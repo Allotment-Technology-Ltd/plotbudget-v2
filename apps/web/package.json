@@ -1,0 +1,33 @@
+{
+  "name": "@repo/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next .turbo node_modules"
+  },
+  "dependencies": {
+    "@repo/logic": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@tanstack/react-query": "^5.20.0",
+    "framer-motion": "^11.0.0",
+    "next": "14.2.21",
+    "next-themes": "^0.4.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,305 @@
+/* apps/web/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: 245 240 234;
+    --bg-secondary: 255 255 255;
+    --bg-elevated: 240 235 228;
+
+    --text-primary: 17 17 17;
+    --text-secondary: 85 85 85;
+
+    --accent-primary: 14 131 69;
+    --accent-glow: 14 131 69;
+
+    --border-subtle: 0 0 0;
+    --border-accent: 14 131 69;
+
+    --surface-overlay: 0 0 0;
+
+    --success: 46 125 50;
+    --error: 201 42 42;
+    --warning: 255 107 53;
+    --info: 26 26 26;
+
+    --needs: 141 163 153;
+    --wants: 199 141 117;
+    --repay: 239 83 80;
+    --savings: 110 201 124;
+
+    --radius-sm: 4px;
+    --radius-DEFAULT: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    --background: 245 240 234;
+    --foreground: 17 17 17;
+    --card: 255 255 255;
+    --card-foreground: 17 17 17;
+    --popover: 255 255 255;
+    --popover-foreground: 17 17 17;
+    --primary: 14 131 69;
+    --primary-foreground: 255 255 255;
+    --secondary: 240 235 228;
+    --secondary-foreground: 17 17 17;
+    --muted: 240 235 228;
+    --muted-foreground: 85 85 85;
+    --accent: 240 235 228;
+    --accent-foreground: 17 17 17;
+    --destructive: 201 42 42;
+    --destructive-foreground: 255 255 255;
+    --border: 0 0 0;
+    --input: 0 0 0;
+    --ring: 14 131 69;
+    --radius: 6px;
+  }
+
+  .dark {
+    --bg-primary: 17 17 17;
+    --bg-secondary: 26 26 26;
+    --bg-elevated: 34 34 34;
+
+    --text-primary: 245 240 234;
+    --text-secondary: 153 153 153;
+
+    --accent-primary: 105 240 174;
+    --accent-glow: 105 240 174;
+
+    --border-subtle: 255 255 255;
+    --border-accent: 105 240 174;
+
+    --surface-overlay: 255 255 255;
+
+    --success: 46 125 50;
+    --error: 201 42 42;
+    --warning: 255 107 53;
+    --info: 26 26 26;
+
+    --needs: 61 90 107;
+    --wants: 157 107 71;
+    --repay: 184 85 77;
+    --savings: 46 125 95;
+
+    --background: 17 17 17;
+    --foreground: 245 240 234;
+    --card: 26 26 26;
+    --card-foreground: 245 240 234;
+    --popover: 26 26 26;
+    --popover-foreground: 245 240 234;
+    --primary: 105 240 174;
+    --primary-foreground: 17 17 17;
+    --secondary: 34 34 34;
+    --secondary-foreground: 245 240 234;
+    --muted: 34 34 34;
+    --muted-foreground: 153 153 153;
+    --accent: 34 34 34;
+    --accent-foreground: 245 240 234;
+    --destructive: 201 42 42;
+    --destructive-foreground: 255 255 255;
+    --border: 255 255 255;
+    --input: 255 255 255;
+    --ring: 105 240 174;
+  }
+
+  * {
+    border-color: rgb(var(--border) / 0.08);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  *:focus:not(:focus-visible) {
+    @apply outline-none ring-0;
+  }
+
+  ::selection {
+    background-color: rgb(var(--accent-primary));
+    color: rgb(17 17 17);
+  }
+
+  .dark ::selection {
+    color: rgb(17 17 17);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .section-label {
+    @apply uppercase tracking-widest text-primary;
+    font-family: var(--font-space), monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    letter-spacing: 0.15em;
+  }
+
+  .section-headline {
+    @apply uppercase text-foreground;
+    font-family: var(--font-space), monospace;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  @media (min-width: 810px) {
+    .section-headline {
+      font-size: 3rem;
+      line-height: 1.15;
+    }
+  }
+
+  .terminal-prompt::before {
+    content: '>_ ';
+    @apply text-primary;
+  }
+
+  .card-plot {
+    @apply bg-card p-6 rounded-lg;
+    border: 1px solid rgb(var(--border) / 0.08);
+  }
+
+  @media (min-width: 810px) {
+    .card-plot {
+      @apply p-8;
+    }
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center
+           bg-primary px-6 py-3
+           uppercase
+           text-primary-foreground
+           rounded-md
+           transition-all duration-200;
+    font-family: var(--font-space), monospace;
+    font-size: 1rem;
+    line-height: 1;
+    letter-spacing: 0.2em;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 30px rgb(var(--accent-glow) / 0.15);
+    transform: translateY(-2px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center
+           px-6 py-3
+           uppercase
+           text-primary
+           bg-transparent rounded-md
+           transition-all duration-200;
+    font-family: var(--font-space), monospace;
+    font-size: 1rem;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    border: 1px solid rgb(var(--primary) / 0.3);
+  }
+
+  .btn-ghost:hover {
+    background-color: rgb(var(--primary) / 0.1);
+  }
+
+  .btn-ghost:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
+
+  .skip-link {
+    @apply sr-only;
+  }
+
+  .skip-link:focus {
+    @apply not-sr-only absolute top-4 left-4 z-50 px-4 py-2 bg-primary text-primary-foreground rounded-md;
+  }
+}
+
+@layer utilities {
+  .content-wrapper {
+    @apply w-full mx-auto px-6;
+    max-width: 1200px;
+  }
+
+  @media (min-width: 810px) {
+    .content-wrapper {
+      @apply px-10;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .content-wrapper {
+      @apply px-20;
+    }
+  }
+
+  .section-padding {
+    @apply py-16;
+  }
+
+  @media (min-width: 810px) {
+    .section-padding {
+      @apply py-20;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .section-padding {
+      @apply py-24;
+    }
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    background-color: rgb(var(--primary));
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgb(var(--accent-glow) / 0.4);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@repo/ui": [
+        "../../packages/ui/src"
+      ],
+      "@repo/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@repo/logic": [
+        "../../packages/logic/src"
+      ],
+      "@repo/logic/*": [
+        "../../packages/logic/src/*"
+      ]
+    },
+    "incremental": true,
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
