@@ -13,6 +13,8 @@
   "dependencies": {
     "@repo/logic": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.94.1",
     "@tanstack/react-query": "^5.20.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.469.0",
