@@ -18,6 +18,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { InvitePartnerForm } from './invite-partner-form';
+import { PartnerStatus } from './partner-status';
 
 interface HouseholdTabProps {
   household: {
@@ -26,6 +28,11 @@ interface HouseholdTabProps {
     is_couple: boolean;
     partner_name: string | null;
     partner_income: number;
+    partner_email?: string | null;
+    partner_invite_status?: 'none' | 'pending' | 'accepted';
+    partner_invite_sent_at?: string | null;
+    partner_accepted_at?: string | null;
+    partner_last_login_at?: string | null;
   };
 }
 
@@ -128,88 +135,112 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
       </section>
 
       {household.is_couple && (
-        <section className="bg-card rounded-lg border border-border p-6">
-          <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
-            Partner Details
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-foreground mb-1">
-                Partner Name
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {household.partner_name || 'Not set'}
-              </p>
+        <>
+          <section className="bg-card rounded-lg border border-border p-6">
+            <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
+              Partner Details
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-foreground mb-1">
+                  Partner Name
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {household.partner_name || 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground mb-1">
+                  Partner Monthly Income
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  £{Number(household.partner_income || 0).toLocaleString('en-GB')}
+                </p>
+              </div>
+              <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="secondary" type="button">
+                    Edit Partner Details
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-lg border-border">
+                  <DialogHeader>
+                    <DialogTitle>Edit Partner Details</DialogTitle>
+                  </DialogHeader>
+                  <form
+                    onSubmit={handlePartnerSubmit}
+                    className="space-y-4 pt-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerName">Partner Name</Label>
+                      <Input
+                        id="partnerName"
+                        value={partnerName}
+                        onChange={(e) => setPartnerName(e.target.value)}
+                        placeholder="Partner name"
+                        maxLength={50}
+                        disabled={isPartnerSaving}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerIncome">Partner Monthly Income (£)</Label>
+                      <Input
+                        id="partnerIncome"
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={partnerIncome}
+                        onChange={(e) => setPartnerIncome(e.target.value)}
+                        placeholder="0"
+                        disabled={isPartnerSaving}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setPartnerDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isPartnerSaving}>
+                        {isPartnerSaving && (
+                          <Loader2
+                            className="mr-2 h-4 w-4 animate-spin"
+                            aria-hidden
+                          />
+                        )}
+                        Save
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
-            <div>
-              <p className="text-sm font-medium text-foreground mb-1">
-                Partner Monthly Income
-              </p>
-              <p className="text-sm text-muted-foreground">
-                £{Number(household.partner_income || 0).toLocaleString('en-GB')}
-              </p>
-            </div>
-            <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="secondary" type="button">
-                  Edit Partner Details
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-lg border-border">
-                <DialogHeader>
-                  <DialogTitle>Edit Partner Details</DialogTitle>
-                </DialogHeader>
-                <form
-                  onSubmit={handlePartnerSubmit}
-                  className="space-y-4 pt-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="partnerName">Partner Name</Label>
-                    <Input
-                      id="partnerName"
-                      value={partnerName}
-                      onChange={(e) => setPartnerName(e.target.value)}
-                      placeholder="Partner name"
-                      maxLength={50}
-                      disabled={isPartnerSaving}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="partnerIncome">Partner Monthly Income (£)</Label>
-                    <Input
-                      id="partnerIncome"
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={partnerIncome}
-                      onChange={(e) => setPartnerIncome(e.target.value)}
-                      placeholder="0"
-                      disabled={isPartnerSaving}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setPartnerDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isPartnerSaving}>
-                      {isPartnerSaving && (
-                        <Loader2
-                          className="mr-2 h-4 w-4 animate-spin"
-                          aria-hidden
-                        />
-                      )}
-                      Save
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </section>
+          </section>
+
+          <section className="bg-card rounded-lg border border-border p-6">
+            <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
+              Partner Access
+            </h2>
+            {household.partner_invite_status === 'none' && <InvitePartnerForm />}
+            {household.partner_invite_status === 'pending' && household.partner_email && (
+              <PartnerStatus
+                status="pending"
+                email={household.partner_email}
+                sentAt={household.partner_invite_sent_at ?? undefined}
+              />
+            )}
+            {household.partner_invite_status === 'accepted' && household.partner_email && (
+              <PartnerStatus
+                status="accepted"
+                email={household.partner_email}
+                acceptedAt={household.partner_accepted_at ?? undefined}
+                lastLoginAt={household.partner_last_login_at}
+              />
+            )}
+          </section>
+        </>
       )}
     </div>
   );

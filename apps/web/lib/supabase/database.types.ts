@@ -81,6 +81,12 @@ export type Database = {
           joint_ratio: number;
           created_at: string;
           updated_at: string;
+          partner_email: string | null;
+          partner_auth_token: string | null;
+          partner_invite_status: 'none' | 'pending' | 'accepted';
+          partner_invite_sent_at: string | null;
+          partner_last_login_at: string | null;
+          partner_accepted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -100,6 +106,12 @@ export type Database = {
           joint_ratio?: number;
           created_at?: string;
           updated_at?: string;
+          partner_email?: string | null;
+          partner_auth_token?: string | null;
+          partner_invite_status?: 'none' | 'pending' | 'accepted';
+          partner_invite_sent_at?: string | null;
+          partner_last_login_at?: string | null;
+          partner_accepted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -119,6 +131,12 @@ export type Database = {
           joint_ratio?: number;
           created_at?: string;
           updated_at?: string;
+          partner_email?: string | null;
+          partner_auth_token?: string | null;
+          partner_invite_status?: 'none' | 'pending' | 'accepted';
+          partner_invite_sent_at?: string | null;
+          partner_last_login_at?: string | null;
+          partner_accepted_at?: string | null;
         };
       };
       paycycles: {

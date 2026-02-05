@@ -22,6 +22,11 @@ export interface SettingsViewProps {
     wants_percent: number;
     savings_percent: number;
     repay_percent: number;
+    partner_email?: string | null;
+    partner_invite_status?: 'none' | 'pending' | 'accepted';
+    partner_invite_sent_at?: string | null;
+    partner_accepted_at?: string | null;
+    partner_last_login_at?: string | null;
   };
 }
 
@@ -54,6 +59,11 @@ export function SettingsView({ user, household }: SettingsViewProps) {
               is_couple: household.is_couple,
               partner_name: household.partner_name,
               partner_income: household.partner_income,
+              partner_email: household.partner_email,
+              partner_invite_status: household.partner_invite_status,
+              partner_invite_sent_at: household.partner_invite_sent_at,
+              partner_accepted_at: household.partner_accepted_at,
+              partner_last_login_at: household.partner_last_login_at,
             }}
           />
         </TabsContent>

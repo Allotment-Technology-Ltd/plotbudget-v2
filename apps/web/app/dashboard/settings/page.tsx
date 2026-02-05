@@ -29,7 +29,7 @@ export default async function SettingsPage() {
   const { data: household } = await supabase
     .from('households')
     .select(
-      'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent'
+      'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at'
     )
     .eq('owner_id', user.id)
     .maybeSingle();
@@ -48,6 +48,11 @@ export default async function SettingsPage() {
     wants_percent: number;
     savings_percent: number;
     repay_percent: number;
+    partner_email: string | null;
+    partner_invite_status: 'none' | 'pending' | 'accepted';
+    partner_invite_sent_at: string | null;
+    partner_accepted_at: string | null;
+    partner_last_login_at: string | null;
   };
   const h = household as HouseholdRow;
 
@@ -69,6 +74,11 @@ export default async function SettingsPage() {
           wants_percent: h.wants_percent,
           savings_percent: h.savings_percent,
           repay_percent: h.repay_percent,
+          partner_email: h.partner_email,
+          partner_invite_status: h.partner_invite_status,
+          partner_invite_sent_at: h.partner_invite_sent_at,
+          partner_accepted_at: h.partner_accepted_at,
+          partner_last_login_at: h.partner_last_login_at,
         }}
       />
     </div>

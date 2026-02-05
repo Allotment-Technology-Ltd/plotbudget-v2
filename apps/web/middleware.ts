@@ -57,9 +57,33 @@ export async function middleware(request: NextRequest) {
   // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Protected routes - redirect to login if not authenticated
+  // Protected routes - redirect to login if not authenticated (or check partner token)
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
     if (!user) {
+      // Check for partner magic-link token
+      const partnerToken = request.cookies.get('partner_auth_token')?.value;
+      if (partnerToken) {
+        const { data: household } = await supabase
+          .from('households')
+          .select('id, partner_invite_status')
+          .eq('partner_auth_token', partnerToken)
+          .eq('partner_invite_status', 'accepted')
+          .single();
+
+        if (household) {
+          const requestHeaders = new Headers(request.headers);
+          requestHeaders.set('x-partner-household-id', household.id);
+          requestHeaders.set('x-is-partner', 'true');
+          await supabase
+            .from('households')
+            .update({ partner_last_login_at: new Date().toISOString() })
+            .eq('id', household.id);
+          return NextResponse.next({
+            request: { headers: requestHeaders },
+          });
+        }
+      }
+
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
@@ -119,5 +143,6 @@ export const config = {
     '/login',
     '/signup',
     '/onboarding/:path*',
+    '/partner/:path*',
   ],
 };
