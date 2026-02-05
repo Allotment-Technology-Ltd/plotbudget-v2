@@ -13,12 +13,13 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
-// Separate schemas for login and signup
+// Login schema
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 });
 
+// Signup schema
 const signupSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z
@@ -34,7 +35,7 @@ const signupSchema = z.object({
   path: ['confirmPassword'],
 });
 
-// Infer types from schemas
+type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
 interface AuthFormProps {
@@ -46,9 +47,17 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const isLogin = mode === 'login';
 
-  // Use conditional type for form data
-  const form = useForm<SignupFormData>({
-    resolver: zodResolver(isLogin ? loginSchema : signupSchema),
+  // Conditionally create form with appropriate schema
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -56,7 +65,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
-  const onSubmit = async (data: SignupFormData) => {
+  const form = isLogin ? loginForm : signupForm;
+
+  const onSubmit = async (data: LoginFormData | SignupFormData) => {
     setIsLoading(true);
     const supabase = createClient();
 
@@ -83,9 +94,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         router.push('/dashboard');
       } else {
         // Signup flow
+        const signupData = data as SignupFormData;
         const { error } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
+          email: signupData.email,
+          password: signupData.password,
         });
 
         if (error) {
@@ -173,15 +185,15 @@ export function AuthForm({ mode }: AuthFormProps) {
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
-              {...form.register('confirmPassword')}
-              aria-invalid={!!form.formState.errors.confirmPassword}
+              {...(signupForm.register('confirmPassword'))}
+              aria-invalid={!!signupForm.formState.errors.confirmPassword}
               aria-describedby={
-                form.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
+                signupForm.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
               }
             />
-            {form.formState.errors.confirmPassword && (
+            {signupForm.formState.errors.confirmPassword && (
               <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
-                {form.formState.errors.confirmPassword.message}
+                {signupForm.formState.errors.confirmPassword.message}
               </p>
             )}
           </div>
