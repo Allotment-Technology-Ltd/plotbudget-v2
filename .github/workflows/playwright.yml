@@ -1,5 +1,5 @@
 # .github/workflows/playwright.yml
-# E2E tests run on PR and push to main/develop (localhost) and on push to main (Vercel preview).
+# Unit tests and E2E tests run on PR and push to main/develop (localhost) and on push to main (Vercel preview).
 # Required repo secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 name: Playwright Tests
 
@@ -10,8 +10,31 @@ on:
     branches: [main, develop]
 
 jobs:
+  test-unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run unit tests
+        working-directory: apps/web
+        run: pnpm test:unit
+
   test-localhost:
     name: E2E on localhost
+    needs: [test-unit]
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -52,6 +75,7 @@ jobs:
 
   test-vercel-preview:
     name: Test on Vercel Preview (pre-merge)
+    needs: [test-unit]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 15
     runs-on: ubuntu-latest

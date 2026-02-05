@@ -73,6 +73,15 @@ Pushes to the linked branch (e.g. `main`) trigger an automatic deploy. After cha
 - **“Row-level security policy” errors**  
   Apply the policies in `docs/supabase-rls-policies.sql` in the Supabase SQL editor for your project.
 
+## Marketing site and app domains
+
+Decide how users get from the marketing site to the app:
+
+- **Two domains:** Marketing at **plotbudget.com**, app at **app.plotbudget.com**. Marketing CTAs link to `https://app.plotbudget.com/signup` and `/login`. Supabase redirect URLs use the app subdomain.
+- **Single domain:** This app is the only site at **plotbudget.com**. Root `/` is the marketing front door; `/signup`, `/login`, `/dashboard` are the app. Supabase redirect URLs use **plotbudget.com**.
+
+See **[MARKETING-APP-INTEGRATION.md](./MARKETING-APP-INTEGRATION.md)** for the full strategy, handoff flows, and implementation checklist.
+
 ## Optional: custom domain
 
 In Vercel: **Settings → Domains** → add your domain and follow the DNS instructions.

@@ -16,7 +16,7 @@ export function TotalAllocatedSummary({ paycycle }: TotalAllocatedSummaryProps) 
 
   return (
     <section
-      className="bg-card rounded-lg p-4 border border-border"
+      className="bg-card rounded-lg p-6 border border-border"
       aria-labelledby="total-allocated-heading"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">

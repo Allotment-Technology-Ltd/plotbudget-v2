@@ -58,6 +58,7 @@ export function DashboardClient({
             className="bg-card rounded-lg border border-border p-12 text-center"
             role="region"
             aria-label="No active pay cycle"
+            data-testid="dashboard-no-cycle"
           >
             <h2 className="font-heading text-xl uppercase tracking-wider text-foreground mb-2">
               No active pay cycle
@@ -75,7 +76,7 @@ export function DashboardClient({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid="dashboard-page">
       <header className="border-b border-border bg-card">
         <div className="content-wrapper py-6">
           <h1 className="font-heading text-headline-sm md:text-headline uppercase">

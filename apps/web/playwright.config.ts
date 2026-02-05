@@ -57,7 +57,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testMatch: [/auth\.spec\.ts/, /onboarding\.spec\.ts/],
+      testMatch: [/auth\.spec\.ts/, /onboarding\.spec\.ts/, /dashboard\.spec\.ts/, /root\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         storageState: soloStatePath,

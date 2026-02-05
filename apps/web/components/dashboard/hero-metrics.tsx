@@ -102,7 +102,7 @@ export function HeroMetrics({ paycycle }: HeroMetricsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors"
+            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors duration-200"
             role="article"
             aria-label={`${metric.label}: ${metric.value}`}
           >

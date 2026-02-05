@@ -87,7 +87,7 @@ export function CategorySummaryGrid({
         return (
           <div
             key={cat.type}
-            className={`bg-card rounded-lg p-4 border flex flex-col ${isOverAllocated ? 'border-warning/50' : 'border-border'}`}
+            className={`bg-card rounded-lg p-6 border flex flex-col ${isOverAllocated ? 'border-warning/50' : 'border-border'}`}
             aria-labelledby={`category-${cat.type}-label`}
           >
             <div className="flex items-center gap-2 mb-3 shrink-0">
