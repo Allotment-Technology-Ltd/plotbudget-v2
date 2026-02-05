@@ -383,7 +383,6 @@ export function SeedDialog({
               <select
                 id="seed-category"
                 value={category}
-                readOnly
                 tabIndex={-1}
                 aria-hidden
                 data-testid="seed-category-select"
