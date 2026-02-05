@@ -12,6 +12,7 @@ type Pot = Database['public']['Tables']['pots']['Row'];
 type Repayment = Database['public']['Tables']['repayments']['Row'];
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
+type Payer = 'me' | 'partner' | 'both';
 
 const POT_STATUS_LABELS: Record<string, string> = {
   active: 'Saving',
@@ -46,9 +47,12 @@ interface SeedsListProps {
   paycycle: Paycycle;
   pots: Pot[];
   repayments: Repayment[];
+  isRitualMode?: boolean;
   onAdd: () => void;
   onEdit: (seed: Seed) => void;
   onDelete: (seed: Seed) => void;
+  onMarkPaid?: (seedId: string, payer: Payer) => void;
+  onUnmarkPaid?: (seedId: string, payer: Payer) => void;
 }
 
 export function SeedsList({
@@ -57,12 +61,17 @@ export function SeedsList({
   household,
   pots,
   repayments,
+  isRitualMode = false,
   onAdd,
   onEdit,
   onDelete,
+  onMarkPaid,
+  onUnmarkPaid,
 }: SeedsListProps) {
   const categoryLabel = categoryLabels[category];
   const singularLabel = singularLabels[category];
+  const totalSeeds = seeds.length;
+  const paidSeeds = seeds.filter((s) => s.is_paid).length;
 
   return (
     <section
@@ -70,12 +79,22 @@ export function SeedsList({
       aria-labelledby={`seeds-${category}-heading`}
     >
       <div className="flex items-center justify-between mb-4">
-        <h2
-          id={`seeds-${category}-heading`}
-          className="font-heading text-xl uppercase tracking-wider text-foreground"
-        >
-          {categoryLabel} ({seeds.length})
-        </h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2
+            id={`seeds-${category}-heading`}
+            className="font-heading text-xl uppercase tracking-wider text-foreground"
+          >
+            {categoryLabel} ({seeds.length})
+          </h2>
+          {isRitualMode && totalSeeds > 0 && (
+            <span
+              className="text-sm text-muted-foreground"
+              aria-label={`${paidSeeds} of ${totalSeeds} paid in ${categoryLabel}`}
+            >
+              {paidSeeds}/{totalSeeds} paid
+            </span>
+          )}
+        </div>
         <Button
           variant="outline"
           className="px-4 py-2 text-sm"
@@ -100,7 +119,9 @@ export function SeedsList({
           className="text-center py-12 text-muted-foreground"
           role="status"
           aria-live="polite"
-          {...(category === 'need' ? { 'data-testid': 'blueprint-empty-state' as const } : {})}
+          {...(category === 'need'
+            ? { 'data-testid': 'blueprint-empty-state' as const }
+            : {})}
         >
           <p className="text-sm">No {categoryLabel.toLowerCase()} added yet.</p>
           <p className="text-xs mt-1">
@@ -132,6 +153,9 @@ export function SeedsList({
                   }
                   onEdit={() => onEdit(seed)}
                   onDelete={() => onDelete(seed)}
+                  isRitualMode={isRitualMode}
+                  onMarkPaid={onMarkPaid}
+                  onUnmarkPaid={onUnmarkPaid}
                 />
               </li>
             );

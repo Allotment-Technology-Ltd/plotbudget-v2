@@ -1,0 +1,234 @@
+'use server';
+
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+import type { Database } from '@/lib/supabase/database.types';
+
+type SeedRow = Database['public']['Tables']['seeds']['Row'];
+type PaycycleRow = Database['public']['Tables']['paycycles']['Row'];
+type SeedUpdate = Database['public']['Tables']['seeds']['Update'];
+
+type Payer = 'me' | 'partner' | 'both';
+type SeedType = 'need' | 'want' | 'savings' | 'repay';
+
+/** Map seed type to paycycle rem_ field prefix (needs, wants, savings, repay) */
+function getRemTypeKey(type: SeedType): string {
+  return type === 'need' ? 'needs' : type === 'want' ? 'wants' : type === 'savings' ? 'savings' : 'repay';
+}
+
+/**
+ * Decrement paycycle remaining amounts when a seed is marked paid.
+ * Business rules: ME/PARTNER seeds decrement rem_{type}_me or rem_{type}_partner by amount.
+ * JOINT seeds decrement rem_{type}_me by amount_me and rem_{type}_partner by amount_partner (when each portion is marked).
+ */
+async function updatePaycycleRemaining(
+  seed: SeedRow,
+  payer: Payer
+): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: paycycle } = await supabase
+    .from('paycycles')
+    .select('*')
+    .eq('id', seed.paycycle_id)
+    .single();
+
+  if (!paycycle) return;
+
+  const typeKey = getRemTypeKey(seed.type);
+  const updates: Partial<PaycycleRow> = {};
+
+  if (payer === 'both' || seed.payment_source !== 'joint') {
+    if (seed.payment_source === 'me') {
+      const field = `rem_${typeKey}_me` as keyof PaycycleRow;
+      (updates as Record<string, number>)[field] = Math.max(
+        0,
+        Number(paycycle[field]) - Number(seed.amount)
+      );
+    } else if (seed.payment_source === 'partner') {
+      const field = `rem_${typeKey}_partner` as keyof PaycycleRow;
+      (updates as Record<string, number>)[field] = Math.max(
+        0,
+        Number(paycycle[field]) - Number(seed.amount)
+      );
+    } else {
+      const fieldMe = `rem_${typeKey}_me` as keyof PaycycleRow;
+      const fieldPartner = `rem_${typeKey}_partner` as keyof PaycycleRow;
+      (updates as Record<string, number>)[fieldMe] = Math.max(
+        0,
+        Number(paycycle[fieldMe]) - Number(seed.amount_me)
+      );
+      (updates as Record<string, number>)[fieldPartner] = Math.max(
+        0,
+        Number(paycycle[fieldPartner]) - Number(seed.amount_partner)
+      );
+    }
+  } else if (payer === 'me') {
+    const field = `rem_${typeKey}_me` as keyof PaycycleRow;
+    (updates as Record<string, number>)[field] = Math.max(
+      0,
+      Number(paycycle[field]) - Number(seed.amount_me)
+    );
+  } else if (payer === 'partner') {
+    const field = `rem_${typeKey}_partner` as keyof PaycycleRow;
+    (updates as Record<string, number>)[field] = Math.max(
+      0,
+      Number(paycycle[field]) - Number(seed.amount_partner)
+    );
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await (supabase.from('paycycles') as any).update(updates).eq('id', seed.paycycle_id);
+  }
+}
+
+/**
+ * Increment paycycle remaining amounts when a seed is unmarked paid (reverse of updatePaycycleRemaining).
+ */
+async function incrementPaycycleRemaining(
+  seed: SeedRow,
+  payer: Payer
+): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: paycycle } = await supabase
+    .from('paycycles')
+    .select('*')
+    .eq('id', seed.paycycle_id)
+    .single();
+
+  if (!paycycle) return;
+
+  const typeKey = getRemTypeKey(seed.type);
+  const updates: Partial<PaycycleRow> = {};
+
+  if (payer === 'both' || seed.payment_source !== 'joint') {
+    if (seed.payment_source === 'me') {
+      const field = `rem_${typeKey}_me` as keyof PaycycleRow;
+      (updates as Record<string, number>)[field] =
+        Number(paycycle[field]) + Number(seed.amount);
+    } else if (seed.payment_source === 'partner') {
+      const field = `rem_${typeKey}_partner` as keyof PaycycleRow;
+      (updates as Record<string, number>)[field] =
+        Number(paycycle[field]) + Number(seed.amount);
+    } else {
+      const fieldMe = `rem_${typeKey}_me` as keyof PaycycleRow;
+      const fieldPartner = `rem_${typeKey}_partner` as keyof PaycycleRow;
+      (updates as Record<string, number>)[fieldMe] =
+        Number(paycycle[fieldMe]) + Number(seed.amount_me);
+      (updates as Record<string, number>)[fieldPartner] =
+        Number(paycycle[fieldPartner]) + Number(seed.amount_partner);
+    }
+  } else if (payer === 'me') {
+    const field = `rem_${typeKey}_me` as keyof PaycycleRow;
+    (updates as Record<string, number>)[field] =
+      Number(paycycle[field]) + Number(seed.amount_me);
+  } else if (payer === 'partner') {
+    const field = `rem_${typeKey}_partner` as keyof PaycycleRow;
+    (updates as Record<string, number>)[field] =
+      Number(paycycle[field]) + Number(seed.amount_partner);
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await (supabase.from('paycycles') as any).update(updates).eq('id', seed.paycycle_id);
+  }
+}
+
+/**
+ * Mark a seed (or portion) as paid. Updates is_paid / is_paid_me / is_paid_partner
+ * and decrements paycycle remaining amounts.
+ */
+export async function markSeedPaid(
+  seedId: string,
+  payer: Payer
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: seedData, error: seedError } = await supabase
+    .from('seeds')
+    .select('*')
+    .eq('id', seedId)
+    .single();
+
+  if (seedError || !seedData) {
+    return { error: 'Seed not found' };
+  }
+
+  const seed = seedData as SeedRow;
+  const updates: SeedUpdate = {};
+
+  if (payer === 'both' || seed.payment_source !== 'joint') {
+    updates.is_paid = true;
+    updates.is_paid_me = true;
+    updates.is_paid_partner = seed.payment_source === 'joint';
+  } else if (payer === 'me') {
+    updates.is_paid_me = true;
+    if (seed.is_paid_partner) {
+      updates.is_paid = true;
+    }
+  } else if (payer === 'partner') {
+    updates.is_paid_partner = true;
+    if (seed.is_paid_me) {
+      updates.is_paid = true;
+    }
+  }
+
+  const { error: updateError } = await (supabase.from('seeds') as any)
+    .update(updates)
+    .eq('id', seedId);
+
+  if (updateError) {
+    return { error: (updateError as { message: string }).message };
+  }
+
+  await updatePaycycleRemaining(seed, payer);
+  revalidatePath('/dashboard/blueprint');
+  return { success: true };
+}
+
+/**
+ * Unmark a seed (or portion) as paid. Reverses is_paid flags and increments paycycle remaining.
+ */
+export async function unmarkSeedPaid(
+  seedId: string,
+  payer: Payer
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: seedData, error: seedError } = await supabase
+    .from('seeds')
+    .select('*')
+    .eq('id', seedId)
+    .single();
+
+  if (seedError || !seedData) {
+    return { error: 'Seed not found' };
+  }
+
+  const seed = seedData as SeedRow;
+  const updates: SeedUpdate = {};
+
+  if (payer === 'both' || seed.payment_source !== 'joint') {
+    updates.is_paid = false;
+    updates.is_paid_me = false;
+    updates.is_paid_partner = false;
+  } else if (payer === 'me') {
+    updates.is_paid_me = false;
+    updates.is_paid = false;
+  } else if (payer === 'partner') {
+    updates.is_paid_partner = false;
+    updates.is_paid = false;
+  }
+
+  const { error: updateError } = await (supabase.from('seeds') as any)
+    .update(updates)
+    .eq('id', seedId);
+
+  if (updateError) {
+    return { error: (updateError as { message: string }).message };
+  }
+
+  await incrementPaycycleRemaining(seed, payer);
+  revalidatePath('/dashboard/blueprint');
+  return { success: true };
+}

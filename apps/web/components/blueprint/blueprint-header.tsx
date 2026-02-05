@@ -23,6 +23,12 @@ interface PaycycleOption {
   status: string;
 }
 
+interface PaidProgress {
+  paid: number;
+  total: number;
+  percent: number;
+}
+
 interface BlueprintHeaderProps {
   paycycle: Paycycle;
   household: Household;
@@ -30,6 +36,8 @@ interface BlueprintHeaderProps {
   onCycleChange: (cycleId: string) => void;
   onCreateNext?: () => void;
   onResyncDraft?: () => void;
+  /** When viewing the active (current) cycle, show payment progress. Draft/archived do not. */
+  paidProgress?: PaidProgress;
 }
 
 export function BlueprintHeader({
@@ -39,44 +47,61 @@ export function BlueprintHeader({
   onCycleChange,
   onCreateNext,
   onResyncDraft,
+  paidProgress,
 }: BlueprintHeaderProps) {
   const startDate = format(new Date(paycycle.start_date), 'MMM d');
   const endDate = format(new Date(paycycle.end_date), 'MMM d, yyyy');
+  const isActiveCycle = paycycle.status === 'active';
+  const showProgress = isActiveCycle && paidProgress != null;
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-10">
       <div className="content-wrapper py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-h-[3.5rem] flex flex-col justify-center">
             <h1 className="font-heading text-headline-sm md:text-headline uppercase text-foreground">
               Your Blueprint
             </h1>
-            <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
+
+            <div className="mt-1 min-h-[1.5rem] flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span>
                 {household.is_couple
                   ? `Managing £${Number(paycycle.total_income).toFixed(2)} together`
                   : `Managing £${Number(paycycle.total_income).toFixed(2)} monthly`}
               </span>
-              <span className="flex items-center gap-1" aria-label="Pay cycle dates">
+              <span
+                className="flex items-center gap-1"
+                aria-label="Pay cycle dates"
+              >
                 <Calendar className="w-4 h-4" aria-hidden />
                 {startDate} – {endDate}
               </span>
+              {showProgress && (
+                <span aria-label={`${paidProgress.paid} of ${paidProgress.total} bills paid`}>
+                  {paidProgress.paid} of {paidProgress.total} bills paid (
+                  {paidProgress.percent.toFixed(0)}%)
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3 flex-nowrap min-w-0 sm:min-w-[320px] sm:justify-end"
+            aria-label="Blueprint controls"
+          >
             <Select
               value={paycycle.id}
               onValueChange={onCycleChange}
               aria-label="Select pay cycle"
             >
-              <SelectTrigger className="min-w-[240px] w-full max-w-[320px]">
+              <SelectTrigger className="min-w-[200px] w-full max-w-[280px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {allPaycycles.map((cycle) => (
                   <SelectItem key={cycle.id} value={cycle.id}>
-                    {cycle.name || format(new Date(cycle.start_date), 'MMM yyyy')}
+                    {cycle.name ||
+                      format(new Date(cycle.start_date), 'MMM yyyy')}
                     {cycle.status === 'active' && ' (Current)'}
                   </SelectItem>
                 ))}
@@ -86,7 +111,7 @@ export function BlueprintHeader({
             {paycycle.status === 'active' && onCreateNext && (
               <Button
                 variant="outline"
-                className="px-4 py-2 text-sm"
+                className="px-4 py-2 text-sm shrink-0"
                 onClick={onCreateNext}
               >
                 <Plus className="w-4 h-4 mr-2" aria-hidden />
@@ -96,7 +121,7 @@ export function BlueprintHeader({
             {paycycle.status === 'draft' && onResyncDraft && (
               <Button
                 variant="outline"
-                className="px-4 py-2 text-sm"
+                className="px-4 py-2 text-sm shrink-0"
                 onClick={onResyncDraft}
               >
                 <RefreshCw className="w-4 h-4 mr-2" aria-hidden />
@@ -104,6 +129,36 @@ export function BlueprintHeader({
               </Button>
             )}
           </div>
+        </div>
+
+        {/* Progress bar: always reserve height so layout never jumps. Active = fill, draft/other = empty. */}
+        <div
+          className="mt-4 h-2 min-h-[8px]"
+          role="region"
+          aria-label="Payment progress"
+        >
+          {showProgress ? (
+            <div
+              role="progressbar"
+              aria-valuenow={paidProgress.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${paidProgress.paid} of ${paidProgress.total} bills paid`}
+              className="h-2 bg-muted rounded-full overflow-hidden"
+            >
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${paidProgress.percent}%` }}
+              />
+            </div>
+          ) : (
+            <div
+              className="h-2 bg-muted rounded-full overflow-hidden"
+              aria-hidden
+            >
+              <div className="h-full w-0" />
+            </div>
+          )}
         </div>
       </div>
     </header>

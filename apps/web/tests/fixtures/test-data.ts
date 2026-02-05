@@ -9,4 +9,6 @@ export const TEST_USERS = {
   couple: { email: 'couple@plotbudget.test', password: 'test-password-123' },
   /** Used only by blueprint specs so onboarding resets don't affect them */
   blueprint: { email: 'blueprint@plotbudget.test', password: 'test-password-123' },
+  /** Used only by ritual (Payday Ritual) specs; isolated for parallel runs */
+  ritual: { email: 'ritual@plotbudget.test', password: 'test-password-123' },
 } as const;

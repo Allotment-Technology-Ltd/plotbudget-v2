@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { BlueprintHeader } from './blueprint-header';
 import { CategorySummaryGrid } from './category-summary-grid';
 import { TotalAllocatedSummary } from './total-allocated-summary';
 import { CategoryRatioDialog } from './category-ratio-dialog';
 import { JointAccountSummary } from './joint-account-summary';
+import { RitualTransferSummary } from './ritual-transfer-summary';
+import { RitualCompletionCelebration } from './ritual-completion-celebration';
 import { SeedsList } from './seeds-list';
 import { SeedDialog } from './seed-dialog';
 import { DeleteSeedConfirmDialog } from './delete-seed-confirm-dialog';
@@ -15,6 +17,7 @@ import {
   createNextPaycycle,
   resyncDraftFromActive,
 } from '@/lib/actions/seed-actions';
+import { markSeedPaid, unmarkSeedPaid } from '@/lib/actions/ritual-actions';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Household = Database['public']['Tables']['households']['Row'];
@@ -42,6 +45,8 @@ interface BlueprintClientProps {
   hasDraftCycle: boolean;
 }
 
+type Payer = 'me' | 'partner' | 'both';
+
 export function BlueprintClient({
   household,
   paycycle,
@@ -61,6 +66,59 @@ export function BlueprintClient({
   const [isRatioDialogOpen, setIsRatioDialogOpen] = useState(false);
   const [seedToDelete, setSeedToDelete] = useState<Seed | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  /** Current cycle = active: payment checkboxes and progress are always shown. Draft = planning only. */
+  const isActiveCycle = paycycle.status === 'active';
+  /** Optimistic paid: seed IDs we just marked paid so the UI updates before server responds */
+  const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
+  /** Optimistic unpaid: seed IDs we just unmarked so the UI updates before server responds */
+  const [optimisticUnpaidIds, setOptimisticUnpaidIds] = useState<Set<string>>(new Set());
+
+  const displaySeeds = useMemo(() => {
+    return seeds.map((s) => {
+      if (optimisticUnpaidIds.has(s.id)) {
+        return { ...s, is_paid: false, is_paid_me: false, is_paid_partner: false };
+      }
+      if (optimisticPaidIds.has(s.id)) {
+        return {
+          ...s,
+          is_paid: true,
+          is_paid_me: true,
+          is_paid_partner: s.payment_source === 'joint' ? true : s.is_paid_partner,
+        };
+      }
+      return s;
+    });
+  }, [seeds, optimisticPaidIds, optimisticUnpaidIds]);
+
+  const totalSeeds = displaySeeds.length;
+  const paidSeeds = displaySeeds.filter((s) => s.is_paid).length;
+  const progressPercent =
+    totalSeeds > 0 ? (paidSeeds / totalSeeds) * 100 : 0;
+  const allPaid = paidSeeds === totalSeeds && totalSeeds > 0;
+
+  useEffect(() => {
+    if (allPaid && isActiveCycle) {
+      setShowCelebration(true);
+    }
+  }, [allPaid, isActiveCycle]);
+
+  useEffect(() => {
+    setOptimisticPaidIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.is_paid) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticUnpaidIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (!s.is_paid) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+  }, [seeds]);
 
   const handleCycleChange = (cycleId: string) => {
     router.push(`/dashboard/blueprint?cycle=${cycleId}`);
@@ -109,10 +167,48 @@ export function BlueprintClient({
     }
   };
 
-  const needSeeds = seeds.filter((s) => s.type === 'need');
-  const wantSeeds = seeds.filter((s) => s.type === 'want');
-  const savingsSeeds = seeds.filter((s) => s.type === 'savings');
-  const repaySeeds = seeds.filter((s) => s.type === 'repay');
+  const handleMarkPaid = async (seedId: string, payer: Payer) => {
+    setOptimisticPaidIds((prev) => new Set(prev).add(seedId));
+    setOptimisticUnpaidIds((prev) => {
+      const next = new Set(prev);
+      next.delete(seedId);
+      return next;
+    });
+    const result = await markSeedPaid(seedId, payer);
+    if ('success' in result) {
+      router.refresh();
+    } else {
+      setOptimisticPaidIds((prev) => {
+        const next = new Set(prev);
+        next.delete(seedId);
+        return next;
+      });
+    }
+  };
+
+  const handleUnmarkPaid = async (seedId: string, payer: Payer) => {
+    setOptimisticUnpaidIds((prev) => new Set(prev).add(seedId));
+    setOptimisticPaidIds((prev) => {
+      const next = new Set(prev);
+      next.delete(seedId);
+      return next;
+    });
+    const result = await unmarkSeedPaid(seedId, payer);
+    if ('success' in result) {
+      router.refresh();
+    } else {
+      setOptimisticUnpaidIds((prev) => {
+        const next = new Set(prev);
+        next.delete(seedId);
+        return next;
+      });
+    }
+  };
+
+  const needSeeds = displaySeeds.filter((s) => s.type === 'need');
+  const wantSeeds = displaySeeds.filter((s) => s.type === 'want');
+  const savingsSeeds = displaySeeds.filter((s) => s.type === 'savings');
+  const repaySeeds = displaySeeds.filter((s) => s.type === 'repay');
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,10 +223,19 @@ export function BlueprintClient({
             ? handleResyncDraft
             : undefined
         }
+        paidProgress={{
+          paid: paidSeeds,
+          total: totalSeeds,
+          percent: progressPercent,
+        }}
       />
 
       <main className="content-wrapper section-padding" id="main-content">
         <div className="space-y-8">
+          {isActiveCycle && household.is_couple && (
+            <RitualTransferSummary seeds={displaySeeds} household={household} />
+          )}
+
           <TotalAllocatedSummary paycycle={paycycle} />
 
           <CategorySummaryGrid
@@ -139,7 +244,7 @@ export function BlueprintClient({
             onEditRatios={() => setIsRatioDialogOpen(true)}
           />
 
-          {household.is_couple && (
+          {household.is_couple && !isActiveCycle && (
             <JointAccountSummary household={household} seeds={seeds} />
           )}
 
@@ -151,9 +256,12 @@ export function BlueprintClient({
               paycycle={paycycle}
               pots={pots}
               repayments={repayments}
+              isRitualMode={isActiveCycle}
               onAdd={() => handleAddSeed('need')}
               onEdit={handleEditSeed}
               onDelete={handleDeleteClick}
+              onMarkPaid={handleMarkPaid}
+              onUnmarkPaid={handleUnmarkPaid}
             />
 
             <SeedsList
@@ -163,9 +271,12 @@ export function BlueprintClient({
               paycycle={paycycle}
               pots={pots}
               repayments={repayments}
+              isRitualMode={isActiveCycle}
               onAdd={() => handleAddSeed('want')}
               onEdit={handleEditSeed}
               onDelete={handleDeleteClick}
+              onMarkPaid={handleMarkPaid}
+              onUnmarkPaid={handleUnmarkPaid}
             />
 
             <SeedsList
@@ -175,9 +286,12 @@ export function BlueprintClient({
               paycycle={paycycle}
               pots={pots}
               repayments={repayments}
+              isRitualMode={isActiveCycle}
               onAdd={() => handleAddSeed('savings')}
               onEdit={handleEditSeed}
               onDelete={handleDeleteClick}
+              onMarkPaid={handleMarkPaid}
+              onUnmarkPaid={handleUnmarkPaid}
             />
 
             <SeedsList
@@ -187,9 +301,12 @@ export function BlueprintClient({
               paycycle={paycycle}
               pots={pots}
               repayments={repayments}
+              isRitualMode={isActiveCycle}
               onAdd={() => handleAddSeed('repay')}
               onEdit={handleEditSeed}
               onDelete={handleDeleteClick}
+              onMarkPaid={handleMarkPaid}
+              onUnmarkPaid={handleUnmarkPaid}
             />
           </div>
         </div>
@@ -225,6 +342,13 @@ export function BlueprintClient({
         onOpenChange={(open) => !open && setSeedToDelete(null)}
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
+      />
+
+      <RitualCompletionCelebration
+        open={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        totalAllocated={paycycle.total_allocated}
+        totalIncome={paycycle.total_income}
       />
     </div>
   );
