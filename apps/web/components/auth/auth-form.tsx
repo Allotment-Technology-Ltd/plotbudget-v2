@@ -47,8 +47,16 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const isLogin = mode === 'login';
 
-  // Conditionally create form with appropriate schema
-  const loginForm = useForm<LoginFormData>({
+  if (isLogin) {
+    return <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} router={router} />;
+  }
+
+  return <SignupForm isLoading={isLoading} setIsLoading={setIsLoading} router={router} />;
+}
+
+// Login Form Component
+function LoginForm({ isLoading, setIsLoading, router }: any) {
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -56,64 +64,29 @@ export function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
-  const signupForm = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-  });
-
-  const form = isLogin ? loginForm : signupForm;
-
-  const onSubmit = async (data: LoginFormData | SignupFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     const supabase = createClient();
 
     try {
-      if (isLogin) {
-        // Login flow
-        const { error } = await supabase.auth.signInWithPassword({
-          email: data.email,
-          password: data.password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
 
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            form.setError('root', {
-              message: 'Email or password is incorrect',
-            });
-          } else {
-            form.setError('root', { message: error.message });
-          }
-          return;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          form.setError('root', {
+            message: 'Email or password is incorrect',
+          });
+        } else {
+          form.setError('root', { message: error.message });
         }
-
-        toast.success('Welcome back!');
-        router.push('/dashboard');
-      } else {
-        // Signup flow
-        const signupData = data as SignupFormData;
-        const { error } = await supabase.auth.signUp({
-          email: signupData.email,
-          password: signupData.password,
-        });
-
-        if (error) {
-          if (error.message.includes('User already registered')) {
-            form.setError('email', {
-              message: 'An account with this email already exists',
-            });
-          } else {
-            form.setError('root', { message: error.message });
-          }
-          return;
-        }
-
-        toast.success('Account created successfully!');
-        router.push('/dashboard');
+        return;
       }
+
+      toast.success('Welcome back!');
+      router.push('/dashboard');
     } catch (error) {
       form.setError('root', {
         message: 'An unexpected error occurred. Please try again.',
@@ -129,7 +102,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-4"
         noValidate
-        aria-label={isLogin ? 'Sign in' : 'Create account'}
+        aria-label="Sign in"
       >
         {/* Email field */}
         <div className="space-y-2">
@@ -153,19 +126,17 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            {isLogin && (
-              <Link
-                href="/reset-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            )}
+            <Link
+              href="/reset-password"
+              className="text-sm text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
           </div>
           <Input
             id="password"
             type="password"
-            placeholder={isLogin ? '••••••••' : 'e.g. coffee-piano-sunset'}
+            placeholder="••••••••"
             {...form.register('password')}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
@@ -177,29 +148,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           )}
         </div>
 
-        {/* Confirm Password field (signup only) */}
-        {!isLogin && (
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              {...(signupForm.register('confirmPassword'))}
-              aria-invalid={!!signupForm.formState.errors.confirmPassword}
-              aria-describedby={
-                signupForm.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
-              }
-            />
-            {signupForm.formState.errors.confirmPassword && (
-              <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
-                {signupForm.formState.errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Root error (general auth errors) */}
+        {/* Root error */}
         {form.formState.errors.root && (
           <div
             className="rounded-md bg-destructive/10 border border-destructive/30 p-3"
@@ -219,10 +168,155 @@ export function AuthForm({ mode }: AuthFormProps) {
           disabled={isLoading}
           aria-busy={isLoading}
         >
-          {isLoading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
+          {isLoading ? 'Loading...' : 'Sign In'}
         </Button>
       </form>
 
+      <AuthFooter isLogin={true} />
+    </div>
+  );
+}
+
+// Signup Form Component
+function SignupForm({ isLoading, setIsLoading, router }: any) {
+  const form = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const onSubmit = async (data: SignupFormData) => {
+    setIsLoading(true);
+    const supabase = createClient();
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          form.setError('email', {
+            message: 'An account with this email already exists',
+          });
+        } else {
+          form.setError('root', { message: error.message });
+        }
+        return;
+      }
+
+      toast.success('Account created successfully!');
+      router.push('/dashboard');
+    } catch (error) {
+      form.setError('root', {
+        message: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+        noValidate
+        aria-label="Create account"
+      >
+        {/* Email field */}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            {...form.register('email')}
+            aria-invalid={!!form.formState.errors.email}
+            aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
+          />
+          {form.formState.errors.email && (
+            <p id="email-error" className="text-sm text-destructive" role="alert">
+              {form.formState.errors.email.message}
+            </p>
+          )}
+        </div>
+
+        {/* Password field */}
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="e.g. coffee-piano-sunset"
+            {...form.register('password')}
+            aria-invalid={!!form.formState.errors.password}
+            aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
+          />
+          {form.formState.errors.password && (
+            <p id="password-error" className="text-sm text-destructive" role="alert">
+              {form.formState.errors.password.message}
+            </p>
+          )}
+        </div>
+
+        {/* Confirm Password field */}
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            {...form.register('confirmPassword')}
+            aria-invalid={!!form.formState.errors.confirmPassword}
+            aria-describedby={
+              form.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
+            }
+          />
+          {form.formState.errors.confirmPassword && (
+            <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
+              {form.formState.errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
+
+        {/* Root error */}
+        {form.formState.errors.root && (
+          <div
+            className="rounded-md bg-destructive/10 border border-destructive/30 p-3"
+            role="alert"
+            aria-live="polite"
+          >
+            <p className="text-sm text-destructive">
+              {form.formState.errors.root.message}
+            </p>
+          </div>
+        )}
+
+        {/* Submit button */}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading}
+          aria-busy={isLoading}
+        >
+          {isLoading ? 'Loading...' : 'Create Account'}
+        </Button>
+      </form>
+
+      <AuthFooter isLogin={false} />
+    </div>
+  );
+}
+
+// Shared Footer Component
+function AuthFooter({ isLogin }: { isLogin: boolean }) {
+  return (
+    <>
       {/* Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -272,6 +366,6 @@ export function AuthForm({ mode }: AuthFormProps) {
           {isLogin ? 'Sign up' : 'Sign in'}
         </Link>
       </p>
-    </div>
+    </>
   );
 }
