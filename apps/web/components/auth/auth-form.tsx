@@ -35,7 +35,6 @@ const signupSchema = z.object({
 });
 
 // Infer types from schemas
-type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
 interface AuthFormProps {
