@@ -53,6 +53,7 @@ export function DeleteSeedConfirmDialog({
             }}
             disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            data-testid="confirm-delete-button"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>

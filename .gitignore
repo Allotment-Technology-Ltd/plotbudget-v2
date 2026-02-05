@@ -36,6 +36,9 @@ pnpm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+playwright/.cache/
 
 # TypeScript
 *.tsbuildinfo
@@ -43,3 +46,4 @@ coverage/
 # Misc
 .vercel/
 .cache/
+.env.test.local
