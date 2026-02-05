@@ -112,7 +112,6 @@ export class BlueprintPage {
   }
 
   async deleteSeed(seedName: string) {
-    const slug = seedName.toLowerCase().replace(/\s+/g, '-');
     await this.seedDeleteButton(seedName).click();
 
     // Confirm deletion in modal
