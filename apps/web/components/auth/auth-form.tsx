@@ -113,6 +113,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             id="email"
             type="email"
             placeholder="you@example.com"
+            className="normal-case"
             {...form.register('email')}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
@@ -139,6 +140,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             id="password"
             type="password"
             placeholder="••••••••"
+            className="normal-case"
             {...form.register('password')}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
@@ -246,6 +248,7 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
             id="email"
             type="email"
             placeholder="you@example.com"
+            className="normal-case"
             {...form.register('email')}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
@@ -264,6 +267,7 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
             id="password"
             type="password"
             placeholder="e.g. coffee-piano-sunset"
+            className="normal-case"
             {...form.register('password')}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
@@ -282,6 +286,7 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
             id="confirmPassword"
             type="password"
             placeholder="••••••••"
+            className="normal-case"
             {...form.register('confirmPassword')}
             aria-invalid={!!form.formState.errors.confirmPassword}
             aria-describedby={

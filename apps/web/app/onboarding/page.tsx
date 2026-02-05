@@ -20,6 +20,10 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { CelebrationSequence } from '@/components/onboarding/celebration-sequence';
 import { AnimatePresence } from 'framer-motion';
+import {
+  calculateCycleStartDate,
+  calculateCycleEndDate,
+} from '@/lib/utils/pay-cycle-dates';
 
 /** Strip £, commas, whitespace so "£3,100" or "3100" parse as numbers */
 function parseIncome(value: unknown): number {
@@ -117,64 +121,6 @@ const onboardingSchema = z
   );
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
-
-function calculateCycleStartDate(
-  type: 'specific_date' | 'last_working_day' | 'every_4_weeks',
-  payDay?: number,
-  anchorDate?: string
-): string {
-  const today = new Date();
-
-  if (type === 'every_4_weeks' && anchorDate) {
-    return anchorDate;
-  }
-
-  if (type === 'specific_date' && payDay != null) {
-    const thisMonth = new Date(today.getFullYear(), today.getMonth(), payDay);
-    if (thisMonth > today) {
-      const lastMonth = new Date(
-        today.getFullYear(),
-        today.getMonth() - 1,
-        payDay
-      );
-      return lastMonth.toISOString().split('T')[0];
-    }
-    return thisMonth.toISOString().split('T')[0];
-  }
-
-  if (type === 'last_working_day') {
-    const lastDay = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      0
-    );
-    return lastDay.toISOString().split('T')[0];
-  }
-
-  return today.toISOString().split('T')[0];
-}
-
-function calculateCycleEndDate(
-  type: 'specific_date' | 'last_working_day' | 'every_4_weeks',
-  startDate: string,
-  payDay?: number
-): string {
-  const start = new Date(startDate);
-
-  if (type === 'every_4_weeks') {
-    const end = new Date(start);
-    end.setDate(end.getDate() + 27);
-    return end.toISOString().split('T')[0];
-  }
-
-  const nextMonth = new Date(
-    start.getFullYear(),
-    start.getMonth() + 1,
-    payDay ?? 1
-  );
-  nextMonth.setDate(nextMonth.getDate() - 1);
-  return nextMonth.toISOString().split('T')[0];
-}
 
 /** Input wrapper with optional £ prefix. Uses forwardRef so react-hook-form's ref attaches to the real input. */
 const IncomeInput = React.forwardRef<

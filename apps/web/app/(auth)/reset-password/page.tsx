@@ -92,6 +92,7 @@ export default function ResetPasswordPage() {
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
+            className="normal-case"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

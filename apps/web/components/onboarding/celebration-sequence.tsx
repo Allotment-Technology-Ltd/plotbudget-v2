@@ -39,10 +39,9 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
   // If user prefers reduced motion, skip animation and go straight to Blueprint
   useEffect(() => {
     if (prefersReducedMotion) {
-      if (onComplete) onComplete();
       router.push('/dashboard/blueprint');
     }
-  }, [prefersReducedMotion, onComplete, router]);
+  }, [prefersReducedMotion, router]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -52,7 +51,6 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
     const timer3 = setTimeout(() => setCurrentLine(3), 1500);
     const timer4 = setTimeout(() => setShowScanLine(true), 2000);
     const timer5 = setTimeout(() => {
-      if (onComplete) onComplete();
       router.push('/dashboard/blueprint');
     }, 3300);
 
@@ -70,7 +68,6 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (onComplete) onComplete();
         router.push('/dashboard/blueprint');
       }
     };
