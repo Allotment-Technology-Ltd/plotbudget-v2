@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -83,15 +84,19 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <div className="space-y-2">
+          <Label htmlFor="reset-email">Email</Label>
+          {/* Input has no label prop - use Label component above */}
+          <Input
+            id="reset-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
         <Button type="submit" className="w-full" isLoading={loading} disabled={loading}>
           Send Reset Link
