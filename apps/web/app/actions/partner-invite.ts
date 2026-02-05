@@ -3,6 +3,9 @@
 import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import type { Database } from '@/lib/supabase/database.types';
+
+type HouseholdRow = Database['public']['Tables']['households']['Row'];
 
 /**
  * Generate and send partner invitation.
@@ -16,14 +19,15 @@ export async function invitePartner(partnerEmail: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: household, error: householdError } = await supabase
+  const { data, error: householdError } = await supabase
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
     .single();
 
-  if (householdError) throw new Error('Household not found');
-  if (!household?.is_couple) throw new Error('Not in couple mode');
+  const household = data as HouseholdRow | null;
+  if (householdError || !household) throw new Error('Household not found');
+  if (!household.is_couple) throw new Error('Not in couple mode');
 
   const token = crypto.randomBytes(32).toString('hex');
 
@@ -34,7 +38,7 @@ export async function invitePartner(partnerEmail: string) {
       partner_auth_token: token,
       partner_invite_status: 'pending',
       partner_invite_sent_at: new Date().toISOString(),
-    })
+    } as never)
     .eq('id', household.id);
 
   if (updateError) throw new Error('Failed to update household');
@@ -58,12 +62,13 @@ export async function resendPartnerInvite() {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: household } = await supabase
+  const { data } = await supabase
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
     .single();
 
+  const household = data as HouseholdRow | null;
   if (!household?.partner_email) throw new Error('No partner invited');
   if (household.partner_invite_status !== 'pending') {
     throw new Error('Partner already accepted');
@@ -71,7 +76,9 @@ export async function resendPartnerInvite() {
 
   await supabase
     .from('households')
-    .update({ partner_invite_sent_at: new Date().toISOString() })
+    .update({
+      partner_invite_sent_at: new Date().toISOString(),
+    } as never)
     .eq('id', household.id);
 
   // TODO: Resend email
@@ -102,7 +109,7 @@ export async function removePartner() {
       partner_invite_sent_at: null,
       partner_accepted_at: null,
       partner_last_login_at: null,
-    })
+    } as never)
     .eq('owner_id', user.id);
 
   if (error) throw new Error('Failed to remove partner');
@@ -119,13 +126,14 @@ export async function removePartner() {
 export async function acceptPartnerInvite(token: string) {
   const supabase = await createServerSupabaseClient();
 
-  const { data: household, error } = await supabase
+  const { data, error } = await supabase
     .from('households')
     .select('*')
     .eq('partner_auth_token', token)
     .eq('partner_invite_status', 'pending')
     .single();
 
+  const household = data as HouseholdRow | null;
   if (error || !household) {
     throw new Error('Invalid or expired invitation');
   }
@@ -136,7 +144,7 @@ export async function acceptPartnerInvite(token: string) {
       partner_invite_status: 'accepted',
       partner_accepted_at: new Date().toISOString(),
       partner_last_login_at: new Date().toISOString(),
-    })
+    } as never)
     .eq('id', household.id);
 
   return { success: true, householdId: household.id };

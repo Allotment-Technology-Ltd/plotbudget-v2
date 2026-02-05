@@ -25,12 +25,15 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
   }
 
   const supabase = createAdminClient();
-  const { data: household, error } = await supabase
+  const { data: householdData, error } = await supabase
     .from('households')
     .select('id, owner_id')
     .eq('partner_auth_token', token)
     .eq('partner_invite_status', 'pending')
     .single();
+
+  type HouseholdRow = { id: string; owner_id: string };
+  const household = householdData as HouseholdRow | null;
 
   if (error || !household) {
     return (
@@ -45,14 +48,16 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
     );
   }
 
-  const { data: owner } = await supabase
+  const { data: ownerData } = await supabase
     .from('users')
     .select('email, display_name')
     .eq('id', household.owner_id)
     .single();
 
+  type OwnerRow = { email: string | null; display_name: string | null };
+  const owner = ownerData as OwnerRow | null;
   const ownerName =
-    (owner?.display_name as string | null)?.trim() || owner?.email || 'Your partner';
+    (owner?.display_name ?? '')?.trim() || owner?.email || 'Your partner';
 
   async function handleAccept(formData: FormData) {
     'use server';

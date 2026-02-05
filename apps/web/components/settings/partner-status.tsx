@@ -58,18 +58,18 @@ export function PartnerStatus({
           <Button
             type="button"
             variant="outline"
-            size="sm"
             disabled={loading}
             onClick={handleResend}
+            className="text-sm"
           >
             Resend Invitation
           </Button>
           <Button
             type="button"
-            variant="destructive"
-            size="sm"
+            variant="outline"
             disabled={loading}
             onClick={handleRemove}
+            className="text-sm border-destructive text-destructive hover:bg-destructive/10"
           >
             Cancel Invitation
           </Button>
@@ -95,10 +95,10 @@ export function PartnerStatus({
       <div className="mt-4">
         <Button
           type="button"
-          variant="destructive"
-          size="sm"
+          variant="outline"
           disabled={loading}
           onClick={handleRemove}
+          className="text-sm border-destructive text-destructive hover:bg-destructive/10"
         >
           Remove Partner
         </Button>
