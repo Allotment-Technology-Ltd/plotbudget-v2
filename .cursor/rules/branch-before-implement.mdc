@@ -1,0 +1,23 @@
+---
+description: Always create a new branch before implementing changes; push to branch and open PR, not main
+alwaysApply: true
+---
+
+# Branch Before Implementing Changes
+
+When an agent is engaged to **implement a change** (new feature, fix, refactor, or any code change that will be committed):
+
+1. **Create a new branch** before making edits.
+   - Use a short, descriptive name: `feat/partner-invite`, `fix/type-errors`, `docs/readme`.
+   - Create from the current branch (usually `main`): `git checkout -b <branch-name>`.
+
+2. **Make all changes on that branch**; do not commit or push to `main`.
+
+3. **When the user asks to commit or push:**
+   - Commit on the new branch.
+   - Push the branch: `git push origin <branch-name>`.
+   - Suggest opening a PR to `main` (or `develop`) so CI runs and Vercel creates a preview. Do not push directly to `main` unless the user explicitly asks to.
+
+4. **If the user says "push to main" or "merge to main":** Confirm they want to push/merge to main, since the preferred flow is branch → PR → merge.
+
+**Exclusions:** One-off exploratory edits, answering questions without changing code, or when the user explicitly says "no branch" or "commit to main" — follow the user's instruction.
