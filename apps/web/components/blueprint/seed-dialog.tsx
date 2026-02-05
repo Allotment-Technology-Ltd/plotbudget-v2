@@ -328,7 +328,7 @@ export function SeedDialog({
           household_id: household.id,
         } as Parameters<typeof createSeed>[0]);
         if (!result) {
-          setError('Request failed. Please try again.');
+          setError('Server did not respond. Please try again.');
           return;
         }
         if (result.error) {

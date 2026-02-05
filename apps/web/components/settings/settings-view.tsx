@@ -1,0 +1,76 @@
+'use client';
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdvancedTab } from './advanced-tab';
+import { HouseholdTab } from './household-tab';
+import { PrivacyTab } from './privacy-tab';
+import { ProfileTab } from './profile-tab';
+
+export interface SettingsViewProps {
+  user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+  };
+  household: {
+    id: string;
+    name: string | null;
+    is_couple: boolean;
+    partner_name: string | null;
+    partner_income: number;
+    needs_percent: number;
+    wants_percent: number;
+    savings_percent: number;
+    repay_percent: number;
+  };
+}
+
+export function SettingsView({ user, household }: SettingsViewProps) {
+  return (
+    <div className="max-w-4xl mx-auto" data-testid="settings-page">
+      <div className="mb-8">
+        <h1 className="font-heading text-headline-sm md:text-headline uppercase text-foreground mb-2">
+          Settings
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your account and household preferences.
+        </p>
+      </div>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="w-full sm:inline-flex h-auto flex-wrap gap-1 bg-muted p-1">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="household">Household</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="space-y-6 mt-6">
+          <ProfileTab user={user} />
+        </TabsContent>
+        <TabsContent value="household" className="space-y-6 mt-6">
+          <HouseholdTab
+            household={{
+              id: household.id,
+              name: household.name,
+              is_couple: household.is_couple,
+              partner_name: household.partner_name,
+              partner_income: household.partner_income,
+            }}
+          />
+        </TabsContent>
+        <TabsContent value="privacy" className="space-y-6 mt-6">
+          <PrivacyTab userId={user.id} />
+        </TabsContent>
+        <TabsContent value="advanced" className="space-y-6 mt-6">
+          <AdvancedTab
+            categoryRatios={{
+              needs: household.needs_percent,
+              wants: household.wants_percent,
+              savings: household.savings_percent,
+              repay: household.repay_percent,
+            }}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

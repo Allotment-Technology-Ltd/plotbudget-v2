@@ -1,8 +1,9 @@
+import Link from 'next/link';
 import { ThemeToggle } from '../components/theme-toggle';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-testid="home-page">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-sticky border-b border-border/8 bg-background/80 backdrop-blur-sm">
         <div className="content-wrapper flex h-16 items-center justify-between">
@@ -37,14 +38,26 @@ export default function HomePage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="btn-primary">GET EARLY ACCESS</button>
-            <button className="btn-ghost">LEARN MORE</button>
+            <Link
+              href="/signup"
+              className="btn-primary transition-colors duration-200"
+              data-testid="cta-signup"
+            >
+              GET EARLY ACCESS
+            </Link>
+            <Link
+              href="#why-plot"
+              className="btn-ghost transition-colors duration-200"
+              data-testid="cta-learn-more"
+            >
+              LEARN MORE
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Feature Cards */}
-      <section className="section-padding bg-secondary/50">
+      <section id="why-plot" className="section-padding bg-secondary/50">
         <div className="content-wrapper">
           <p className="section-label mb-4 text-center">WHY PLOT</p>
           <h2 className="section-headline text-center mb-12">

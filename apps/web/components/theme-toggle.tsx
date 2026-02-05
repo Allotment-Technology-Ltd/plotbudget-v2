@@ -20,7 +20,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors"
+        className="inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors duration-200"
         style={{
           border: '1px solid rgb(var(--primary) / 0.3)',
           color: 'rgb(var(--primary))',
@@ -36,7 +36,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors hover:bg-primary/10"
+      className="inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors duration-200 hover:bg-primary/10"
       style={{
         border: '1px solid rgb(var(--primary) / 0.3)',
         color: 'rgb(var(--primary))',

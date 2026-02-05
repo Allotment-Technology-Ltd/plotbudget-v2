@@ -96,7 +96,7 @@ export function calculateCycleEndDate(
   }
 
   if (type === 'last_working_day') {
-    const lwd = getLastWorkingDay(start.getFullYear(), start.getMonth() + 1);
+    const lwd = getLastWorkingDay(start.getFullYear(), start.getMonth());
     return lwd.toISOString().split('T')[0];
   }
 

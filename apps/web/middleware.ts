@@ -54,11 +54,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes - redirect to login if not authenticated
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    if (!session) {
+    if (!user) {
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
@@ -68,12 +69,14 @@ export async function middleware(request: NextRequest) {
     const { data: profile } = await supabase
       .from('users')
       .select('has_completed_onboarding')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
-    // Redirect to onboarding if not completed (except if already on onboarding page)
+    // Redirect to onboarding only when profile exists and explicitly says not completed.
+    // If profile is null (fetch failed/RLS), allow request through to avoid redirect loops.
     if (
-      !profile?.has_completed_onboarding &&
+      profile != null &&
+      !profile.has_completed_onboarding &&
       !request.nextUrl.pathname.includes('/onboarding')
     ) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
@@ -82,17 +85,17 @@ export async function middleware(request: NextRequest) {
 
   // Onboarding: require auth; redirect away if already completed
   if (request.nextUrl.pathname.includes('/onboarding')) {
-    if (!session) {
+    if (!user) {
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
   }
-  if (request.nextUrl.pathname.includes('/onboarding') && session) {
+  if (request.nextUrl.pathname.includes('/onboarding') && user) {
     const { data: profile } = await supabase
       .from('users')
       .select('has_completed_onboarding')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (profile?.has_completed_onboarding) {
@@ -102,7 +105,7 @@ export async function middleware(request: NextRequest) {
 
   // Auth routes - redirect to dashboard if already authenticated
   if (['/login', '/signup'].includes(request.nextUrl.pathname)) {
-    if (session) {
+    if (user) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }

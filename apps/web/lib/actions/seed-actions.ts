@@ -272,7 +272,8 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
     revalidatePath('/dashboard/blueprint');
     return {};
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Failed to create seed' };
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message };
   }
 }
 

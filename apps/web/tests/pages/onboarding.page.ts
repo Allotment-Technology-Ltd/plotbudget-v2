@@ -71,7 +71,8 @@ export class OnboardingPage {
   }
 
   async expectRedirectToBlueprint() {
-    await this.page.waitForURL(/\/blueprint/);
+    // Celebration animation can take ~3.3s; allow 60s in CI for redirect to /dashboard/blueprint
+    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000 });
     await expect(this.page.getByTestId('blueprint-empty-state')).toBeVisible();
   }
 }

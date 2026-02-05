@@ -11,6 +11,7 @@ const authDir = path.resolve(process.cwd(), 'tests', '.auth');
 const soloStatePath = path.join(authDir, 'solo.json');
 const blueprintStatePath = path.join(authDir, 'blueprint.json');
 const ritualStatePath = path.join(authDir, 'ritual.json');
+const dashboardStatePath = path.join(authDir, 'dashboard.json');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -57,7 +58,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testMatch: [/auth\.spec\.ts/, /onboarding\.spec\.ts/],
+      testMatch: [/auth\.spec\.ts/, /onboarding\.spec\.ts/, /root\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         storageState: soloStatePath,
@@ -69,6 +70,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: blueprintStatePath,
+      },
+    },
+    {
+      name: 'chromium-dashboard',
+      testMatch: [/dashboard\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: dashboardStatePath,
       },
     },
     {

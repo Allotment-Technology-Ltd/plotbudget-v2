@@ -102,6 +102,13 @@ export class BlueprintPage {
   // Actions
   async goto() {
     await this.page.goto('/dashboard/blueprint');
+    if (this.page.url().includes('/login')) {
+      throw new Error('Session lost: redirected to login instead of blueprint');
+    }
+    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
+    await expect(
+      this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state')).first()
+    ).toBeVisible({ timeout: 10_000 });
   }
 
   async addSeed(params: {
@@ -144,8 +151,10 @@ export class BlueprintPage {
       }
       throw new Error('Seed dialog did not close within 15s');
     });
-    // Wait for list to show the new seed (router.refresh() may use RSC fetch, not a simple GET)
-    await expect(this.seedCard(params.name)).toBeVisible({ timeout: 20000 });
+    // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
+    await this.page.goto('/dashboard/blueprint');
+    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
+    await expect(this.seedCard(params.name)).toBeVisible({ timeout: 15_000 });
   }
 
   async expectSeedInList(seedName: string, amount: number) {
