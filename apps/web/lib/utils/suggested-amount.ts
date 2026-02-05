@@ -37,7 +37,21 @@ export function countPayCyclesUntil(
 }
 
 /**
- * Suggested amount per pay cycle for savings: (target - current) / cycles remaining
+ * Effective start date for "remaining cycles": use today when cycle start is in the past
+ * so we don't count past pay cycles (e.g. when paycycle.start_date is from an old cycle).
+ */
+function effectiveStartDate(cycleStartStr: string): string {
+  const cycleStart = new Date(cycleStartStr);
+  const today = new Date();
+  cycleStart.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  return cycleStart > today ? iso(cycleStart) : iso(today);
+}
+
+/**
+ * Suggested amount per pay cycle for savings: (target - current) / cycles remaining.
+ * Uses "today" as reference when cycle start is in the past so remaining cycles are accurate.
  */
 export function suggestedSavingsAmount(
   currentAmount: number,
@@ -51,17 +65,14 @@ export function suggestedSavingsAmount(
   if (remaining <= 0) return 0;
   if (!targetDate) return null;
 
-  const cycles = countPayCyclesUntil(
-    cycleStartDate,
-    targetDate,
-    payCycleType,
-    payDay
-  );
+  const start = effectiveStartDate(cycleStartDate);
+  const cycles = countPayCyclesUntil(start, targetDate, payCycleType, payDay);
   return Math.ceil((remaining / cycles) * 100) / 100;
 }
 
 /**
- * Suggested amount per pay cycle for repayments: current_balance / cycles remaining
+ * Suggested amount per pay cycle for repayments: current_balance / cycles remaining.
+ * Uses "today" as reference when cycle start is in the past so remaining cycles are accurate.
  */
 export function suggestedRepaymentAmount(
   currentBalance: number,
@@ -73,11 +84,7 @@ export function suggestedRepaymentAmount(
   if (currentBalance <= 0) return 0;
   if (!targetDate) return null;
 
-  const cycles = countPayCyclesUntil(
-    cycleStartDate,
-    targetDate,
-    payCycleType,
-    payDay
-  );
+  const start = effectiveStartDate(cycleStartDate);
+  const cycles = countPayCyclesUntil(start, targetDate, payCycleType, payDay);
   return Math.ceil((currentBalance / cycles) * 100) / 100;
 }

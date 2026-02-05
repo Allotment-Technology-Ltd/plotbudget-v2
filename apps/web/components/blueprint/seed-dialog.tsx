@@ -417,62 +417,6 @@ export function SeedDialog({
             )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="seed-amount">Amount (£)</Label>
-              {suggestedAmount != null && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-xs px-3 py-1.5"
-                  onClick={() =>
-                    form.setValue('amountStr', suggestedAmount.toFixed(2))
-                  }
-                >
-                  Use suggested (£{suggestedAmount.toFixed(2)})
-                </Button>
-              )}
-            </div>
-            <div className="relative flex">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-body text-muted-foreground pointer-events-none">
-                £
-              </span>
-              <Controller
-                name="amountStr"
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="seed-amount"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    className="pl-8"
-                    aria-invalid={!!form.formState.errors.amountStr}
-                    aria-describedby={
-                      form.formState.errors.amountStr ? 'seed-amount-error' : undefined
-                    }
-                    data-testid="seed-amount-input"
-                    value={field.value}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/[^0-9.]/g, '');
-                      field.onChange(v);
-                    }}
-                  />
-                )}
-              />
-            </div>
-            {form.formState.errors.amountStr && (
-              <p
-                id="seed-amount-error"
-                className="text-sm text-destructive"
-                role="alert"
-                data-testid="amount-error-message"
-              >
-                {form.formState.errors.amountStr.message}
-              </p>
-            )}
-          </div>
-
           {category === 'savings' && (
             <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
               <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">
@@ -703,6 +647,62 @@ export function SeedDialog({
               )}
             </div>
           )}
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="seed-amount">Amount (£)</Label>
+              {suggestedAmount != null && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-xs px-3 py-1.5"
+                  onClick={() =>
+                    form.setValue('amountStr', suggestedAmount.toFixed(2))
+                  }
+                >
+                  Use suggested (£{suggestedAmount.toFixed(2)})
+                </Button>
+              )}
+            </div>
+            <div className="relative flex">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-body text-muted-foreground pointer-events-none">
+                £
+              </span>
+              <Controller
+                name="amountStr"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="seed-amount"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    className="pl-8"
+                    aria-invalid={!!form.formState.errors.amountStr}
+                    aria-describedby={
+                      form.formState.errors.amountStr ? 'seed-amount-error' : undefined
+                    }
+                    data-testid="seed-amount-input"
+                    value={field.value}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9.]/g, '');
+                      field.onChange(v);
+                    }}
+                  />
+                )}
+              />
+            </div>
+            {form.formState.errors.amountStr && (
+              <p
+                id="seed-amount-error"
+                className="text-sm text-destructive"
+                role="alert"
+                data-testid="amount-error-message"
+              >
+                {form.formState.errors.amountStr.message}
+              </p>
+            )}
+          </div>
 
           {isCouple && (
             <div className="space-y-3">

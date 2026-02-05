@@ -25,6 +25,7 @@
     "@radix-ui/react-radio-group": "^1.2.0",
     "@radix-ui/react-select": "^2.1.0",
     "@radix-ui/react-slider": "^1.2.0",
+    "@radix-ui/react-switch": "^1.1.0",
     "@repo/logic": "workspace:*",
     "@repo/ui": "workspace:*",
     "@supabase/ssr": "^0.5.2",

@@ -10,6 +10,7 @@ loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
 const authDir = path.resolve(process.cwd(), 'tests', '.auth');
 const soloStatePath = path.join(authDir, 'solo.json');
 const blueprintStatePath = path.join(authDir, 'blueprint.json');
+const ritualStatePath = path.join(authDir, 'ritual.json');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -68,6 +69,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: blueprintStatePath,
+      },
+    },
+    {
+      name: 'chromium-ritual',
+      testMatch: [/ritual\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: ritualStatePath,
       },
     },
 

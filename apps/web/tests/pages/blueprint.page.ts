@@ -55,6 +55,50 @@ export class BlueprintPage {
     return this.page.getByTestId(`delete-seed-${seedName.toLowerCase().replace(/\s+/g, '-')}`);
   }
 
+  // Payment tracking (current cycle: checkboxes and progress always visible)
+  get ritualProgressBar() {
+    return this.page.getByRole('progressbar', { name: /bills paid/i });
+  }
+
+  get ritualCelebrationClose() {
+    return this.page.getByTestId('ritual-celebration-close');
+  }
+
+  get ritualCelebrationDashboard() {
+    return this.page.getByTestId('ritual-celebration-dashboard');
+  }
+
+  seedPaidCheckbox(seedName: string) {
+    const slug = seedName.toLowerCase().replace(/\s+/g, '-');
+    return this.page.getByTestId(`seed-paid-${slug}`);
+  }
+
+  seedPaidMeCheckbox(seedName: string) {
+    const slug = seedName.toLowerCase().replace(/\s+/g, '-');
+    return this.page.getByTestId(`seed-paid-me-${slug}`);
+  }
+
+  seedPaidPartnerCheckbox(seedName: string) {
+    const slug = seedName.toLowerCase().replace(/\s+/g, '-');
+    return this.page.getByTestId(`seed-paid-partner-${slug}`);
+  }
+
+  async markSeedPaid(seedName: string) {
+    // Use click() not check(): checkbox is controlled by server state; after
+    // server action + router.refresh() the checkbox is replaced by PAID badge.
+    await this.seedPaidCheckbox(seedName).click({ noWaitAfter: true });
+  }
+
+  async unmarkSeedPaid(seedName: string) {
+    await this.seedPaidCheckbox(seedName).click({ noWaitAfter: true });
+  }
+
+  async expectRitualProgress(paid: number, total: number) {
+    await expect(
+      this.page.getByText(`${paid} of ${total} bills paid`)
+    ).toBeVisible();
+  }
+
   // Actions
   async goto() {
     await this.page.goto('/dashboard/blueprint');
