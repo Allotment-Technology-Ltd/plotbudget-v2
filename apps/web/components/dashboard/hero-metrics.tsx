@@ -94,6 +94,7 @@ export function HeroMetrics({ paycycle }: HeroMetricsProps) {
     <section
       className="grid grid-cols-2 lg:grid-cols-3 gap-4"
       aria-label="Current cycle overview"
+      data-testid="dashboard-hero"
     >
       {metrics.map((metric, index) => (
           <motion.div

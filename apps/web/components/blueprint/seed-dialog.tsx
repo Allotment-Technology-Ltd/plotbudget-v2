@@ -312,6 +312,10 @@ export function SeedDialog({
 
       if (editMode && seed) {
         const result = await updateSeed(seed.id, payload as Parameters<typeof updateSeed>[1]);
+        if (!result) {
+          setError('Request failed. Please try again.');
+          return;
+        }
         if (result.error) {
           setError(result.error);
           return;
@@ -323,6 +327,10 @@ export function SeedDialog({
           paycycle_id: paycycle.id,
           household_id: household.id,
         } as Parameters<typeof createSeed>[0]);
+        if (!result) {
+          setError('Request failed. Please try again.');
+          return;
+        }
         if (result.error) {
           setError(result.error);
           return;
@@ -369,6 +377,23 @@ export function SeedDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-6" noValidate>
+          {category && (
+            <div className="sr-only" aria-hidden>
+              <Label htmlFor="seed-category">Category</Label>
+              <select
+                id="seed-category"
+                value={category}
+                tabIndex={-1}
+                aria-hidden
+                data-testid="seed-category-select"
+              >
+                <option value="need">Need</option>
+                <option value="want">Want</option>
+                <option value="savings">Savings</option>
+                <option value="repay">Repayment</option>
+              </select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="seed-name">Name</Label>
             <Input
@@ -378,6 +403,7 @@ export function SeedDialog({
               aria-describedby={
                 form.formState.errors.name ? 'seed-name-error' : undefined
               }
+              data-testid="seed-name-input"
               {...form.register('name')}
             />
             {form.formState.errors.name && (
@@ -425,6 +451,7 @@ export function SeedDialog({
                     aria-describedby={
                       form.formState.errors.amountStr ? 'seed-amount-error' : undefined
                     }
+                    data-testid="seed-amount-input"
                     value={field.value}
                     onChange={(e) => {
                       const v = e.target.value.replace(/[^0-9.]/g, '');
@@ -439,6 +466,7 @@ export function SeedDialog({
                 id="seed-amount-error"
                 className="text-sm text-destructive"
                 role="alert"
+                data-testid="amount-error-message"
               >
                 {form.formState.errors.amountStr.message}
               </p>
@@ -679,16 +707,17 @@ export function SeedDialog({
           {isCouple && (
             <div className="space-y-3">
               <Label>Payment Source</Label>
-              <Controller
-                name="payment_source"
-                control={form.control}
-                render={({ field }) => (
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    className="flex flex-col sm:flex-row gap-4"
-                    aria-label="Who pays for this expense"
-                  >
+<Controller
+                    name="payment_source"
+                    control={form.control}
+                    render={({ field }) => (
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="flex flex-col sm:flex-row gap-4"
+                        aria-label="Who pays for this expense"
+                        data-testid="seed-source-select"
+                      >
                     <RadioGroupItem value="me" label="Me" />
                     <RadioGroupItem value="partner" label={household.partner_name || 'Partner'} />
                     <RadioGroupItem value="joint" label="Joint" />
@@ -756,6 +785,7 @@ export function SeedDialog({
               className="h-4 w-4 rounded border-primary text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
               {...form.register('is_recurring')}
               aria-describedby="seed-recurring-desc"
+              data-testid="seed-recurring-checkbox"
             />
             <div>
               <Label htmlFor="seed-recurring" className="cursor-pointer font-normal">
@@ -772,6 +802,7 @@ export function SeedDialog({
             <div
               className="rounded-md bg-destructive/10 border border-destructive/30 p-3"
               role="alert"
+              data-testid="seed-dialog-error"
             >
               <p className="text-sm text-destructive">{error}</p>
             </div>
@@ -785,7 +816,12 @@ export function SeedDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+              data-testid="submit-seed-form"
+            >
               {editMode ? 'Save Changes' : 'Add'}
             </Button>
           </DialogFooter>

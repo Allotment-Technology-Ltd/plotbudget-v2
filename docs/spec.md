@@ -21,6 +21,7 @@
 10. [User Flows](#10-user-flows)
 11. [Client State Management](#11-client-state-management)
 12. [Security & Compliance](#12-security--compliance)
+13. [E2E Testing Standards (Playwright)](#13-e2e-testing-standards-playwright)
 
 ---
 
@@ -1298,6 +1299,246 @@ headers: [
 - Consent tracking for analytics (PostHog opt-in)
 - No third-party data sharing
 - UK data residency (Supabase EU region)
+
+---
+
+## 13. E2E Testing Standards (Playwright)
+
+### Test ID Conventions
+
+**Every interactive element MUST have a `data-testid` attribute:**
+```tsx
+// ✅ CORRECT
+<Button data-testid="submit-seed-form">Save Seed</Button>
+<Link data-testid="nav-dashboard" href="/dashboard">Dashboard</Link>
+
+// ❌ WRONG
+<Button>Save Seed</Button>
+<Link href="/dashboard">Dashboard</Link>
+```
+
+**Naming Pattern:**
+- **Action elements**: `{action}-{entity}-{context?}`
+  - `submit-seed-form`, `delete-pot-123`, `cancel-onboarding`
+- **Input fields**: `{field}-input`
+  - `seed-name-input`, `amount-input`, `split-ratio-input`
+- **Navigation**: `nav-{destination}`
+  - `nav-dashboard`, `nav-blueprint`, `nav-settings`
+- **Status/Display**: `{entity}-{property}`
+  - `seed-card-rent`, `total-allocated`, `burn-rate-value`
+
+**Component-Level Requirement:**
+- All `packages/ui` components that accept `onClick`, `onChange`, `onSubmit` MUST expose a `data-testid` prop
+- Pass through to the underlying DOM element
+
+**Audit Rule:**
+- When creating new features, add test IDs FIRST before implementing logic
+- Use Cursor to verify: "Check this component for missing test IDs"
+
+### Test Data Management
+
+**Test Users (Hardcoded in Supabase):**
+```typescript
+// These users exist in production DB and are reused across tests
+const TEST_USERS = {
+  solo: { email: 'solo@plotbudget.test', password: 'test-password-123' },
+  couple: { email: 'couple@plotbudget.test', password: 'test-password-123' }
+}
+```
+
+**Test Data Lifecycle (Hybrid Approach):**
+1. **Immutable Seed Data**: Test users, default categories (seeded once, never modified)
+2. **Mutable Test Data**: Seeds, pots, repayments (created per test, cleaned up after)
+
+**Cleanup Strategy:**
+```sql
+-- Run before each test suite
+DELETE FROM seeds WHERE household_id IN (
+  SELECT id FROM households WHERE owner_id IN (
+    SELECT id FROM users WHERE email LIKE '%@plotbudget.test'
+  )
+);
+-- Repeat for pots, repayments, paycycles
+```
+
+### Time-Dependent Testing
+
+**Use Playwright's Clock API for consistent dates:**
+```typescript
+// Freeze time to a known payday (e.g., 2024-01-31)
+await page.clock.setFixedTime(new Date('2024-01-31T12:00:00Z'));
+
+// This ensures:
+// - Pay cycle dates are predictable
+// - Burn rate calculations are consistent
+// - "Upcoming bills" filters show expected results
+```
+
+**Critical Test Scenarios:**
+- [ ] Onboarding: First pay cycle creation with future date
+- [ ] Blueprint: Draft cycle creation (next month)
+- [ ] Payday Ritual: Archive current cycle, activate draft cycle
+- [ ] Dashboard: Metrics recalculate after cycle switch
+
+### Authentication State Reuse
+
+**Setup once, reuse across tests:**
+```typescript
+// tests/auth.setup.ts
+import { test as setup } from '@playwright/test';
+
+setup('authenticate as solo user', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByTestId('email-input').fill('solo@plotbudget.test');
+  await page.getByTestId('password-input').fill('test-password-123');
+  await page.getByTestId('submit-login-form').click();
+  await page.waitForURL('/');
+  await page.context().storageState({ path: 'tests/.auth/solo.json' });
+});
+```
+
+**Reuse in tests:**
+```typescript
+// tests/specs/blueprint.spec.ts
+import { test } from '@playwright/test';
+
+test.use({ storageState: 'tests/.auth/solo.json' });
+
+test('add new seed', async ({ page }) => {
+  // Already logged in as solo user
+  await page.goto('/blueprint');
+  // ...
+});
+```
+
+### CI/CD Testing Strategy
+
+**PR Checks (Fast - ~2 min):**
+- Run against `localhost:3000` in GitHub Actions
+- Parallel execution enabled
+- Only critical paths: auth, onboarding, blueprint CRUD
+
+**Pre-Merge Validation (Thorough - ~5 min):**
+- Run against Vercel preview deployment
+- Full test suite including edge cases
+- Visual snapshots (future Phase 6+)
+
+**Test Execution Triggers:**
+```yaml
+# .github/workflows/playwright.yml
+on:
+  pull_request:       # Fast tests on localhost
+  push:
+    branches: [main]  # Full tests on Vercel preview
+```
+
+### Folder Structure
+```
+apps/web/
+├── tests/
+│   ├── .auth/                  # Stored auth states (gitignored)
+│   ├── fixtures/
+│   │   └── test-data.ts        # Shared test data factories
+│   ├── pages/                  # Page Object Models
+│   │   ├── auth.page.ts
+│   │   ├── onboarding.page.ts
+│   │   └── blueprint.page.ts
+│   ├── specs/
+│   │   ├── auth.spec.ts        # Login, signup, logout
+│   │   ├── onboarding.spec.ts  # 6-step wizard
+│   │   └── blueprint.spec.ts   # CRUD operations
+│   ├── utils/
+│   │   ├── db-cleanup.ts       # SQL cleanup scripts
+│   │   └── test-helpers.ts     # Custom matchers, waiters
+│   └── auth.setup.ts           # Global auth setup
+├── playwright.config.ts
+└── package.json
+```
+
+### Development Workflow
+
+**Before writing feature code:**
+1. Add test IDs to Figma/design mockups
+2. Implement UI components with `data-testid` props
+3. Write failing E2E test
+4. Implement feature logic
+5. Verify test passes
+
+**Local testing commands:**
+```bash
+# Run all tests (headless)
+pnpm test:e2e
+
+# Run specific test file (headed mode for debugging)
+pnpm test:e2e tests/specs/onboarding.spec.ts --headed
+
+# Run with Playwright UI (interactive debugging)
+pnpm test:e2e:ui
+
+# Generate test report
+pnpm test:e2e --reporter=html
+```
+
+### Test Coverage Requirements
+
+**Phase 4b (Current - Must Have):**
+- [ ] Auth: Login, signup, password reset
+- [ ] Onboarding: Solo mode, couple mode (full 6 steps)
+- [ ] Blueprint: Add/edit/delete seeds, pots, repayments
+- [ ] Dashboard: Verify metrics calculations
+
+**Phase 5 (Payday Ritual - Future):**
+- [ ] Draft cycle creation
+- [ ] Mark seeds as paid
+- [ ] Archive current cycle
+- [ ] Activate draft as new current cycle
+
+**Phase 6 (Partner Invitation - Future):**
+- [ ] Send invite email
+- [ ] Accept invite flow
+- [ ] Joint household creation
+- [ ] Split ratio adjustments
+
+### Debugging Failed Tests
+
+**Trace Viewer (after test failure):**
+```bash
+npx playwright show-trace test-results/*/trace.zip
+```
+
+**Console Logs:**
+```typescript
+test('example', async ({ page }) => {
+  page.on('console', msg => console.log('BROWSER:', msg.text()));
+  page.on('pageerror', err => console.error('PAGE ERROR:', err));
+});
+```
+
+**Pause Execution:**
+```typescript
+await page.pause(); // Opens Playwright Inspector
+```
+
+### Accessibility Testing (Phase 6+)
+
+**Future Integration:**
+```typescript
+import AxeBuilder from '@axe-core/playwright';
+
+test('homepage is accessible', async ({ page }) => {
+  await page.goto('/');
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+```
+
+### When Adding New Features
+
+**Cursor Prompt:**
+> "I'm implementing [feature name]. Generate the component with data-testid attributes following the E2E Testing Standards in spec.md. Also create a Page Object Model in tests/pages/ and a spec file in tests/specs/ that covers the happy path and one error case."
+
+**Example:**
+> "I'm implementing the 'Add Pot' modal. Generate the component with test IDs, create a PotModal page object, and write a spec that tests adding a savings pot and validates the required name field."
 
 ---
 

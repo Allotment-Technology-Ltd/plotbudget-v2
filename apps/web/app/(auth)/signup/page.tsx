@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="bg-card rounded-lg p-8 space-y-6">
+    <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
       <div className="space-y-2 text-center">
         <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
           Private Beta

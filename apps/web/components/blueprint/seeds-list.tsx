@@ -76,7 +76,20 @@ export function SeedsList({
         >
           {categoryLabel} ({seeds.length})
         </h2>
-        <Button variant="outline" className="px-4 py-2 text-sm" onClick={onAdd}>
+        <Button
+          variant="outline"
+          className="px-4 py-2 text-sm"
+          onClick={onAdd}
+          data-testid={
+            category === 'need'
+              ? 'add-seed-button'
+              : category === 'savings'
+                ? 'add-pot-button'
+                : category === 'repay'
+                  ? 'add-repayment-button'
+                  : undefined
+          }
+        >
           <Plus className="w-4 h-4 mr-2" aria-hidden />
           Add {singularLabel}
         </Button>
@@ -87,6 +100,7 @@ export function SeedsList({
           className="text-center py-12 text-muted-foreground"
           role="status"
           aria-live="polite"
+          {...(category === 'need' ? { 'data-testid': 'blueprint-empty-state' as const } : {})}
         >
           <p className="text-sm">No {categoryLabel.toLowerCase()} added yet.</p>
           <p className="text-xs mt-1">

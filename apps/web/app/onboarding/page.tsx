@@ -143,6 +143,7 @@ const IncomeInput = React.forwardRef<
         placeholder={placeholder}
         className="pl-8"
         aria-invalid={error}
+        data-testid="income-input"
         {...props}
       />
     </div>
@@ -304,7 +305,7 @@ export default function OnboardingPage() {
               aria-label="Onboarding: set up your first paycycle"
             >
               {/* Section 1: Mode */}
-              <div className="space-y-4">
+              <div className="space-y-4" data-testid="onboarding-step-1">
                 <h1 className="font-heading text-headline-sm md:text-headline uppercase text-foreground">
                   Let&apos;s Set Up Your First Paycycle
                 </h1>
@@ -322,8 +323,16 @@ export default function OnboardingPage() {
                       className="flex flex-col sm:flex-row gap-4"
                       aria-label="Household mode"
                     >
-                      <RadioGroupItem value="solo" label="Just Me" />
-                      <RadioGroupItem value="couple" label="Me & My Partner" />
+                      <RadioGroupItem
+                        value="solo"
+                        label="Just Me"
+                        data-testid="select-mode-solo"
+                      />
+                      <RadioGroupItem
+                        value="couple"
+                        label="Me & My Partner"
+                        data-testid="select-mode-couple"
+                      />
                     </RadioGroup>
                   )}
                 />
@@ -344,6 +353,7 @@ export default function OnboardingPage() {
                       id="myIncome-error"
                       className="text-sm text-destructive"
                       role="alert"
+                      data-testid="income-error-message"
                     >
                       {form.formState.errors.myIncome.message}
                     </p>
@@ -412,6 +422,7 @@ export default function OnboardingPage() {
                       onValueChange={field.onChange}
                       className="flex flex-col gap-2"
                       aria-label="Pay cycle type"
+                      data-testid="pay-cycle-type-select"
                     >
                       <RadioGroupItem
                         value="specific_date"
@@ -452,6 +463,7 @@ export default function OnboardingPage() {
                                 ? 'payDay-error'
                                 : undefined
                             }
+                            data-testid="pay-cycle-date-input"
                           >
                             <SelectValue placeholder="Select day" />
                           </SelectTrigger>
@@ -529,6 +541,7 @@ export default function OnboardingPage() {
                           value={[field.value]}
                           onValueChange={(value) => field.onChange(value[0])}
                           aria-label="Your share of joint bills (percentage)"
+                          data-testid="split-ratio-me-input"
                         />
                         <div className="flex justify-between text-sm font-body">
                           <span>You: {field.value}%</span>
@@ -557,6 +570,7 @@ export default function OnboardingPage() {
                 className="w-full"
                 disabled={isLoading}
                 aria-busy={isLoading}
+                data-testid="create-blueprint-button"
               >
                 {isLoading ? 'Creating Blueprint...' : 'Create Your Blueprint'}
               </Button>

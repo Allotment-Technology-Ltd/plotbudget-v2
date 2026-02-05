@@ -114,6 +114,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             type="email"
             placeholder="you@example.com"
             className="normal-case"
+            data-testid="email-input"
             {...form.register('email')}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
@@ -132,6 +133,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             <Link
               href="/reset-password"
               className="text-sm text-primary hover:underline"
+              data-testid="nav-reset-password"
             >
               Forgot password?
             </Link>
@@ -141,6 +143,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             type="password"
             placeholder="••••••••"
             className="normal-case"
+            data-testid="password-input"
             {...form.register('password')}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
@@ -158,6 +161,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
             className="rounded-md bg-destructive/10 border border-destructive/30 p-3"
             role="alert"
             aria-live="polite"
+            data-testid="login-error-message"
           >
             <p className="text-sm text-destructive">
               {form.formState.errors.root.message}
@@ -171,6 +175,7 @@ function LoginForm({ isLoading, setIsLoading, router }: any) {
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
+          data-testid="submit-login-form"
         >
           {isLoading ? 'Loading...' : 'Sign In'}
         </Button>
@@ -240,6 +245,7 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
         className="space-y-4"
         noValidate
         aria-label="Create account"
+        data-testid="signup-form"
       >
         {/* Email field */}
         <div className="space-y-2">
@@ -378,6 +384,7 @@ function AuthFooter({ isLogin }: { isLogin: boolean }) {
         <Link
           href={isLogin ? '/signup' : '/login'}
           className="text-primary hover:underline font-medium"
+          data-testid={isLogin ? 'nav-signup' : 'nav-login'}
         >
           {isLogin ? 'Sign up' : 'Sign in'}
         </Link>

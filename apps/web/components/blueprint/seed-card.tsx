@@ -34,6 +34,7 @@ export function SeedCard({
 }: SeedCardProps) {
   const badge = paymentSourceBadge[seed.payment_source];
   const partnerName = household.partner_name || 'Partner';
+  const seedSlug = seed.name.toLowerCase().replace(/\s+/g, '-');
 
   return (
     <div
@@ -48,8 +49,24 @@ export function SeedCard({
       }}
       className="flex items-center justify-between p-4 bg-background rounded-md border border-border hover:border-primary/30 transition-colors gap-4 cursor-pointer group"
       aria-label={`Edit ${seed.name}`}
+      data-testid={`seed-card-${seedSlug}`}
     >
-      <div className="flex-1 min-w-0">
+      <div
+        className="flex-1 min-w-0"
+        data-testid={`edit-seed-${seedSlug}`}
+        role="button"
+        tabIndex={-1}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onEdit();
+          }
+        }}
+      >
         <div className="flex items-center gap-3 flex-wrap">
           <h3
             id={`seed-${seed.id}-name`}
@@ -118,6 +135,7 @@ export function SeedCard({
             onDelete();
           }}
           aria-label={`Delete ${seed.name}`}
+          data-testid={`delete-seed-${seedSlug}`}
         >
           <Trash className="w-4 h-4" aria-hidden />
         </Button>
