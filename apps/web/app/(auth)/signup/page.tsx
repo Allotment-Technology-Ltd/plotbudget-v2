@@ -1,4 +1,4 @@
-import { AuthForm } from '@/components/auth/auth-form';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Sign up | PLOT',
@@ -10,24 +10,22 @@ export default function SignupPage() {
     <div className="bg-card rounded-lg p-8 space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
-          Get Started
+          Private Beta
         </h1>
         <p className="text-muted-foreground font-body">
-          Create your PLOT account
+          PlotBudget is currently in private testing. If you have an account,
+          please sign in.
         </p>
       </div>
 
-      <div className="bg-primary/10 border border-primary/30 rounded-md p-4">
-        <p className="text-sm font-body">
-          <strong>Password tip:</strong> Use 3 random words
-          <br />
-          <span className="text-muted-foreground">
-            e.g. coffee-piano-sunset
-          </span>
-        </p>
+      <div className="flex justify-center pt-2">
+        <Link
+          href="/login"
+          className="btn-primary inline-flex items-center justify-center rounded-md px-6 py-3"
+        >
+          Go to Login
+        </Link>
       </div>
-
-      <AuthForm mode="signup" />
     </div>
   );
 }

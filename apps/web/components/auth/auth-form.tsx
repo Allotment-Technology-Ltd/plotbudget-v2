@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
+import { checkEmailAllowed } from '@/app/actions/auth';
+import { ALLOWLIST_ERROR_MESSAGE } from '@/lib/auth/allowlist';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -193,6 +195,15 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
     const supabase = createClient();
 
     try {
+      const allowed = await checkEmailAllowed(data.email);
+      if (!allowed) {
+        form.setError('email', {
+          message: ALLOWLIST_ERROR_MESSAGE,
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,

@@ -63,6 +63,41 @@ export async function middleware(request: NextRequest) {
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
+
+    // If authenticated, check onboarding status for dashboard routes
+    const { data: profile } = await supabase
+      .from('users')
+      .select('has_completed_onboarding')
+      .eq('id', session.user.id)
+      .single();
+
+    // Redirect to onboarding if not completed (except if already on onboarding page)
+    if (
+      !profile?.has_completed_onboarding &&
+      !request.nextUrl.pathname.includes('/onboarding')
+    ) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+  }
+
+  // Onboarding: require auth; redirect away if already completed
+  if (request.nextUrl.pathname.includes('/onboarding')) {
+    if (!session) {
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+  if (request.nextUrl.pathname.includes('/onboarding') && session) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('has_completed_onboarding')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile?.has_completed_onboarding) {
+      return NextResponse.redirect(new URL('/dashboard/blueprint', request.url));
+    }
   }
 
   // Auth routes - redirect to dashboard if already authenticated
