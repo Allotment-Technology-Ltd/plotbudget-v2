@@ -1,9 +1,20 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
+
+// Mount nav and user menu only on client so usePathname/useTheme context is available (avoids "useContext null" Server Error in some envs)
+const DashboardNavClient = dynamic(
+  () => Promise.resolve(DashboardNav),
+  { ssr: false }
+);
+const UserMenuClient = dynamic(
+  () => Promise.resolve(UserMenu),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -41,8 +52,8 @@ export default async function DashboardLayout({
             PLOT
           </Link>
           <nav className="flex items-center gap-6">
-            <DashboardNav />
-            <UserMenu
+            <DashboardNavClient />
+            <UserMenuClient
               user={{
                 email: user.email ?? '',
                 display_name: displayName,

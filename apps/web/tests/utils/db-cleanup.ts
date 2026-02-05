@@ -274,4 +274,5 @@ export async function cleanupAllTestUsers() {
   await cleanupTestUser('couple@plotbudget.test');
   await cleanupTestUser('blueprint@plotbudget.test');
   await cleanupTestUser('ritual@plotbudget.test');
+  await cleanupTestUser('dashboard@plotbudget.test');
 }

@@ -11,4 +11,6 @@ export const TEST_USERS = {
   blueprint: { email: 'blueprint@plotbudget.test', password: 'test-password-123' },
   /** Used only by ritual (Payday Ritual) specs; isolated for parallel runs */
   ritual: { email: 'ritual@plotbudget.test', password: 'test-password-123' },
+  /** Used only by dashboard/settings specs; isolated so blueprint cleanup doesn't affect it */
+  dashboard: { email: 'dashboard@plotbudget.test', password: 'test-password-123' },
 } as const;

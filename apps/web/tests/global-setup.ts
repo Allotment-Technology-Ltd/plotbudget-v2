@@ -31,11 +31,8 @@ async function waitForServer(url: string, timeoutMs = 120000): Promise<boolean> 
   return false;
 }
 
-/** Which user to log in as per project; blueprint/ritual users are isolated for parallel runs */
-const PROJECT_AUTH: Record<
-  string,
-  { email: string; password: string; ensureBlueprintReadyAfterLogin?: boolean }
-> = {
+/** Which user to log in as per project; users are set up (DB) before login so saved state is "ready" */
+const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
   chromium: {
     email: TEST_USERS.solo.email,
     password: TEST_USERS.solo.password,
@@ -43,12 +40,14 @@ const PROJECT_AUTH: Record<
   'chromium-blueprint': {
     email: TEST_USERS.blueprint.email,
     password: TEST_USERS.blueprint.password,
-    ensureBlueprintReadyAfterLogin: true,
   },
   'chromium-ritual': {
     email: TEST_USERS.ritual.email,
     password: TEST_USERS.ritual.password,
-    ensureBlueprintReadyAfterLogin: true,
+  },
+  'chromium-dashboard': {
+    email: TEST_USERS.dashboard.email,
+    password: TEST_USERS.dashboard.password,
   },
 };
 
@@ -92,9 +91,19 @@ export default async function globalSetup(config: FullConfig) {
     }
   }
 
-  // Create blueprint and ritual auth users if missing (so we can log in without seed)
+  // Create auth users if missing
   await ensureAuthUserExists(TEST_USERS.blueprint.email, TEST_USERS.blueprint.password);
   await ensureAuthUserExists(TEST_USERS.ritual.email, TEST_USERS.ritual.password);
+  await ensureAuthUserExists(TEST_USERS.dashboard.email, TEST_USERS.dashboard.password);
+
+  // Sync to public.users and set household + onboarding done BEFORE login so saved state is "ready"
+  await ensureUserInPublicUsers(TEST_USERS.solo.email);
+  await ensureUserInPublicUsers(TEST_USERS.blueprint.email);
+  await ensureUserInPublicUsers(TEST_USERS.ritual.email);
+  await ensureUserInPublicUsers(TEST_USERS.dashboard.email);
+  await ensureBlueprintReady(TEST_USERS.blueprint.email);
+  await ensureBlueprintReady(TEST_USERS.ritual.email);
+  await ensureBlueprintReady(TEST_USERS.dashboard.email);
 
   const browser = await chromium.launch();
   for (const project of projectsWithAuth) {
@@ -114,13 +123,6 @@ export default async function globalSetup(config: FullConfig) {
     await context.close();
   }
   await browser.close();
-
-  // Sync to public.users and (for blueprint/ritual) set household + onboarding done
-  await ensureUserInPublicUsers(TEST_USERS.solo.email);
-  await ensureUserInPublicUsers(TEST_USERS.blueprint.email);
-  await ensureUserInPublicUsers(TEST_USERS.ritual.email);
-  await ensureBlueprintReady(TEST_USERS.blueprint.email);
-  await ensureBlueprintReady(TEST_USERS.ritual.email);
 
   if (serverStarted) {
     console.log('✅ Global setup: server started, auth states saved (solo + blueprint)');

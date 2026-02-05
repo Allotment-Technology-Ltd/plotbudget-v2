@@ -90,6 +90,7 @@ export function UserMenu({ user }: UserMenuProps) {
           <Link
             href="/dashboard/settings"
             className="flex items-center focus:bg-primary/10 focus:text-primary"
+            data-testid="user-menu-settings"
           >
             <Settings className="mr-2 h-4 w-4" aria-hidden />
             Settings
