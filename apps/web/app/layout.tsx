@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Space_Mono } from 'next/font/google';
+import { Toaster } from 'sonner';
 import { ThemeProvider } from '../components/providers/theme-provider';
 import './globals.css';
 
@@ -63,6 +64,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main id="main-content">{children}</main>
+          <Toaster position="top-right" />
         </ThemeProvider>
       </body>
     </html>
