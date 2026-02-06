@@ -257,6 +257,86 @@ export async function acceptPartnerInvite(token: string) {
 }
 
 /**
+ * Partner leaves the household (unlinks themselves). Does not sign out or redirect — caller does that.
+ * Use when partner clicks "Leave" so they can be re-invited later and sign in to rejoin.
+ */
+export async function leaveHouseholdAsPartner(): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from('households')
+    .update({
+      partner_user_id: null,
+      partner_invite_status: 'none',
+      partner_email: null,
+      partner_auth_token: null,
+      partner_invite_sent_at: null,
+      partner_accepted_at: null,
+      partner_last_login_at: null,
+    } as never)
+    .eq('partner_user_id', user.id);
+
+  if (error) throw new Error('Failed to leave household');
+}
+
+/**
+ * Owner removes partner and deletes the partner's account (GDPR: delete on behalf).
+ */
+export async function removePartnerAndDeleteAccount(): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('partner_user_id')
+    .eq('owner_id', user.id)
+    .single();
+
+  const partnerUserId = (household as { partner_user_id: string | null } | null)?.partner_user_id;
+  if (!partnerUserId) throw new Error('No partner to remove');
+
+  const admin = createAdminClient();
+
+  const { error: updateError } = await admin
+    .from('households')
+    .update({
+      partner_user_id: null,
+      partner_email: null,
+      partner_auth_token: null,
+      partner_invite_status: 'none',
+      partner_invite_sent_at: null,
+      partner_accepted_at: null,
+      partner_last_login_at: null,
+    } as never)
+    .eq('owner_id', user.id);
+
+  if (updateError) throw new Error('Failed to remove partner');
+
+  const { error: userDeleteError } = await admin
+    .from('users')
+    .delete()
+    .eq('id', partnerUserId);
+
+  if (userDeleteError) throw new Error('Failed to delete partner profile');
+
+  try {
+    await admin.auth.admin.deleteUser(partnerUserId);
+  } catch (err) {
+    console.error('Failed to delete partner auth user:', err);
+  }
+
+  revalidatePath('/dashboard/settings');
+}
+
+/**
  * Return the partner invite join URL when the household has a pending invite.
  * Used so the owner can copy the link and share via WhatsApp, SMS, etc.
  */

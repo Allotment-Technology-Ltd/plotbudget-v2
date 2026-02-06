@@ -11,11 +11,17 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('household_id, current_paycycle_id, has_completed_onboarding')
     .eq('id', user.id)
-    .single() as { data: { household_id: string | null; current_paycycle_id: string | null; has_completed_onboarding: boolean } | null };
+    .single()) as {
+    data: {
+      household_id: string | null;
+      current_paycycle_id: string | null;
+      has_completed_onboarding: boolean;
+    } | null;
+  };
 
   const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user.id);
 

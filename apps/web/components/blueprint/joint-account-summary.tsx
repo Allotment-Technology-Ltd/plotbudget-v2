@@ -1,6 +1,7 @@
 'use client';
 
 import { Wallet, User, Users } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Household = Database['public']['Tables']['households']['Row'];
@@ -9,11 +10,13 @@ type Seed = Database['public']['Tables']['seeds']['Row'];
 interface JointAccountSummaryProps {
   household: Household;
   seeds: Seed[];
+  userAvatarUrl?: string | null;
 }
 
 export function JointAccountSummary({
   household,
   seeds,
+  userAvatarUrl,
 }: JointAccountSummaryProps) {
   if (!household.is_couple) return null;
 
@@ -91,7 +94,16 @@ export function JointAccountSummary({
         )}
 
         <div className="flex items-start gap-3 p-4 rounded-md bg-background border border-border">
-          <User className="w-5 h-5 text-primary mt-0.5" aria-hidden />
+          {userAvatarUrl ? (
+            <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+              <AvatarImage src={userAvatarUrl} alt="" className="avatar-pixelated object-cover" />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                <User className="w-5 h-5" aria-hidden />
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <User className="w-5 h-5 text-primary mt-0.5" aria-hidden />
+          )}
           <div>
             <p className="font-heading text-sm uppercase tracking-wider text-muted-foreground">
               Your Set-Aside

@@ -16,7 +16,7 @@ type PaycycleOption = {
 
 type UserProfile = Pick<
   Database['public']['Tables']['users']['Row'],
-  'household_id' | 'current_paycycle_id' | 'has_completed_onboarding'
+  'household_id' | 'current_paycycle_id' | 'has_completed_onboarding' | 'avatar_url'
 >;
 
 export default async function BlueprintPage({
@@ -32,7 +32,7 @@ export default async function BlueprintPage({
 
   const { data: profile } = (await supabase
     .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding')
+    .select('household_id, current_paycycle_id, has_completed_onboarding, avatar_url')
     .eq('id', user.id)
     .single()) as { data: UserProfile | null };
 
@@ -118,6 +118,7 @@ export default async function BlueprintPage({
       allPaycycles={allPaycycles}
       activePaycycleId={activePaycycle?.id ?? null}
       hasDraftCycle={hasDraftCycle}
+      userAvatarUrl={profile?.avatar_url ?? null}
     />
   );
 }

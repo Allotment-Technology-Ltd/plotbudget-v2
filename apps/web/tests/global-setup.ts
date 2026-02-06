@@ -57,6 +57,14 @@ const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
     email: TEST_USERS.onboarding.email,
     password: TEST_USERS.onboarding.password,
   },
+  'visual-desktop': {
+    email: TEST_USERS.visual.email,
+    password: TEST_USERS.visual.password,
+  },
+  'visual-mobile': {
+    email: TEST_USERS.visual.email,
+    password: TEST_USERS.visual.password,
+  },
 };
 
 export default async function globalSetup(config: FullConfig) {
@@ -105,6 +113,7 @@ export default async function globalSetup(config: FullConfig) {
   await ensureAuthUserExists(TEST_USERS.dashboard.email, TEST_USERS.dashboard.password);
   await ensureAuthUserExists(TEST_USERS.partner.email, TEST_USERS.partner.password);
   await ensureAuthUserExists(TEST_USERS.onboarding.email, TEST_USERS.onboarding.password);
+  await ensureAuthUserExists(TEST_USERS.visual.email, TEST_USERS.visual.password);
 
   // Sync to public.users and set household + onboarding done BEFORE login so saved state is "ready"
   await ensureUserInPublicUsers(TEST_USERS.solo.email);
@@ -113,10 +122,12 @@ export default async function globalSetup(config: FullConfig) {
   await ensureUserInPublicUsers(TEST_USERS.dashboard.email);
   await ensureUserInPublicUsers(TEST_USERS.partner.email);
   await ensureUserInPublicUsers(TEST_USERS.onboarding.email);
+  await ensureUserInPublicUsers(TEST_USERS.visual.email);
   await resetOnboardingState(TEST_USERS.onboarding.email);
   await ensureBlueprintReady(TEST_USERS.blueprint.email);
   await ensureBlueprintReady(TEST_USERS.ritual.email);
   await ensureBlueprintReady(TEST_USERS.dashboard.email);
+  await ensureBlueprintReady(TEST_USERS.visual.email);
 
   // Partner invite e2e: dashboard has pending invite; dashboard household already has paycycle (ensureBlueprintReady above)
   await ensurePartnerInviteReady(

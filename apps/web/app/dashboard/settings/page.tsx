@@ -36,13 +36,15 @@ export default async function SettingsPage() {
   if (!user) redirect('/login');
 
   const email = user.email ?? '';
-  type ProfileRow = { display_name: string | null };
+  type ProfileRow = { display_name: string | null; avatar_url: string | null };
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name')
+    .select('display_name, avatar_url')
     .eq('id', user.id)
     .maybeSingle();
-  const displayName = (profile as ProfileRow | null)?.display_name ?? null;
+  const profileRow = profile as ProfileRow | null;
+  const displayName = profileRow?.display_name ?? null;
+  const avatarUrl = profileRow?.avatar_url ?? null;
 
   const { data: owned } = await supabase
     .from('households')
@@ -68,6 +70,7 @@ export default async function SettingsPage() {
           id: user.id,
           email,
           displayName,
+          avatarUrl,
         }}
         household={{
           id: household.id,

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { acceptPartnerInvite } from '@/app/actions/partner-invite';
-import { Button } from '@/components/ui/button';
 
 interface Props {
   searchParams: Promise<{ t?: string }>;
@@ -67,49 +66,10 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
 
   const joinUrl = `/partner/join?t=${encodeURIComponent(token)}`;
 
-  async function handleAccept(formData: FormData) {
-    'use server';
-    const t = formData.get('token') as string;
-    if (!t) return;
-    await acceptPartnerInvite(t);
-    redirect('/dashboard');
-  }
-
+  // Authenticated user with valid token: accept invite and go straight to dashboard (no extra screen)
   if (user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background" data-testid="partner-join-authenticated">
-        <div className="w-full max-w-md space-y-6 p-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold">Welcome to PLOT!</h1>
-            <p className="mt-2 text-muted-foreground">
-              {ownerName} invited you to budget together.
-            </p>
-          </div>
-
-          <div className="rounded-lg border bg-card p-6">
-            <h2 className="font-semibold">What you&apos;ll get access to:</h2>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              <li>✓ View all household seeds and pots</li>
-              <li>✓ Mark your bills as paid</li>
-              <li>✓ See budget overview</li>
-              <li>✓ Collaborate on payday rituals</li>
-            </ul>
-          </div>
-
-          <form action={handleAccept} className="space-y-4">
-            <input type="hidden" name="token" value={token} />
-            <Button type="submit" className="w-full" data-testid="partner-join-accept">
-              Accept & go to dashboard →
-            </Button>
-          </form>
-
-          <p className="text-center text-xs text-muted-foreground">
-            You&apos;re signed in as {user.email}. Accepting will link your
-            account to this household.
-          </p>
-        </div>
-      </div>
-    );
+    await acceptPartnerInvite(token);
+    redirect('/dashboard');
   }
 
   return (

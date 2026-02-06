@@ -18,6 +18,9 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
     "test:e2e:codegen": "playwright codegen http://localhost:3000",
+    "test:e2e:layout": "playwright test --project=mobile-layout",
+    "test:e2e:visual": "playwright test --project=visual-desktop --project=visual-mobile",
+    "test:e2e:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
     "audit:test-ids": "tsx scripts/audit-test-ids.ts"
   },
   "dependencies": {

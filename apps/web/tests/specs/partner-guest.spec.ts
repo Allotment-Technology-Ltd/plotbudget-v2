@@ -59,7 +59,7 @@ test.describe('Partner invite (unauthenticated)', () => {
 });
 
 test.describe('Partner invite (authenticated)', () => {
-  test('partner with valid token sees Accept and can accept then reach dashboard', async ({
+  test('partner with valid token is taken straight to dashboard', async ({
     page,
   }) => {
     // Sign in as partner programmatically (no login UI) so we don't depend on the login form in the browser
@@ -70,19 +70,8 @@ test.describe('Partner invite (authenticated)', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page).toHaveURL(
-      (url) =>
-        url.pathname === '/partner/join' &&
-        url.searchParams.get('t') === E2E_PARTNER_INVITE_TOKEN
-    );
-
-    const partnerPage = new PartnerJoinPage(page);
-    await partnerPage.expectAuthenticatedJoin();
-    await partnerPage.clickAccept();
-
-    // After accept we should land on dashboard (owner household has paycycle from global setup).
-    // If the app sends partner to onboarding instead, accept that so the test is resilient.
-    await page.waitForURL(/\/(dashboard|onboarding)/);
+    // Invite is auto-accepted and user is redirected to dashboard (no Accept screen)
+    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
     const onDashboard =
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
     const onOnboarding = page.getByTestId('onboarding-step-1');

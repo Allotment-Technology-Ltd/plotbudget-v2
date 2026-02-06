@@ -11,6 +11,7 @@ export interface SettingsViewProps {
     id: string;
     email: string;
     displayName: string | null;
+    avatarUrl?: string | null;
   };
   household: {
     id: string;
@@ -46,7 +47,7 @@ export function SettingsView({ user, household, isPartner = false }: SettingsVie
         <TabsList className="w-full sm:inline-flex h-auto flex-wrap gap-1 bg-muted p-1">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
-          {!isPartner && <TabsTrigger value="privacy">Privacy</TabsTrigger>}
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="space-y-6 mt-6">
@@ -69,11 +70,9 @@ export function SettingsView({ user, household, isPartner = false }: SettingsVie
             isPartner={isPartner}
           />
         </TabsContent>
-        {!isPartner && (
-          <TabsContent value="privacy" className="space-y-6 mt-6">
-            <PrivacyTab userId={user.id} />
-          </TabsContent>
-        )}
+        <TabsContent value="privacy" className="space-y-6 mt-6">
+          <PrivacyTab userId={user.id} isPartner={isPartner} />
+        </TabsContent>
         {!isPartner && (
           <TabsContent value="advanced" className="space-y-6 mt-6">
             <AdvancedTab

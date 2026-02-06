@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { leaveHouseholdAsPartner } from '@/app/actions/partner-invite';
 
 /**
  * Signs out the current user. Caller should redirect and show toast on success.
@@ -28,9 +29,11 @@ export async function signOut() {
 }
 
 /**
- * Signs out the partner (they have an account) and redirects to login. Use when partner clicks "Leave".
+ * Partner leaves the household (unlinks from it) then signs out and redirects to login.
+ * Use when partner clicks "Leave". They can be re-invited and sign in to rejoin.
  */
 export async function leavePartnerSession() {
+  await leaveHouseholdAsPartner();
   await signOut();
   revalidatePath('/', 'layout');
   redirect('/login');

@@ -155,7 +155,8 @@ export async function exportUserData(): Promise<string> {
 }
 
 /**
- * Delete user account and all associated data
+ * Delete user account and all associated data (GDPR).
+ * Works for both owners and partners: partners are unlinked from household first, then user and auth are deleted.
  */
 export async function deleteUserAccount() {
   const supabase = await createServerSupabaseClient();
@@ -167,21 +168,36 @@ export async function deleteUserAccount() {
     throw new Error('Not authenticated');
   }
 
-  const { data: household } = await supabase
+  const admin = createAdminClient();
+  const { data: ownedHousehold } = await supabase
     .from('households')
     .select('id')
     .eq('owner_id', user.id)
     .maybeSingle();
 
-  if (household) {
+  if (ownedHousehold) {
     const { error: householdError } = await supabase
       .from('households')
       .delete()
-      .eq('id', (household as { id: string }).id);
+      .eq('id', (ownedHousehold as { id: string }).id);
 
     if (householdError) {
       throw new Error('Failed to delete household data');
     }
+  } else {
+    // Partner: unlink from household so we can delete user row
+    await admin
+      .from('households')
+      .update({
+        partner_user_id: null,
+        partner_invite_status: 'none',
+        partner_email: null,
+        partner_auth_token: null,
+        partner_invite_sent_at: null,
+        partner_accepted_at: null,
+        partner_last_login_at: null,
+      } as never)
+      .eq('partner_user_id', user.id);
   }
 
   const { error: userError } = await supabase
@@ -194,7 +210,6 @@ export async function deleteUserAccount() {
   }
 
   try {
-    const admin = createAdminClient();
     await admin.auth.admin.deleteUser(user.id);
   } catch (err) {
     console.error('Failed to delete auth user:', err);
