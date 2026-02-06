@@ -1,6 +1,9 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -23,9 +26,10 @@ function getRemTypeKey(type: SeedType): string {
  */
 async function updatePaycycleRemaining(
   seed: SeedRow,
-  payer: Payer
+  payer: Payer,
+  client?: SupabaseClient<Database>
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
 
   const { data: paycycle } = await supabase
     .from('paycycles')
@@ -87,9 +91,10 @@ async function updatePaycycleRemaining(
  */
 async function incrementPaycycleRemaining(
   seed: SeedRow,
-  payer: Payer
+  payer: Payer,
+  client?: SupabaseClient<Database>
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
 
   const { data: paycycle } = await supabase
     .from('paycycles')
@@ -143,18 +148,28 @@ export async function markSeedPaid(
   payer: Payer
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext();
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+  const client = !user && isPartner ? createAdminClient() : supabase;
 
-  const { data: seedData, error: seedError } = await supabase
+  const { data: seedDataRes, error: seedError } = await client
     .from('seeds')
     .select('*')
     .eq('id', seedId)
     .single();
 
-  if (seedError || !seedData) {
+  if (seedError || !seedDataRes) {
     return { error: 'Seed not found' };
   }
 
-  const seed = seedData as SeedRow;
+  const seed = seedDataRes as SeedRow;
+  if (!user && isPartner && partnerHouseholdId && seed.household_id !== partnerHouseholdId) {
+    return { error: 'Seed not found' };
+  }
+
   const updates: SeedUpdate = {};
 
   if (payer === 'both' || seed.payment_source !== 'joint') {
@@ -173,7 +188,7 @@ export async function markSeedPaid(
     }
   }
 
-  const { error: updateError } = await (supabase.from('seeds') as any)
+  const { error: updateError } = await (client.from('seeds') as any)
     .update(updates)
     .eq('id', seedId);
 
@@ -181,7 +196,7 @@ export async function markSeedPaid(
     return { error: (updateError as { message: string }).message };
   }
 
-  await updatePaycycleRemaining(seed, payer);
+  await updatePaycycleRemaining(seed, payer, !user && isPartner ? (client as SupabaseClient<Database>) : undefined);
   revalidatePath('/dashboard/blueprint');
   return { success: true };
 }
@@ -194,18 +209,28 @@ export async function unmarkSeedPaid(
   payer: Payer
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext();
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+  const client = !user && isPartner ? createAdminClient() : supabase;
 
-  const { data: seedData, error: seedError } = await supabase
+  const { data: seedDataRes, error: seedError } = await client
     .from('seeds')
     .select('*')
     .eq('id', seedId)
     .single();
 
-  if (seedError || !seedData) {
+  if (seedError || !seedDataRes) {
     return { error: 'Seed not found' };
   }
 
-  const seed = seedData as SeedRow;
+  const seed = seedDataRes as SeedRow;
+  if (!user && isPartner && partnerHouseholdId && seed.household_id !== partnerHouseholdId) {
+    return { error: 'Seed not found' };
+  }
+
   const updates: SeedUpdate = {};
 
   if (payer === 'both' || seed.payment_source !== 'joint') {
@@ -220,7 +245,7 @@ export async function unmarkSeedPaid(
     updates.is_paid = false;
   }
 
-  const { error: updateError } = await (supabase.from('seeds') as any)
+  const { error: updateError } = await (client.from('seeds') as any)
     .update(updates)
     .eq('id', seedId);
 
@@ -228,7 +253,7 @@ export async function unmarkSeedPaid(
     return { error: (updateError as { message: string }).message };
   }
 
-  await incrementPaycycleRemaining(seed, payer);
+  await incrementPaycycleRemaining(seed, payer, !user && isPartner ? (client as SupabaseClient<Database>) : undefined);
   revalidatePath('/dashboard/blueprint');
   return { success: true };
 }

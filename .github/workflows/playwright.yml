@@ -1,5 +1,6 @@
 # .github/workflows/playwright.yml
 # Unit tests and E2E tests run on PR and push to main/develop (localhost).
+# Unit and E2E run in parallel for faster feedback. Playwright browsers are cached.
 # Vercel Preview E2E is disabled (set if: false below); re-enable when preview testing is needed.
 # Required repo secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 name: Playwright Tests
@@ -35,10 +36,8 @@ jobs:
 
   test-localhost:
     name: E2E on localhost
-    needs: [test-unit]
-    timeout-minutes: 10
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -54,9 +53,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
+
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != 'true' ]; then
+            pnpm exec playwright install --with-deps chromium
+          else
+            pnpm exec playwright install-deps chromium
+          fi
 
       - name: Run Playwright tests
         working-directory: apps/web

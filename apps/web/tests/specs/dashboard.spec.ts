@@ -30,6 +30,16 @@ test.describe('Dashboard and app shell', () => {
     await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15_000 });
   });
 
+  test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
+    await page.goto('/dashboard/settings');
+    await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15_000 });
+    if (page.url().includes('/login')) {
+      throw new Error('Session lost: redirected to login.');
+    }
+    await expect(page.getByText('Who is signed in', { exact: false })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Logged in as:', { exact: false })).toBeVisible();
+  });
+
   test('logout redirects to login', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForURL(/\/dashboard/);

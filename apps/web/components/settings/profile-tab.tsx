@@ -16,9 +16,10 @@ interface ProfileTabProps {
     email: string;
     displayName: string | null;
   };
+  isPartner?: boolean;
 }
 
-export function ProfileTab({ user }: ProfileTabProps) {
+export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,25 +44,22 @@ export function ProfileTab({ user }: ProfileTabProps) {
   return (
     <div className="space-y-6">
       <section className="bg-card rounded-lg border border-border p-6">
+        <h2 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground mb-4">
+          Who is signed in
+        </h2>
+        <div className="mb-6 rounded-md border border-border bg-muted/30 px-4 py-3">
+          <p className="text-sm font-medium text-foreground">
+            {isPartner ? (
+              <>Viewing as partner: <span className="normal-case font-normal text-muted-foreground">{user.email}</span></>
+            ) : (
+              <>Logged in as: <span className="normal-case font-normal text-muted-foreground">{user.email}</span></>
+            )}
+          </p>
+        </div>
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Profile Information
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
-            <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your name"
-              maxLength={50}
-              disabled={isLoading}
-              aria-describedby="displayName-help"
-            />
-            <p id="displayName-help" className="text-sm text-muted-foreground">
-              This is how your name will appear in the app.
-            </p>
-          </div>
+        {isPartner ? (
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -74,18 +72,52 @@ export function ProfileTab({ user }: ProfileTabProps) {
               aria-describedby="email-help"
             />
             <p id="email-help" className="text-sm text-muted-foreground">
-              Managed by your account authentication.
+              You are viewing this household as the invited partner. Use &quot;Leave&quot; in the menu to sign out of partner access.
             </p>
           </div>
-          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            )}
-            Save Changes
-          </Button>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your name"
+                maxLength={50}
+                disabled={isLoading}
+                aria-describedby="displayName-help"
+              />
+              <p id="displayName-help" className="text-sm text-muted-foreground">
+                This is how your name will appear in the app.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={user.email}
+                readOnly
+                disabled
+                className="bg-muted/50 cursor-not-allowed normal-case"
+                aria-describedby="email-help"
+              />
+              <p id="email-help" className="text-sm text-muted-foreground">
+                Managed by your account authentication.
+              </p>
+            </div>
+            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+              {isLoading && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+              )}
+              Save Changes
+            </Button>
+          </form>
+        )}
       </section>
 
+      {!isPartner && (
       <section className="bg-card rounded-lg border border-border p-6">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Security
@@ -95,7 +127,9 @@ export function ProfileTab({ user }: ProfileTabProps) {
         </p>
         <ChangePasswordDialog />
       </section>
+      )}
 
+      {!isPartner && (
       <section className="bg-card rounded-lg border border-border p-6">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Avatar
@@ -120,6 +154,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
           </div>
         </div>
       </section>
+      )}
     </div>
   );
 }

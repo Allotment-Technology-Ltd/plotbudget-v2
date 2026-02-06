@@ -28,9 +28,10 @@ export interface SettingsViewProps {
     partner_accepted_at?: string | null;
     partner_last_login_at?: string | null;
   };
+  isPartner?: boolean;
 }
 
-export function SettingsView({ user, household }: SettingsViewProps) {
+export function SettingsView({ user, household, isPartner = false }: SettingsViewProps) {
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
       <div className="mb-8">
@@ -45,11 +46,11 @@ export function SettingsView({ user, household }: SettingsViewProps) {
         <TabsList className="w-full sm:inline-flex h-auto flex-wrap gap-1 bg-muted p-1">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          {!isPartner && <TabsTrigger value="privacy">Privacy</TabsTrigger>}
+          {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="space-y-6 mt-6">
-          <ProfileTab user={user} />
+          <ProfileTab user={user} isPartner={isPartner} />
         </TabsContent>
         <TabsContent value="household" className="space-y-6 mt-6">
           <HouseholdTab
@@ -65,21 +66,26 @@ export function SettingsView({ user, household }: SettingsViewProps) {
               partner_accepted_at: household.partner_accepted_at,
               partner_last_login_at: household.partner_last_login_at,
             }}
+            isPartner={isPartner}
           />
         </TabsContent>
-        <TabsContent value="privacy" className="space-y-6 mt-6">
-          <PrivacyTab userId={user.id} />
-        </TabsContent>
-        <TabsContent value="advanced" className="space-y-6 mt-6">
-          <AdvancedTab
-            categoryRatios={{
-              needs: household.needs_percent,
-              wants: household.wants_percent,
-              savings: household.savings_percent,
-              repay: household.repay_percent,
-            }}
-          />
-        </TabsContent>
+        {!isPartner && (
+          <TabsContent value="privacy" className="space-y-6 mt-6">
+            <PrivacyTab userId={user.id} />
+          </TabsContent>
+        )}
+        {!isPartner && (
+          <TabsContent value="advanced" className="space-y-6 mt-6">
+            <AdvancedTab
+              categoryRatios={{
+                needs: household.needs_percent,
+                wants: household.wants_percent,
+                savings: household.savings_percent,
+                repay: household.repay_percent,
+              }}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -1,4 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import type { Database } from '@/lib/supabase/database.types';
@@ -24,26 +26,42 @@ export default async function BlueprintPage({
   searchParams: { cycle?: string };
 }) {
   const supabase = await createServerSupabaseClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding')
-    .eq('id', user.id)
-    .single()) as { data: UserProfile | null };
+  let householdId: string;
+  let currentPaycycleId: string | null = null;
 
-  if (!profile?.has_completed_onboarding) {
-    redirect('/onboarding');
+  if (user) {
+    const { data: profile } = (await supabase
+      .from('users')
+      .select('household_id, current_paycycle_id, has_completed_onboarding')
+      .eq('id', user.id)
+      .single()) as { data: UserProfile | null };
+
+    if (!profile?.has_completed_onboarding) redirect('/onboarding');
+    if (!profile.household_id) redirect('/onboarding');
+    householdId = profile.household_id;
+    currentPaycycleId = profile.current_paycycle_id;
+  } else {
+    const { householdId: pid, isPartner } = await getPartnerContext();
+    if (!isPartner || !pid) redirect('/login');
+    householdId = pid;
+    const admin = createAdminClient();
+    const { data: activeCycle } = (await admin
+      .from('paycycles')
+      .select('id')
+      .eq('household_id', householdId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()) as { data: { id: string } | null };
+    currentPaycycleId = activeCycle?.id ?? null;
   }
 
-  const householdId = profile.household_id;
-  if (!householdId) redirect('/onboarding');
+  const client = user ? supabase : createAdminClient();
 
-  const { data: household } = await supabase
+  const { data: household } = await client
     .from('households')
     .select('*')
     .eq('id', householdId)
@@ -51,10 +69,10 @@ export default async function BlueprintPage({
 
   if (!household) redirect('/onboarding');
 
-  const targetCycleId = searchParams.cycle || profile.current_paycycle_id;
+  const targetCycleId = searchParams.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
 
-  const { data: paycycle } = await supabase
+  const { data: paycycle } = await client
     .from('paycycles')
     .select('*')
     .eq('id', targetCycleId)
@@ -62,27 +80,27 @@ export default async function BlueprintPage({
 
   if (!paycycle) redirect('/dashboard');
 
-  const { data: seeds } = await supabase
+  const { data: seeds } = await client
     .from('seeds')
     .select('*')
     .eq('paycycle_id', targetCycleId)
     .order('created_at', { ascending: true });
 
-  const { data: potsData } = await supabase
+  const { data: potsData } = await client
     .from('pots')
     .select('*')
     .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   const pots = (potsData ?? []) as Pot[];
 
-  const { data: repaymentsData } = await supabase
+  const { data: repaymentsData } = await client
     .from('repayments')
     .select('*')
     .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   const repayments = (repaymentsData ?? []) as Repayment[];
 
-  const { data: allPaycyclesData } = await supabase
+  const { data: allPaycyclesData } = await client
     .from('paycycles')
     .select('id, name, start_date, end_date, status')
     .eq('household_id', householdId)

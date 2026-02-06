@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { Database } from '@/lib/supabase/database.types';
+import { sendPartnerInviteEmail } from '@/lib/email/partner-invite';
 
 type HouseholdRow = Database['public']['Tables']['households']['Row'];
 
@@ -43,8 +44,7 @@ export async function invitePartner(partnerEmail: string) {
 
   if (updateError) throw new Error('Failed to update household');
 
-  // TODO: Send email (Phase 6.2)
-  // await sendPartnerInviteEmail(partnerEmail, user.email, token);
+  await sendPartnerInviteEmail(partnerEmail, user.email ?? '', token);
 
   revalidatePath('/dashboard/settings');
 
@@ -81,8 +81,11 @@ export async function resendPartnerInvite() {
     } as never)
     .eq('id', household.id);
 
-  // TODO: Resend email
-  // await sendPartnerInviteEmail(household.partner_email, user.email, household.partner_auth_token);
+  await sendPartnerInviteEmail(
+    household.partner_email,
+    user.email ?? '',
+    household.partner_auth_token ?? ''
+  );
 
   revalidatePath('/dashboard/settings');
 

@@ -178,6 +178,25 @@ export function SeedCard({
           )}
         </div>
 
+        {/* Only show "Added by" in couple mode; we always capture created_by_owner so it's available if they switch from solo to couple */}
+        {(household.is_couple && seed.created_by_owner != null) && (
+          <p className="text-xs text-muted-foreground mt-0.5" aria-label={`Added by ${seed.created_by_owner ? 'you' : partnerName}`}>
+            Added by {seed.created_by_owner ? 'you' : partnerName}
+          </p>
+        )}
+        {seed.is_paid && isRitualMode && household.is_couple && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Paid by{' '}
+            {seed.is_paid_me && seed.is_paid_partner
+              ? 'both'
+              : seed.is_paid_me
+                ? 'you'
+                : seed.is_paid_partner
+                  ? partnerName
+                  : '—'}
+          </p>
+        )}
+
         {seed.payment_source === 'joint' && (
           <p className="text-sm text-muted-foreground mt-1">
             You: £{Number(seed.amount_me).toFixed(2)} • {partnerName}: £

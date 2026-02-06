@@ -34,9 +34,10 @@ interface HouseholdTabProps {
     partner_accepted_at?: string | null;
     partner_last_login_at?: string | null;
   };
+  isPartner?: boolean;
 }
 
-export function HouseholdTab({ household }: HouseholdTabProps) {
+export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps) {
   const [householdName, setHouseholdName] = useState(household.name || '');
   const [isLoading, setIsLoading] = useState(false);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
@@ -88,29 +89,35 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Household Details
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="householdName">Household Name</Label>
-            <Input
-              id="householdName"
-              value={householdName}
-              onChange={(e) => setHouseholdName(e.target.value)}
-              placeholder="e.g., Smith Household"
-              maxLength={50}
-              disabled={isLoading}
-              aria-describedby="householdName-help"
-            />
-            <p id="householdName-help" className="text-sm text-muted-foreground">
-              A friendly name for your household.
-            </p>
-          </div>
-          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            )}
-            Save Changes
-          </Button>
-        </form>
+        {isPartner ? (
+          <p className="text-sm text-muted-foreground">
+            {household.name || 'Unnamed household'}
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="householdName">Household Name</Label>
+              <Input
+                id="householdName"
+                value={householdName}
+                onChange={(e) => setHouseholdName(e.target.value)}
+                placeholder="e.g., Smith Household"
+                maxLength={50}
+                disabled={isLoading}
+                aria-describedby="householdName-help"
+              />
+              <p id="householdName-help" className="text-sm text-muted-foreground">
+                A friendly name for your household.
+              </p>
+            </div>
+            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+              {isLoading && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+              )}
+              Save Changes
+            </Button>
+          </form>
+        )}
       </section>
 
       <section className="bg-card rounded-lg border border-border p-6">
@@ -157,6 +164,7 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
                   £{Number(household.partner_income || 0).toLocaleString('en-GB')}
                 </p>
               </div>
+              {!isPartner && (
               <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="secondary" type="button">
@@ -216,6 +224,7 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
                   </form>
                 </DialogContent>
               </Dialog>
+              )}
             </div>
           </section>
 
@@ -223,6 +232,12 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
             <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
               Partner Access
             </h2>
+            {isPartner ? (
+              <p className="text-sm text-muted-foreground">
+                You have partner access to this household. Only the account owner can invite or remove partners.
+              </p>
+            ) : (
+            <>
             {household.partner_invite_status === 'none' && <InvitePartnerForm />}
             {household.partner_invite_status === 'pending' && household.partner_email && (
               <PartnerStatus
@@ -238,6 +253,8 @@ export function HouseholdTab({ household }: HouseholdTabProps) {
                 acceptedAt={household.partner_accepted_at ?? undefined}
                 lastLoginAt={household.partner_last_login_at}
               />
+            )}
+            </>
             )}
           </section>
         </>
