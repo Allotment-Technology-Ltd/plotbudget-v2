@@ -1,10 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { SignupGatedView } from '@/components/auth/signup-gated-view';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
+
+const REDIRECT_AFTER_AUTH_COOKIE = 'redirect_after_auth';
+const COOKIE_MAX_AGE = 60 * 10; // 10 minutes
+
+function setRedirectAfterAuthCookie(redirectPath: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${REDIRECT_AFTER_AUTH_COOKIE}=${encodeURIComponent(redirectPath)}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
+}
 
 /** True when redirect points back to partner join (invite flow). */
 function isPartnerInviteRedirect(redirect: string | null): boolean {
@@ -33,6 +42,13 @@ export function SignupPageClient() {
       </div>
     );
   }
+
+  // After email confirmation Supabase sends user to auth/callback; store where to send them next
+  useEffect(() => {
+    if (redirectTo?.startsWith('/')) {
+      setRedirectAfterAuthCookie(redirectTo);
+    }
+  }, [redirectTo]);
 
   return (
     <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">

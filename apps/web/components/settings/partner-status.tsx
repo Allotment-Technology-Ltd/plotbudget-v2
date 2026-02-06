@@ -7,6 +7,7 @@ import {
   removePartner,
   getPartnerInviteLink,
   sendPartnerInviteToEmail,
+  removePartnerAndDeleteAccount,
 } from '@/app/actions/partner-invite';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,13 +49,35 @@ export function PartnerStatus({
 
   async function handleRemove() {
     if (
-      !confirm('Are you sure you want to remove your partner\'s access?')
+      !confirm('Remove partner from this household? They can be re-invited and sign in to rejoin.')
     ) {
       return;
     }
     setLoading(true);
     try {
       await removePartner();
+      toast.success('Partner removed from household');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRemoveAndDeleteAccount() {
+    if (
+      !confirm(
+        'Permanently remove partner and delete their account and data? This cannot be undone.'
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await removePartnerAndDeleteAccount();
+      toast.success('Partner removed and account deleted');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove');
     } finally {
       setLoading(false);
     }
@@ -187,15 +210,27 @@ export function PartnerStatus({
           Last login: {new Date(lastLoginAt).toLocaleDateString()}
         </p>
       )}
-      <div className="mt-4">
+      <p className="mt-2 text-xs text-muted-foreground">
+        Remove from household only (they can be re-invited), or remove and delete their account.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button
           type="button"
           variant="outline"
           disabled={loading}
           onClick={handleRemove}
+          className="text-sm"
+        >
+          Remove from household
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading}
+          onClick={handleRemoveAndDeleteAccount}
           className="text-sm border-destructive text-destructive hover:bg-destructive/10"
         >
-          Remove Partner
+          Remove and delete account
         </Button>
       </div>
     </div>
