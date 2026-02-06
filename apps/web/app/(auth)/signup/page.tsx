@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
-import { AuthForm } from '@/components/auth/auth-form';
-import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
+import { SignupPageClient } from '@/components/auth/signup-page-client';
 
 export const metadata = {
   title: 'Sign up | PLOT',
@@ -9,20 +8,8 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
-      <Suspense fallback={null}>
-        <DeletedAccountToast />
-      </Suspense>
-      <div className="space-y-2 text-center">
-        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
-          Create Account
-        </h1>
-        <p className="text-muted-foreground font-body">
-          Sign up to start plotting your budget together
-        </p>
-      </div>
-
-      <AuthForm mode="signup" />
-    </div>
+    <Suspense fallback={<div className="bg-card rounded-lg p-8 min-h-[320px]" />}>
+      <SignupPageClient />
+    </Suspense>
   );
 }

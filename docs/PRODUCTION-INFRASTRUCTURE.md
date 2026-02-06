@@ -52,6 +52,18 @@ PlotBudget V2 production launch: separate dev/staging and production environment
 
 **Optional:** `ALLOWED_EMAILS` (comma-separated). If set, only those emails can sign up; if unset, signups are public.
 
+### Auth feature flags (signup gating / beta)
+
+Use these to keep production live but gate public signup until ICO/privacy/terms are ready:
+
+| Variable | Values | Effect |
+|----------|--------|--------|
+| `NEXT_PUBLIC_SIGNUP_GATED` | `true` / unset | When `true`, `/signup` shows a waitlist CTA instead of the form; login shows beta message and hides Forgot password + Google login. |
+| `NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED` | `true` / unset | When `true`, the Google login option is shown on auth forms. |
+| `NEXT_PUBLIC_WAITLIST_URL` | URL | Link for "Register for the waitlist" when signup is gated (e.g. MailerLite form or `https://plotbudget.com`). Defaults to `https://plotbudget.com` if unset. |
+
+**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated` and `google-login-enabled` from PostHog override the env vars above. Create these flags in PostHog → Feature Flags.
+
 ---
 
 ## Step 3: Custom Domain (app.plotbudget.com)

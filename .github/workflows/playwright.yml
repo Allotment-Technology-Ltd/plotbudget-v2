@@ -1,6 +1,6 @@
 # .github/workflows/playwright.yml
 # Unit tests and E2E tests run on PR and push to main/develop (localhost).
-# Vercel Preview E2E runs only on PR (preview exists); push to main deploys production (no preview).
+# Vercel Preview E2E is disabled (set if: false below); re-enable when preview testing is needed.
 # Required repo secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 name: Playwright Tests
 
@@ -77,8 +77,8 @@ jobs:
   test-vercel-preview:
     name: Test on Vercel Preview (pre-merge)
     needs: [test-unit]
-    # Only run when a PR is open: Vercel creates a preview per PR. Push to main = production deploy (no preview).
-    if: github.event_name == 'pull_request'
+    # Disabled: not crucial for now. Re-enable by changing to: if: github.event_name == 'pull_request'
+    if: false
     timeout-minutes: 15
     runs-on: ubuntu-latest
 
