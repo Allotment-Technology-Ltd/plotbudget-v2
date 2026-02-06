@@ -57,6 +57,15 @@ export async function middleware(request: NextRequest) {
   // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Root: no holding page — redirect to login or dashboard (removes app.plotbudget.com landing)
+  if (request.nextUrl.pathname === '/') {
+    const url = new URL(request.url);
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', url));
+    }
+    return NextResponse.redirect(new URL('/login', url));
+  }
+
   // Protected routes - require authenticated user (partners use accounts, not cookie)
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
     if (!user) {
@@ -126,6 +135,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/login',
     '/signup',
