@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@/lib/supabase/database.types';
 import { sendPartnerInviteEmail } from '@/lib/email/partner-invite';
 
@@ -124,10 +125,11 @@ export async function removePartner() {
 
 /**
  * Accept partner invitation.
- * Called from /partner/join page.
+ * Called from /partner/join page. The partner may be unauthenticated; we
+ * authorize via the token, so we use the admin client to bypass RLS.
  */
 export async function acceptPartnerInvite(token: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from('households')
@@ -141,7 +143,7 @@ export async function acceptPartnerInvite(token: string) {
     throw new Error('Invalid or expired invitation');
   }
 
-  await supabase
+  const { error: updateError } = await supabase
     .from('households')
     .update({
       partner_invite_status: 'accepted',
@@ -149,6 +151,8 @@ export async function acceptPartnerInvite(token: string) {
       partner_last_login_at: new Date().toISOString(),
     } as never)
     .eq('id', household.id);
+
+  if (updateError) throw new Error('Failed to accept invitation');
 
   return { success: true, householdId: household.id };
 }
