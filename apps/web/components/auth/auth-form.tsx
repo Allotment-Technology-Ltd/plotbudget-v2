@@ -325,6 +325,7 @@ function SignupForm({ isLoading, setIsLoading, router }: any) {
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
+          data-testid="submit-signup-form"
         >
           {isLoading ? 'Loading...' : 'Create Account'}
         </Button>

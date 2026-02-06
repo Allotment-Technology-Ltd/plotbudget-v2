@@ -27,14 +27,15 @@ test.describe('Authentication Flow', () => {
     await authPage.expectLoginError();
   });
 
-  test('user can navigate to signup page', async ({ page }) => {
+  test('user can navigate to signup page and sees signup form', async ({ page }) => {
     const authPage = new AuthPage(page);
 
     await authPage.goto();
     await authPage.signupLink.click();
 
     await page.waitForURL(/\/signup/);
-    // Signup page is currently a private beta placeholder (no form)
     await expect(page.getByTestId('signup-page')).toBeVisible();
+    await expect(page.getByTestId('signup-form')).toBeVisible();
+    await expect(page.getByTestId('submit-signup-form')).toBeVisible();
   });
 });
