@@ -196,7 +196,7 @@ export async function markSeedPaid(
     return { error: (updateError as { message: string }).message };
   }
 
-  await updatePaycycleRemaining(seed, payer, !user && isPartner ? client : undefined);
+  await updatePaycycleRemaining(seed, payer, !user && isPartner ? (client as SupabaseClient<Database>) : undefined);
   revalidatePath('/dashboard/blueprint');
   return { success: true };
 }
@@ -253,7 +253,7 @@ export async function unmarkSeedPaid(
     return { error: (updateError as { message: string }).message };
   }
 
-  await incrementPaycycleRemaining(seed, payer, !user && isPartner ? client : undefined);
+  await incrementPaycycleRemaining(seed, payer, !user && isPartner ? (client as SupabaseClient<Database>) : undefined);
   revalidatePath('/dashboard/blueprint');
   return { success: true };
 }

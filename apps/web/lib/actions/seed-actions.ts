@@ -284,7 +284,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
 
     if (error) return { error: error.message };
 
-    await updatePaycycleAllocations(data.paycycle_id, canActAsPartner ? client : undefined);
+    await updatePaycycleAllocations(data.paycycle_id, canActAsPartner ? (client as SupabaseClient<Database>) : undefined);
     revalidatePath('/dashboard/blueprint');
     return {};
   } catch (e) {

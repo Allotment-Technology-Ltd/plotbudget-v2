@@ -49,13 +49,13 @@ export default async function BlueprintPage({
     if (!isPartner || !pid) redirect('/login');
     householdId = pid;
     const admin = createAdminClient();
-    const { data: activeCycle } = await admin
+    const { data: activeCycle } = (await admin
       .from('paycycles')
       .select('id')
       .eq('household_id', householdId)
       .eq('status', 'active')
       .limit(1)
-      .maybeSingle();
+      .maybeSingle()) as { data: { id: string } | null };
     currentPaycycleId = activeCycle?.id ?? null;
   }
 

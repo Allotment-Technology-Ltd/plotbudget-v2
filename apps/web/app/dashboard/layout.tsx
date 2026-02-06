@@ -50,11 +50,11 @@ export default async function DashboardLayout({
     const { householdId, isPartner: partner } = await getPartnerContext();
     if (partner && householdId) {
       const admin = createAdminClient();
-      const { data: household } = await admin
+      const { data: household } = (await admin
         .from('households')
         .select('partner_email, partner_name')
         .eq('id', householdId)
-        .single();
+        .single()) as { data: { partner_email: string | null; partner_name: string | null } | null };
       if (household) {
         isPartner = true;
         email = (household.partner_email ?? 'Partner').trim() || 'Partner';
