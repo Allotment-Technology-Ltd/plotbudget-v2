@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { marketingUrl } from '@/lib/marketing-url';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { createClient } from '@/lib/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +25,41 @@ import { signOut, leavePartnerSession } from '@/lib/actions/auth-actions';
 
 interface UserMenuProps {
   user: {
+    id?: string;
     email: string;
     display_name?: string | null;
+    avatar_url?: string | null;
   };
   isPartner?: boolean;
 }
 
 export function UserMenu({ user, isPartner = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    if (!user.id) return;
+    const channel = supabase
+      .channel('user-avatar-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newUrl = (payload.new as { avatar_url?: string | null })?.avatar_url;
+          if (newUrl != null) setAvatarUrl(newUrl);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id, supabase]);
 
   const displayName = user.display_name?.trim() || user.email;
   const initials = user.display_name?.trim()
@@ -62,6 +91,13 @@ export function UserMenu({ user, isPartner = false }: UserMenuProps) {
           data-testid="user-menu-trigger"
         >
           <Avatar className="h-8 w-8 rounded-full border-0">
+            {avatarUrl ? (
+              <AvatarImage
+                src={avatarUrl}
+                alt=""
+                className="avatar-pixelated object-cover"
+              />
+            ) : null}
             <AvatarFallback
               className="bg-transparent text-primary font-display text-sm"
               aria-hidden
