@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Space_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '../components/providers/theme-provider';
+import { PostHogProvider } from '../components/providers/posthog-provider';
 import './globals.css';
 
 const inter = Inter({
@@ -57,15 +58,17 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <main id="main-content">{children}</main>
-          <Toaster position="top-right" />
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main id="main-content">{children}</main>
+            <Toaster position="top-right" />
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
