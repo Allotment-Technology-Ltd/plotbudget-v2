@@ -49,11 +49,13 @@ export default async function DashboardLayout({
     .eq('owner_id', user.id)
     .maybeSingle();
 
-  const { data: partnerOf } = await supabase
+  const { data: partnerOfData } = await supabase
     .from('households')
     .select('id, partner_name')
     .eq('partner_user_id', user.id)
     .maybeSingle();
+  type PartnerHousehold = { id: string; partner_name: string | null };
+  const partnerOf = partnerOfData as PartnerHousehold | null;
 
   const isPartner = !owned && !!partnerOf;
   if (isPartner && partnerOf) {

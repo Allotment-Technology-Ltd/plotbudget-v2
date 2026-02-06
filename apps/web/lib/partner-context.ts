@@ -21,8 +21,9 @@ export async function getPartnerContext(
     .eq('partner_user_id', userId)
     .maybeSingle();
 
+  const row = data as { id: string } | null;
   return {
-    householdId: data?.id ?? null,
-    isPartner: !!data?.id,
+    householdId: row?.id ?? null,
+    isPartner: !!row?.id,
   };
 }
