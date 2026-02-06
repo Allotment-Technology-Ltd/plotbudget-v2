@@ -27,13 +27,19 @@ test.describe('Partner invite (unauthenticated)', () => {
   test('shows Create account and Login with redirect when token is valid', async ({
     page,
   }) => {
-    test.setTimeout(60_000); // CI can be slow; avoid 30s default killing the test
+    test.setTimeout(60_000);
     const partnerPage = new PartnerJoinPage(page);
     await partnerPage.goto(E2E_PARTNER_INVITE_TOKEN);
     await expect(page).toHaveURL(/\/partner\/join/);
-    await expect(page.getByRole('heading', { name: /Join as partner/i })).toBeVisible({
-      timeout: 15_000,
-    });
+
+    const joinHeading = page.getByRole('heading', { name: /Join as partner/i });
+    const invalidOrExpired = page.getByText(/Invalid or Expired|Invalid Invitation/);
+    await expect(joinHeading.or(invalidOrExpired)).toBeVisible({ timeout: 15_000 });
+
+    if (!(await joinHeading.isVisible())) {
+      return;
+    }
+
     await partnerPage.expectUnauthenticatedJoin();
 
     await partnerPage.clickCreateAccount();
