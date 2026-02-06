@@ -1,6 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
@@ -29,17 +28,10 @@ export async function signOut() {
 }
 
 /**
- * Clears the partner session cookie and redirects to login. Use when partner clicks "Leave".
+ * Signs out the partner (they have an account) and redirects to login. Use when partner clicks "Leave".
  */
 export async function leavePartnerSession() {
-  const cookieStore = await cookies();
-  cookieStore.set('partner_auth_token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  });
+  await signOut();
   revalidatePath('/', 'layout');
   redirect('/login');
 }

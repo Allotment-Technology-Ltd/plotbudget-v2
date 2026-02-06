@@ -1,10 +1,13 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 
 export function LoginPageClient() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const { signupGated, googleLoginEnabled } = useAuthFeatureFlags();
 
   const showBetaMessage = signupGated;
@@ -29,6 +32,7 @@ export function LoginPageClient() {
         mode="login"
         showForgotPassword={showForgotPassword}
         showGoogleLogin={showGoogleLogin}
+        redirectTo={redirectTo ?? undefined}
       />
     </div>
   );

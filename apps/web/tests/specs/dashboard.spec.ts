@@ -46,6 +46,10 @@ test.describe('Dashboard and app shell', () => {
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
-    await page.waitForURL(/plotbudget\.com/);
+    // In E2E, NEXT_PUBLIC_MARKETING_URL may be localhost so we stay on app origin; accept either
+    await page.waitForURL((url) => {
+      if (/plotbudget\.com/.test(url.href)) return true;
+      return url.pathname === '/';
+    });
   });
 });

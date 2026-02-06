@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
@@ -34,35 +32,32 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  let displayName: string | null = null;
-  let email = '';
-  let isPartner = false;
+  if (!user) redirect('/login');
 
-  if (user) {
-    email = user.email ?? '';
-    const { data: profile } = await supabase
-      .from('users')
-      .select('display_name')
-      .eq('id', user.id)
-      .maybeSingle();
-    type ProfileRow = { display_name: string | null };
-    displayName = (profile as ProfileRow | null)?.display_name ?? null;
-  } else {
-    const { householdId, isPartner: partner } = await getPartnerContext();
-    if (partner && householdId) {
-      const admin = createAdminClient();
-      const { data: household } = (await admin
-        .from('households')
-        .select('partner_email, partner_name')
-        .eq('id', householdId)
-        .single()) as { data: { partner_email: string | null; partner_name: string | null } | null };
-      if (household) {
-        isPartner = true;
-        email = (household.partner_email ?? 'Partner').trim() || 'Partner';
-        displayName = (household.partner_name ?? 'Partner').trim() || 'Partner';
-      }
-    }
-    if (!isPartner) redirect('/login');
+  const email = user.email ?? '';
+  const { data: profile } = await supabase
+    .from('users')
+    .select('display_name')
+    .eq('id', user.id)
+    .maybeSingle();
+  type ProfileRow = { display_name: string | null };
+  let displayName = (profile as ProfileRow | null)?.display_name ?? null;
+
+  const { data: owned } = await supabase
+    .from('households')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  const { data: partnerOf } = await supabase
+    .from('households')
+    .select('id, partner_name')
+    .eq('partner_user_id', user.id)
+    .maybeSingle();
+
+  const isPartner = !owned && !!partnerOf;
+  if (isPartner && partnerOf) {
+    displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
   }
 
   return (

@@ -72,7 +72,7 @@ export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
               aria-describedby="email-help"
             />
             <p id="email-help" className="text-sm text-muted-foreground">
-              You are viewing this household as the invited partner. Use &quot;Leave&quot; in the menu to sign out of partner access.
+              You are viewing this household as the invited partner. Use &quot;Leave&quot; in the menu to sign out.
             </p>
           </div>
         ) : (

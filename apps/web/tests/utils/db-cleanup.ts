@@ -50,7 +50,20 @@ export async function cleanupTestUser(email: string) {
   }
 
   if (!householdId) {
-    console.warn(`⚠️  Household for ${email} not found`);
+    // User may be partner of a household (e.g. partner@plotbudget.test); clear that link
+    await supabase
+      .from('households')
+      .update({
+        partner_user_id: null,
+        partner_email: null,
+        partner_auth_token: null,
+        partner_invite_status: 'none',
+        partner_invite_sent_at: null,
+        partner_accepted_at: null,
+        partner_last_login_at: null,
+      } as Record<string, unknown>)
+      .eq('partner_user_id', user.id);
+    console.log(`✅ Cleared partner link for ${email}`);
     return;
   }
 
@@ -267,6 +280,101 @@ export async function ensureBlueprintReady(email: string) {
 }
 
 /**
+ * Ensure a household has a pending partner invite with the given token, and the partner user exists.
+ * Used by partner invite e2e: ownerEmail = dashboard (or solo), partnerEmail = partner@plotbudget.test.
+ */
+export async function ensurePartnerInviteReady(
+  ownerEmail: string,
+  partnerEmail: string,
+  token: string
+) {
+  await ensureAuthUserExists(partnerEmail, 'test-password-123');
+  await ensureUserInPublicUsers(partnerEmail);
+
+  const { data: owner } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', ownerEmail)
+    .single();
+
+  if (!owner) {
+    console.warn(`⚠️  Owner ${ownerEmail} not found for partner invite`);
+    return;
+  }
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('id')
+    .eq('owner_id', owner.id)
+    .maybeSingle();
+
+  if (!household) {
+    await ensureBlueprintReady(ownerEmail);
+    const { data: h } = await supabase
+      .from('households')
+      .select('id')
+      .eq('owner_id', owner.id)
+      .single();
+    if (!h) {
+      console.warn(`⚠️  No household for ${ownerEmail}`);
+      return;
+    }
+  }
+
+  const { error } = await supabase
+    .from('households')
+    .update({
+      is_couple: true,
+      partner_email: partnerEmail,
+      partner_auth_token: token,
+      partner_invite_status: 'pending',
+      partner_invite_sent_at: new Date().toISOString(),
+    } as Record<string, unknown>)
+    .eq('owner_id', owner.id);
+
+  if (error) {
+    console.warn(`⚠️  Failed to set partner invite for ${ownerEmail}:`, error.message);
+  } else {
+    console.log(`✅ Partner invite ready: ${ownerEmail} -> ${partnerEmail}`);
+  }
+}
+
+/**
+ * Ensure partner user is linked to owner's household (partner_user_id set) and save auth state.
+ * Call after ensurePartnerInviteReady; then login as partner and save state to partner.json.
+ */
+export async function linkPartnerToHousehold(ownerEmail: string, partnerEmail: string) {
+  const {
+    data: { users: authUsers },
+  } = await supabase.auth.admin.listUsers({ perPage: 100 });
+  const partnerAuth = authUsers?.find((u) => u.email === partnerEmail);
+  if (!partnerAuth) return;
+
+  const { data: owner } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', ownerEmail)
+    .single();
+  if (!owner) return;
+
+  const { error } = await supabase
+    .from('households')
+    .update({
+      partner_user_id: partnerAuth.id,
+      partner_invite_status: 'accepted',
+      partner_accepted_at: new Date().toISOString(),
+      partner_last_login_at: new Date().toISOString(),
+    } as Record<string, unknown>)
+    .eq('owner_id', owner.id);
+
+  if (error) {
+    console.warn(`⚠️  Failed to link partner:`, error.message);
+  } else {
+    console.log(`✅ Partner ${partnerEmail} linked to ${ownerEmail} household`);
+  }
+}
+
+/**
  * Cleanup all test users (run before test suite)
  */
 export async function cleanupAllTestUsers() {
@@ -275,4 +383,6 @@ export async function cleanupAllTestUsers() {
   await cleanupTestUser('blueprint@plotbudget.test');
   await cleanupTestUser('ritual@plotbudget.test');
   await cleanupTestUser('dashboard@plotbudget.test');
+  await cleanupTestUser('partner@plotbudget.test');
+  await cleanupTestUser('onboarding@plotbudget.test');
 }

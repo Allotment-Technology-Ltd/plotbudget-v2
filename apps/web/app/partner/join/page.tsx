@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { acceptPartnerInvite } from '@/app/actions/partner-invite';
 import { Button } from '@/components/ui/button';
 
@@ -13,7 +14,7 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center" data-testid="partner-join-invalid">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Invalid Invitation Link</h1>
           <p className="text-muted-foreground">
@@ -24,8 +25,8 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
     );
   }
 
-  const supabase = createAdminClient();
-  const { data: householdData, error } = await supabase
+  const admin = createAdminClient();
+  const { data: householdData, error } = await admin
     .from('households')
     .select('id, owner_id')
     .eq('partner_auth_token', token)
@@ -37,7 +38,7 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
 
   if (error || !household) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center" data-testid="partner-join-expired">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Invalid or Expired Invitation</h1>
           <p className="text-muted-foreground">
@@ -48,7 +49,7 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
     );
   }
 
-  const { data: ownerData } = await supabase
+  const { data: ownerData } = await admin
     .from('users')
     .select('email, display_name')
     .eq('id', household.owner_id)
@@ -59,31 +60,65 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
   const ownerName =
     (owner?.display_name ?? '')?.trim() || owner?.email || 'Your partner';
 
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const joinUrl = `/partner/join?t=${encodeURIComponent(token)}`;
+
   async function handleAccept(formData: FormData) {
     'use server';
     const t = formData.get('token') as string;
     if (!t) return;
     await acceptPartnerInvite(t);
-
-    const cookieStore = await cookies();
-    cookieStore.set('partner_auth_token', t, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    });
-
     redirect('/dashboard');
   }
 
+  if (user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background" data-testid="partner-join-authenticated">
+        <div className="w-full max-w-md space-y-6 p-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold">Welcome to PLOT!</h1>
+            <p className="mt-2 text-muted-foreground">
+              {ownerName} invited you to budget together.
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="font-semibold">What you&apos;ll get access to:</h2>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li>✓ View all household seeds and pots</li>
+              <li>✓ Mark your bills as paid</li>
+              <li>✓ See budget overview</li>
+              <li>✓ Collaborate on payday rituals</li>
+            </ul>
+          </div>
+
+          <form action={handleAccept} className="space-y-4">
+            <input type="hidden" name="token" value={token} />
+            <Button type="submit" className="w-full" data-testid="partner-join-accept">
+              Accept & go to dashboard →
+            </Button>
+          </form>
+
+          <p className="text-center text-xs text-muted-foreground">
+            You&apos;re signed in as {user.email}. Accepting will link your
+            account to this household.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background" data-testid="partner-join-unauthenticated">
       <div className="w-full max-w-md space-y-6 p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Welcome to PLOT!</h1>
+          <h1 className="text-3xl font-bold">Join as partner</h1>
           <p className="mt-2 text-muted-foreground">
-            {ownerName} invited you to budget together.
+            {ownerName} invited you to budget together on PLOT.
           </p>
         </div>
 
@@ -97,17 +132,27 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
           </ul>
         </div>
 
-        <form action={handleAccept} className="space-y-4">
-          <input type="hidden" name="token" value={token} />
-          <Button type="submit" className="w-full">
-            Accept & Continue →
-          </Button>
-        </form>
-
-        <p className="text-center text-xs text-muted-foreground">
-          By accepting, you&apos;ll be able to access this household&apos;s
-          budget data.
+        <p className="text-sm text-muted-foreground text-center">
+          Create an account or sign in to accept the invitation. You&apos;ll
+          use this account every time you open PLOT.
         </p>
+
+        <div className="flex flex-col gap-3">
+          <Link
+            href={`/signup?redirect=${encodeURIComponent(joinUrl)}`}
+            data-testid="partner-join-signup"
+            className="btn-primary inline-flex w-full items-center justify-center rounded-md px-6 py-3 font-heading text-cta uppercase tracking-widest"
+          >
+            Create account
+          </Link>
+          <Link
+            href={`/login?redirect=${encodeURIComponent(joinUrl)}`}
+            data-testid="partner-join-login"
+            className="inline-flex w-full items-center justify-center rounded-md border border-input bg-transparent px-6 py-3 font-heading text-cta uppercase tracking-widest transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            I already have an account
+          </Link>
+        </div>
       </div>
     </div>
   );

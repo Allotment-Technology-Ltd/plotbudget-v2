@@ -7,11 +7,18 @@ import { defineConfig, devices } from '@playwright/test';
 loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
 loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
 
+// When Playwright starts the web server, always hit it at localhost. When SKIP_WEBSERVER=1, use PLAYWRIGHT_TEST_BASE_URL.
+const baseURL =
+  process.env.SKIP_WEBSERVER === '1'
+    ? process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000'
+    : 'http://localhost:3000';
+
 const authDir = path.resolve(process.cwd(), 'tests', '.auth');
 const soloStatePath = path.join(authDir, 'solo.json');
 const blueprintStatePath = path.join(authDir, 'blueprint.json');
 const ritualStatePath = path.join(authDir, 'ritual.json');
 const dashboardStatePath = path.join(authDir, 'dashboard.json');
+const onboardingStatePath = path.join(authDir, 'onboarding.json');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -42,7 +49,7 @@ export default defineConfig({
   /* Shared settings for all projects */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
+    baseURL,
 
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
@@ -58,10 +65,18 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testMatch: [/auth\.spec\.ts/, /onboarding\.spec\.ts/, /root\.spec\.ts/],
+      testMatch: [/auth\.spec\.ts/, /root\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         storageState: soloStatePath,
+      },
+    },
+    {
+      name: 'chromium-onboarding',
+      testMatch: [/onboarding\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: onboardingStatePath,
       },
     },
     {
@@ -86,6 +101,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: ritualStatePath,
+      },
+    },
+    {
+      name: 'chromium-partner-guest',
+      testMatch: [/partner-guest\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
       },
     },
 
@@ -124,7 +147,7 @@ export default defineConfig({
     webServer: {
       command: 'pnpm dev',
       url: 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       stdout: 'ignore',
       stderr: 'pipe',
       timeout: 120 * 1000, // 2 minutes for Next.js to start

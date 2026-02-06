@@ -47,4 +47,17 @@ test.describe('Authentication Flow', () => {
       await expect(page.getByTestId('waitlist-cta')).toBeVisible();
     }
   });
+
+  test('login with redirect param lands on redirect URL after success', async ({
+    page,
+  }) => {
+    await page.goto('/login?redirect=%2Fdashboard%2Fsettings');
+
+    const authPage = new AuthPage(page);
+    // Use dashboard user so we are not affected by onboarding.spec resetting solo in parallel
+    await authPage.login('dashboard@plotbudget.test', 'test-password-123');
+
+    await page.waitForURL(/\/dashboard\/settings/);
+    expect(page.url()).toContain('/dashboard/settings');
+  });
 });
