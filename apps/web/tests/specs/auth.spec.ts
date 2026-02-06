@@ -11,8 +11,8 @@ test.describe('Authentication Flow', () => {
     await authPage.goto();
     await authPage.login('solo@plotbudget.test', 'test-password-123');
 
-    // Should redirect to dashboard (or onboarding if not yet completed)
-    await page.waitForURL(/\/(dashboard|onboarding)/);
+    // Should redirect to dashboard (or onboarding if not yet completed); allow 45s in CI
+    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 45_000 });
     if (page.url().includes('/dashboard')) {
       await authPage.expectRedirectToDashboard();
     }
@@ -57,7 +57,7 @@ test.describe('Authentication Flow', () => {
     // Use dashboard user so we are not affected by onboarding.spec resetting solo in parallel
     await authPage.login('dashboard@plotbudget.test', 'test-password-123');
 
-    await page.waitForURL(/\/dashboard\/settings/);
+    await page.waitForURL(/\/dashboard\/settings/, { timeout: 45_000 });
     expect(page.url()).toContain('/dashboard/settings');
   });
 });

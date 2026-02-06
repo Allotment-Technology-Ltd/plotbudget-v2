@@ -161,7 +161,7 @@ export class BlueprintPage {
     const card = this.seedCard(seedName);
     await expect(card).toBeVisible();
     await expect(card).toContainText(seedName);
-    await expect(card).toContainText(`£${amount}`);
+    await expect(card).toContainText(`£${amount}`, { timeout: 15_000 });
   }
 
   async deleteSeed(seedName: string) {

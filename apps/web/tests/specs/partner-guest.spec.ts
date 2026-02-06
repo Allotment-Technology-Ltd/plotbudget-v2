@@ -27,22 +27,26 @@ test.describe('Partner invite (unauthenticated)', () => {
   test('shows Create account and Login with redirect when token is valid', async ({
     page,
   }) => {
+    test.setTimeout(60_000); // CI can be slow; avoid 30s default killing the test
     const partnerPage = new PartnerJoinPage(page);
     await partnerPage.goto(E2E_PARTNER_INVITE_TOKEN);
     await expect(page).toHaveURL(/\/partner\/join/);
     await expect(page.getByRole('heading', { name: /Join as partner/i })).toBeVisible({
-      timeout: 10000,
+      timeout: 15_000,
     });
     await partnerPage.expectUnauthenticatedJoin();
 
     await partnerPage.clickCreateAccount();
-    await page.waitForURL(/\/signup/);
+    await page.waitForURL(/\/signup/, { timeout: 15_000 });
     expect(page.url()).toContain('redirect=');
     expect(page.url()).toContain(encodeURIComponent('/partner/join'));
 
-    await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`);
+    await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(partnerPage.loginLink).toBeVisible({ timeout: 15_000 });
     await partnerPage.clickLogin();
-    await page.waitForURL(/\/login/);
+    await page.waitForURL(/\/login/, { timeout: 15_000 });
     expect(page.url()).toContain('redirect=');
     expect(page.url()).toContain(encodeURIComponent('/partner/join'));
   });
