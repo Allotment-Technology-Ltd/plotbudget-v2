@@ -275,6 +275,7 @@ export type Database = {
           uses_joint_account: boolean;
           linked_pot_id: string | null;
           linked_repayment_id: string | null;
+          created_by_owner: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -297,6 +298,7 @@ export type Database = {
           uses_joint_account?: boolean;
           linked_pot_id?: string | null;
           linked_repayment_id?: string | null;
+          created_by_owner?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -319,6 +321,7 @@ export type Database = {
           uses_joint_account?: boolean;
           linked_pot_id?: string | null;
           linked_repayment_id?: string | null;
+          created_by_owner?: boolean;
           created_at?: string;
           updated_at?: string;
         };

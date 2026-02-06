@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/ui', '@repo/logic'],
+  webpack: (config, { dev }) => {
+    // In dev, use memory-only cache so webpack doesn't serialize large strings to disk (which
+    // triggers "Serializing big strings" warning). The "use Buffer" approach would require
+    // changes in webpack core or plugins (e.g. mini-css-extract-plugin), not in app config.
+    if (dev) {
+      config.cache = { type: 'memory' };
+    }
+    // Suppress the warning if it still appears (e.g. if Next overrides cache or in production).
+    config.ignoreWarnings = [...(config.ignoreWarnings || []), /Serializing big strings/];
+    return config;
+  },
   async headers() {
     return [
       {

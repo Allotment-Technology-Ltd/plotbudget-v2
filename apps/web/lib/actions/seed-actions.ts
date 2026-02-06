@@ -1,8 +1,11 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import { calculateNextCycleDates } from '@/lib/utils/pay-cycle-dates';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Household = Database['public']['Tables']['households']['Row'];
@@ -83,8 +86,11 @@ function calculateSeedSplit(
 }
 
 /** Recalculate and update all paycycle allocation and remaining columns from seeds */
-async function updatePaycycleAllocations(paycycleId: string): Promise<void> {
-  const supabase = await createServerSupabaseClient();
+async function updatePaycycleAllocations(
+  paycycleId: string,
+  client?: SupabaseClient<Database>
+): Promise<void> {
+  const supabase = client ?? (await createServerSupabaseClient());
 
   const { data: seedsData } = await supabase
     .from('seeds')
@@ -193,13 +199,20 @@ async function updatePaycycleAllocations(paycycleId: string): Promise<void> {
 export async function createSeed(data: CreateSeedInput): Promise<{ error?: string }> {
   try {
     const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext();
+    const canActAsPartner = isPartner && partnerHouseholdId && partnerHouseholdId === data.household_id;
+    if (!user && !canActAsPartner) return { error: 'Not authenticated' };
+    const client = canActAsPartner && !user ? createAdminClient() : supabase;
 
     let linkedPotId = data.linked_pot_id ?? null;
     let linkedRepaymentId = data.linked_repayment_id ?? null;
 
     if (data.type === 'savings' && data.pot && !linkedPotId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: pot, error: potErr } = await (supabase.from('pots') as any)
+      const { data: pot, error: potErr } = await (client.from('pots') as any)
         .insert({
           household_id: data.household_id,
           name: data.name,
@@ -216,7 +229,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
 
     if (data.type === 'repay' && data.repayment && !linkedRepaymentId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: repayment, error: repayErr } = await (supabase.from('repayments') as any)
+      const { data: repayment, error: repayErr } = await (client.from('repayments') as any)
         .insert({
           household_id: data.household_id,
           name: data.name,
@@ -231,7 +244,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       linkedRepaymentId = repayment?.id ?? null;
     }
 
-    const { data: household } = (await supabase
+    const { data: household } = (await client
       .from('households')
       .select('joint_ratio')
       .eq('id', data.household_id)
@@ -244,6 +257,8 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       data.split_ratio,
       jointRatio
     );
+
+    const createdByOwner = !!user;
 
     const insertData: SeedInsert = {
       household_id: data.household_id,
@@ -262,13 +277,14 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       linked_pot_id: linkedPotId,
       linked_repayment_id: linkedRepaymentId,
       uses_joint_account: data.uses_joint_account ?? false,
+      created_by_owner: createdByOwner,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('seeds') as any).insert(insertData);
+    const { error } = await (client.from('seeds') as any).insert(insertData);
 
     if (error) return { error: error.message };
 
-    await updatePaycycleAllocations(data.paycycle_id);
+    await updatePaycycleAllocations(data.paycycle_id, canActAsPartner ? client : undefined);
     revalidatePath('/dashboard/blueprint');
     return {};
   } catch (e) {

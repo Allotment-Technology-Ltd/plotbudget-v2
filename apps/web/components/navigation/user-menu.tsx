@@ -19,16 +19,17 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { signOut } from '@/lib/actions/auth-actions';
+import { signOut, leavePartnerSession } from '@/lib/actions/auth-actions';
 
 interface UserMenuProps {
   user: {
     email: string;
     display_name?: string | null;
   };
+  isPartner?: boolean;
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, isPartner = false }: UserMenuProps) {
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
@@ -39,6 +40,10 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
+      if (isPartner) {
+        await leavePartnerSession();
+        return;
+      }
       await signOut();
       toast.success("You've been logged out");
       router.push('/login');
@@ -74,6 +79,11 @@ export function UserMenu({ user }: UserMenuProps) {
       >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col gap-0.5">
+            {isPartner && (
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Viewing as partner
+              </p>
+            )}
             <p className="font-heading text-sm font-medium uppercase tracking-wider text-foreground">
               {displayName}
             </p>
@@ -143,11 +153,11 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem
           className="cursor-pointer transition-colors duration-200 focus:bg-destructive/10 focus:text-destructive"
           onSelect={handleSignOut}
-          aria-label="Log out"
+          aria-label={isPartner ? 'Leave' : 'Log out'}
           data-testid="user-menu-logout"
         >
           <LogOut className="mr-2 h-4 w-4" aria-hidden />
-          Log out
+          {isPartner ? 'Leave' : 'Log out'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

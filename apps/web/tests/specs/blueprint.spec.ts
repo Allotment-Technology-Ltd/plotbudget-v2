@@ -85,4 +85,21 @@ test.describe.serial('Blueprint - Seed Management', () => {
     // Should show validation error
     await expect(page.getByTestId('amount-error-message')).toBeVisible();
   });
+
+  test('solo mode: added seed does not show "Added by" (data still captured for future couple mode)', async ({ page }) => {
+    const blueprintPage = new BlueprintPage(page);
+    await blueprintPage.goto();
+
+    await blueprintPage.addSeed({
+      name: 'Solo Only Bill',
+      amount: 99,
+      category: 'need',
+      source: 'me',
+      recurring: false,
+    });
+
+    await blueprintPage.expectSeedInList('Solo Only Bill', 99);
+    // In solo mode we hide "Added by" in the UI; created_by_owner is still stored
+    await expect(page.getByText('Added by', { exact: false })).not.toBeVisible();
+  });
 });

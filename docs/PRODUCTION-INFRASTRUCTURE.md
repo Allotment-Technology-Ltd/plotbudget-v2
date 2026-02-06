@@ -50,6 +50,18 @@ PlotBudget V2 production launch: separate dev/staging and production environment
 - `NEXT_PUBLIC_APP_URL=https://app.plotbudget.com`
 - Strong, unique `CRON_SECRET`.
 
+### Partner invite email (Resend)
+
+Partner invite emails are sent from the Next.js app via [Resend](https://resend.com). Set these in **every environment** where you want invites to send (local, Preview, production):
+
+| Variable | Description |
+|----------|-------------|
+| `RESEND_API_KEY` | Resend API key (create in Resend dashboard). Required for sending. |
+| `RESEND_FROM_EMAIL` | Sender string, e.g. `PLOT <hello@plotbudget.com>`. Defaults to Resend onboarding address if unset. |
+
+- **App URL for invite links:** The app uses `NEXT_PUBLIC_APP_URL` when set; on Vercel Preview it falls back to `VERCEL_URL` (set automatically), and locally to `http://localhost:3000`. Set `NEXT_PUBLIC_APP_URL` in production and optionally in Preview if you want a specific base URL.
+- **Supabase:** Partner invites do not use Supabase Auth email; they are sent by the app. No Supabase email/SMTP config is required for this feature.
+
 **Optional:** `ALLOWED_EMAILS` (comma-separated). If set, only those emails can sign up; if unset, signups are public.
 
 ### Auth feature flags (signup gating / beta)
