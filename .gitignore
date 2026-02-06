@@ -43,6 +43,9 @@ playwright/.cache/
 # TypeScript
 *.tsbuildinfo
 
+# Supabase CLI
+supabase/.temp/
+
 # Misc
 .vercel/
 .cache/
