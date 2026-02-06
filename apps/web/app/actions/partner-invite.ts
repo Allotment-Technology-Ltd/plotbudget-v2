@@ -54,6 +54,96 @@ export async function invitePartner(partnerEmail: string) {
 }
 
 /**
+ * Create a shareable partner invite link without sending email.
+ * Sets household to pending with a new token; owner can copy link and share (e.g. WhatsApp, SMS).
+ * Optionally send email later via sendPartnerInviteToEmail.
+ */
+export async function createPartnerInviteLink(): Promise<{ url: string }> {
+  const supabase = await createServerSupabaseClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error: householdError } = await supabase
+    .from('households')
+    .select('*')
+    .eq('owner_id', user.id)
+    .single();
+
+  const household = data as HouseholdRow | null;
+  if (householdError || !household) throw new Error('Household not found');
+  if (!household.is_couple) throw new Error('Not in couple mode');
+
+  const token = crypto.randomBytes(32).toString('hex');
+
+  const { error: updateError } = await supabase
+    .from('households')
+    .update({
+      partner_email: null,
+      partner_auth_token: token,
+      partner_invite_status: 'pending',
+      partner_invite_sent_at: new Date().toISOString(),
+    } as never)
+    .eq('id', household.id);
+
+  if (updateError) throw new Error('Failed to create invite link');
+
+  revalidatePath('/dashboard/settings');
+
+  const base = getAppBaseUrl();
+  const url = `${base}/partner/join?t=${encodeURIComponent(token)}`;
+  return { url };
+}
+
+/**
+ * Send partner invite email to the given address when invite is already pending (e.g. link-only).
+ * Updates household partner_email and sends the same join link via email.
+ */
+export async function sendPartnerInviteToEmail(partnerEmail: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data } = await supabase
+    .from('households')
+    .select('*')
+    .eq('owner_id', user.id)
+    .single();
+
+  const household = data as HouseholdRow | null;
+  if (!household) throw new Error('Household not found');
+  if (household.partner_invite_status !== 'pending') {
+    throw new Error('No pending invitation');
+  }
+  if (!household.partner_auth_token) throw new Error('No invite link');
+
+  const { error: updateError } = await supabase
+    .from('households')
+    .update({
+      partner_email: partnerEmail,
+      partner_invite_sent_at: new Date().toISOString(),
+    } as never)
+    .eq('id', household.id);
+
+  if (updateError) throw new Error('Failed to update household');
+
+  await sendPartnerInviteEmail(
+    partnerEmail,
+    user.email ?? '',
+    household.partner_auth_token
+  );
+
+  revalidatePath('/dashboard/settings');
+
+  return { success: true, message: 'Invitation email sent!' };
+}
+
+/**
  * Resend partner invitation.
  */
 export async function resendPartnerInvite() {
