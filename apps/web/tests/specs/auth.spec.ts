@@ -27,14 +27,24 @@ test.describe('Authentication Flow', () => {
     await authPage.expectLoginError();
   });
 
-  test('user can navigate to signup page', async ({ page }) => {
+  test('user can navigate to signup page and sees either form or gated waitlist', async ({
+    page,
+  }) => {
     const authPage = new AuthPage(page);
 
     await authPage.goto();
     await authPage.signupLink.click();
 
     await page.waitForURL(/\/signup/);
-    // Signup page is currently a private beta placeholder (no form)
     await expect(page.getByTestId('signup-page')).toBeVisible();
+    // When signup is gated: waitlist CTA; when open: signup form
+    const formVisible = await page.getByTestId('signup-form').isVisible();
+    const gatedVisible = await page.getByTestId('signup-gated-view').isVisible();
+    expect(formVisible || gatedVisible).toBeTruthy();
+    if (formVisible) {
+      await expect(page.getByTestId('submit-signup-form')).toBeVisible();
+    } else {
+      await expect(page.getByTestId('waitlist-cta')).toBeVisible();
+    }
   });
 });

@@ -43,7 +43,7 @@ export default function HomePage() {
               className="btn-primary transition-colors duration-200"
               data-testid="cta-signup"
             >
-              GET EARLY ACCESS
+              Get Started
             </Link>
             <Link
               href="#why-plot"
