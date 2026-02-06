@@ -23,9 +23,6 @@ importers:
 
   apps/marketing:
     dependencies:
-      '@repo/design-tokens':
-        specifier: workspace:*
-        version: link:../../packages/design-tokens
       '@vercel/analytics':
         specifier: ^1.6.1
         version: 1.6.1(react@18.3.1)
