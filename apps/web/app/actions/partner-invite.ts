@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@/lib/supabase/database.types';
 import { sendPartnerInviteEmail } from '@/lib/email/partner-invite';
+import { getAppBaseUrl } from '@/lib/app-url';
 
 type HouseholdRow = Database['public']['Tables']['households']['Row'];
 
@@ -113,6 +114,7 @@ export async function removePartner() {
       partner_invite_sent_at: null,
       partner_accepted_at: null,
       partner_last_login_at: null,
+      partner_user_id: null,
     } as never)
     .eq('owner_id', user.id);
 
@@ -124,14 +126,20 @@ export async function removePartner() {
 }
 
 /**
- * Accept partner invitation.
- * Called from /partner/join page. The partner may be unauthenticated; we
- * authorize via the token, so we use the admin client to bypass RLS.
+ * Accept partner invitation and link the current user as partner.
+ * Called from /partner/join after the user has signed up or logged in.
+ * Requires authentication; we set partner_user_id so they get RLS access.
+ * Use admin client for lookup by token (row not yet visible to partner via RLS).
  */
 export async function acceptPartnerInvite(token: string) {
-  const supabase = createAdminClient();
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('You must be signed in to accept the invitation');
 
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from('households')
     .select('*')
     .eq('partner_auth_token', token)
@@ -143,9 +151,10 @@ export async function acceptPartnerInvite(token: string) {
     throw new Error('Invalid or expired invitation');
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await admin
     .from('households')
     .update({
+      partner_user_id: user.id,
       partner_invite_status: 'accepted',
       partner_accepted_at: new Date().toISOString(),
       partner_last_login_at: new Date().toISOString(),
@@ -155,4 +164,34 @@ export async function acceptPartnerInvite(token: string) {
   if (updateError) throw new Error('Failed to accept invitation');
 
   return { success: true, householdId: household.id };
+}
+
+/**
+ * Return the partner invite join URL when the household has a pending invite.
+ * Used so the owner can copy the link and share via WhatsApp, SMS, etc.
+ */
+export async function getPartnerInviteLink(): Promise<{ url: string | null }> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { url: null };
+
+  const { data } = await supabase
+    .from('households')
+    .select('partner_auth_token, partner_invite_status')
+    .eq('owner_id', user.id)
+    .single();
+
+  const household = data as { partner_auth_token: string | null; partner_invite_status: string } | null;
+  if (
+    !household?.partner_auth_token ||
+    household.partner_invite_status !== 'pending'
+  ) {
+    return { url: null };
+  }
+
+  const base = getAppBaseUrl();
+  const url = `${base}/partner/join?t=${encodeURIComponent(household.partner_auth_token)}`;
+  return { url };
 }

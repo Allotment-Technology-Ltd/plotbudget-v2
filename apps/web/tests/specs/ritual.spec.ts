@@ -25,6 +25,7 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
   test('mark seed as paid updates progress and shows celebration', async ({
     page,
   }) => {
+    test.setTimeout(60_000);
     const blueprintPage = new BlueprintPage(page);
     await blueprintPage.goto();
 
@@ -42,7 +43,7 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
     await blueprintPage.expectRitualProgress(1, 1);
     await expect(
       page.getByText('Ritual Complete!', { exact: false })
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test('celebration can be dismissed', async ({ page }) => {

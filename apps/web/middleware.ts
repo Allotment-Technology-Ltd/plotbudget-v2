@@ -57,50 +57,34 @@ export async function middleware(request: NextRequest) {
   // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Protected routes - redirect to login if not authenticated (or check partner token)
+  // Protected routes - require authenticated user (partners use accounts, not cookie)
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
     if (!user) {
-      // Check for partner magic-link token
-      const partnerToken = request.cookies.get('partner_auth_token')?.value;
-      if (partnerToken) {
-        const { data: household } = await supabase
-          .from('households')
-          .select('id, partner_invite_status')
-          .eq('partner_auth_token', partnerToken)
-          .eq('partner_invite_status', 'accepted')
-          .single();
-
-        if (household) {
-          const requestHeaders = new Headers(request.headers);
-          requestHeaders.set('x-partner-household-id', household.id);
-          requestHeaders.set('x-is-partner', 'true');
-          await supabase
-            .from('households')
-            .update({ partner_last_login_at: new Date().toISOString() })
-            .eq('id', household.id);
-          return NextResponse.next({
-            request: { headers: requestHeaders },
-          });
-        }
-      }
-
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If authenticated, check onboarding status for dashboard routes
+    // If authenticated, check onboarding: owners go to onboarding until complete;
+    // partners (partner_user_id set) can use dashboard without completing owner onboarding.
     const { data: profile } = await supabase
       .from('users')
       .select('has_completed_onboarding')
       .eq('id', user.id)
       .single();
 
-    // Redirect to onboarding only when profile exists and explicitly says not completed.
-    // If profile is null (fetch failed/RLS), allow request through to avoid redirect loops.
+    const { data: partnerHousehold } = await supabase
+      .from('households')
+      .select('id')
+      .eq('partner_user_id', user.id)
+      .maybeSingle();
+
+    const isPartner = !!partnerHousehold;
+
     if (
       profile != null &&
       !profile.has_completed_onboarding &&
+      !isPartner &&
       !request.nextUrl.pathname.includes('/onboarding')
     ) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
@@ -127,10 +111,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Auth routes - redirect to dashboard if already authenticated
+  // Auth routes - redirect to dashboard (or redirect param e.g. partner join) if already authenticated
   if (['/login', '/signup'].includes(request.nextUrl.pathname)) {
     if (user) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      const redirectTo = request.nextUrl.searchParams.get('redirect');
+      const path = redirectTo ?? '/dashboard';
+      const url = path.startsWith('/') ? new URL(path, request.url) : new URL('/dashboard', request.url);
+      return NextResponse.redirect(url);
     }
   }
 

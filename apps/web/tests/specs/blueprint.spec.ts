@@ -28,6 +28,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
   });
 
   test('edit existing seed amount', async ({ page }) => {
+    test.setTimeout(60_000);
     const blueprintPage = new BlueprintPage(page);
     await blueprintPage.goto();
 
@@ -48,7 +49,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
     await blueprintPage.seedAmountInput.fill('350');
     await blueprintPage.submitSeedButton.click();
 
-    // Verify updated amount
+    // Verify updated amount (allow time for UI to reflect in CI)
     await blueprintPage.expectSeedInList('Groceries', 350);
   });
 

@@ -1,11 +1,14 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { SignupGatedView } from '@/components/auth/signup-gated-view';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 
 export function SignupPageClient() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const { signupGated, waitlistUrl } = useAuthFeatureFlags();
 
   if (signupGated) {
@@ -28,7 +31,7 @@ export function SignupPageClient() {
           Sign up to start plotting your budget together
         </p>
       </div>
-      <AuthForm mode="signup" />
+      <AuthForm mode="signup" redirectTo={redirectTo ?? undefined} />
     </div>
   );
 }

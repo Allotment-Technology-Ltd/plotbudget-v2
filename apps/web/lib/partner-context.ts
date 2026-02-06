@@ -1,20 +1,29 @@
-import { headers } from 'next/headers';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase/database.types';
 
 /**
- * Read partner context from request headers (set by middleware when partner
- * is authenticated via magic-link cookie).
- * Use this in server components/actions to load data for the partner's household
- * (e.g. with admin client filtered by householdId).
+ * Resolve partner context from DB: is this user the partner of a household?
+ * Use in server components/actions when the user is authenticated (partners
+ * now have accounts). Returns householdId when user is partner_user_id of a household.
  */
-export async function getPartnerContext(): Promise<{
+export async function getPartnerContext(
+  supabase: SupabaseClient<Database>,
+  userId: string | null
+): Promise<{
   householdId: string | null;
   isPartner: boolean;
 }> {
-  const h = await headers();
-  const householdId = h.get('x-partner-household-id');
-  const isPartner = h.get('x-is-partner') === 'true';
+  if (!userId) return { householdId: null, isPartner: false };
+
+  const { data } = await supabase
+    .from('households')
+    .select('id')
+    .eq('partner_user_id', userId)
+    .maybeSingle();
+
+  const row = data as { id: string } | null;
   return {
-    householdId: isPartner && householdId ? householdId : null,
-    isPartner: !!isPartner,
+    householdId: row?.id ?? null,
+    isPartner: !!row?.id,
   };
 }

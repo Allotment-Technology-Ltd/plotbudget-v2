@@ -46,12 +46,15 @@ interface AuthFormProps {
   showForgotPassword?: boolean;
   /** When false, hide Google login option. Default true for signup, false until flag enabled. */
   showGoogleLogin?: boolean;
+  /** After success, redirect here instead of /dashboard (e.g. partner join URL). */
+  redirectTo?: string;
 }
 
 export function AuthForm({
   mode,
   showForgotPassword = true,
   showGoogleLogin = false,
+  redirectTo,
 }: AuthFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +68,7 @@ export function AuthForm({
         router={router}
         showForgotPassword={showForgotPassword}
         showGoogleLogin={showGoogleLogin}
+        redirectTo={redirectTo}
       />
     );
   }
@@ -75,6 +79,7 @@ export function AuthForm({
       setIsLoading={setIsLoading}
       router={router}
       showGoogleLogin={showGoogleLogin}
+      redirectTo={redirectTo}
     />
   );
 }
@@ -86,12 +91,14 @@ function LoginForm({
   router,
   showForgotPassword = true,
   showGoogleLogin = false,
+  redirectTo,
 }: {
   isLoading: boolean;
   setIsLoading: (v: boolean) => void;
   router: ReturnType<typeof useRouter>;
   showForgotPassword?: boolean;
   showGoogleLogin?: boolean;
+  redirectTo?: string;
 }) {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -122,8 +129,12 @@ function LoginForm({
         return;
       }
 
-      toast.success('Welcome back!');
-      router.push('/dashboard');
+      router.push(redirectTo ?? '/dashboard');
+      try {
+        toast.success('Welcome back!');
+      } catch {
+        // Don't block redirect if toast fails (e.g. in test env)
+      }
     } catch (error) {
       form.setError('root', {
         message: 'An unexpected error occurred. Please try again.',
@@ -136,7 +147,10 @@ function LoginForm({
   return (
     <div className="space-y-6">
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit(onSubmit)(e);
+        }}
         className="space-y-4"
         noValidate
         aria-label="Sign in"
@@ -206,19 +220,20 @@ function LoginForm({
           </div>
         )}
 
-        {/* Submit button */}
+        {/* Submit via button click only (type="button" avoids native form submit and page reload) */}
         <Button
-          type="submit"
+          type="button"
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
           data-testid="submit-login-form"
+          onClick={() => form.handleSubmit(onSubmit)()}
         >
           {isLoading ? 'Loading...' : 'Sign In'}
         </Button>
       </form>
 
-      <AuthFooter isLogin={true} showGoogleLogin={showGoogleLogin} />
+      <AuthFooter isLogin={true} showGoogleLogin={showGoogleLogin} redirectTo={redirectTo} />
     </div>
   );
 }
@@ -229,11 +244,13 @@ function SignupForm({
   setIsLoading,
   router,
   showGoogleLogin = false,
+  redirectTo,
 }: {
   isLoading: boolean;
   setIsLoading: (v: boolean) => void;
   router: ReturnType<typeof useRouter>;
   showGoogleLogin?: boolean;
+  redirectTo?: string;
 }) {
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -274,8 +291,12 @@ function SignupForm({
         return;
       }
 
-      toast.success('Account created successfully!');
-      router.push('/dashboard');
+      router.push(redirectTo ?? '/dashboard');
+      try {
+        toast.success('Account created successfully!');
+      } catch {
+        // Don't block redirect if toast fails (e.g. in test env)
+      }
     } catch (error) {
       form.setError('root', {
         message: 'An unexpected error occurred. Please try again.',
@@ -288,7 +309,10 @@ function SignupForm({
   return (
     <div className="space-y-6">
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit(onSubmit)(e);
+        }}
         className="space-y-4"
         noValidate
         aria-label="Create account"
@@ -366,19 +390,20 @@ function SignupForm({
           </div>
         )}
 
-        {/* Submit button */}
+        {/* Submit via button click only (type="button" avoids native form submit and page reload) */}
         <Button
-          type="submit"
+          type="button"
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
           data-testid="submit-signup-form"
+          onClick={() => form.handleSubmit(onSubmit)()}
         >
           {isLoading ? 'Loading...' : 'Create Account'}
         </Button>
       </form>
 
-      <AuthFooter isLogin={false} showGoogleLogin={showGoogleLogin} />
+      <AuthFooter isLogin={false} showGoogleLogin={showGoogleLogin} redirectTo={redirectTo} />
     </div>
   );
 }
@@ -387,10 +412,13 @@ function SignupForm({
 function AuthFooter({
   isLogin,
   showGoogleLogin = false,
+  redirectTo,
 }: {
   isLogin: boolean;
   showGoogleLogin?: boolean;
+  redirectTo?: string;
 }) {
+  const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
   return (
     <>
       {showGoogleLogin && (
@@ -440,7 +468,7 @@ function AuthFooter({
       <p className="text-center text-sm text-muted-foreground">
         {isLogin ? "Don't have an account? " : 'Already have an account? '}
         <Link
-          href={isLogin ? '/signup' : '/login'}
+          href={isLogin ? `/signup${redirectQuery}` : `/login${redirectQuery}`}
           className="text-primary hover:underline font-medium"
           data-testid={isLogin ? 'nav-signup' : 'nav-login'}
         >

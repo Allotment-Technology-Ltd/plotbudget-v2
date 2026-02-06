@@ -55,17 +55,44 @@ export class OnboardingPage {
     await expect(this.soloModeButton).toBeVisible();
   }
 
+  /** Next pay date input (visible when "Every 4 weeks" is selected). Value format: YYYY-MM-DD */
+  get anchorDateInput() {
+    return this.page.getByLabel('Next Pay Date');
+  }
+
   async completeSoloOnboarding(income: number, payCycleDate: number) {
     // Single form: mode, income, pay cycle (radio), then submit
     await this.soloModeButton.click();
     await expect(this.incomeInput).toBeVisible();
     await this.incomeInput.fill(income.toString());
     await expect(this.payCycleSelect).toBeVisible();
-    // Pay cycle type is a RadioGroup, not a <select>
     await this.page.getByRole('radio', { name: 'Specific date (e.g., 25th)' }).click();
-    // Pay day is a Select dropdown; open and choose the day
     await this.payCycleDateInput.click();
-    await this.page.getByRole('option', { name: payCycleDate.toString() }).click();
+    const dayOption = this.page.getByRole('option', { name: payCycleDate.toString() });
+    await expect(dayOption).toBeVisible({ timeout: 5000 });
+    await dayOption.click();
+    await expect(this.createBlueprintButton).toBeVisible();
+    await this.createBlueprintButton.click();
+  }
+
+  async completeSoloOnboardingLastWorkingDay(income: number) {
+    await this.soloModeButton.click();
+    await expect(this.incomeInput).toBeVisible();
+    await this.incomeInput.fill(income.toString());
+    await expect(this.payCycleSelect).toBeVisible();
+    await this.page.getByRole('radio', { name: 'Last working day' }).click();
+    await expect(this.createBlueprintButton).toBeVisible();
+    await this.createBlueprintButton.click();
+  }
+
+  async completeSoloOnboardingEvery4Weeks(income: number, nextPayDate: string) {
+    await this.soloModeButton.click();
+    await expect(this.incomeInput).toBeVisible();
+    await this.incomeInput.fill(income.toString());
+    await expect(this.payCycleSelect).toBeVisible();
+    await this.page.getByRole('radio', { name: 'Every 4 weeks' }).click();
+    await expect(this.anchorDateInput).toBeVisible({ timeout: 5000 });
+    await this.anchorDateInput.fill(nextPayDate);
     await expect(this.createBlueprintButton).toBeVisible();
     await this.createBlueprintButton.click();
   }
@@ -74,5 +101,11 @@ export class OnboardingPage {
     // Celebration animation can take ~3.3s; allow 60s in CI for redirect to /dashboard/blueprint
     await this.page.waitForURL(/\/blueprint/, { timeout: 60_000 });
     await expect(this.page.getByTestId('blueprint-empty-state')).toBeVisible();
+  }
+
+  async logout() {
+    await this.page.getByTestId('user-menu-trigger').click();
+    await this.page.getByRole('menuitem', { name: 'Log out' }).click();
+    await this.page.waitForURL((url) => url.pathname === '/' || /plotbudget\.com/.test(url.href));
   }
 }

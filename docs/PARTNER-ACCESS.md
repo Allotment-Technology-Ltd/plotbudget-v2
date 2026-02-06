@@ -2,22 +2,26 @@
 
 ## How the partner accesses the app
 
-When a partner **accepts an invite** (on `/partner/join?t=<token>`):
+When a partner **opens the invite link** (`/partner/join?t=<token>`):
 
-1. They click “Accept & Continue” and a **cookie** (`partner_auth_token`) is set (30-day expiry).
-2. They are redirected to the dashboard.
+1. They see “Join as partner” with two options: **Create account** or **I already have an account** (log in).
+2. After signing up or logging in, they are sent back to the same join page and click **Accept & go to dashboard**.
+3. Their account is linked to the household as partner (`partner_user_id`). They are redirected to the dashboard.
 
-From then on, the partner **does not log in with email/password**. They are recognised by that cookie. The app treats them as “viewing as partner” for that household.
+From then on, the partner **logs in with their own email/password** (or existing account). They have the same permissions as before (view/edit shared household, mark paid, etc.) but use a real account, so it’s easier to manage and to get back in each paycycle.
+
+---
+
+## Sharing the invite link
+
+The owner can **copy the invite link** from Settings → Household when an invitation is pending. They can share it via WhatsApp, SMS, Instagram, or any app—no need to rely only on email. The link is also sent by email when they send or resend the invitation.
 
 ---
 
 ## What happens the next cycle / next time they open the app
 
-- **Same browser, within 30 days:** They open the app (e.g. `app.plotbudget.com/dashboard` or your preview URL). The cookie is still there, so they go straight to the dashboard. No need to use the invite link again.
-- **New device or after clearing cookies:** The cookie is gone. They must use the **original invite link** again (`/partner/join?t=<token>`). The token does not expire when the invite is accepted; it stays valid so they can re-enter from a new device.
-- **After 30 days (cookie expired):** Same as “new device” – use the invite link again.
-
-So “next cycle” is just: they come back to the app in the same browser and keep using it. No extra step unless they’re on a new device or the cookie was cleared.
+- The partner signs in with their email and password. They go straight to the dashboard as partner for that household.
+- No cookie or magic link is needed; their account is linked to the household.
 
 ---
 
@@ -30,6 +34,6 @@ So “next cycle” is just: they come back to the app in the same browser and k
 
 ## Making it clear who is logged in
 
-- In **Settings → Profile** we show either **“Logged in as [owner email]”** (account holder) or **“Viewing as partner ([partner email])”**.
-- In the **header user menu** we show the same identity (owner email or “Partner” + partner email).
+- In **Settings → Profile** we show either **“Logged in as [owner email]”** (account holder) or the partner’s email (they are signed in as partner).
+- In the **header user menu** we show the same identity (owner email or partner email) and **Leave** for the partner (signs them out).
 - On **seeds/bills** we show who added a bill and who marked it paid (you vs partner), so it’s clear who made changes.

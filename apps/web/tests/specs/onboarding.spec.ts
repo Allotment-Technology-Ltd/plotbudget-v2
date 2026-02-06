@@ -1,29 +1,51 @@
 // apps/web/tests/specs/onboarding.spec.ts
 import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../pages/onboarding.page';
+import { AuthPage } from '../pages/auth.page';
 import { resetOnboardingState } from '../utils/db-cleanup';
+import { TEST_USERS } from '../fixtures/test-data';
 
 test.describe('Onboarding Flow - Solo Mode', () => {
-  test.use({ storageState: 'tests/.auth/solo.json' });
-
+  // Project chromium-onboarding provides storageState for onboarding@ so no other test shares this user
   test.beforeEach(async () => {
-    // Reset so /onboarding is shown (middleware redirects completed users to dashboard)
-    await resetOnboardingState('solo@plotbudget.test');
+    await resetOnboardingState(TEST_USERS.onboarding.email);
   });
 
-  test('complete solo onboarding with specific date pay cycle', async ({ page }) => {
-    // Freeze time to January 15, 2024 for predictable pay cycle dates
+  test('complete solo onboarding for all pay cycle date options (specific date, last working day, every 4 weeks)', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000); // 3 scenarios × ~90s each
     await page.clock.setFixedTime(new Date('2024-01-15T12:00:00Z'));
 
     const onboardingPage = new OnboardingPage(page);
+    const authPage = new AuthPage(page);
+    const { email, password } = TEST_USERS.onboarding;
 
+    // —— Scenario 1: Specific date (e.g. 25th) ——
     await onboardingPage.goto();
-
-    // Complete all steps (requires test IDs on onboarding UI)
     await onboardingPage.completeSoloOnboarding(2500, 31);
-
-    // Should redirect to empty blueprint
     await onboardingPage.expectRedirectToBlueprint();
+    await onboardingPage.logout();
+
+    // —— Clear down, then Scenario 2: Last working day ——
+    await resetOnboardingState(email);
+    await authPage.goto();
+    await authPage.login(email, password);
+    await page.waitForURL(/\/(dashboard|onboarding)/);
+    await onboardingPage.goto();
+    await onboardingPage.completeSoloOnboardingLastWorkingDay(2500);
+    await onboardingPage.expectRedirectToBlueprint();
+    await onboardingPage.logout();
+
+    // —— Clear down, then Scenario 3: Every 4 weeks ——
+    await resetOnboardingState(email);
+    await authPage.goto();
+    await authPage.login(email, password);
+    await page.waitForURL(/\/(dashboard|onboarding)/);
+    await onboardingPage.goto();
+    await onboardingPage.completeSoloOnboardingEvery4Weeks(2500, '2024-02-15');
+    await onboardingPage.expectRedirectToBlueprint();
+    await onboardingPage.logout();
   });
 
   test('cannot proceed without entering income', async ({ page }) => {

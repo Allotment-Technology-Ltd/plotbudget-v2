@@ -1,7 +1,6 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import { calculateNextCycleDates } from '@/lib/utils/pay-cycle-dates';
@@ -202,17 +201,16 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext();
+    const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
     const canActAsPartner = isPartner && partnerHouseholdId && partnerHouseholdId === data.household_id;
     if (!user && !canActAsPartner) return { error: 'Not authenticated' };
-    const client = canActAsPartner && !user ? createAdminClient() : supabase;
 
     let linkedPotId = data.linked_pot_id ?? null;
     let linkedRepaymentId = data.linked_repayment_id ?? null;
 
     if (data.type === 'savings' && data.pot && !linkedPotId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: pot, error: potErr } = await (client.from('pots') as any)
+      const { data: pot, error: potErr } = await (supabase.from('pots') as any)
         .insert({
           household_id: data.household_id,
           name: data.name,
@@ -229,7 +227,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
 
     if (data.type === 'repay' && data.repayment && !linkedRepaymentId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: repayment, error: repayErr } = await (client.from('repayments') as any)
+      const { data: repayment, error: repayErr } = await (supabase.from('repayments') as any)
         .insert({
           household_id: data.household_id,
           name: data.name,
@@ -244,7 +242,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       linkedRepaymentId = repayment?.id ?? null;
     }
 
-    const { data: household } = (await client
+    const { data: household } = (await supabase
       .from('households')
       .select('joint_ratio')
       .eq('id', data.household_id)
@@ -280,11 +278,11 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       created_by_owner: createdByOwner,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (client.from('seeds') as any).insert(insertData);
+    const { error } = await (supabase.from('seeds') as any).insert(insertData);
 
     if (error) return { error: error.message };
 
-    await updatePaycycleAllocations(data.paycycle_id, canActAsPartner ? (client as SupabaseClient<Database>) : undefined);
+    await updatePaycycleAllocations(data.paycycle_id);
     revalidatePath('/dashboard/blueprint');
     return {};
   } catch (e) {
