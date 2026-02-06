@@ -1,15 +1,41 @@
 /*
  * PLOT Marketing Site — Global Styles
  * ====================================
- * Theme colors from @repo/design-tokens. The .dark class
- * (toggled on <html> by useTheme) swaps all values.
+ * Theme colors aligned with @repo/design-tokens (same values).
+ * The .dark class (toggled on <html> by useTheme) swaps all values.
+ * Inline here so marketing deploys without pnpm workspace (Vercel).
  */
-
-@import '@repo/design-tokens/tokens.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme tokens — aligned with packages/design-tokens */
+:root {
+  --bg-primary: #F5F0EA;
+  --bg-secondary: #FFFFFF;
+  --bg-elevated: #F0EBE4;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --accent-primary: #0E8345;
+  --accent-glow: rgba(14, 131, 69, 0.15);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-accent: rgba(14, 131, 69, 0.3);
+  --surface-overlay: rgba(0, 0, 0, 0.03);
+}
+
+.dark {
+  --bg-primary: #111111;
+  --bg-secondary: #1A1A1A;
+  --bg-elevated: #222222;
+  --text-primary: #F5F0EA;
+  --text-secondary: #999999;
+  --accent-primary: #69F0AE;
+  --accent-glow: rgba(105, 240, 174, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(105, 240, 174, 0.2);
+  --surface-overlay: rgba(255, 255, 255, 0.03);
+}
 
 /* ========================================================
    2. BASE RESETS & DEFAULTS
