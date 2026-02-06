@@ -121,13 +121,13 @@ export default defineConfig({
       },
     },
 
-    /* Mobile viewport layout checks — catch overflow and content off-screen */
+    /* Mobile viewport layout checks — use visual user so dashboard logout doesn't invalidate session */
     {
       name: 'mobile-layout',
       testMatch: [/layout\.spec\.ts/],
       use: {
         ...devices['Pixel 5'],
-        storageState: dashboardStatePath,
+        storageState: visualStatePath,
         viewport: { width: 393, height: 851 },
       },
     },
