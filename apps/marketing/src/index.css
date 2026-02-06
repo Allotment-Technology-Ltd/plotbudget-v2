@@ -1,0 +1,304 @@
+/*
+ * PLOT Marketing Site — Global Styles
+ * ====================================
+ * Theme colors are managed via CSS custom properties.
+ * The .dark class (toggled on <html> by useTheme) swaps all
+ * values simultaneously — no per-component dark: prefixes needed.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================================
+   1. THEME CUSTOM PROPERTIES
+   ======================================================== */
+
+:root {
+  /* Light mode (default) — "empowering partner" personality */
+  --bg-primary:      #F5F0EA;
+  --bg-secondary:    #FFFFFF;
+  --bg-elevated:     #F0EBE4;
+  --text-primary:    #111111;
+  --text-secondary:  #555555;
+  --accent-primary:  #0E8345;
+  --accent-glow:     rgba(14, 131, 69, 0.15);
+  --border-subtle:   rgba(0, 0, 0, 0.08);
+  --border-accent:   rgba(14, 131, 69, 0.3);
+  --surface-overlay: rgba(0, 0, 0, 0.03);
+}
+
+.dark {
+  /* Dark mode — "anti-corporate underdog" personality */
+  --bg-primary:      #111111;
+  --bg-secondary:    #1A1A1A;
+  --bg-elevated:     #222222;
+  --text-primary:    #F5F0EA;
+  --text-secondary:  #999999;
+  --accent-primary:  #69F0AE;
+  --accent-glow:     rgba(105, 240, 174, 0.12);
+  --border-subtle:   rgba(255, 255, 255, 0.08);
+  --border-accent:   rgba(105, 240, 174, 0.2);
+  --surface-overlay: rgba(255, 255, 255, 0.03);
+}
+
+/* ========================================================
+   2. BASE RESETS & DEFAULTS
+   ======================================================== */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-plot-bg text-plot-text font-body;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Default focus ring — green accent, visible for keyboard users */
+  *:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus ring for mouse users */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--accent-primary);
+    color: #111111;
+  }
+}
+
+/* ========================================================
+   3. CUSTOM COMPONENT CLASSES
+   ======================================================== */
+
+@layer components {
+  /* Terminal-style section label (e.g., "THE PROBLEM") */
+  .section-label {
+    @apply font-heading text-label uppercase tracking-[0.15em] text-plot-accent;
+  }
+
+  /* Section headline */
+  .section-headline {
+    @apply font-heading text-headline-sm md:text-headline uppercase text-plot-text;
+  }
+
+  /* Terminal prompt prefix for cards */
+  .terminal-prompt::before {
+    content: '>_ ';
+    @apply text-plot-accent;
+  }
+
+  /* Card base style */
+  .card {
+    @apply bg-plot-surface border border-plot-border p-8;
+    border-radius: 0;
+  }
+
+  /* CTA button base */
+  .btn-primary {
+    @apply inline-flex items-center justify-center
+           bg-plot-accent px-6 py-3
+           font-heading text-cta-sm md:text-cta uppercase
+           tracking-[0.2em]
+           transition-all duration-200;
+    color: #111111;
+    border-radius: 0;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 20px var(--accent-glow);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Ghost/outline button variant */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center
+           border border-plot-border-accent px-6 py-3
+           font-heading text-cta-sm md:text-cta uppercase
+           tracking-[0.2em] text-plot-accent
+           transition-all duration-200;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .btn-ghost:hover {
+    background: var(--accent-glow);
+  }
+}
+
+/* ========================================================
+   4. UTILITY CLASSES
+   ======================================================== */
+
+@layer utilities {
+  /* Max-width content wrapper */
+  .content-wrapper {
+    @apply w-full max-w-content mx-auto px-6 md:px-10 xl:px-20;
+  }
+
+  /* Section vertical spacing */
+  .section-padding {
+    @apply py-16 md:py-20 xl:py-24;
+  }
+
+  /* Terminal cursor blink */
+  .cursor-blink {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    background-color: var(--accent-primary);
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+  }
+
+  /* Glow text effect */
+  .text-glow {
+    text-shadow: 0 0 20px var(--accent-glow);
+  }
+}
+
+/* ========================================================
+   5. SCANLINE OVERLAY (Dark mode only)
+   Very subtle CRT effect for the terminal aesthetic.
+   Completely invisible in light mode.
+   ======================================================== */
+
+.dark body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.015) 0px,
+    rgba(0, 0, 0, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ========================================================
+   6. CUSTOM SCROLLBAR
+   ======================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) var(--bg-primary);
+}
+
+/* ========================================================
+   7. REDUCED MOTION
+   Respect user preference — disable all animations
+   ======================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================================
+   8. PHONE MOCKUP FRAME
+   CSS-only device frame for the App Showcase section
+   ======================================================== */
+
+.phone-frame {
+  position: relative;
+  width: 260px;
+  background: #000;
+  border-radius: 28px;
+  padding: 8px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.phone-frame::before {
+  /* Dynamic Island */
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 22px;
+  background: #000;
+  border-radius: 12px;
+  z-index: 3;
+}
+
+.phone-screen {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-screen::before {
+  /* Safe area spacer — pushes content below the dynamic island */
+  content: '';
+  display: block;
+  width: 100%;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.phone-screen-dark::before {
+  background: #1a1d1f;
+}
+
+.phone-screen-light::before {
+  background: #f5f0ea;
+}
+
+.phone-screen img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (min-width: 810px) {
+  .phone-frame {
+    width: 280px;
+  }
+
+  .phone-screen::before {
+    height: 48px;
+  }
+}
