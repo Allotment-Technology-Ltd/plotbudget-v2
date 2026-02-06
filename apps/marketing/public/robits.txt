@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://plotbudget.com/sitemap.xml

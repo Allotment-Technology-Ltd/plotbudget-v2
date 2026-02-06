@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="google-site-verification" content="IK3QZqwAoMavTJSRtzqgJdGzpZMIkoXqPz1C_sFASVc" />
+    <!-- Favicon (replace with your PLOT # mark) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Preconnect for Google Fonts (performance) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Load PLOT typefaces: JetBrains Mono, Space Mono, Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Default title (overridden by react-helmet-async in SEO.jsx) -->
+    <title>PLOT — Budgeting for Couples | Privacy-First Payday Ritual</title>
+    <meta
+      name="description"
+      content="The 15-minute payday ritual for UK couples who want to manage money together — without sharing bank access. No Open Banking. No data scraping. Join the waitlist."
+    />
+
+    <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, WhatsApp) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="PLOT — Budgeting for Couples | Privacy-First Payday Ritual" />
+    <meta property="og:description" content="The 15-minute payday ritual for UK couples who want to manage money together — without sharing bank access. No Open Banking. No data scraping. Join the waitlist." />
+    <meta property="og:image" content="https://plotbudget.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://plotbudget.com" />
+    <meta property="og:site_name" content="PLOT Budget" />
+    <meta property="og:locale" content="en_GB" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PLOT — Budgeting for Couples | Privacy-First Payday Ritual" />
+    <meta name="twitter:description" content="The 15-minute payday ritual for UK couples who want to manage money together — without sharing bank access." />
+    <meta name="twitter:image" content="https://plotbudget.com/og-image.png" />
+
+    <!--
+      Inline script to prevent FOUC (flash of unstyled content) on theme.
+      Runs before React mounts so the correct theme class is present
+      from the very first paint.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('plot-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = saved || (prefersDark ? 'dark' : 'light');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Google Analytics (replace VITE_GA_MEASUREMENT_ID in .env) -->
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-E2PMYGCJ5Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-E2PMYGCJ5Z');
+</script>
+
+  </head>
+  <body>
+    <!-- Skip-to-content link for keyboard/screen reader users -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-[var(--accent-primary)] focus:text-[#111] focus:px-4 focus:py-2 focus:font-heading focus:text-sm focus:tracking-widest focus:uppercase"
+    >
+      Skip to content
+    </a>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

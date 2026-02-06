@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Privacy Policy — PLOT Budget</title>
+    <meta name="description" content="PLOT's privacy policy. How we handle your data: what we collect, why, and how we protect it." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://plotbudget.com/privacy" />
+
+    <!-- OG -->
+    <meta property="og:title" content="Privacy Policy — PLOT Budget" />
+    <meta property="og:description" content="PLOT's privacy policy. How we handle your data: what we collect, why, and how we protect it." />
+    <meta property="og:image" content="https://plotbudget.com/og-image.png" />
+    <meta property="og:url" content="https://plotbudget.com/privacy" />
+    <meta property="og:type" content="website" />
+
+    <!-- Fonts — match marketing site -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ── Reset ── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      /* ── Theme tokens ── */
+      :root {
+        --bg:       #F5F0EA;
+        --bg-card:  #FFFFFF;
+        --text:     #111111;
+        --muted:    #666666;
+        --accent:   #0E8345;
+        --border:   rgba(17,17,17,0.1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg:       #111111;
+          --bg-card:  #1a1d1f;
+          --text:     #F5F0EA;
+          --muted:    #999999;
+          --accent:   #69F0AE;
+          --border:   rgba(245,240,234,0.1);
+        }
+      }
+
+      /* ── Base ── */
+      html { scroll-behavior: smooth; }
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── Layout ── */
+      .container {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+
+      /* ── Header ── */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+      }
+      .logo {
+        font-family: 'Space Mono', monospace;
+        font-weight: 700;
+        font-size: 20px;
+        color: var(--accent);
+        text-decoration: none;
+        letter-spacing: 0.2em;
+      }
+      .back-link {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--muted);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: color 0.2s;
+      }
+      .back-link:hover { color: var(--accent); }
+
+      /* ── Typography ── */
+      h1 {
+        font-family: 'Space Mono', monospace;
+        font-size: clamp(24px, 5vw, 32px);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .effective-date {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 48px;
+      }
+      h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-top: 48px;
+        margin-bottom: 16px;
+      }
+      p {
+        margin-bottom: 16px;
+        color: var(--text);
+      }
+      p + p { margin-top: 0; }
+      strong { font-weight: 600; }
+      a { color: var(--accent); }
+      a:hover { text-decoration: none; }
+
+      /* ── Summary box ── */
+      .summary {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        padding: 24px;
+        margin-bottom: 48px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+      .summary p { margin-bottom: 8px; }
+      .summary p:last-child { margin-bottom: 0; }
+
+      /* ── Footer ── */
+      .footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
+      .footer a { color: var(--muted); }
+      .footer a:hover { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <a href="/" class="logo">PLOT</a>
+      <a href="/" class="back-link">← Back to home</a>
+    </header>
+
+    <main class="container">
+      <h1>Privacy Policy</h1>
+      <p class="effective-date">Effective: 1 February 2025</p>
+
+      <div class="summary">
+        <p><strong>The short version:</strong></p>
+        <p>→ We don't connect to your bank.</p>
+        <p>→ We don't track your transactions.</p>
+        <p>→ We don't sell your data to anyone.</p>
+        <p>→ You tell us what you earn and how you want to allocate it. That's it.</p>
+      </div>
+
+      <h2>1. Who We Are</h2>
+      <p>
+        PLOT Budget ("PLOT", "we", "us") is a household budgeting application
+        operated from the United Kingdom. Our app helps couples plan monthly
+        budgets collaboratively without requiring access to bank accounts
+        or transaction data.
+      </p>
+      <p>
+        For data protection enquiries, contact us at
+        <a href="mailto:hello@plotbudget.com">hello@plotbudget.com</a>.
+      </p>
+
+      <h2>2. What We Collect</h2>
+      <p>
+        We collect only what's necessary to make PLOT work. When you create an
+        account, we collect your <strong>email address</strong> and
+        <strong>password</strong> (stored securely via Firebase Authentication —
+        we never see or store your password in plain text).
+      </p>
+      <p>
+        When you use PLOT, we store the budget data you enter: income amounts,
+        allocation categories, split ratios, and pay cycle dates. This is data
+        you type in manually — we do not import, scrape, or infer any of it
+        from external sources.
+      </p>
+      <p>
+        If you join our waitlist, we collect your <strong>email address</strong>
+        via MailerLite so we can notify you when PLOT is available.
+      </p>
+
+      <h2>3. What We Don't Collect</h2>
+      <p>
+        We do not use Open Banking. We do not connect to your bank accounts.
+        We do not access, store, or process your transaction history, account
+        balances, or any banking credentials. We do not track your spending
+        patterns or purchase behaviour.
+      </p>
+      <p>
+        We do not use cookies for advertising. We do not sell, rent, or share
+        your personal data with third-party advertisers or data brokers.
+      </p>
+
+      <h2>4. How We Use Your Data</h2>
+      <p>
+        Your budget data is used solely to provide the PLOT service to you:
+        calculating allocations, generating your household budget view, and
+        synchronising data between household members. Your email is used for
+        account authentication and essential service communications (e.g.
+        password resets, critical security notices).
+      </p>
+
+      <h2>5. How We Store and Protect Your Data</h2>
+      <p>
+        Your data is stored on Google Firebase infrastructure, which provides
+        encryption at rest and in transit. We use Firestore Security Rules to
+        ensure users can only access their own household data. Authentication
+        is managed by Firebase Authentication with industry-standard security
+        practices.
+      </p>
+      <p>
+        We follow the UK National Cyber Security Centre (NCSC) guidelines
+        for application security.
+      </p>
+
+      <h2>6. Data Sharing</h2>
+      <p>
+        If you are part of a household in PLOT, your budget allocations and
+        split ratios are visible to your household partner. This is a core
+        feature of the app — both partners need to see the shared budget to
+        plan effectively.
+      </p>
+      <p>
+        We use the following third-party services to operate PLOT:
+      </p>
+      <p>
+        <strong>Firebase (Google)</strong> — Authentication, database, and hosting.
+        Subject to <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's privacy policy</a>.
+      </p>
+      <p>
+        <strong>MailerLite</strong> — Waitlist email collection only.
+        Subject to <a href="https://www.mailerlite.com/legal/privacy-policy" target="_blank" rel="noopener">MailerLite's privacy policy</a>.
+      </p>
+      <p>
+        We do not share your data with any other third parties.
+      </p>
+
+      <h2>7. Your Rights</h2>
+      <p>
+        Under UK GDPR, you have the right to access, correct, or delete your
+        personal data. You can delete your account and all associated data
+        from within the app, or by emailing us at
+        <a href="mailto:hello@plotbudget.com">hello@plotbudget.com</a>.
+        We will respond to all data requests within 30 days.
+      </p>
+      <p>
+        You also have the right to data portability, to restrict processing,
+        and to lodge a complaint with the
+        <a href="https://ico.org.uk/" target="_blank" rel="noopener">Information Commissioner's Office (ICO)</a>
+        if you believe your data rights have been violated.
+      </p>
+
+      <h2>8. Children</h2>
+      <p>
+        PLOT is not intended for use by anyone under the age of 18. We do not
+        knowingly collect data from minors.
+      </p>
+
+      <h2>9. Changes to This Policy</h2>
+      <p>
+        If we make material changes to this privacy policy, we will notify
+        registered users by email before the changes take effect. The current
+        version will always be available at this URL.
+      </p>
+
+      <h2>10. Contact</h2>
+      <p>
+        Questions about this policy or your data? Email us at
+        <a href="mailto:hello@plotbudget.com">hello@plotbudget.com</a>.
+      </p>
+    </main>
+
+    <footer class="footer">
+      <p>© 2026 Allotment Technology Ltd. All rights reserved.</p>
+      <p style="margin-top: 8px;">
+        <a href="/">Home</a> · <a href="mailto:hello@plotbudget.com">Contact</a>
+      </p>
+    </footer>
+  </body>
+</html>
