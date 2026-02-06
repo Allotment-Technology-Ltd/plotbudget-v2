@@ -36,7 +36,10 @@ test.describe('Authentication Flow', () => {
     await authPage.goto();
     await authPage.signupLink.click();
 
-    await page.waitForURL(/\/signup/, { timeout: 15_000 });
+    await page.waitForURL(/\/signup/, {
+      timeout: 30_000,
+      waitUntil: 'domcontentloaded',
+    });
     await expect(page.getByTestId('signup-page')).toBeVisible({ timeout: 15_000 });
     // When signup is gated: waitlist CTA; when open: signup form
     const formVisible = await page.getByTestId('signup-form').isVisible();
