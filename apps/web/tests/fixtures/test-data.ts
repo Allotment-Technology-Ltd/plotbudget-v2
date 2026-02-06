@@ -17,6 +17,8 @@ export const TEST_USERS = {
   partner: { email: 'partner@plotbudget.test', password: 'test-password-123' },
   /** Used only by onboarding spec (full flow) so no other test resets or shares this user */
   onboarding: { email: 'onboarding@plotbudget.test', password: 'test-password-123' },
+  /** Used only by visual regression specs; isolated so they can run in parallel with other E2E */
+  visual: { email: 'visual@plotbudget.test', password: 'test-password-123' },
 } as const;
 
 /** Token used in e2e for partner invite link; must match DB state from ensurePartnerInviteReady */

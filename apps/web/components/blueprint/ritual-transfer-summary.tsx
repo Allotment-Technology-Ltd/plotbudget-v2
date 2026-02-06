@@ -1,5 +1,7 @@
 'use client';
 
+import { User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
@@ -8,6 +10,7 @@ type Household = Database['public']['Tables']['households']['Row'];
 interface RitualTransferSummaryProps {
   seeds: Seed[];
   household: Household;
+  userAvatarUrl?: string | null;
 }
 
 /**
@@ -69,6 +72,7 @@ function getPartnerSetAside(seeds: Seed[]) {
 export function RitualTransferSummary({
   seeds,
   household,
+  userAvatarUrl,
 }: RitualTransferSummaryProps) {
   const { totalJointTransfer, userJointTransfer, partnerJointTransfer } =
     getJointTransfer(seeds);
@@ -104,10 +108,20 @@ export function RitualTransferSummary({
           </div>
         )}
 
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground uppercase tracking-wider">
-            Your Set-Aside
-          </p>
+        <div className="space-y-2 flex flex-col">
+          <div className="flex items-center gap-2">
+            {userAvatarUrl ? (
+              <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+                <AvatarImage src={userAvatarUrl} alt="" className="avatar-pixelated object-cover" />
+                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                  <User className="w-5 h-5" aria-hidden />
+                </AvatarFallback>
+              </Avatar>
+            ) : null}
+            <p className="text-sm text-muted-foreground uppercase tracking-wider">
+              Your Set-Aside
+            </p>
+          </div>
           <p className="text-3xl font-display text-foreground">
             £{userSetAside.toFixed(2)}
           </p>

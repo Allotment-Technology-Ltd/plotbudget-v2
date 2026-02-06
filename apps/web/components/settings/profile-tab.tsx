@@ -1,13 +1,13 @@
 'use client';
 
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChangePasswordDialog } from './change-password-dialog';
+import { AvatarUpload } from './avatar-upload';
 import { updateUserProfile } from '@/lib/actions/settings-actions';
 
 interface ProfileTabProps {
@@ -15,6 +15,7 @@ interface ProfileTabProps {
     id: string;
     email: string;
     displayName: string | null;
+    avatarUrl?: string | null;
   };
   isPartner?: boolean;
 }
@@ -36,10 +37,6 @@ export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
       setIsLoading(false);
     }
   };
-
-  const initials = displayName
-    ? displayName.charAt(0).toUpperCase()
-    : user.email.charAt(0).toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -131,28 +128,10 @@ export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
 
       {!isPartner && (
       <section className="bg-card rounded-lg border border-border p-6">
-        <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
-          Avatar
+        <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-4">
+          Profile picture
         </h2>
-        <div className="flex flex-col sm:flex-row items-start gap-6">
-          <Avatar className="h-20 w-20 rounded-full border border-border">
-            <AvatarFallback className="bg-primary/10 text-primary font-display text-2xl">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="space-y-2 flex-1">
-            <p className="text-sm text-muted-foreground">
-              Upload a profile picture (max 2MB, JPG/PNG)
-            </p>
-            <Button type="button" variant="secondary" disabled aria-disabled="true">
-              <Upload className="mr-2 h-4 w-4" aria-hidden />
-              Upload Avatar
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Avatar upload coming soon
-            </p>
-          </div>
-        </div>
+        <AvatarUpload userId={user.id} currentAvatarUrl={user.avatarUrl} />
       </section>
       )}
     </div>

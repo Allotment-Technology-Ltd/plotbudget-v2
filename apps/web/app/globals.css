@@ -299,4 +299,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Avatar: keep pixelated look when scaling (no smoothing) */
+  .avatar-pixelated {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
 }

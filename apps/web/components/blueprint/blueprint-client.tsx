@@ -43,6 +43,7 @@ interface BlueprintClientProps {
   allPaycycles: PaycycleOption[];
   activePaycycleId: string | null;
   hasDraftCycle: boolean;
+  userAvatarUrl?: string | null;
 }
 
 type Payer = 'me' | 'partner' | 'both';
@@ -56,6 +57,7 @@ export function BlueprintClient({
   allPaycycles,
   activePaycycleId,
   hasDraftCycle,
+  userAvatarUrl,
 }: BlueprintClientProps) {
   const router = useRouter();
   const [isAddSeedOpen, setIsAddSeedOpen] = useState(false);
@@ -233,7 +235,11 @@ export function BlueprintClient({
       <main className="content-wrapper section-padding" id="main-content">
         <div className="space-y-8">
           {isActiveCycle && household.is_couple && (
-            <RitualTransferSummary seeds={displaySeeds} household={household} />
+            <RitualTransferSummary
+              seeds={displaySeeds}
+              household={household}
+              userAvatarUrl={userAvatarUrl}
+            />
           )}
 
           <TotalAllocatedSummary paycycle={paycycle} />
@@ -245,7 +251,11 @@ export function BlueprintClient({
           />
 
           {household.is_couple && !isActiveCycle && (
-            <JointAccountSummary household={household} seeds={seeds} />
+            <JointAccountSummary
+              household={household}
+              seeds={seeds}
+              userAvatarUrl={userAvatarUrl}
+            />
           )}
 
           <div className="space-y-8">

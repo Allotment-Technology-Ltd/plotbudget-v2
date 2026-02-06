@@ -19,6 +19,7 @@ const blueprintStatePath = path.join(authDir, 'blueprint.json');
 const ritualStatePath = path.join(authDir, 'ritual.json');
 const dashboardStatePath = path.join(authDir, 'dashboard.json');
 const onboardingStatePath = path.join(authDir, 'onboarding.json');
+const visualStatePath = path.join(authDir, 'visual.json');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -36,8 +37,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Use 5 workers in CI to match local; locally use default when not in CI */
-  workers: process.env.CI ? 5 : undefined,
+  /* CI: 5 workers. Local: 4 workers so visual + layout + auth + etc. run in parallel without EMFILE */
+  workers: process.env.CI ? 5 : 4,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -45,6 +46,14 @@ export default defineConfig({
     ['list'],
     ...(process.env.CI ? [['github'] as const] : []),
   ],
+
+  /* Visual regression: same baselines on all OSes; allow minor pixel variance */
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+      pathTemplate: '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}',
+    },
+  },
 
   /* Shared settings for all projects */
   use: {
@@ -109,6 +118,36 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: { cookies: [], origins: [] },
+      },
+    },
+
+    /* Mobile viewport layout checks — use visual user so dashboard logout doesn't invalidate session */
+    {
+      name: 'mobile-layout',
+      testMatch: [/layout\.spec\.ts/],
+      use: {
+        ...devices['Pixel 5'],
+        storageState: visualStatePath,
+        viewport: { width: 393, height: 851 },
+      },
+    },
+
+    /* Visual regression — dedicated user so runs in parallel with rest of suite */
+    {
+      name: 'visual-desktop',
+      testMatch: [/visual\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: visualStatePath,
+      },
+    },
+    {
+      name: 'visual-mobile',
+      testMatch: [/visual\.spec\.ts/],
+      use: {
+        ...devices['Pixel 5'],
+        storageState: visualStatePath,
+        viewport: { width: 393, height: 851 },
       },
     },
 
