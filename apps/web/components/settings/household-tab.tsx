@@ -239,17 +239,17 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
             ) : (
             <>
             {household.partner_invite_status === 'none' && <InvitePartnerForm />}
-            {household.partner_invite_status === 'pending' && household.partner_email && (
+            {household.partner_invite_status === 'pending' && (
               <PartnerStatus
                 status="pending"
-                email={household.partner_email}
+                email={household.partner_email ?? null}
                 sentAt={household.partner_invite_sent_at ?? undefined}
               />
             )}
-            {household.partner_invite_status === 'accepted' && household.partner_email && (
+            {household.partner_invite_status === 'accepted' && (
               <PartnerStatus
                 status="accepted"
-                email={household.partner_email}
+                email={household.partner_email ?? null}
                 acceptedAt={household.partner_accepted_at ?? undefined}
                 lastLoginAt={household.partner_last_login_at}
               />
