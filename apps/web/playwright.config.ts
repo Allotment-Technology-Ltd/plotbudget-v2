@@ -29,8 +29,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Run E2E with 2 workers in CI for speed; locally use default (all cores) */
-  workers: process.env.CI ? 2 : undefined,
+  /* Use 5 workers in CI to match local; locally use default when not in CI */
+  workers: process.env.CI ? 5 : undefined,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
