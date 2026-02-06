@@ -1,10 +1,10 @@
 'use client';
 
-import { LogOut, Settings, Moon, Sun, Monitor } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { marketingUrl } from '@/lib/marketing-url';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -30,7 +30,6 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, isPartner = false }: UserMenuProps) {
-  const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const displayName = user.display_name?.trim() || user.email;
@@ -46,7 +45,7 @@ export function UserMenu({ user, isPartner = false }: UserMenuProps) {
       }
       await signOut();
       toast.success("You've been logged out");
-      router.push('/login');
+      window.location.href = marketingUrl('/');
     } catch {
       toast.error('Failed to log out');
     }
@@ -149,6 +148,20 @@ export function UserMenu({ user, isPartner = false }: UserMenuProps) {
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer transition-colors duration-200"
+        >
+          <a
+            href={marketingUrl('/')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center focus:bg-primary/10 focus:text-primary"
+          >
+            <HelpCircle className="mr-2 h-4 w-4" aria-hidden />
+            Help
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer transition-colors duration-200 focus:bg-destructive/10 focus:text-destructive"

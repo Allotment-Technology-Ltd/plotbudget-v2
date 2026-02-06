@@ -21,6 +21,7 @@
     "audit:test-ids": "tsx scripts/audit-test-ids.ts"
   },
   "dependencies": {
+    "@repo/design-tokens": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.0",
     "@radix-ui/react-avatar": "^1.1.11",

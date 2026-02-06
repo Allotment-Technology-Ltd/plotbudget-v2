@@ -25,132 +25,34 @@
     />
 
     <style>
-      /* ── Reset ── */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-      /* ── Theme tokens ── */
       :root {
-        --bg:       #F5F0EA;
-        --bg-card:  #FFFFFF;
-        --text:     #111111;
-        --muted:    #666666;
-        --accent:   #0E8345;
-        --border:   rgba(17,17,17,0.1);
+        --bg: #F5F0EA; --bg-card: #FFFFFF; --text: #111111;
+        --muted: #666666; --accent: #0E8345; --border: rgba(17,17,17,0.1);
       }
       @media (prefers-color-scheme: dark) {
-        :root {
-          --bg:       #111111;
-          --bg-card:  #1a1d1f;
-          --text:     #F5F0EA;
-          --muted:    #999999;
-          --accent:   #69F0AE;
-          --border:   rgba(245,240,234,0.1);
-        }
+        :root { --bg: #111111; --bg-card: #1a1d1f; --text: #F5F0EA;
+          --muted: #999999; --accent: #69F0AE; --border: rgba(245,240,234,0.1); }
       }
-
-      /* ── Base ── */
       html { scroll-behavior: smooth; }
-      body {
-        font-family: 'Inter', system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        line-height: 1.7;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      /* ── Layout ── */
-      .container {
-        max-width: 680px;
-        margin: 0 auto;
-        padding: 48px 24px 96px;
-      }
-
-      /* ── Header ── */
-      .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--border);
-      }
-      .logo {
-        font-family: 'Space Mono', monospace;
-        font-weight: 700;
-        font-size: 20px;
-        color: var(--accent);
-        text-decoration: none;
-        letter-spacing: 0.2em;
-      }
-      .back-link {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 13px;
-        color: var(--muted);
-        text-decoration: none;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        transition: color 0.2s;
-      }
+      body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+      .container { max-width: 680px; margin: 0 auto; padding: 48px 24px 96px; }
+      .header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+      .logo { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: var(--accent); text-decoration: none; letter-spacing: 0.2em; }
+      .back-link { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
       .back-link:hover { color: var(--accent); }
-
-      /* ── Typography ── */
-      h1 {
-        font-family: 'Space Mono', monospace;
-        font-size: clamp(24px, 5vw, 32px);
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-      .effective-date {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 13px;
-        color: var(--muted);
-        letter-spacing: 0.05em;
-        margin-bottom: 48px;
-      }
-      h2 {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-top: 48px;
-        margin-bottom: 16px;
-      }
-      p {
-        margin-bottom: 16px;
-        color: var(--text);
-      }
+      h1 { font-family: 'Space Mono', monospace; font-size: clamp(24px, 5vw, 32px); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+      .effective-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 48px; }
+      h2 { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-top: 48px; margin-bottom: 16px; }
+      p { margin-bottom: 16px; color: var(--text); }
       p + p { margin-top: 0; }
       strong { font-weight: 600; }
       a { color: var(--accent); }
       a:hover { text-decoration: none; }
-
-      /* ── Summary box ── */
-      .summary {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-left: 3px solid var(--accent);
-        padding: 24px;
-        margin-bottom: 48px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 14px;
-        line-height: 1.8;
-      }
+      .summary { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 24px; margin-bottom: 48px; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.8; }
       .summary p { margin-bottom: 8px; }
       .summary p:last-child { margin-bottom: 0; }
-
-      /* ── Footer ── */
-      .footer {
-        border-top: 1px solid var(--border);
-        padding: 32px 24px;
-        text-align: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
-        color: var(--muted);
-        letter-spacing: 0.05em;
-      }
+      .footer { border-top: 1px solid var(--border); padding: 32px 24px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
       .footer a { color: var(--muted); }
       .footer a:hover { color: var(--accent); }
     </style>
@@ -163,7 +65,7 @@
 
     <main class="container">
       <h1>Privacy Policy</h1>
-      <p class="effective-date">Effective: 1 February 2025</p>
+      <p class="effective-date">Effective: 6 February 2025</p>
 
       <div class="summary">
         <p><strong>The short version:</strong></p>
@@ -189,7 +91,7 @@
       <p>
         We collect only what's necessary to make PLOT work. When you create an
         account, we collect your <strong>email address</strong> and
-        <strong>password</strong> (stored securely via Firebase Authentication —
+        <strong>password</strong> (stored securely via Supabase Authentication —
         we never see or store your password in plain text).
       </p>
       <p>
@@ -199,8 +101,9 @@
         from external sources.
       </p>
       <p>
-        If you join our waitlist, we collect your <strong>email address</strong>
-        via MailerLite so we can notify you when PLOT is available.
+        If you join our waitlist on the marketing site, we collect your
+        <strong>email address</strong> via MailerLite so we can notify you when
+        PLOT is available.
       </p>
 
       <h2>3. What We Don't Collect</h2>
@@ -221,16 +124,27 @@
         calculating allocations, generating your household budget view, and
         synchronising data between household members. Your email is used for
         account authentication and essential service communications (e.g.
-        password resets, critical security notices).
+        password resets, partner invitations, critical security notices).
+      </p>
+      <p>
+        We use Resend to send transactional emails (password resets, partner
+        invites). We use PostHog for product analytics in the app to improve
+        the service — this does not include your budget data. The marketing
+        site may use Google Analytics for aggregate traffic insights.
       </p>
 
       <h2>5. How We Store and Protect Your Data</h2>
       <p>
-        Your data is stored on Google Firebase infrastructure, which provides
-        encryption at rest and in transit. We use Firestore Security Rules to
-        ensure users can only access their own household data. Authentication
-        is managed by Firebase Authentication with industry-standard security
-        practices.
+        Your data is stored on Supabase infrastructure (PostgreSQL database),
+        which provides encryption at rest and in transit. Our application is
+        hosted on Vercel. Both Supabase and Vercel use industry-standard
+        security practices and are compliant with relevant data protection
+        frameworks.
+      </p>
+      <p>
+        We use Row Level Security (RLS) in our database to ensure users can
+        only access their own household data. Authentication is managed by
+        Supabase Auth with industry-standard security practices.
       </p>
       <p>
         We follow the UK National Cyber Security Centre (NCSC) guidelines
@@ -247,14 +161,14 @@
       <p>
         We use the following third-party services to operate PLOT:
       </p>
-      <p>
-        <strong>Firebase (Google)</strong> — Authentication, database, and hosting.
-        Subject to <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's privacy policy</a>.
-      </p>
-      <p>
-        <strong>MailerLite</strong> — Waitlist email collection only.
-        Subject to <a href="https://www.mailerlite.com/legal/privacy-policy" target="_blank" rel="noopener">MailerLite's privacy policy</a>.
-      </p>
+      <ul style="margin: 16px 0; padding-left: 24px;">
+        <li><strong>Supabase</strong> — Authentication, database, and backend. Subject to <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase's privacy policy</a>.</li>
+        <li><strong>Vercel</strong> — Application hosting. Subject to <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel's privacy policy</a>.</li>
+        <li><strong>Resend</strong> — Transactional emails (password resets, partner invites). Subject to <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Resend's privacy policy</a>.</li>
+        <li><strong>MailerLite</strong> — Waitlist email collection on the marketing site only. Subject to <a href="https://www.mailerlite.com/legal/privacy-policy" target="_blank" rel="noopener">MailerLite's privacy policy</a>.</li>
+        <li><strong>PostHog</strong> — Product analytics in the app. Subject to <a href="https://posthog.com/privacy" target="_blank" rel="noopener">PostHog's privacy policy</a>.</li>
+        <li><strong>Google Analytics</strong> — Aggregate analytics on the marketing site (optional). Subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>.</li>
+      </ul>
       <p>
         We do not share your data with any other third parties.
       </p>
@@ -295,9 +209,9 @@
     </main>
 
     <footer class="footer">
-      <p>© 2026 Allotment Technology Ltd. All rights reserved.</p>
+      <p>© 2025 Allotment Technology Ltd. All rights reserved.</p>
       <p style="margin-top: 8px;">
-        <a href="/">Home</a> · <a href="mailto:hello@plotbudget.com">Contact</a>
+        <a href="/">Home</a> · <a href="/terms">Terms</a> · <a href="mailto:hello@plotbudget.com">Contact</a>
       </p>
     </footer>
   </body>

@@ -1,0 +1,11 @@
+{
+  "name": "@repo/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/tokens.css",
+  "exports": {
+    ".": "./src/tokens.css",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "files": ["src"]
+}

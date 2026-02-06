@@ -1,0 +1,66 @@
+/**
+ * PLOT Design Tokens
+ * Shared design system for marketing site and app.
+ * Import this file in your app's global CSS.
+ */
+
+/* Light mode */
+:root {
+  /* Backgrounds */
+  --plot-bg-primary: #F5F0EA;
+  --plot-bg-secondary: #FFFFFF;
+  --plot-bg-elevated: #F0EBE4;
+
+  /* Text */
+  --plot-text-primary: #111111;
+  --plot-text-secondary: #555555;
+
+  /* Accent — PLOT green */
+  --plot-accent-primary: #0E8345;
+  --plot-accent-glow: rgba(14, 131, 69, 0.15);
+
+  /* Borders */
+  --plot-border-subtle: rgba(0, 0, 0, 0.08);
+  --plot-border-accent: rgba(14, 131, 69, 0.3);
+
+  /* Overlay */
+  --plot-surface-overlay: rgba(0, 0, 0, 0.03);
+
+  /* RGB format for Tailwind opacity (space-separated) */
+  --plot-accent-rgb: 14 131 69;
+  --plot-bg-primary-rgb: 245 240 234;
+  --plot-bg-secondary-rgb: 255 255 255;
+  --plot-text-primary-rgb: 17 17 17;
+  --plot-text-secondary-rgb: 85 85 85;
+
+  /* Aliases for marketing site (maps to plot- tokens) */
+  --bg-primary: var(--plot-bg-primary);
+  --bg-secondary: var(--plot-bg-secondary);
+  --bg-elevated: var(--plot-bg-elevated);
+  --text-primary: var(--plot-text-primary);
+  --text-secondary: var(--plot-text-secondary);
+  --accent-primary: var(--plot-accent-primary);
+  --accent-glow: var(--plot-accent-glow);
+  --border-subtle: var(--plot-border-subtle);
+  --border-accent: var(--plot-border-accent);
+  --surface-overlay: var(--plot-surface-overlay);
+}
+
+/* Dark mode */
+.dark {
+  --plot-bg-primary: #111111;
+  --plot-bg-secondary: #1A1A1A;
+  --plot-bg-elevated: #222222;
+  --plot-text-primary: #F5F0EA;
+  --plot-text-secondary: #999999;
+  --plot-accent-primary: #69F0AE;
+  --plot-accent-glow: rgba(105, 240, 174, 0.12);
+  --plot-border-subtle: rgba(255, 255, 255, 0.08);
+  --plot-border-accent: rgba(105, 240, 174, 0.2);
+  --plot-surface-overlay: rgba(255, 255, 255, 0.03);
+  --plot-accent-rgb: 105 240 174;
+  --plot-bg-primary-rgb: 17 17 17;
+  --plot-bg-secondary-rgb: 26 26 26;
+  --plot-text-primary-rgb: 245 240 234;
+  --plot-text-secondary-rgb: 153 153 153;
+}

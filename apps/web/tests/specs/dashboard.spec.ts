@@ -40,13 +40,12 @@ test.describe('Dashboard and app shell', () => {
     await expect(page.getByText('Logged in as:', { exact: false })).toBeVisible();
   });
 
-  test('logout redirects to login', async ({ page }) => {
+  test('logout redirects to marketing site', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForURL(/\/dashboard/);
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
-    await page.waitForURL(/\/login/);
-    await expect(page.getByTestId('email-input')).toBeVisible();
+    await page.waitForURL(/plotbudget\.com/);
   });
 });

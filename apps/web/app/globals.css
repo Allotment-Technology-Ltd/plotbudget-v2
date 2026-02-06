@@ -1,5 +1,7 @@
 /* apps/web/app/globals.css */
 
+@import '@repo/design-tokens/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,12 +15,9 @@
     --text-primary: 17 17 17;
     --text-secondary: 85 85 85;
 
-    /* Forest green #10b981 = rgb(16, 185, 129) */
-    --accent-primary: 16 185 129;
-    --accent-glow: 16 185 129;
-
-    --border-subtle: 0 0 0;
-    --border-accent: 16 185 129;
+    /* PLOT green — aligned with design-tokens #0E8345 */
+    --accent-primary: var(--plot-accent-rgb);
+    --accent-glow: var(--plot-accent-rgb);
 
     --surface-overlay: 0 0 0;
 
@@ -44,7 +43,7 @@
     --card-foreground: 17 17 17;
     --popover: 255 255 255;
     --popover-foreground: 17 17 17;
-    --primary: 16 185 129;
+    --primary: var(--plot-accent-rgb);
     --primary-foreground: 255 255 255;
     --secondary: 240 235 228;
     --secondary-foreground: 17 17 17;
@@ -56,7 +55,7 @@
     --destructive-foreground: 255 255 255;
     --border: 0 0 0;
     --input: 0 0 0;
-    --ring: 16 185 129;
+    --ring: var(--plot-accent-rgb);
     --radius: 6px;
   }
 
@@ -68,11 +67,8 @@
     --text-primary: 245 240 234;
     --text-secondary: 153 153 153;
 
-    --accent-primary: 105 240 174;
-    --accent-glow: 105 240 174;
-
-    --border-subtle: 255 255 255;
-    --border-accent: 105 240 174;
+    --accent-primary: var(--plot-accent-rgb);
+    --accent-glow: var(--plot-accent-rgb);
 
     --surface-overlay: 255 255 255;
 
@@ -92,7 +88,7 @@
     --card-foreground: 245 240 234;
     --popover: 26 26 26;
     --popover-foreground: 245 240 234;
-    --primary: 105 240 174;
+    --primary: var(--plot-accent-rgb);
     --primary-foreground: 17 17 17;
     --secondary: 34 34 34;
     --secondary-foreground: 245 240 234;
@@ -104,7 +100,7 @@
     --destructive-foreground: 255 255 255;
     --border: 255 255 255;
     --input: 255 255 255;
-    --ring: 105 240 174;
+    --ring: var(--plot-accent-rgb);
   }
 
   * {

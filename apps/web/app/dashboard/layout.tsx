@@ -7,6 +7,7 @@ import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
+import { AppFooter } from '@/components/navigation/app-footer';
 
 // Mount nav and user menu only on client so usePathname/useTheme context is available (avoids "useContext null" Server Error in some envs)
 const DashboardNavClient = dynamic(
@@ -86,7 +87,10 @@ export default async function DashboardLayout({
           </nav>
         </div>
       </header>
-      {children}
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+        <div className="flex-1">{children}</div>
+        <AppFooter />
+      </div>
     </div>
   );
 }
