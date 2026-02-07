@@ -147,7 +147,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: apps/web
           github-comment: 'false'
-          vercel-args: '--yes --debug'
+          vercel-args: '--debug'
       - name: Install Playwright Browsers
         working-directory: apps/web
         run: pnpm exec playwright install --with-deps chromium
