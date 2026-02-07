@@ -66,11 +66,8 @@ test.describe.serial('Blueprint - Seed Management', () => {
       recurring: false,
     });
 
-    // Delete it
+    // Delete it (deleteSeed asserts one fewer card with this name)
     await blueprintPage.deleteSeed('Test Seed');
-
-    // Verify it's gone
-    await expect(blueprintPage.seedCard('Test Seed')).not.toBeVisible();
   });
 
   test('cannot add seed with negative amount', async ({ page }) => {

@@ -173,12 +173,15 @@ export class BlueprintPage {
   }
 
   async deleteSeed(seedName: string) {
+    const countBefore = await this.seedCard(seedName).count();
     await this.seedDeleteButton(seedName).first().click();
 
     // Confirm deletion in modal
     await this.page.getByTestId('confirm-delete-button').click();
 
-    // Wait for seed to disappear
-    await expect(this.seedCard(seedName)).not.toBeVisible();
+    // Wait for one fewer seed card (same name can appear in multiple categories/cycles)
+    await expect(this.seedCard(seedName)).toHaveCount(countBefore - 1, {
+      timeout: 10_000,
+    });
   }
 }
