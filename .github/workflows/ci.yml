@@ -143,7 +143,7 @@ jobs:
         run: pnpm build
       - name: Deploy to Vercel Preview
         id: vercel-deploy
-        working-directory: apps/web
+        # Deploy from repo root so uploaded files include apps/web; Vercel project Root Directory is apps/web.
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
