@@ -537,7 +537,7 @@ export default function OnboardingPage() {
                         <Slider
                           min={0}
                           max={100}
-                          step={5}
+                          step={1}
                           value={[field.value]}
                           onValueChange={(value) => field.onChange(value[0])}
                           aria-label="Your share of joint bills (percentage)"

@@ -22,6 +22,8 @@ interface SeedCardProps {
   isCycleLocked?: boolean;
   onMarkPaid?: (seedId: string, payer: Payer) => void;
   onUnmarkPaid?: (seedId: string, payer: Payer) => void;
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 const paymentSourceBadge = {
@@ -45,9 +47,11 @@ export function SeedCard({
   isCycleLocked = false,
   onMarkPaid,
   onUnmarkPaid,
+  isPartner = false,
+  otherLabel = 'Partner',
 }: SeedCardProps) {
   const badge = paymentSourceBadge[seed.payment_source];
-  const partnerName = household.partner_name || 'Partner';
+  const otherName = otherLabel;
   const seedSlug = seed.name.toLowerCase().replace(/\s+/g, '-');
   const isJointCouple =
     seed.payment_source === 'joint' && household.is_couple;
@@ -147,10 +151,10 @@ export function SeedCard({
                       handleCheckboxChange('partner', e.target.checked)
                     }
                     className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
-                    aria-label={`Mark ${seed.name} - ${partnerName}'s portion as paid`}
+                    aria-label={`Mark ${seed.name} - ${otherName}'s portion as paid`}
                     data-testid={`seed-paid-partner-${seedSlug}`}
                   />
-                  <span className="text-muted-foreground">{partnerName}</span>
+                  <span className="text-muted-foreground">{otherName}</span>
                 </label>
               </div>
             ) : (
@@ -215,15 +219,16 @@ export function SeedCard({
         </div>
 
         {/* Amount + badge + delete — right-aligned, own row on mobile */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0 sm:flex-nowrap">
-          <div className="text-right">
-            <p className="font-display text-lg text-foreground whitespace-nowrap">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0 sm:flex-nowrap min-w-0">
+          <div className="text-right min-w-0">
+            <p className="font-display text-lg text-foreground break-all">
               £{Number(seed.amount).toFixed(2)}
             </p>
             {household.is_couple && (
               <span
                 className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
-                aria-label={`Payment source: ${badge.label}`}
+                aria-label={seed.payment_source === 'joint' ? 'From joint account' : `From personal account`}
+                title={seed.payment_source === 'joint' ? 'From joint account' : 'From personal account'}
               >
                 {badge.label}
               </span>
@@ -250,8 +255,8 @@ export function SeedCard({
       {/* Meta row: Added by, Paid by, joint split, pot, repayment — full width below */}
       <div className="mt-2 pl-0 sm:pl-0 space-y-0.5">
         {(household.is_couple && seed.created_by_owner != null) && (
-          <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? 'you' : partnerName}`}>
-            Added by {seed.created_by_owner ? 'you' : partnerName}
+          <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}`}>
+            Added by {seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}
           </p>
         )}
         {seed.is_paid && isRitualMode && household.is_couple && (
@@ -259,17 +264,17 @@ export function SeedCard({
             Paid by{' '}
             {seed.is_paid_me && seed.is_paid_partner
               ? 'both'
-              : seed.is_paid_me
-                ? 'you'
-                : seed.is_paid_partner
-                  ? partnerName
+              : seed.is_paid_me && !seed.is_paid_partner
+                ? (isPartner ? otherName : 'you')
+                : !seed.is_paid_me && seed.is_paid_partner
+                  ? (isPartner ? 'you' : otherName)
                   : '—'}
           </p>
         )}
         {seed.payment_source === 'joint' && (
           <p className="text-xs sm:text-sm text-muted-foreground">
-            You: £{Number(seed.amount_me).toFixed(2)} · {partnerName}: £
-            {Number(seed.amount_partner).toFixed(2)}
+            You: £{(isPartner ? Number(seed.amount_partner) : Number(seed.amount_me)).toFixed(2)} · {otherName}: £
+            {(isPartner ? Number(seed.amount_me) : Number(seed.amount_partner)).toFixed(2)}
           </p>
         )}
         {linkedPot && (

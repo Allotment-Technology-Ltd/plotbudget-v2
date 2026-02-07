@@ -15,14 +15,14 @@ function setRedirectAfterAuthCookie(redirectPath: string) {
   document.cookie = `${REDIRECT_AFTER_AUTH_COOKIE}=${encodeURIComponent(redirectPath)}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
 }
 
-/** True when redirect points back to partner join (invite flow). */
+/** True when redirect points to partner complete/join (invite flow). */
 function isPartnerInviteRedirect(redirect: string | null): boolean {
   if (!redirect) return false;
   try {
     const path = redirect.startsWith('/') ? redirect : new URL(redirect).pathname;
-    return path.includes('/partner/join');
+    return path.includes('/partner/join') || path.includes('/partner/complete');
   } catch {
-    return redirect.includes('/partner/join');
+    return redirect.includes('/partner/join') || redirect.includes('/partner/complete');
   }
 }
 

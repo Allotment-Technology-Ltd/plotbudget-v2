@@ -7,6 +7,9 @@ import { ensureBlueprintReady } from '../utils/db-cleanup';
 const RITUAL_USER = 'ritual@plotbudget.test';
 
 test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
+  // Retry once when Next dev server hits intermittent useContext/webpack errors on /dashboard/blueprint
+  test.describe.configure({ retries: 1 });
+
   test.beforeEach(async () => {
     await ensureBlueprintReady(RITUAL_USER);
   });

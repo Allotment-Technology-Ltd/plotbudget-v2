@@ -113,9 +113,9 @@ export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
           : 'good') as StatusKey,
     },
     {
-      label: 'Remaining',
+      label: 'Left to spend',
       value: `£${totalRemaining.toFixed(2)}`,
-      subtext: `${remainingPercent.toFixed(0)}% left`,
+      subtext: `${remainingPercent.toFixed(0)}% of income left this cycle`,
       percentage: remainingPercent,
       status: (remainingPercent < 10 ? 'warning' : 'good') as StatusKey,
     },
@@ -147,7 +147,7 @@ export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors duration-200"
+            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors duration-200 min-w-0 overflow-hidden"
             role="article"
             aria-label={`${metric.label}: ${metric.value}`}
           >
@@ -157,7 +157,7 @@ export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
               </p>
             </div>
             <p
-              className={`text-3xl font-display mb-1 ${statusColors[metric.status]}`}
+              className={`text-2xl sm:text-3xl font-display mb-1 break-all ${statusColors[metric.status]}`}
             >
               {metric.value}
             </p>

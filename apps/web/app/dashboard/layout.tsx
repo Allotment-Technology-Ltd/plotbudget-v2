@@ -8,13 +8,17 @@ import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
 import { AppFooter } from '@/components/navigation/app-footer';
 
-// Mount nav and user menu only on client so usePathname/useTheme context is available (avoids "useContext null" Server Error in some envs)
+// Mount nav, user menu, and footer only on client so usePathname/useTheme context is available (avoids "useContext null" Server Error in some envs)
 const DashboardNavClient = dynamic(
   () => Promise.resolve(DashboardNav),
   { ssr: false }
 );
 const UserMenuClient = dynamic(
   () => Promise.resolve(UserMenu),
+  { ssr: false }
+);
+const AppFooterClient = dynamic(
+  () => Promise.resolve(AppFooter),
   { ssr: false }
 );
 
@@ -94,7 +98,7 @@ export default async function DashboardLayout({
       </header>
       <div className="flex min-h-[calc(100vh-4rem)] flex-col">
         <div className="flex-1">{children}</div>
-        <AppFooter />
+        <AppFooterClient />
       </div>
     </div>
   );

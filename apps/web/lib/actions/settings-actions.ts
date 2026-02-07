@@ -129,6 +129,44 @@ export async function updatePartnerName(householdId: string, partnerName: string
   revalidatePath('/dashboard', 'layout');
 }
 
+/** Partner updates their own display name on the household (partner_name). */
+export async function updateMyPartnerName(householdId: string, partnerName: string) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const validatedName = partnerNameSchema.parse(partnerName.trim());
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('id')
+    .eq('id', householdId)
+    .eq('partner_user_id', user.id)
+    .maybeSingle();
+
+  if (!household) {
+    throw new Error('Household not found or unauthorized');
+  }
+
+  const householdPayload: HouseholdsUpdate = { partner_name: validatedName };
+  const { error } = await supabase
+    .from('households')
+    .update(householdPayload as never)
+    .eq('id', householdId);
+
+  if (error) {
+    throw new Error('Failed to update your name');
+  }
+
+  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard', 'layout');
+}
+
 export async function updatePartnerDetails(
   householdId: string,
   partnerName: string,

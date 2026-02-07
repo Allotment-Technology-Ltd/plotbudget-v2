@@ -106,11 +106,18 @@ export class BlueprintPage {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
-    // When cycle is locked, Add buttons are hidden; wait for either editable state or Unlock button
+    // When cycle is locked, Add buttons are hidden; wait for either editable state or Unlock button (or Server Error — fail fast)
     const addOrEmpty = this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state'));
     const unlockBtn = this.page.getByRole('button', { name: /Unlock/i });
     const editableOrLocked = addOrEmpty.or(unlockBtn);
-    await expect(editableOrLocked.first()).toBeVisible({ timeout: 15_000 });
+    const serverError = this.page.getByRole('dialog', { name: 'Server Error' });
+    await Promise.race([
+      expect(editableOrLocked.first()).toBeVisible({ timeout: 15_000 }),
+      serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
+        const detail = await this.page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
+        throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
+      }),
+    ]);
     // If locked, unlock so tests can add seeds
     if (await unlockBtn.isVisible()) {
       await unlockBtn.click();
@@ -126,8 +133,8 @@ export class BlueprintPage {
     recurring: boolean;
   }) {
     await this.addSeedButton.click();
-
-    await expect(this.seedNameInput).toBeVisible();
+    // Dialog may take a moment to open (animation/portal); allow time for it to be visible
+    await expect(this.seedNameInput).toBeVisible({ timeout: 15_000 });
     await this.seedNameInput.fill(params.name);
     await this.seedAmountInput.fill(params.amount.toString());
     // Category is set by which section opened the dialog (add-seed-button = Needs); no need to select

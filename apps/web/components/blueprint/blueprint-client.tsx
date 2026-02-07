@@ -56,6 +56,10 @@ interface BlueprintClientProps {
   initialNewCycleCelebration?: boolean;
   /** Income events in this cycle (for display). */
   incomeEvents?: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[];
+  /** When true, viewer is the partner — labels show "You" for partner and owner name for the other. */
+  isPartner?: boolean;
+  /** Owner's display name (when isPartner), for "other" label. */
+  ownerDisplayName?: string | null;
 }
 
 type Payer = 'me' | 'partner' | 'both';
@@ -74,8 +78,13 @@ export function BlueprintClient({
   initialEditSeedId = null,
   initialNewCycleCelebration = false,
   incomeEvents = [],
+  isPartner = false,
+  ownerDisplayName = null,
 }: BlueprintClientProps) {
   const router = useRouter();
+  const otherLabel = isPartner
+    ? (ownerDisplayName?.trim() || 'Account owner')
+    : (household.partner_name?.trim() || 'Partner');
   const [isAddSeedOpen, setIsAddSeedOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
     'need' | 'want' | 'savings' | 'repay' | null
@@ -467,6 +476,8 @@ export function BlueprintClient({
               household={household}
               userAvatarUrl={userAvatarUrl}
               avatarEnabled={avatarEnabled}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
           )}
 
@@ -489,6 +500,8 @@ export function BlueprintClient({
               seeds={seeds}
               userAvatarUrl={userAvatarUrl}
               avatarEnabled={avatarEnabled}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
           )}
 
@@ -507,6 +520,8 @@ export function BlueprintClient({
               onDelete={handleDeleteClick}
               onMarkPaid={handleMarkPaid}
               onUnmarkPaid={handleUnmarkPaid}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
 
             <SeedsList
@@ -523,6 +538,8 @@ export function BlueprintClient({
               onDelete={handleDeleteClick}
               onMarkPaid={handleMarkPaid}
               onUnmarkPaid={handleUnmarkPaid}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
 
             <SeedsList
@@ -539,6 +556,8 @@ export function BlueprintClient({
               onDelete={handleDeleteClick}
               onMarkPaid={handleMarkPaid}
               onUnmarkPaid={handleUnmarkPaid}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
 
             <SeedsList
@@ -555,6 +574,8 @@ export function BlueprintClient({
               onDelete={handleDeleteClick}
               onMarkPaid={handleMarkPaid}
               onUnmarkPaid={handleUnmarkPaid}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
             />
           </div>
         </div>
@@ -582,6 +603,8 @@ export function BlueprintClient({
           setSelectedCategory(null);
           router.refresh();
         }}
+        isPartner={isPartner}
+        otherLabel={otherLabel}
       />
 
       <DeleteSeedConfirmDialog
