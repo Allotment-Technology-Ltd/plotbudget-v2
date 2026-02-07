@@ -135,3 +135,7 @@ In Vercel: **Settings → Domains** → add your domain and follow the DNS instr
 ## Optional: preview deployments
 
 Every branch/PR can get a preview URL. Use the same env vars for Preview if previews should hit the same Supabase project, or add a separate Supabase project and different env vars for Preview.
+
+## Testing the pipeline
+
+To verify the full CI and deployment pipeline: open a PR to `main`. GitHub Actions will run lint, type-check, unit tests, E2E on localhost, and E2E smoke on Vercel Preview. All jobs must pass before merge.
