@@ -11,12 +11,14 @@ CREATE INDEX IF NOT EXISTS idx_households_partner_user_id
 
 -- RLS: allow partner to read and update their household (e.g. partner_last_login_at).
 -- Owner-only policies already exist; these add partner access.
+DROP POLICY IF EXISTS "Partners can read household they belong to" ON public.households;
 CREATE POLICY "Partners can read household they belong to"
   ON public.households
   FOR SELECT
   TO authenticated
   USING (partner_user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Partners can update household they belong to" ON public.households;
 CREATE POLICY "Partners can update household they belong to"
   ON public.households
   FOR UPDATE
@@ -25,6 +27,7 @@ CREATE POLICY "Partners can update household they belong to"
   WITH CHECK (partner_user_id = auth.uid());
 
 -- Paycycles: partner can read/update (no insert for partner - owner creates paycycles).
+DROP POLICY IF EXISTS "Partners can read paycycles of their household" ON public.paycycles;
 CREATE POLICY "Partners can read paycycles of their household"
   ON public.paycycles
   FOR SELECT
@@ -36,6 +39,7 @@ CREATE POLICY "Partners can read paycycles of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can update paycycles of their household" ON public.paycycles;
 CREATE POLICY "Partners can update paycycles of their household"
   ON public.paycycles
   FOR UPDATE
@@ -48,6 +52,7 @@ CREATE POLICY "Partners can update paycycles of their household"
   );
 
 -- Seeds: partner can read, insert, update, delete (same as owner for shared household).
+DROP POLICY IF EXISTS "Partners can insert seeds for their household" ON public.seeds;
 CREATE POLICY "Partners can insert seeds for their household"
   ON public.seeds
   FOR INSERT
@@ -59,6 +64,7 @@ CREATE POLICY "Partners can insert seeds for their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can read seeds of their household" ON public.seeds;
 CREATE POLICY "Partners can read seeds of their household"
   ON public.seeds
   FOR SELECT
@@ -70,6 +76,7 @@ CREATE POLICY "Partners can read seeds of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can update seeds of their household" ON public.seeds;
 CREATE POLICY "Partners can update seeds of their household"
   ON public.seeds
   FOR UPDATE
@@ -87,6 +94,7 @@ CREATE POLICY "Partners can update seeds of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can delete seeds of their household" ON public.seeds;
 CREATE POLICY "Partners can delete seeds of their household"
   ON public.seeds
   FOR DELETE
@@ -99,6 +107,7 @@ CREATE POLICY "Partners can delete seeds of their household"
   );
 
 -- Pots: partner can read, insert, update, delete.
+DROP POLICY IF EXISTS "Partners can insert pots for their household" ON public.pots;
 CREATE POLICY "Partners can insert pots for their household"
   ON public.pots
   FOR INSERT
@@ -110,6 +119,7 @@ CREATE POLICY "Partners can insert pots for their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can read pots of their household" ON public.pots;
 CREATE POLICY "Partners can read pots of their household"
   ON public.pots
   FOR SELECT
@@ -121,6 +131,7 @@ CREATE POLICY "Partners can read pots of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can update pots of their household" ON public.pots;
 CREATE POLICY "Partners can update pots of their household"
   ON public.pots
   FOR UPDATE
@@ -132,6 +143,7 @@ CREATE POLICY "Partners can update pots of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can delete pots of their household" ON public.pots;
 CREATE POLICY "Partners can delete pots of their household"
   ON public.pots
   FOR DELETE
@@ -144,6 +156,7 @@ CREATE POLICY "Partners can delete pots of their household"
   );
 
 -- Repayments: partner can read, insert, update, delete.
+DROP POLICY IF EXISTS "Partners can insert repayments for their household" ON public.repayments;
 CREATE POLICY "Partners can insert repayments for their household"
   ON public.repayments
   FOR INSERT
@@ -155,6 +168,7 @@ CREATE POLICY "Partners can insert repayments for their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can read repayments of their household" ON public.repayments;
 CREATE POLICY "Partners can read repayments of their household"
   ON public.repayments
   FOR SELECT
@@ -166,6 +180,7 @@ CREATE POLICY "Partners can read repayments of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can update repayments of their household" ON public.repayments;
 CREATE POLICY "Partners can update repayments of their household"
   ON public.repayments
   FOR UPDATE
@@ -177,6 +192,7 @@ CREATE POLICY "Partners can update repayments of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can delete repayments of their household" ON public.repayments;
 CREATE POLICY "Partners can delete repayments of their household"
   ON public.repayments
   FOR DELETE

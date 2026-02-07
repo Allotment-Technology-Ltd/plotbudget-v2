@@ -2,6 +2,52 @@
 
 PlotBudget deploys to Vercel via **GitHub** (repo linked to Vercel). The app lives in a pnpm monorepo at `apps/web`. Pushing to the linked branch triggers an automatic deploy.
 
+## Environment strategy (two-tier: Preview = Staging)
+
+We use two environments only:
+
+| Tier | When | Vercel | Supabase |
+|------|------|--------|----------|
+| **Preview (Staging)** | Every PR gets a preview deployment | Vercel Preview URL | A single **non-production** Supabase project (shared by all previews) |
+| **Production** | Pushes to `main` | Production Vercel project | **Production** Supabase project only |
+
+- **Preview = Staging:** There is no separate long-lived staging environment. PR preview deployments serve as staging; validate there before merging to `main`.
+- **Production** is only from `main`. Production DB is never used by Preview.
+
+### Branching rules
+
+- **`main`** is protected: all changes must go through a Pull Request. Required status checks (lint, type-check, unit tests, E2E on localhost, E2E smoke on Vercel Preview) must pass before merge. No direct push to `main`.
+- PRs target `main` and receive a Vercel Preview URL; `main` deploys to Production.
+
+### Data safety
+
+- **Production data never touches non-production.** The production Supabase project is used only by the production app (Vercel production deployment). Preview deployments use a different Supabase project (or a dedicated preview/staging project) with no production data.
+- Do not point Preview or any non-production app at the production database. See [OPS_CHECKLIST.md](./OPS_CHECKLIST.md) for one-time Supabase and Vercel setup.
+
+### Pipeline overview
+
+```mermaid
+flowchart LR
+  subgraph pr [Pull Request]
+    Lint[lint]
+    Type[type-check]
+    Unit[Unit tests]
+    E2ELocal[E2E localhost]
+    E2EPreview[E2E smoke on Preview]
+  end
+  subgraph main [Push to main]
+    Migrate[Migrations]
+    Release[semantic-release]
+    Vercel[Vercel deploy]
+  end
+  PR --> Lint --> Type --> Unit --> E2ELocal --> E2EPreview
+  Merge --> Migrate --> Release
+  PushMain[push main] --> Vercel
+  Release -.->|tags/version| PushMain
+```
+
+---
+
 ## Prerequisites
 
 - Repo linked to Vercel (GitHub integration)

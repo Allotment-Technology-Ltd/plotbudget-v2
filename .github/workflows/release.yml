@@ -1,0 +1,43 @@
+# Release: on push to main, apply production migrations then run semantic-release (version + changelog).
+# Requires: SUPABASE_PROD_DATABASE_URL (full Postgres URI). Vercel deploys main automatically.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    name: Apply migrations (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - name: Push migrations
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_DATABASE_URL }}
+        run: supabase db push --db-url "$DATABASE_URL" --include-all --yes
+
+  release:
+    name: semantic-release
+    needs: [migrate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec semantic-release

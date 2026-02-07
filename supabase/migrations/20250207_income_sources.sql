@@ -1,7 +1,7 @@
 -- Income sources: independent streams per household (decoupled from budget cycle).
 -- Each source has its own frequency rule and amount; projection engine sums events in cycle window.
 
-CREATE TABLE public.income_sources (
+CREATE TABLE IF NOT EXISTS public.income_sources (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   household_id UUID NOT NULL REFERENCES public.households(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE public.income_sources (
   )
 );
 
-CREATE INDEX idx_income_sources_household ON public.income_sources(household_id);
-CREATE INDEX idx_income_sources_household_active ON public.income_sources(household_id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_income_sources_household ON public.income_sources(household_id);
+CREATE INDEX IF NOT EXISTS idx_income_sources_household_active ON public.income_sources(household_id) WHERE is_active = true;
 
 COMMENT ON TABLE public.income_sources IS 'Per-household income streams with independent frequency; used by projection engine for cycle total_income';
 COMMENT ON COLUMN public.income_sources.frequency_rule IS 'specific_date = day_of_month each month; last_working_day = LWD of month; every_4_weeks = anchor_date + 28n';
@@ -37,6 +37,7 @@ CREATE TRIGGER update_income_sources_updated_at
 -- RLS: owner and partner can manage income sources for their household
 ALTER TABLE public.income_sources ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can insert income_sources for own household" ON public.income_sources;
 CREATE POLICY "Users can insert income_sources for own household"
   ON public.income_sources
   FOR INSERT
@@ -48,6 +49,7 @@ CREATE POLICY "Users can insert income_sources for own household"
     )
   );
 
+DROP POLICY IF EXISTS "Users can read income_sources of own household" ON public.income_sources;
 CREATE POLICY "Users can read income_sources of own household"
   ON public.income_sources
   FOR SELECT
@@ -59,6 +61,7 @@ CREATE POLICY "Users can read income_sources of own household"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update income_sources of own household" ON public.income_sources;
 CREATE POLICY "Users can update income_sources of own household"
   ON public.income_sources
   FOR UPDATE
@@ -76,6 +79,7 @@ CREATE POLICY "Users can update income_sources of own household"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete income_sources of own household" ON public.income_sources;
 CREATE POLICY "Users can delete income_sources of own household"
   ON public.income_sources
   FOR DELETE
@@ -87,6 +91,7 @@ CREATE POLICY "Users can delete income_sources of own household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can insert income_sources for their household" ON public.income_sources;
 CREATE POLICY "Partners can insert income_sources for their household"
   ON public.income_sources
   FOR INSERT
@@ -98,6 +103,7 @@ CREATE POLICY "Partners can insert income_sources for their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can read income_sources of their household" ON public.income_sources;
 CREATE POLICY "Partners can read income_sources of their household"
   ON public.income_sources
   FOR SELECT
@@ -109,6 +115,7 @@ CREATE POLICY "Partners can read income_sources of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can update income_sources of their household" ON public.income_sources;
 CREATE POLICY "Partners can update income_sources of their household"
   ON public.income_sources
   FOR UPDATE
@@ -126,6 +133,7 @@ CREATE POLICY "Partners can update income_sources of their household"
     )
   );
 
+DROP POLICY IF EXISTS "Partners can delete income_sources of their household" ON public.income_sources;
 CREATE POLICY "Partners can delete income_sources of their household"
   ON public.income_sources
   FOR DELETE

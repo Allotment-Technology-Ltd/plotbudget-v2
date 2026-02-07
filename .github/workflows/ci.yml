@@ -1,35 +1,56 @@
-# .github/workflows/playwright.yml
-# Unit tests and E2E tests run on PR and push to main/develop (localhost).
-# Unit and E2E run in parallel for faster feedback. Playwright browsers are cached.
-# Vercel Preview E2E is disabled (set if: false below); re-enable when preview testing is needed.
-# Required repo secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-name: Playwright Tests
+# Guardrails: block merge if lint, type-check, unit tests, or E2E fail.
+# Runs on every Pull Request to main. All jobs must pass to merge.
+# Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+name: CI
 
 on:
   pull_request:
-    branches: [main, develop]
-  push:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint
+
+  type-check:
+    name: type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm type-check
+
   test-unit:
     name: Unit tests (Vitest)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
+      - run: pnpm install
       - name: Run unit tests
         working-directory: apps/web
         run: pnpm test:unit
@@ -40,26 +61,20 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
+      - run: pnpm install
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
-
       - name: Install Playwright Browsers
         working-directory: apps/web
         run: |
@@ -68,7 +83,6 @@ jobs:
           else
             pnpm exec playwright install-deps chromium
           fi
-
       - name: Run Playwright tests
         working-directory: apps/web
         env:
@@ -77,7 +91,6 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
         run: pnpm test:e2e
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -86,48 +99,38 @@ jobs:
           retention-days: 7
 
   test-vercel-preview:
-    name: Test on Vercel Preview (pre-merge)
+    name: E2E smoke on Vercel Preview
     needs: [test-unit]
-    # Disabled: not crucial for now. Re-enable by changing to: if: github.event_name == 'pull_request'
-    if: false
-    timeout-minutes: 15
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
+      - run: pnpm install
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
-
+        run: pnpm exec playwright install --with-deps chromium
       - name: Wait for Vercel Preview Deployment
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
         id: waitForDeployment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
-
-      - name: Run Playwright tests against Vercel Preview
+      - name: Run smoke tests against Vercel Preview
         working-directory: apps/web
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SKIP_WEBSERVER: '1'
           PLAYWRIGHT_TEST_BASE_URL: ${{ steps.waitForDeployment.outputs.url }}
-        run: pnpm test:e2e
-
+        run: pnpm exec playwright test --project=smoke
       - uses: actions/upload-artifact@v4
         if: always()
         with:
