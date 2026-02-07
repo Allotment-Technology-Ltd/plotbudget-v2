@@ -161,8 +161,9 @@ export class BlueprintPage {
     // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
     await this.page.goto('/dashboard/blueprint');
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
-    // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode)
-    await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: 15_000 });
+    // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode).
+    // Allow 20s for CI where the new seed can take a moment to appear after reload.
+    await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: 20_000 });
   }
 
   async expectSeedInList(seedName: string, amount: number) {

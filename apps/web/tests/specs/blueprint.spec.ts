@@ -12,6 +12,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
   });
 
   test('add a new recurring need seed', async ({ page }) => {
+    test.setTimeout(90_000); // addSeed: dialog close + reload + seed card visibility can exceed 30s in CI
     const blueprintPage = new BlueprintPage(page);
     await blueprintPage.goto();
 

@@ -69,11 +69,11 @@ test.describe('Partner invite (authenticated)', () => {
     await page.context().addCookies([cookie]);
 
     await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'load',
     });
 
     // Invite is auto-accepted and user is redirected to dashboard (no Accept screen)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30_000 });
     const onDashboard =
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
     const onOnboarding = page.getByTestId('onboarding-step-1');
