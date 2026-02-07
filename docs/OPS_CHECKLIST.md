@@ -38,7 +38,7 @@ In **Settings → Branches** → Add/Edit rule for `main`:
 ## Vercel
 
 - [ ] **Environment variables** — Set for **Production** and **Preview** as in [DEPLOYMENT.md](./DEPLOYMENT.md). Preview should use the non-production Supabase project so production data is never used in previews.
-- [ ] **CI smoke tests** — The workflow deploys to Vercel from GitHub Actions (using `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) and runs smoke tests against that preview. Add those three secrets to GitHub so the "E2E smoke on Vercel Preview" job can run.
+- [ ] **CI smoke tests** — The workflow deploys to Vercel from GitHub Actions (using `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) and runs smoke tests against that preview. Add those three secrets to GitHub so the "E2E smoke on Vercel Preview" job can run. If the deploy fails with a generic "Unexpected error," regenerate `VERCEL_TOKEN` in Vercel (Account Settings → Tokens) and update the secret in GitHub.
 
 ---
 
