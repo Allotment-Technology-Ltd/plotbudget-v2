@@ -2,12 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/ui', '@repo/logic'],
-  // Expose version and build info for Settings → Advanced (user-facing).
-  env: {
-    NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
-    NEXT_PUBLIC_BUILD_SHA: process.env.VERCEL_GIT_COMMIT_SHA || '',
-    NEXT_PUBLIC_BUILD_TIMESTAMP: process.env.VERCEL_GIT_COMMIT_TIMESTAMP || '',
-  },
   webpack: (config, { dev }) => {
     // In dev, use memory-only cache so webpack doesn't serialize large strings to disk (which
     // triggers "Serializing big strings" warning). The "use Buffer" approach would require

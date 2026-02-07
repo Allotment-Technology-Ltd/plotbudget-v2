@@ -74,9 +74,9 @@ export function PrivacyTab({ userId: _userId, isPartner = false }: PrivacyTabPro
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           {isPartner ? 'Delete My Account' : 'Danger Zone'}
         </h2>
-        <Alert variant="destructive" className="mb-8 p-5">
+        <Alert variant="destructive" className="mb-6">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-          <AlertDescription className="break-words min-w-0 leading-relaxed">
+          <AlertDescription className="break-words min-w-0">
             {isPartner
               ? 'Permanently delete your account and data. You will be removed from the household. This cannot be undone.'
               : 'This action cannot be undone. All your data will be permanently deleted, including your household, paycycles, seeds, pots, and repayments.'}
