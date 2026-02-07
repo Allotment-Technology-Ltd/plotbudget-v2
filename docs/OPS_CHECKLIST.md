@@ -13,6 +13,9 @@ Add these in **Settings → Secrets and variables → Actions** (repository secr
 | `NEXT_PUBLIC_SUPABASE_URL` | CI (E2E), optional in release | Supabase project URL (use non-production for CI if Preview uses it) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | CI (E2E) | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | CI (E2E) | Supabase service_role key (for test setup/teardown) |
+| `VERCEL_TOKEN` | CI (E2E smoke on Vercel Preview) | Vercel → Settings → Tokens. Used to deploy from CI so smoke tests don't depend on vercel[bot]. |
+| `VERCEL_ORG_ID` | CI (E2E smoke on Vercel Preview) | From `vercel link` or Vercel project → Settings → General. |
+| `VERCEL_PROJECT_ID` | CI (E2E smoke on Vercel Preview) | From `vercel link` or Vercel project → Settings → General. |
 | `SUPABASE_PROD_DATABASE_URL` | Release workflow only | Full Postgres URI. Use **Session pooler** (IPv4-friendly): `postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres` from Supabase → Settings → Database → Connection pooling. |
 
 Get the production DB URL from Supabase Dashboard → **Settings → Database** → Connection string / Connection pooling (Session). Replace the password placeholder with your database password.
@@ -35,7 +38,7 @@ In **Settings → Branches** → Add/Edit rule for `main`:
 ## Vercel
 
 - [ ] **Environment variables** — Set for **Production** and **Preview** as in [DEPLOYMENT.md](./DEPLOYMENT.md). Preview should use the non-production Supabase project so production data is never used in previews.
-- [ ] **Preview deployments** — Ensure preview deployments are enabled for pull requests (Vercel → Settings → Git) so the CI workflow can get a preview URL and run smoke tests.
+- [ ] **CI smoke tests** — The workflow deploys to Vercel from GitHub Actions (using `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) and runs smoke tests against that preview. Add those three secrets to GitHub so the "E2E smoke on Vercel Preview" job can run.
 
 ---
 
