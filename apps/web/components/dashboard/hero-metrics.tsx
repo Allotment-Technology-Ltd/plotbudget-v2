@@ -10,10 +10,52 @@ interface HeroMetricsProps {
   seeds: Seed[];
 }
 
+const typeMap = {
+  need: 'needs',
+  want: 'wants',
+  savings: 'savings',
+  repay: 'repay',
+} as const;
+
 /**
- * Total remaining budget across all category/source buckets.
+ * Total remaining budget from seeds (unpaid amounts). Use this for display so
+ * the dashboard is correct even when paycycle.rem_* are out of sync.
  */
-function getTotalRemaining(paycycle: PayCycle): number {
+function getTotalRemainingFromSeeds(seeds: Seed[]): number {
+  const rem: Record<string, number> = {
+    rem_needs_me: 0,
+    rem_needs_partner: 0,
+    rem_needs_joint: 0,
+    rem_wants_me: 0,
+    rem_wants_partner: 0,
+    rem_wants_joint: 0,
+    rem_savings_me: 0,
+    rem_savings_partner: 0,
+    rem_savings_joint: 0,
+    rem_repay_me: 0,
+    rem_repay_partner: 0,
+    rem_repay_joint: 0,
+  };
+  for (const seed of seeds) {
+    const typeKey = typeMap[seed.type];
+    if (seed.payment_source === 'me') {
+      const k = `rem_${typeKey}_me` as keyof typeof rem;
+      rem[k] += seed.is_paid ? 0 : Number(seed.amount);
+    } else if (seed.payment_source === 'partner') {
+      const k = `rem_${typeKey}_partner` as keyof typeof rem;
+      rem[k] += seed.is_paid ? 0 : Number(seed.amount);
+    } else {
+      const unpaidMe = seed.is_paid_me ? 0 : Number(seed.amount_me ?? 0);
+      const unpaidPartner = seed.is_paid_partner ? 0 : Number(seed.amount_partner ?? 0);
+      const k = `rem_${typeKey}_joint` as keyof typeof rem;
+      rem[k] += unpaidMe + unpaidPartner;
+    }
+  }
+  return Object.values(rem).reduce((a, b) => a + b, 0);
+}
+
+/** Fallback: total remaining from paycycle.rem_* (may be stale). */
+function getTotalRemainingFromPaycycle(paycycle: PayCycle): number {
   return (
     paycycle.rem_needs_me +
     paycycle.rem_needs_partner +
@@ -32,8 +74,11 @@ function getTotalRemaining(paycycle: PayCycle): number {
 
 type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
 
-export function HeroMetrics({ paycycle }: HeroMetricsProps) {
-  const totalRemaining = getTotalRemaining(paycycle);
+export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
+  const totalRemaining =
+    seeds.length > 0
+      ? getTotalRemainingFromSeeds(seeds)
+      : getTotalRemainingFromPaycycle(paycycle);
   const allocatedPercent =
     paycycle.total_income > 0
       ? (paycycle.total_allocated / paycycle.total_income) * 100

@@ -2,12 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { marketingUrl } from '@/lib/marketing-url';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/dashboard/blueprint', label: 'Blueprint' },
-  { href: marketingUrl('/'), label: 'Pricing', external: true },
 ];
 
 export function DashboardNav() {

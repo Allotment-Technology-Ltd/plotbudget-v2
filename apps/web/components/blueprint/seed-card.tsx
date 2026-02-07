@@ -19,6 +19,7 @@ interface SeedCardProps {
   onEdit: () => void;
   onDelete: () => void;
   isRitualMode?: boolean;
+  isCycleLocked?: boolean;
   onMarkPaid?: (seedId: string, payer: Payer) => void;
   onUnmarkPaid?: (seedId: string, payer: Payer) => void;
 }
@@ -41,6 +42,7 @@ export function SeedCard({
   onEdit,
   onDelete,
   isRitualMode = false,
+  isCycleLocked = false,
   onMarkPaid,
   onUnmarkPaid,
 }: SeedCardProps) {
@@ -49,7 +51,7 @@ export function SeedCard({
   const seedSlug = seed.name.toLowerCase().replace(/\s+/g, '-');
   const isJointCouple =
     seed.payment_source === 'joint' && household.is_couple;
-  const canMarkUnmark = isRitualMode && (onMarkPaid || onUnmarkPaid);
+  const canMarkUnmark = !isCycleLocked && isRitualMode && (onMarkPaid || onUnmarkPaid);
 
   const handleCheckboxChange = (payer: Payer, checked: boolean) => {
     if (checked && onMarkPaid) onMarkPaid(seed.id, payer);
@@ -57,12 +59,15 @@ export function SeedCard({
   };
 
   const isPaid = !!seed.is_paid;
-  const canEditOrDelete = !isRitualMode || !isPaid;
+  const canEditOrDelete = !isCycleLocked && (!isRitualMode || !isPaid);
+
+  const lockedMessage =
+    'Unlock the blueprint first (e.g. to add a new bill), then you can mark bills as unpaid or edit them.';
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canEditOrDelete) {
-      toast.info('Mark this bill as unpaid before editing.');
+      toast.info(isCycleLocked ? lockedMessage : 'Mark this bill as unpaid before editing.');
       return;
     }
     onEdit();
@@ -71,121 +76,186 @@ export function SeedCard({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canEditOrDelete) {
-      toast.info('Mark this bill as unpaid before deleting.');
+      toast.info(isCycleLocked ? lockedMessage : 'Mark this bill as unpaid before deleting.');
       return;
     }
     onDelete();
   };
 
-  const cardContent = (
-    <>
-      {canMarkUnmark && (
-        <div className="flex items-center gap-2 mr-4 shrink-0" role="group">
-          {isJointCouple ? (
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!seed.is_paid_me}
-                  onChange={(e) =>
-                    handleCheckboxChange('me', e.target.checked)
-                  }
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-                  aria-label={`Mark ${seed.name} - your portion as paid`}
-                  data-testid={`seed-paid-me-${seedSlug}`}
-                />
-                <span className="text-muted-foreground">You</span>
-              </label>
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!seed.is_paid_partner}
-                  onChange={(e) =>
-                    handleCheckboxChange('partner', e.target.checked)
-                  }
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-                  aria-label={`Mark ${seed.name} - ${partnerName}'s portion as paid`}
-                  data-testid={`seed-paid-partner-${seedSlug}`}
-                />
-                <span className="text-muted-foreground">{partnerName}</span>
-              </label>
-            </div>
-          ) : (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!seed.is_paid}
-                onChange={(e) =>
-                  handleCheckboxChange('both', e.target.checked)
-                }
-                className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-                aria-label={`Mark ${seed.name} as paid`}
-                data-testid={`seed-paid-${seedSlug}`}
-              />
-            </label>
-          )}
-        </div>
-      )}
+  const borderClass = isPaid && isRitualMode
+    ? 'border-primary/50 bg-primary/5'
+    : 'border-border hover:border-primary/30';
 
-      {seed.is_paid && isRitualMode && (
-        <div
-          className="flex items-center gap-2 mr-4 shrink-0 text-primary"
-          aria-label={`${seed.name} is paid`}
-        >
-          <CheckCircle2 className="w-5 h-5" aria-hidden />
-          <span className="text-xs font-medium uppercase">Paid</span>
-        </div>
-      )}
-
-      <div
-        className={`flex-1 min-w-0 ${canEditOrDelete ? 'cursor-pointer' : ''}`}
-        data-testid={`edit-seed-${seedSlug}`}
-        role="button"
-        tabIndex={0}
-        onClick={handleEditClick}
-        onKeyDown={(e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (canEditOrDelete) onEdit();
-            else toast.info('Mark this bill as unpaid before editing.');
+  return (
+    <div
+      className={`p-4 bg-background rounded-md border transition-colors ${!canEditOrDelete ? '' : 'cursor-pointer group hover:border-primary/30'} ${borderClass}`}
+      data-testid={`seed-card-${seedSlug}`}
+      role="button"
+      tabIndex={0}
+      onClick={handleEditClick}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!canEditOrDelete) {
+            toast.info(isCycleLocked ? lockedMessage : 'Mark this bill as unpaid before editing.');
+          } else {
+            onEdit();
           }
-        }}
-        aria-label={canEditOrDelete ? `Edit ${seed.name}` : `${seed.name} (mark as unpaid to edit)`}
-      >
-        <div className="flex items-center gap-3 flex-wrap">
-          <h3
-            id={`seed-${seed.id}-name`}
-            className="font-body font-medium text-foreground truncate"
-          >
-            {seed.name}
-          </h3>
-          {seed.is_recurring && (
-            <span
-              className="text-xs text-muted-foreground flex items-center gap-1 shrink-0"
-              aria-label="Recurring expense"
-            >
-              <Repeat className="w-3 h-3" aria-hidden />
-              Recurring
-            </span>
+        }
+      }}
+      aria-label={
+        canEditOrDelete
+          ? `Edit ${seed.name}`
+          : isCycleLocked
+            ? `${seed.name} (unlock blueprint to edit)`
+            : `${seed.name} (mark as unpaid to edit)`
+      }
+    >
+      {/* Top row: checkboxes (or paid badge) | title + tags | amount + delete — on mobile stack title full-width then amount row */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        {/* Checkboxes or Paid badge — left; clickable area limited so card click target is clear */}
+        <div
+          className="flex items-start sm:items-center gap-2 shrink-0"
+          role="group"
+          aria-label="Mark this bill as paid"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {canMarkUnmark && (
+            isJointCouple ? (
+              <div className="flex flex-row sm:flex-col gap-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider w-full sm:w-auto" aria-hidden>
+                  Mark paid
+                </p>
+                <label className="flex items-center gap-1.5 text-xs cursor-pointer whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={!!seed.is_paid_me}
+                    onChange={(e) =>
+                      handleCheckboxChange('me', e.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
+                    aria-label={`Mark ${seed.name} - your portion as paid`}
+                    data-testid={`seed-paid-me-${seedSlug}`}
+                  />
+                  <span className="text-muted-foreground">You</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-xs cursor-pointer whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={!!seed.is_paid_partner}
+                    onChange={(e) =>
+                      handleCheckboxChange('partner', e.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
+                    aria-label={`Mark ${seed.name} - ${partnerName}'s portion as paid`}
+                    data-testid={`seed-paid-partner-${seedSlug}`}
+                  />
+                  <span className="text-muted-foreground">{partnerName}</span>
+                </label>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!seed.is_paid}
+                  onChange={(e) =>
+                    handleCheckboxChange('both', e.target.checked)
+                  }
+                  className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
+                  aria-label={`Mark ${seed.name} as paid`}
+                  data-testid={`seed-paid-${seedSlug}`}
+                />
+                <span className={`text-xs font-medium uppercase tracking-wider whitespace-nowrap ${isPaid ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {isPaid ? 'Paid' : 'Mark as paid'}
+                </span>
+              </label>
+            )
           )}
-          {statusLabel && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0"
-              aria-label={`Status: ${statusLabel}`}
+          {seed.is_paid && isRitualMode && !canMarkUnmark && (
+            <div
+              className="flex items-center gap-1.5 text-primary shrink-0"
+              aria-label={`${seed.name} is paid`}
             >
-              {statusLabel}
-            </span>
+              <CheckCircle2 className="w-5 h-5" aria-hidden />
+              <span className="text-xs font-medium uppercase">Paid</span>
+            </div>
           )}
         </div>
 
-        {/* Only show "Added by" in couple mode; we always capture created_by_owner so it's available if they switch from solo to couple */}
+        {/* Title + optional tags — part of card click target */}
+        <div
+          className="flex-1 min-w-0 text-left"
+          data-testid={`edit-seed-${seedSlug}`}
+        >
+          <div className="flex flex-wrap items-center gap-2 gap-y-1">
+            <h3
+              id={`seed-${seed.id}-name`}
+              className="font-body font-medium text-foreground uppercase line-clamp-2 break-words"
+            >
+              {seed.name}
+            </h3>
+            {seed.is_recurring && (
+              <span
+                className="text-xs text-muted-foreground flex items-center gap-1 shrink-0"
+                aria-label="Recurring expense"
+              >
+                <Repeat className="w-3 h-3" aria-hidden />
+                Recurring
+              </span>
+            )}
+            {statusLabel && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0"
+                aria-label={`Status: ${statusLabel}`}
+              >
+                {statusLabel}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Amount + badge + delete — right-aligned, own row on mobile */}
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0 sm:flex-nowrap">
+          <div className="text-right">
+            <p className="font-display text-lg text-foreground whitespace-nowrap">
+              £{Number(seed.amount).toFixed(2)}
+            </p>
+            {household.is_couple && (
+              <span
+                className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
+                aria-label={`Payment source: ${badge.label}`}
+              >
+                {badge.label}
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            className="h-9 w-9 p-0 shrink-0 opacity-70 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleDeleteClick}
+            aria-label={
+              canEditOrDelete
+                ? `Delete ${seed.name}`
+                : isCycleLocked
+                  ? `Delete ${seed.name} (unlock blueprint first)`
+                  : `Delete ${seed.name} (mark as unpaid first)`
+            }
+            data-testid={`delete-seed-${seedSlug}`}
+          >
+            <Trash className="w-4 h-4" aria-hidden />
+          </Button>
+        </div>
+      </div>
+
+      {/* Meta row: Added by, Paid by, joint split, pot, repayment — full width below */}
+      <div className="mt-2 pl-0 sm:pl-0 space-y-0.5">
         {(household.is_couple && seed.created_by_owner != null) && (
-          <p className="text-xs text-muted-foreground mt-0.5" aria-label={`Added by ${seed.created_by_owner ? 'you' : partnerName}`}>
+          <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? 'you' : partnerName}`}>
             Added by {seed.created_by_owner ? 'you' : partnerName}
           </p>
         )}
         {seed.is_paid && isRitualMode && household.is_couple && (
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground">
             Paid by{' '}
             {seed.is_paid_me && seed.is_paid_partner
               ? 'both'
@@ -196,64 +266,24 @@ export function SeedCard({
                   : '—'}
           </p>
         )}
-
         {seed.payment_source === 'joint' && (
-          <p className="text-sm text-muted-foreground mt-1">
-            You: £{Number(seed.amount_me).toFixed(2)} • {partnerName}: £
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            You: £{Number(seed.amount_me).toFixed(2)} · {partnerName}: £
             {Number(seed.amount_partner).toFixed(2)}
           </p>
         )}
         {linkedPot && (
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             £{Number(linkedPot.current_amount).toFixed(0)} / £
             {Number(linkedPot.target_amount).toFixed(0)}
           </p>
         )}
         {linkedRepayment && !linkedPot && (
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             £{Number(linkedRepayment.current_balance).toFixed(0)} remaining
           </p>
         )}
       </div>
-
-      <div className="flex items-center gap-4 shrink-0">
-        <div className="text-right">
-          <p className="font-display text-lg text-foreground">
-            £{Number(seed.amount).toFixed(2)}
-          </p>
-          {household.is_couple && (
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
-              aria-label={`Payment source: ${badge.label}`}
-            >
-              {badge.label}
-            </span>
-          )}
-        </div>
-
-        <Button
-          variant="ghost"
-          className="h-9 w-9 p-0 shrink-0 opacity-70 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-          onClick={handleDeleteClick}
-          aria-label={canEditOrDelete ? `Delete ${seed.name}` : `Delete ${seed.name} (mark as unpaid first)`}
-          data-testid={`delete-seed-${seedSlug}`}
-        >
-          <Trash className="w-4 h-4" aria-hidden />
-        </Button>
-      </div>
-    </>
-  );
-
-  const borderClass = isPaid && isRitualMode
-    ? 'border-primary/50 bg-primary/5'
-    : 'border-border hover:border-primary/30';
-
-  return (
-    <div
-      className={`flex items-center justify-between p-4 bg-background rounded-md border transition-colors gap-4 ${!canEditOrDelete ? '' : 'cursor-pointer group hover:border-primary/30'} ${borderClass}`}
-      data-testid={`seed-card-${seedSlug}`}
-    >
-      {cardContent}
     </div>
   );
 }

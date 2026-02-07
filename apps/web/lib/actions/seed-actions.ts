@@ -23,6 +23,7 @@ export interface CreateSeedInput {
   split_ratio?: number | null;
   uses_joint_account?: boolean;
   is_recurring: boolean;
+  due_date?: string | null;
   paycycle_id: string;
   household_id: string;
   linked_pot_id?: string | null;
@@ -50,6 +51,7 @@ export interface UpdateSeedInput {
   split_ratio?: number | null;
   uses_joint_account?: boolean;
   is_recurring?: boolean;
+  due_date?: string | null;
   linked_pot_id?: string | null;
   linked_repayment_id?: string | null;
   pot?: {
@@ -267,6 +269,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       payment_source: data.payment_source,
       split_ratio: data.split_ratio ?? null,
       is_recurring: data.is_recurring ?? false,
+      due_date: data.due_date ?? null,
       is_paid: false,
       is_paid_me: false,
       is_paid_partner: false,
@@ -366,6 +369,7 @@ export async function updateSeed(
     if (data.payment_source !== undefined) seedUpdate.payment_source = data.payment_source;
     if (data.split_ratio !== undefined) seedUpdate.split_ratio = data.split_ratio;
     if (data.is_recurring !== undefined) seedUpdate.is_recurring = data.is_recurring;
+    if (data.due_date !== undefined) seedUpdate.due_date = data.due_date;
     if (data.linked_pot_id !== undefined) seedUpdate.linked_pot_id = data.linked_pot_id;
     if (data.linked_repayment_id !== undefined) seedUpdate.linked_repayment_id = data.linked_repayment_id;
     if (data.uses_joint_account !== undefined) seedUpdate.uses_joint_account = data.uses_joint_account;
@@ -407,6 +411,39 @@ export async function deleteSeed(seedId: string): Promise<{ error?: string }> {
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to delete seed' };
   }
+}
+
+/** Mark need/want seeds with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
+export async function markOverdueSeedsPaid(
+  paycycleId: string
+): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data: overdue } = await supabase
+    .from('seeds')
+    .select('id, payment_source')
+    .eq('paycycle_id', paycycleId)
+    .in('type', ['need', 'want'])
+    .not('due_date', 'is', null)
+    .lt('due_date', today)
+    .eq('is_paid', false);
+
+  if (!overdue || overdue.length === 0) return;
+
+  for (const row of overdue as { id: string; payment_source: string }[]) {
+    const isJoint = row.payment_source === 'joint';
+    const updates: Record<string, unknown> = {
+      is_paid: true,
+      is_paid_me: isJoint || row.payment_source === 'me',
+      is_paid_partner: isJoint || row.payment_source === 'partner',
+    };
+    await (supabase.from('seeds') as any).update(updates).eq('id', row.id);
+  }
+
+  await updatePaycycleAllocations(paycycleId);
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
 }
 
 /** Create next paycycle, clone recurring seeds, and return new cycle id */
@@ -477,6 +514,7 @@ export async function createNextPaycycle(
         category: s.category,
         payment_source: s.payment_source,
         is_recurring: true,
+        due_date: s.due_date ?? null,
         is_paid: false,
         is_paid_me: false,
         is_paid_partner: false,
@@ -567,6 +605,7 @@ export async function resyncDraftFromActive(
             linked_pot_id: seed.linked_pot_id ?? null,
             linked_repayment_id: seed.linked_repayment_id ?? null,
             uses_joint_account: seed.uses_joint_account ?? false,
+            due_date: seed.due_date ?? null,
           })
           .eq('id', existing.id);
       } else {
@@ -580,6 +619,7 @@ export async function resyncDraftFromActive(
           payment_source: seed.payment_source,
           split_ratio: seed.split_ratio,
           is_recurring: true,
+          due_date: seed.due_date ?? null,
           is_paid: false,
           is_paid_me: false,
           is_paid_partner: false,

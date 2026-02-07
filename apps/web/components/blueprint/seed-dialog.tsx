@@ -77,6 +77,7 @@ const seedFormSchema = z.object({
   split_ratio: z.number().min(0).max(100).optional(),
   uses_joint_account: z.boolean().default(false),
   is_recurring: z.boolean().default(false),
+  due_date: z.string().optional(),
   // Savings: link or create
   link_pot_id: z.string().optional(),
   pot_current_str: z.string().optional(),
@@ -123,6 +124,7 @@ export function SeedDialog({
       split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
       uses_joint_account: false,
       is_recurring: false,
+      due_date: '',
       link_pot_id: undefined,
       pot_current_str: '',
       pot_target_str: '',
@@ -149,6 +151,7 @@ export function SeedDialog({
               : Math.round((household.joint_ratio ?? 0.5) * 100),
           uses_joint_account: seed.uses_joint_account ?? false,
           is_recurring: seed.is_recurring,
+          due_date: (seed as { due_date?: string | null }).due_date ?? '',
         };
         if (linkedPot) {
           form.reset({
@@ -177,6 +180,7 @@ export function SeedDialog({
           payment_source: 'me',
           split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
           is_recurring: false,
+          due_date: '',
           link_pot_id: undefined,
           pot_current_str: '',
           pot_target_str: '',
@@ -268,6 +272,10 @@ export function SeedDialog({
         is_recurring:
           category === 'savings' || category === 'repay' ? true : data.is_recurring,
       };
+
+      if (category === 'need' || category === 'want') {
+        payload.due_date = data.due_date?.trim() || null;
+      }
 
       if (category === 'savings') {
         if (data.link_pot_id) {
@@ -363,20 +371,22 @@ export function SeedDialog({
   };
   const namePlaceholder = category ? namePlaceholders[category] : 'e.g. Rent, Electric bill';
 
+  // UX: Constrain dialog height (max-h-[90vh]) so it never fills the viewport;
+  // form content scrolls inside. Keeps focus and works on mobile/desktop.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={true}
-        className="max-w-md"
+        className="max-w-md max-h-[90vh] flex flex-col gap-4 overflow-hidden"
         aria-describedby={undefined}
       >
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {editMode ? `Edit ${categoryLabel}` : `Add ${categoryLabel}`}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-6" noValidate>
+        <form onSubmit={onSubmit} className="space-y-6 overflow-y-auto min-h-0 flex-1 pr-1 -mr-1 focus:outline-none" noValidate>
           {category && (
             <div className="sr-only" aria-hidden>
               <Label htmlFor="seed-category">Category</Label>
@@ -416,6 +426,22 @@ export function SeedDialog({
               </p>
             )}
           </div>
+
+          {(category === 'need' || category === 'want') && (
+            <div className="space-y-2">
+              <Label htmlFor="seed-due-date">Due date (optional)</Label>
+              <Input
+                id="seed-due-date"
+                type="date"
+                aria-label="Due date"
+                data-testid="seed-due-date-input"
+                {...form.register('due_date')}
+              />
+              <p className="text-xs text-muted-foreground">
+                When the due date has passed, this bill is automatically marked as paid.
+              </p>
+            </div>
+          )}
 
           {category === 'savings' && (
             <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">

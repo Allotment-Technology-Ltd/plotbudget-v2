@@ -98,13 +98,24 @@ export function BlueprintHeader({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {allPaycycles.map((cycle) => (
-                  <SelectItem key={cycle.id} value={cycle.id}>
-                    {cycle.name ||
-                      format(new Date(cycle.start_date), 'MMM yyyy')}
-                    {cycle.status === 'active' && ' (Current)'}
-                  </SelectItem>
-                ))}
+                {allPaycycles.map((cycle) => {
+                  const dateLabel = cycle.name || format(new Date(cycle.start_date), 'MMM yyyy');
+                  const statusLabel =
+                    cycle.status === 'active'
+                      ? 'Current cycle'
+                      : cycle.status === 'draft'
+                        ? 'Next cycle'
+                        : dateLabel;
+                  const displayLabel =
+                    cycle.status === 'active' || cycle.status === 'draft'
+                      ? statusLabel
+                      : dateLabel;
+                  return (
+                    <SelectItem key={cycle.id} value={cycle.id}>
+                      {displayLabel}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 

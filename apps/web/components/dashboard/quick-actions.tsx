@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, LayoutGrid, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createNextPaycycle } from '@/lib/actions/seed-actions';
@@ -40,13 +40,6 @@ export function QuickActions({
       icon: Plus,
       href: '/dashboard/blueprint?action=add',
       color: 'bg-primary/10 text-primary hover:bg-primary/20',
-    },
-    {
-      label: 'Manage Blueprint',
-      description: 'View and edit your budget',
-      icon: LayoutGrid,
-      href: '/dashboard/blueprint',
-      color: 'bg-accent/10 text-accent-foreground hover:bg-accent/20',
     },
     ...(hasDraftCycle
       ? []

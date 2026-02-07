@@ -144,14 +144,6 @@ export function RitualTransferSummary({
           </p>
         </div>
       </div>
-
-      <div className="mt-6 p-4 rounded-md bg-muted" role="status">
-        <p className="text-sm text-foreground">
-          <strong className="text-primary">How it works:</strong> Transfer the
-          amounts above on payday, then check off each bill as you pay it
-          throughout the month.
-        </p>
-      </div>
     </div>
   );
 }

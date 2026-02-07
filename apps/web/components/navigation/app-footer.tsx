@@ -11,9 +11,7 @@ export function AppFooter() {
     >
       <div className="content-wrapper flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
         <a
-          href={marketingUrl('/')}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="mailto:hello@plotbudget.com"
           className="font-heading uppercase tracking-wider hover:text-foreground transition-colors"
         >
           Help
