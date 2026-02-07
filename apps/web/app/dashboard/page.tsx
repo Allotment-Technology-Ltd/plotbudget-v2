@@ -3,6 +3,7 @@ import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
+import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
 import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
 
 export default async function DashboardPage() {
@@ -67,7 +68,7 @@ export default async function DashboardPage() {
       .select('*')
       .eq('id', currentPaycycleId)
       .single();
-    currentPaycycle = paycycle ?? null;
+    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
 
     if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
       await markOverdueSeedsPaid(currentPaycycleId);
@@ -111,6 +112,29 @@ export default async function DashboardPage() {
     .maybeSingle();
   const hasDraftCycle = !!draftCycle;
 
+  let incomeEvents: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[] = [];
+  if (currentPaycycle) {
+    const { data: incomeSources } = await supabase
+      .from('income_sources')
+      .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
+      .eq('household_id', householdId)
+      .eq('is_active', true);
+    const sources = (incomeSources ?? []) as {
+      id: string;
+      name: string;
+      amount: number;
+      frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+      day_of_month: number | null;
+      anchor_date: string | null;
+      payment_source: 'me' | 'partner' | 'joint';
+    }[];
+    incomeEvents = getIncomeEventsForCycle(
+      currentPaycycle.start_date,
+      currentPaycycle.end_date,
+      sources
+    );
+  }
+
   return (
     <DashboardClient
       household={household as Household}
@@ -120,6 +144,7 @@ export default async function DashboardPage() {
       repayments={repayments ?? []}
       historicalCycles={historicalCycles}
       hasDraftCycle={hasDraftCycle}
+      incomeEvents={incomeEvents}
     />
   );
 }

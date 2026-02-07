@@ -129,7 +129,8 @@ export function calculateNextCycleDates(
     end = new Date(start);
     end.setDate(end.getDate() + 27);
   } else if (type === 'last_working_day') {
-    end = getLastWorkingDay(start.getFullYear(), start.getMonth() + 1);
+    // End = last working day of the month that contains cycle start
+    end = getLastWorkingDay(start.getFullYear(), start.getMonth());
   } else {
     const nextPay = new Date(start.getFullYear(), start.getMonth() + 1, payDay ?? 1);
     end = toWorkingDay(nextPay);
@@ -139,4 +140,77 @@ export function calculateNextCycleDates(
     start: start.toISOString().split('T')[0],
     end: end.toISOString().split('T')[0],
   };
+}
+
+export type FrequencyRule = 'specific_date' | 'last_working_day' | 'every_4_weeks';
+
+/**
+ * Get all payment dates for a single income source within [rangeStart, rangeEnd] (inclusive).
+ * Used by the projection engine to count how many times an income lands in a cycle (handles double-dip for 4-weekly).
+ */
+export function getPaymentDatesInRange(
+  rangeStart: string,
+  rangeEnd: string,
+  frequencyRule: FrequencyRule,
+  dayOfMonth?: number | null,
+  anchorDate?: string | null
+): string[] {
+  const start = new Date(rangeStart);
+  const end = new Date(rangeEnd);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+  const out: string[] = [];
+
+  if (frequencyRule === 'specific_date' && dayOfMonth != null) {
+    let year = start.getFullYear();
+    let month = start.getMonth();
+    const endYear = end.getFullYear();
+    const endMonth = end.getMonth();
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+      const day = Math.min(dayOfMonth, lastDayOfMonth);
+      const candidate = new Date(year, month, day);
+      if (candidate >= start && candidate <= end) {
+        const working = toWorkingDay(candidate);
+        const str = working.toISOString().split('T')[0];
+        if (!out.includes(str)) out.push(str);
+      }
+      if (month === 11) {
+        month = 0;
+        year += 1;
+      } else {
+        month += 1;
+      }
+    }
+    return out.sort();
+  }
+
+  if (frequencyRule === 'last_working_day') {
+    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (cur <= end) {
+      const lwd = getLastWorkingDay(cur.getFullYear(), cur.getMonth());
+      if (lwd >= start && lwd <= end) {
+        const str = lwd.toISOString().split('T')[0];
+        if (!out.includes(str)) out.push(str);
+      }
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return out.sort();
+  }
+
+  if (frequencyRule === 'every_4_weeks' && anchorDate) {
+    const anchor = new Date(anchorDate);
+    anchor.setHours(0, 0, 0, 0);
+    let pay = new Date(anchor);
+    while (pay <= end) {
+      if (pay >= start) {
+        const str = pay.toISOString().split('T')[0];
+        if (!out.includes(str)) out.push(str);
+      }
+      pay.setDate(pay.getDate() + 28);
+    }
+    return out.sort();
+  }
+
+  return out;
 }

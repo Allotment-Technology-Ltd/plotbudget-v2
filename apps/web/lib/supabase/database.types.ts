@@ -142,6 +142,50 @@ export type Database = {
           partner_user_id?: string | null;
         };
       };
+      income_sources: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          amount: number;
+          frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+          day_of_month: number | null;
+          anchor_date: string | null;
+          payment_source: 'me' | 'partner' | 'joint';
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          amount: number;
+          frequency_rule?: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+          day_of_month?: number | null;
+          anchor_date?: string | null;
+          payment_source?: 'me' | 'partner' | 'joint';
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          name?: string;
+          amount?: number;
+          frequency_rule?: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+          day_of_month?: number | null;
+          anchor_date?: string | null;
+          payment_source?: 'me' | 'partner' | 'joint';
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       paycycles: {
         Row: {
           id: string;
@@ -434,6 +478,7 @@ export type Enums<T extends keyof Database['public']['Enums']> = Database['publi
 // Convenience type aliases
 export type User = Tables<'users'>;
 export type Household = Tables<'households'>;
+export type IncomeSource = Tables<'income_sources'>;
 export type PayCycle = Tables<'paycycles'>;
 export type Seed = Tables<'seeds'>;
 export type Pot = Tables<'pots'>;

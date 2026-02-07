@@ -89,6 +89,46 @@ const partnerNameSchema = z
 
 const partnerIncomeSchema = z.number().min(0, 'Partner income cannot be negative');
 
+/** Update only partner name. Partner income is managed in Settings → Income. */
+export async function updatePartnerName(householdId: string, partnerName: string) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const validatedName = partnerNameSchema.parse(partnerName.trim());
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('id')
+    .eq('id', householdId)
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  if (!household) {
+    throw new Error('Household not found or unauthorized');
+  }
+
+  const householdPayload: HouseholdsUpdate = {
+    partner_name: validatedName,
+  };
+  const { error } = await supabase
+    .from('households')
+    .update(householdPayload as never)
+    .eq('id', householdId);
+
+  if (error) {
+    throw new Error('Failed to update household');
+  }
+
+  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard', 'layout');
+}
+
 export async function updatePartnerDetails(
   householdId: string,
   partnerName: string,

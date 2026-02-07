@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import { calculateNextCycleDates } from '@/lib/utils/pay-cycle-dates';
+import { projectIncomeForCycle } from '@/lib/utils/income-projection';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -478,15 +479,45 @@ export async function createNextPaycycle(
     );
     const cycleName = `Paycycle ${startStr}`;
 
+    // Projection engine: use income_sources if any active, else fall back to current cycle totals
+    let total_income = current.total_income;
+    let snapshot_user_income = current.snapshot_user_income;
+    let snapshot_partner_income = current.snapshot_partner_income;
+
+    const { data: incomeSources } = await supabase
+      .from('income_sources')
+      .select('id, amount, frequency_rule, day_of_month, anchor_date, payment_source')
+      .eq('household_id', current.household_id)
+      .eq('is_active', true);
+
+    if (incomeSources && incomeSources.length > 0) {
+      const projected = projectIncomeForCycle(
+        startStr,
+        endStr,
+        incomeSources as {
+          id: string;
+          amount: number;
+          frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+          day_of_month: number | null;
+          anchor_date: string | null;
+          payment_source: 'me' | 'partner' | 'joint';
+        }[],
+        household.joint_ratio ?? 0.5
+      );
+      total_income = projected.total;
+      snapshot_user_income = projected.snapshot_user_income;
+      snapshot_partner_income = projected.snapshot_partner_income;
+    }
+
     const paycycleInsert: PaycycleInsert = {
       household_id: current.household_id,
       status: 'draft',
       name: cycleName,
       start_date: startStr,
       end_date: endStr,
-      total_income: current.total_income,
-      snapshot_user_income: current.snapshot_user_income,
-      snapshot_partner_income: current.snapshot_partner_income,
+      total_income,
+      snapshot_user_income,
+      snapshot_partner_income,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: newCycle, error: insertErr } = await (supabase.from('paycycles') as any)

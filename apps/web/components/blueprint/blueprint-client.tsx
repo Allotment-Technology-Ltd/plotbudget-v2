@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { IncomeThisCycle } from '@/components/dashboard/income-this-cycle';
 import { BlueprintHeader } from './blueprint-header';
 import { CategorySummaryGrid } from './category-summary-grid';
 import { TotalAllocatedSummary } from './total-allocated-summary';
@@ -53,6 +54,8 @@ interface BlueprintClientProps {
   initialEditSeedId?: string | null;
   /** When true, show "New cycle started!" celebration once (e.g. after creating next cycle). */
   initialNewCycleCelebration?: boolean;
+  /** Income events in this cycle (for display). */
+  incomeEvents?: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[];
 }
 
 type Payer = 'me' | 'partner' | 'both';
@@ -70,6 +73,7 @@ export function BlueprintClient({
   avatarEnabled = false,
   initialEditSeedId = null,
   initialNewCycleCelebration = false,
+  incomeEvents = [],
 }: BlueprintClientProps) {
   const router = useRouter();
   const [isAddSeedOpen, setIsAddSeedOpen] = useState(false);
@@ -467,6 +471,11 @@ export function BlueprintClient({
           )}
 
           <TotalAllocatedSummary paycycle={paycycle} />
+
+          <IncomeThisCycle
+            total={paycycle.total_income}
+            events={incomeEvents}
+          />
 
           <CategorySummaryGrid
             paycycle={paycycle}

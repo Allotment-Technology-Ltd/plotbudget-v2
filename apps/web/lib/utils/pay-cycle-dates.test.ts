@@ -5,6 +5,7 @@ import {
   calculateCycleStartDate,
   calculateCycleEndDate,
   calculateNextCycleDates,
+  getPaymentDatesInRange,
 } from './pay-cycle-dates';
 
 describe('getLastWorkingDay', () => {
@@ -118,5 +119,60 @@ describe('calculateNextCycleDates', () => {
     );
     expect(start).toBe('2024-02-01');
     expect(end).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('last_working_day: end is last working day of start month (not next month)', () => {
+    // Prev end Jan 31 (LWD Jan) -> next start Feb 1 -> end must be Feb 29 (LWD Feb), not March
+    const { start, end } = calculateNextCycleDates('2024-01-31', 'last_working_day');
+    expect(start).toBe('2024-02-01');
+    expect(end).toBe('2024-02-29');
+  });
+});
+
+describe('getPaymentDatesInRange', () => {
+  it('specific_date: returns one date when range contains one pay day', () => {
+    const dates = getPaymentDatesInRange('2024-01-01', '2024-01-31', 'specific_date', 25);
+    expect(dates).toEqual(['2024-01-25']);
+  });
+
+  it('specific_date: returns multiple months when range spans multiple pay days', () => {
+    const dates = getPaymentDatesInRange('2024-01-20', '2024-03-31', 'specific_date', 25);
+    expect(dates).toContain('2024-01-25');
+    // Feb 25 2024 is Sunday → toWorkingDay → Friday Feb 23
+    expect(dates).toContain('2024-02-23');
+    expect(dates).toContain('2024-03-25');
+    expect(dates).toHaveLength(3);
+  });
+
+  it('last_working_day: returns LWD of each month in range', () => {
+    const dates = getPaymentDatesInRange('2024-01-01', '2024-03-31', 'last_working_day');
+    expect(dates).toContain('2024-01-31');
+    expect(dates).toContain('2024-02-29'); // Feb 29 Thu
+    expect(dates).toContain('2024-03-29'); // Mar 31 Sun -> Fri 29
+    expect(dates).toHaveLength(3);
+  });
+
+  it('every_4_weeks: single payment in range', () => {
+    const dates = getPaymentDatesInRange(
+      '2024-01-01',
+      '2024-01-31',
+      'every_4_weeks',
+      null,
+      '2024-01-15'
+    );
+    expect(dates).toEqual(['2024-01-15']);
+  });
+
+  it('every_4_weeks: double-dip when two payments fall in range', () => {
+    const dates = getPaymentDatesInRange(
+      '2024-01-01',
+      '2024-02-29',
+      'every_4_weeks',
+      null,
+      '2024-01-15'
+    );
+    expect(dates).toContain('2024-01-15');
+    expect(dates).toContain('2024-02-12');
+    expect(dates).toHaveLength(2);
   });
 });

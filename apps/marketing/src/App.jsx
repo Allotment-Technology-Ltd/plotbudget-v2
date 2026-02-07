@@ -824,7 +824,7 @@ function Footer() {
           {/* Center: Links */}
           <nav aria-label="Footer navigation" className="flex gap-6 flex-wrap">
             {[
-              { label: 'Log in', href: 'https://app.plotbudget.com/login' },
+              { label: 'Log in', href: `${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login` },
               { label: 'Privacy', href: '/privacy' },
               { label: 'Terms', href: '/terms' },
               { label: 'Contact', href: 'mailto:hello@plotbudget.com' },

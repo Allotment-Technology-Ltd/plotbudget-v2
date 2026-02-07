@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from 'lucide-react';
 import { HeroMetrics } from './hero-metrics';
+import { IncomeThisCycle } from './income-this-cycle';
 import { QuickActions } from './quick-actions';
 import { FinancialHealthCard } from './financial-health-card';
 import { CategoryDonutChart } from './category-donut-chart';
@@ -21,6 +22,13 @@ type HistoricalCycle = Pick<
   'id' | 'name' | 'start_date' | 'end_date' | 'total_income' | 'total_allocated'
 >;
 
+export type IncomeEventDisplay = {
+  sourceName: string;
+  amount: number;
+  date: string;
+  payment_source: 'me' | 'partner' | 'joint';
+};
+
 export interface DashboardClientProps {
   household: Household;
   currentPaycycle: PayCycle | null;
@@ -29,6 +37,7 @@ export interface DashboardClientProps {
   repayments: Repayment[];
   historicalCycles: HistoricalCycle[];
   hasDraftCycle: boolean;
+  incomeEvents?: IncomeEventDisplay[];
 }
 
 export function DashboardClient({
@@ -39,6 +48,7 @@ export function DashboardClient({
   repayments,
   historicalCycles,
   hasDraftCycle,
+  incomeEvents = [],
 }: DashboardClientProps) {
   const [, setSelectedCategory] = useState<string | null>(null);
 
@@ -105,6 +115,11 @@ export function DashboardClient({
           paycycle={currentPaycycle}
           household={household}
           seeds={seeds}
+        />
+
+        <IncomeThisCycle
+          total={currentPaycycle.total_income}
+          events={incomeEvents}
         />
 
         <QuickActions
