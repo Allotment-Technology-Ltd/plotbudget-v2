@@ -41,6 +41,11 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
     await blueprintPage.markSeedPaid('Ritual Test Bill');
 
     await blueprintPage.expectRitualProgress(1, 1);
+    // After all bills paid we show "Close cycle" CTA; user must click it to see celebration
+    await expect(
+      page.getByRole('button', { name: /Close cycle/i })
+    ).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: /Close cycle/i }).click();
     await expect(
       page.getByText('Ritual Complete!', { exact: false })
     ).toBeVisible({ timeout: 15_000 });
@@ -59,6 +64,11 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
     });
 
     await blueprintPage.markSeedPaid('Single Bill');
+    // Close-cycle CTA appears when all paid; click to open celebration
+    await expect(
+      page.getByRole('button', { name: /Close cycle/i })
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: /Close cycle/i }).click();
 
     await expect(blueprintPage.ritualCelebrationClose).toBeVisible({
       timeout: 5000,
