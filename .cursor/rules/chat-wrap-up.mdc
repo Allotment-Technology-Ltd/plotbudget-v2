@@ -1,0 +1,22 @@
+---
+description: When the user signals the chat is complete, run wrap-up actions and keep the reply short
+alwaysApply: true
+---
+
+# Chat wrap-up
+
+When the user signals that development for this chat is **complete**, treat it as a wrap-up and do the following.
+
+**Keyword / phrases to treat as wrap-up:**  
+`wrap up`, `chat complete`, `we're done`, `done for now`, `that's it for this chat`, `close down this chat`, or similar (e.g. "can you wrap up" or "let's close this chat").
+
+**When you see a wrap-up signal:**
+
+1. **Do not start or suggest new work.** Keep the reply short and conclusive.
+2. **Offer (or run if the user already asked) these actions:**
+   - Check that all relevant branches are merged with `main` and that local `main` is up to date with `origin/main` (e.g. `git fetch origin`, `git checkout main`, `git pull origin main`).
+   - If there are uncommitted changes, ask whether to commit and push them (on the current branch), or note them for the user.
+3. **Give a one- or two-sentence summary** of what was done in this chat (e.g. "This chat: added X, fixed Y, pushed branch Z.").
+4. **End with a short sign-off** (e.g. "You’re all set. Say 'wrap up' anytime to run this again.").
+
+Keep the whole reply brief (a few short paragraphs at most). Do not open new tasks, suggest follow-ups, or add detail unless the user asks.
