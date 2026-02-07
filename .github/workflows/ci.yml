@@ -150,10 +150,30 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           set -e
-          # Deploy with Vercel CLI so we see full output; stdout is the deployment URL.
-          deploy_out=$(pnpm exec vercel deploy --token "$VERCEL_TOKEN" 2>&1) || { echo "$deploy_out"; exit 1; }
+          # Retry deploy up to 3 times (Vercel sometimes returns generic "Unexpected error. Please try again later").
+          max_attempts=3
+          attempt=1
+          deploy_out=""
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Deploy attempt $attempt of $max_attempts..."
+            deploy_out=$(pnpm exec vercel deploy --token "$VERCEL_TOKEN" 2>&1) && break || true
+            echo "$deploy_out"
+            preview_url=$(echo "$deploy_out" | grep -oE 'https://[^[:space:]]+\.vercel\.app[^[:space:]]*' | tail -1)
+            if [ -n "$preview_url" ]; then
+              echo "::warning::Vercel CLI exited with error but a preview URL was produced; using it for smoke tests."
+              break
+            fi
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              echo "Retrying in 30s..."
+              sleep 30
+            else
+              echo "$deploy_out"
+              echo "::error::Vercel deploy failed after $max_attempts attempts."
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+          done
           echo "$deploy_out"
-          # Capture URL (CLI prints it to stdout; often last line or line containing .vercel.app).
           preview_url=$(echo "$deploy_out" | grep -oE 'https://[^[:space:]]+\.vercel\.app[^[:space:]]*' | tail -1)
           if [ -z "$preview_url" ]; then
             echo "::error::Could not parse preview URL from Vercel deploy output."
