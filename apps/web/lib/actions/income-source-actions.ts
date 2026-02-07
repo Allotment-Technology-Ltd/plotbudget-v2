@@ -48,8 +48,8 @@ export async function createIncomeSource(
       sort_order: data.sort_order ?? 0,
       is_active: true,
     };
-    const { data: row, error } = await supabase
-      .from('income_sources')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: row, error } = await (supabase.from('income_sources') as any)
       .insert(insertData)
       .select('id')
       .single();
@@ -84,7 +84,8 @@ export async function updateIncomeSource(
     if (data.sort_order !== undefined) update.sort_order = data.sort_order;
     if (data.is_active !== undefined) update.is_active = data.is_active;
 
-    const { error } = await supabase.from('income_sources').update(update).eq('id', id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('income_sources') as any).update(update).eq('id', id);
 
     if (error) return { error: error.message };
     revalidatePath('/dashboard/settings');
@@ -99,7 +100,8 @@ export async function updateIncomeSource(
 export async function deleteIncomeSource(id: string): Promise<{ error?: string }> {
   try {
     const supabase = await createServerSupabaseClient();
-    const { error } = await supabase.from('income_sources').delete().eq('id', id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('income_sources') as any).delete().eq('id', id);
 
     if (error) return { error: error.message };
     revalidatePath('/dashboard/settings');
@@ -174,7 +176,8 @@ export async function backfillIncomeSourcesFromOnboarding(
         sort_order: 0,
         is_active: true,
       };
-      const { error } = await supabase.from('income_sources').insert(insertData);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from('income_sources') as any).insert(insertData);
       if (!error) created += 1;
     }
     if (partnerIncome > 0) {
@@ -189,7 +192,8 @@ export async function backfillIncomeSourcesFromOnboarding(
         sort_order: 1,
         is_active: true,
       };
-      const { error } = await supabase.from('income_sources').insert(insertData);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from('income_sources') as any).insert(insertData);
       if (!error) created += 1;
     }
 

@@ -68,7 +68,7 @@ export default async function DashboardPage() {
       .select('*')
       .eq('id', currentPaycycleId)
       .single();
-    currentPaycycle = paycycle ?? null;
+    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
 
     if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
       await markOverdueSeedsPaid(currentPaycycleId);

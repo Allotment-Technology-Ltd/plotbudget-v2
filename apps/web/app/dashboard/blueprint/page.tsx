@@ -9,6 +9,7 @@ import type { Database } from '@/lib/supabase/database.types';
 
 type Pot = Database['public']['Tables']['pots']['Row'];
 type Repayment = Database['public']['Tables']['repayments']['Row'];
+type PaycycleRow = Database['public']['Tables']['paycycles']['Row'];
 type PaycycleOption = {
   id: string;
   name: string | null;
@@ -72,14 +73,15 @@ export default async function BlueprintPage({
   const targetCycleId = searchParams.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
 
-  const { data: paycycle } = await supabase
+  const { data: paycycleData } = await supabase
     .from('paycycles')
     .select('*')
     .eq('id', targetCycleId)
     .single();
 
-  if (!paycycle) redirect('/dashboard');
+  if (!paycycleData) redirect('/dashboard');
 
+  const paycycle = paycycleData as PaycycleRow;
   const paycycleRow = paycycle as { id: string; status: string };
   if (paycycleRow.status === 'active') {
     await markOverdueSeedsPaid(paycycleRow.id);

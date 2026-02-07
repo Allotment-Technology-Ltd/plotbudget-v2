@@ -387,7 +387,7 @@ export function IncomeSourcesTab({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      className="h-9 w-9 p-0 shrink-0"
                       onClick={() => openEdit(source)}
                       aria-label="Edit"
                     >
@@ -396,10 +396,9 @@ export function IncomeSourcesTab({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      className="h-9 w-9 p-0 shrink-0 text-destructive hover:text-destructive"
                       onClick={() => setDeleteId(source.id)}
                       aria-label="Delete"
-                      className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
