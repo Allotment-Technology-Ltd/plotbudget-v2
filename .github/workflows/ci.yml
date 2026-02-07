@@ -1,0 +1,171 @@
+# Guardrails: block merge if lint, type-check, unit tests, or E2E fail.
+# Runs on every Pull Request to main. All jobs must pass to merge.
+# Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+# Uses pull_request_target so secrets (e.g. VERCEL_*) are available; test-vercel-preview only runs for same-repo PRs.
+name: CI
+
+on:
+  pull_request_target:
+    branches: [main]
+
+# Allow artifact upload and PR/check writes (fixes "Resource not accessible by integration" on pull_request)
+permissions:
+  contents: read
+  actions: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint
+
+  type-check:
+    name: type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm type-check
+
+  test-unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Run unit tests
+        working-directory: apps/web
+        run: pnpm test:unit
+
+  test-localhost:
+    name: E2E on localhost
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
+      - name: Install Playwright Browsers
+        working-directory: apps/web
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != 'true' ]; then
+            pnpm exec playwright install --with-deps chromium
+          else
+            pnpm exec playwright install-deps chromium
+          fi
+      - name: Run Playwright tests
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-localhost
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  test-vercel-preview:
+    name: E2E smoke on Vercel Preview
+    needs: [test-unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run for PRs from the same repo (not forks) so we don't run untrusted code with secrets.
+    if: github.repository == github.event.pull_request.head.repo.full_name
+    # Deploy from CI so we don't depend on vercel[bot] or GitHub–Vercel PR integration.
+    # Required secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (see docs/OPS_CHECKLIST.md)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Check Vercel secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error::Missing one or more of VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID. Add them in Settings → Secrets and variables → Actions. See docs/OPS_CHECKLIST.md."
+            exit 1
+          fi
+      - name: Build app
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build
+      - name: Deploy to Vercel Preview
+        id: vercel-deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: apps/web
+          github-comment: 'false'
+          vercel-args: '--debug'
+      - name: Install Playwright Browsers
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run smoke tests against Vercel Preview
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SKIP_WEBSERVER: '1'
+          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.preview-url }}
+        run: pnpm exec playwright test --project=smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-vercel
+          path: apps/web/playwright-report/
+          retention-days: 7

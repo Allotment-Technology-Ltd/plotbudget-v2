@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next .turbo node_modules",
     "test": "vitest run",
@@ -58,6 +58,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
+    "@repo/eslint-config": "workspace:*",
+    "vercel": "^37.0.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
