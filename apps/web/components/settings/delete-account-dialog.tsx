@@ -55,7 +55,7 @@ export function DeleteAccountDialog() {
           variant="outline"
           className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" aria-hidden />
+          <Trash2 className="mr-2 h-4 w-4 shrink-0 mt-0.5" aria-hidden />
           Delete My Account
         </Button>
       </AlertDialogTrigger>

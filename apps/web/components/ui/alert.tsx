@@ -21,7 +21,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         ref={ref}
         role="alert"
         className={cn(
-          'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
+          'flex w-full gap-3 rounded-lg border p-4 items-start [&>svg]:mt-1 [&>svg]:shrink-0 [&>svg]:text-foreground [&>svg~*]:min-w-0 [&>svg~*]:flex-1',
           variantClasses[variant],
           className
         )}

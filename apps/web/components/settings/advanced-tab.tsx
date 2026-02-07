@@ -101,6 +101,52 @@ export function AdvancedTab({ categoryRatios }: AdvancedTabProps) {
           Blueprint page.
         </p>
       </section>
+
+      <section className="bg-card rounded-lg border border-border p-6">
+        <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
+          App version
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          You can use this to confirm you’re on the latest release or when
+          reporting an issue.
+        </p>
+        <dl className="text-sm space-y-3">
+          <div>
+            <dt className="font-medium text-foreground">Version</dt>
+            <dd className="text-muted-foreground">
+              {process.env.NEXT_PUBLIC_APP_VERSION ?? '—'}
+            </dd>
+          </div>
+          {process.env.NEXT_PUBLIC_BUILD_TIMESTAMP ? (
+            <>
+              <div>
+                <dt className="font-medium text-foreground">Last updated</dt>
+                <dd className="text-muted-foreground">
+                  {new Date(
+                    Number(process.env.NEXT_PUBLIC_BUILD_TIMESTAMP) * 1000
+                  ).toLocaleString('en-GB', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </dd>
+              </div>
+              {process.env.NEXT_PUBLIC_BUILD_SHA && (
+                <div>
+                  <dt className="font-medium text-foreground">Build ID</dt>
+                  <dd className="font-mono text-muted-foreground text-xs">
+                    {process.env.NEXT_PUBLIC_BUILD_SHA.slice(0, 7)}
+                  </dd>
+                </div>
+              )}
+            </>
+          ) : (
+            <div>
+              <dt className="font-medium text-foreground">Environment</dt>
+              <dd className="text-muted-foreground">Development</dd>
+            </div>
+          )}
+        </dl>
+      </section>
     </div>
   );
 }
