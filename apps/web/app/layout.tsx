@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Space_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '../components/providers/theme-provider';
 import { PostHogProvider } from '../components/providers/posthog-provider';
 import './globals.css';
@@ -69,6 +70,7 @@ export default function RootLayout({
             <Toaster position="top-right" />
           </ThemeProvider>
         </PostHogProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
