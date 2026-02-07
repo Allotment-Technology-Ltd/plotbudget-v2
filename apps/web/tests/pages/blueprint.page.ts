@@ -161,23 +161,27 @@ export class BlueprintPage {
     // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
     await this.page.goto('/dashboard/blueprint');
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
-    await expect(this.seedCard(params.name)).toBeVisible({ timeout: 15_000 });
+    // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode)
+    await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: 15_000 });
   }
 
   async expectSeedInList(seedName: string, amount: number) {
-    const card = this.seedCard(seedName);
+    const card = this.seedCard(seedName).first();
     await expect(card).toBeVisible();
     await expect(card).toContainText(seedName);
     await expect(card).toContainText(`£${amount}`, { timeout: 15_000 });
   }
 
   async deleteSeed(seedName: string) {
-    await this.seedDeleteButton(seedName).click();
+    const countBefore = await this.seedCard(seedName).count();
+    await this.seedDeleteButton(seedName).first().click();
 
     // Confirm deletion in modal
     await this.page.getByTestId('confirm-delete-button').click();
 
-    // Wait for seed to disappear
-    await expect(this.seedCard(seedName)).not.toBeVisible();
+    // Wait for one fewer seed card (same name can appear in multiple categories/cycles)
+    await expect(this.seedCard(seedName)).toHaveCount(countBefore - 1, {
+      timeout: 10_000,
+    });
   }
 }
