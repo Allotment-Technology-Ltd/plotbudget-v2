@@ -46,10 +46,10 @@ test.describe('Dashboard and app shell', () => {
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
-    // In E2E, NEXT_PUBLIC_MARKETING_URL may be localhost so we stay on app origin; accept either
+    // In E2E, app may redirect to /login or / (marketing); accept any post-logout destination
     await page.waitForURL((url) => {
       if (/plotbudget\.com/.test(url.href)) return true;
-      return url.pathname === '/';
+      return url.pathname === '/' || url.pathname === '/login';
     });
   });
 });

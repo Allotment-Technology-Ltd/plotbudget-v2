@@ -98,14 +98,14 @@ export class OnboardingPage {
   }
 
   async expectRedirectToBlueprint() {
-    // Celebration animation can take ~3.3s; allow 60s in CI for redirect to /dashboard/blueprint
-    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000 });
+    // Celebration animation can take ~3.3s; use 'commit' so client-side nav counts (no full load event)
+    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000, waitUntil: 'commit' });
     await expect(this.page.getByTestId('blueprint-empty-state')).toBeVisible();
   }
 
   async logout() {
     await this.page.getByTestId('user-menu-trigger').click();
     await this.page.getByRole('menuitem', { name: 'Log out' }).click();
-    await this.page.waitForURL((url) => url.pathname === '/' || /plotbudget\.com/.test(url.href));
+    await this.page.waitForURL((url) => url.pathname === '/' || url.pathname === '/login' || /plotbudget\.com/.test(url.href));
   }
 }
