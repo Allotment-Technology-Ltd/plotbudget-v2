@@ -7,6 +7,13 @@ on:
   pull_request:
     branches: [main]
 
+# Allow artifact upload and PR/check writes (fixes "Resource not accessible by integration" on pull_request)
+permissions:
+  contents: read
+  actions: write
+  checks: write
+  pull-requests: write
+
 jobs:
   lint:
     name: lint

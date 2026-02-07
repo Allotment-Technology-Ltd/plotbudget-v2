@@ -108,6 +108,7 @@ export default async function globalSetup(config: FullConfig) {
   }
 
   // Create auth users if missing
+  await ensureAuthUserExists(TEST_USERS.solo.email, TEST_USERS.solo.password);
   await ensureAuthUserExists(TEST_USERS.blueprint.email, TEST_USERS.blueprint.password);
   await ensureAuthUserExists(TEST_USERS.ritual.email, TEST_USERS.ritual.password);
   await ensureAuthUserExists(TEST_USERS.dashboard.email, TEST_USERS.dashboard.password);
