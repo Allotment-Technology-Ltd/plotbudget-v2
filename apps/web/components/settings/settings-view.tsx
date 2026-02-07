@@ -3,8 +3,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdvancedTab } from './advanced-tab';
 import { HouseholdTab } from './household-tab';
+import { IncomeSourcesTab } from './income-sources-tab';
 import { PrivacyTab } from './privacy-tab';
 import { ProfileTab } from './profile-tab';
+import type { IncomeSource } from '@/lib/supabase/database.types';
 
 export interface SettingsViewProps {
   user: {
@@ -30,10 +32,25 @@ export interface SettingsViewProps {
     partner_accepted_at?: string | null;
     partner_last_login_at?: string | null;
   };
+  incomeSources?: IncomeSource[];
   isPartner?: boolean;
+  /** Open a specific tab from URL (e.g. ?tab=income) */
+  initialTab?: string;
 }
 
-export function SettingsView({ user, household, isPartner = false, avatarEnabled = false }: SettingsViewProps) {
+export function SettingsView({
+  user,
+  household,
+  incomeSources = [],
+  isPartner = false,
+  avatarEnabled = false,
+  initialTab,
+}: SettingsViewProps) {
+  const defaultTab =
+    initialTab === 'income' || initialTab === 'household' || initialTab === 'privacy' || initialTab === 'advanced'
+      ? initialTab
+      : 'profile';
+
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
       <div className="mb-8">
@@ -44,10 +61,11 @@ export function SettingsView({ user, household, isPartner = false, avatarEnabled
           Manage your account and household preferences.
         </p>
       </div>
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="w-full sm:inline-flex h-auto flex-wrap gap-1 bg-muted p-1">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
+          <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
@@ -68,6 +86,13 @@ export function SettingsView({ user, household, isPartner = false, avatarEnabled
               partner_accepted_at: household.partner_accepted_at,
               partner_last_login_at: household.partner_last_login_at,
             }}
+            isPartner={isPartner}
+          />
+        </TabsContent>
+        <TabsContent value="income" className="space-y-6 mt-6">
+          <IncomeSourcesTab
+            householdId={household.id}
+            incomeSources={incomeSources}
             isPartner={isPartner}
           />
         </TabsContent>

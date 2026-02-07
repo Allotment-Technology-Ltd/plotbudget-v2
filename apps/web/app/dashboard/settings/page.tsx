@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
 import { SettingsView } from '@/components/settings/settings-view';
 
 export const metadata: Metadata = {
@@ -29,8 +30,13 @@ type HouseholdRow = {
 const householdSelect =
   'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at';
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const supabase = await createServerSupabaseClient();
+  const params = await searchParams;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -64,6 +70,41 @@ export default async function SettingsPage() {
 
   if (!household) redirect('/onboarding');
 
+  let incomeSourcesData = await supabase
+    .from('income_sources')
+    .select('*')
+    .eq('household_id', household.id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  let incomeSources = (incomeSourcesData.data ?? []) as {
+    id: string;
+    household_id: string;
+    name: string;
+    amount: number;
+    frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+    day_of_month: number | null;
+    anchor_date: string | null;
+    payment_source: 'me' | 'partner' | 'joint';
+    sort_order: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  }[];
+
+  if (incomeSources.length === 0) {
+    const backfill = await backfillIncomeSourcesFromOnboarding(household.id);
+    if (backfill.created > 0) {
+      const refetch = await supabase
+        .from('income_sources')
+        .select('*')
+        .eq('household_id', household.id)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+      incomeSources = (refetch.data ?? []) as typeof incomeSources;
+    }
+  }
+
   const avatarEnabled = getAvatarEnabledFromEnv();
 
   return (
@@ -92,7 +133,9 @@ export default async function SettingsPage() {
           partner_accepted_at: household.partner_accepted_at,
           partner_last_login_at: household.partner_last_login_at,
         }}
+        incomeSources={incomeSources}
         isPartner={isPartner}
+        initialTab={params.tab}
       />
     </div>
   );

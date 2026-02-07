@@ -71,9 +71,9 @@ export default function Navbar({ theme, onToggleTheme }) {
 
       {/* Right side: primary Log in + Join link + theme toggle */}
       <div className="flex items-center gap-4">
-        {/* Log in — primary CTA, app subdomain */}
+        {/* Log in — primary CTA; use VITE_APP_URL locally so login stays on local app */}
         <a
-          href="https://app.plotbudget.com/login"
+          href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login`}
           className="btn-primary text-cta-sm"
           aria-label="Log in to PLOT"
         >

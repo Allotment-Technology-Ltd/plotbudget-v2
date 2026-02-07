@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   updateHouseholdName,
-  updatePartnerDetails,
+  updatePartnerName,
 } from '@/lib/actions/settings-actions';
 import {
   Dialog,
@@ -42,9 +43,6 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
   const [isLoading, setIsLoading] = useState(false);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
   const [partnerName, setPartnerName] = useState(household.partner_name || '');
-  const [partnerIncome, setPartnerIncome] = useState(
-    String(household.partner_income || 0)
-  );
   const [isPartnerSaving, setIsPartnerSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,17 +64,12 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
     e.preventDefault();
     setIsPartnerSaving(true);
     try {
-      const income = parseFloat(partnerIncome);
-      if (Number.isNaN(income) || income < 0) {
-        toast.error('Please enter a valid partner income');
-        return;
-      }
-      await updatePartnerDetails(household.id, partnerName.trim(), income);
-      toast.success('Partner details updated');
+      await updatePartnerName(household.id, partnerName.trim());
+      toast.success('Partner name updated');
       setPartnerDialogOpen(false);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to update partner details';
+        err instanceof Error ? err.message : 'Failed to update partner name';
       toast.error(message);
     } finally {
       setIsPartnerSaving(false);
@@ -156,24 +149,26 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
                   {household.partner_name || 'Not set'}
                 </p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-foreground mb-1">
-                  Partner Monthly Income
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  £{Number(household.partner_income || 0).toLocaleString('en-GB')}
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Partner income is managed in{' '}
+                <Link
+                  href="/dashboard/settings?tab=income"
+                  className="text-primary underline hover:no-underline"
+                >
+                  Settings → Income
+                </Link>
+                .
+              </p>
               {!isPartner && (
               <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="secondary" type="button">
-                    Edit Partner Details
+                    Edit Partner Name
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-lg border-border">
                   <DialogHeader>
-                    <DialogTitle>Edit Partner Details</DialogTitle>
+                    <DialogTitle>Edit Partner Name</DialogTitle>
                   </DialogHeader>
                   <form
                     onSubmit={handlePartnerSubmit}
@@ -187,19 +182,6 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
                         onChange={(e) => setPartnerName(e.target.value)}
                         placeholder="Partner name"
                         maxLength={50}
-                        disabled={isPartnerSaving}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerIncome">Partner Monthly Income (£)</Label>
-                      <Input
-                        id="partnerIncome"
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={partnerIncome}
-                        onChange={(e) => setPartnerIncome(e.target.value)}
-                        placeholder="0"
                         disabled={isPartnerSaving}
                       />
                     </div>

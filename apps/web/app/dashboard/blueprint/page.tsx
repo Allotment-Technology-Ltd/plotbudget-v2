@@ -4,6 +4,7 @@ import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
+import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Pot = Database['public']['Tables']['pots']['Row'];
@@ -119,6 +120,26 @@ export default async function BlueprintPage({
   const editSeedId = searchParams.edit ?? null;
   const showNewCycleCelebration = searchParams.newCycle != null;
 
+  const { data: incomeSources } = await supabase
+    .from('income_sources')
+    .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
+    .eq('household_id', householdId)
+    .eq('is_active', true);
+  const sources = (incomeSources ?? []) as {
+    id: string;
+    name: string;
+    amount: number;
+    frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+    day_of_month: number | null;
+    anchor_date: string | null;
+    payment_source: 'me' | 'partner' | 'joint';
+  }[];
+  const incomeEvents = getIncomeEventsForCycle(
+    paycycle.start_date,
+    paycycle.end_date,
+    sources
+  );
+
   return (
     <BlueprintClient
       household={household}
@@ -133,6 +154,7 @@ export default async function BlueprintPage({
       avatarEnabled={avatarEnabled}
       initialEditSeedId={editSeedId}
       initialNewCycleCelebration={showNewCycleCelebration}
+      incomeEvents={incomeEvents}
     />
   );
 }
