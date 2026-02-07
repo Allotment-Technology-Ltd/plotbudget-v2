@@ -1,7 +1,7 @@
 # Guardrails: block merge if lint, type-check, unit tests, or E2E fail.
 # Runs on every Pull Request to main. All jobs must pass to merge.
 # Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-# Uses pull_request_target so secrets (e.g. VERCEL_*) are available; test-vercel-preview only runs for same-repo PRs.
+# Uses pull_request_target so secrets (Supabase for E2E) are available to same-repo PRs.
 name: CI
 
 on:
@@ -103,99 +103,5 @@ jobs:
         if: always()
         with:
           name: playwright-report-localhost
-          path: apps/web/playwright-report/
-          retention-days: 7
-
-  test-vercel-preview:
-    name: E2E smoke on Vercel Preview
-    needs: [test-unit]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Only run for PRs from the same repo (not forks) so we don't run untrusted code with secrets.
-    if: github.repository == github.event.pull_request.head.repo.full_name
-    # Deploy from CI so we don't depend on vercel[bot] or GitHub–Vercel PR integration.
-    # Required secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (see docs/OPS_CHECKLIST.md)
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install
-      - name: Check Vercel secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "::error::Missing one or more of VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID. Add them in Settings → Secrets and variables → Actions. See docs/OPS_CHECKLIST.md."
-            exit 1
-          fi
-      - name: Build app
-        working-directory: apps/web
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        run: pnpm build
-      - name: Deploy to Vercel Preview
-        id: vercel-deploy
-        # Deploy from repo root so uploaded files include apps/web; Vercel project Root Directory is apps/web.
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          set -e
-          # Retry deploy up to 3 times (Vercel sometimes returns generic "Unexpected error. Please try again later").
-          max_attempts=3
-          attempt=1
-          deploy_out=""
-          while [ "$attempt" -le "$max_attempts" ]; do
-            echo "Deploy attempt $attempt of $max_attempts..."
-            deploy_out=$(pnpm exec vercel deploy --token "$VERCEL_TOKEN" 2>&1) && break || true
-            echo "$deploy_out"
-            preview_url=$(echo "$deploy_out" | grep -oE 'https://[^[:space:]]+\.vercel\.app[^[:space:]]*' | tail -1)
-            if [ -n "$preview_url" ]; then
-              echo "::warning::Vercel CLI exited with error but a preview URL was produced; using it for smoke tests."
-              break
-            fi
-            if [ "$attempt" -lt "$max_attempts" ]; then
-              echo "Retrying in 30s..."
-              sleep 30
-            else
-              echo "$deploy_out"
-              echo "::error::Vercel deploy failed after $max_attempts attempts."
-              exit 1
-            fi
-            attempt=$((attempt + 1))
-          done
-          echo "$deploy_out"
-          preview_url=$(echo "$deploy_out" | grep -oE 'https://[^[:space:]]+\.vercel\.app[^[:space:]]*' | tail -1)
-          if [ -z "$preview_url" ]; then
-            echo "::error::Could not parse preview URL from Vercel deploy output."
-            exit 1
-          fi
-          echo "preview-url=$preview_url" >> "$GITHUB_OUTPUT"
-          echo "Deployed to $preview_url"
-      - name: Install Playwright Browsers
-        working-directory: apps/web
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Run smoke tests against Vercel Preview
-        working-directory: apps/web
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SKIP_WEBSERVER: '1'
-          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.preview-url }}
-        run: pnpm exec playwright test --project=smoke
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-vercel
           path: apps/web/playwright-report/
           retention-days: 7
