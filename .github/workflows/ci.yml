@@ -1,10 +1,11 @@
 # Guardrails: block merge if lint, type-check, unit tests, or E2E fail.
 # Runs on every Pull Request to main. All jobs must pass to merge.
 # Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+# Uses pull_request_target so secrets (e.g. VERCEL_*) are available; test-vercel-preview only runs for same-repo PRs.
 name: CI
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
 
 # Allow artifact upload and PR/check writes (fixes "Resource not accessible by integration" on pull_request)
@@ -110,6 +111,8 @@ jobs:
     needs: [test-unit]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Only run for PRs from the same repo (not forks) so we don't run untrusted code with secrets.
+    if: github.repository == github.event.pull_request.head.repo.full_name
     # Deploy from CI so we don't depend on vercel[bot] or GitHub–Vercel PR integration.
     # Required secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (see docs/OPS_CHECKLIST.md)
     steps:
