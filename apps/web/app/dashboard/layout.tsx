@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
@@ -64,6 +65,8 @@ export default async function DashboardLayout({
     displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
   }
 
+  const avatarEnabled = getAvatarEnabledFromEnv();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -81,9 +84,10 @@ export default async function DashboardLayout({
                 id: user.id,
                 email,
                 display_name: displayName,
-                avatar_url: avatarUrl,
+                avatar_url: avatarEnabled ? avatarUrl : null,
               }}
               isPartner={isPartner}
+              avatarEnabled={avatarEnabled}
             />
           </nav>
         </div>

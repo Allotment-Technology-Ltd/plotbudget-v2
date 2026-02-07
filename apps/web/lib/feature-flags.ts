@@ -16,6 +16,10 @@ export function getGoogleLoginEnabledFromEnv(): boolean {
   return getEnv().NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED === 'true';
 }
 
+export function getAvatarEnabledFromEnv(): boolean {
+  return getEnv().NEXT_PUBLIC_AVATAR_ENABLED === 'true';
+}
+
 /** URL for "Join waitlist" when signup is gated (e.g. MailerLite form or marketing page). */
 export function getWaitlistUrlFromEnv(): string {
   return getEnv().NEXT_PUBLIC_WAITLIST_URL || 'https://plotbudget.com';

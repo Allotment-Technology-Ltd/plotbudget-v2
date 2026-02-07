@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import type { Database } from '@/lib/supabase/database.types';
 import { revalidatePath } from 'next/cache';
 
@@ -14,6 +15,10 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
  * Call with FormData containing a single file under key "avatar".
  */
 export async function uploadAvatar(formData: FormData): Promise<{ avatarUrl?: string; error?: string }> {
+  if (!getAvatarEnabledFromEnv()) {
+    return { error: 'Avatar feature is not enabled' };
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

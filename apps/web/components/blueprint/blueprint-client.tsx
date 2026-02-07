@@ -44,6 +44,7 @@ interface BlueprintClientProps {
   activePaycycleId: string | null;
   hasDraftCycle: boolean;
   userAvatarUrl?: string | null;
+  avatarEnabled?: boolean;
 }
 
 type Payer = 'me' | 'partner' | 'both';
@@ -58,6 +59,7 @@ export function BlueprintClient({
   activePaycycleId,
   hasDraftCycle,
   userAvatarUrl,
+  avatarEnabled = false,
 }: BlueprintClientProps) {
   const router = useRouter();
   const [isAddSeedOpen, setIsAddSeedOpen] = useState(false);
@@ -239,6 +241,7 @@ export function BlueprintClient({
               seeds={displaySeeds}
               household={household}
               userAvatarUrl={userAvatarUrl}
+              avatarEnabled={avatarEnabled}
             />
           )}
 
@@ -255,6 +258,7 @@ export function BlueprintClient({
               household={household}
               seeds={seeds}
               userAvatarUrl={userAvatarUrl}
+              avatarEnabled={avatarEnabled}
             />
           )}
 

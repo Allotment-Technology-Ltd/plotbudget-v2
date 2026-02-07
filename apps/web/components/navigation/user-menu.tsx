@@ -31,15 +31,16 @@ interface UserMenuProps {
     avatar_url?: string | null;
   };
   isPartner?: boolean;
+  avatarEnabled?: boolean;
 }
 
-export function UserMenu({ user, isPartner = false }: UserMenuProps) {
+export function UserMenu({ user, isPartner = false, avatarEnabled = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    if (!user.id) return;
+    if (!avatarEnabled || !user.id) return;
     const channel = supabase
       .channel('user-avatar-changes')
       .on(
@@ -59,7 +60,7 @@ export function UserMenu({ user, isPartner = false }: UserMenuProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user.id, supabase]);
+  }, [avatarEnabled, user.id, supabase]);
 
   const displayName = user.display_name?.trim() || user.email;
   const initials = user.display_name?.trim()
@@ -91,7 +92,7 @@ export function UserMenu({ user, isPartner = false }: UserMenuProps) {
           data-testid="user-menu-trigger"
         >
           <Avatar className="h-8 w-8 rounded-full border-0">
-            {avatarUrl ? (
+            {avatarEnabled && avatarUrl ? (
               <AvatarImage
                 src={avatarUrl}
                 alt=""

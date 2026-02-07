@@ -18,9 +18,10 @@ interface ProfileTabProps {
     avatarUrl?: string | null;
   };
   isPartner?: boolean;
+  avatarEnabled?: boolean;
 }
 
-export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
+export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: ProfileTabProps) {
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -126,7 +127,7 @@ export function ProfileTab({ user, isPartner = false }: ProfileTabProps) {
       </section>
       )}
 
-      {!isPartner && (
+      {!isPartner && avatarEnabled && (
       <section className="bg-card rounded-lg border border-border p-6">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-4">
           Profile picture

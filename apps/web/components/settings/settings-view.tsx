@@ -13,6 +13,7 @@ export interface SettingsViewProps {
     displayName: string | null;
     avatarUrl?: string | null;
   };
+  avatarEnabled?: boolean;
   household: {
     id: string;
     name: string | null;
@@ -32,7 +33,7 @@ export interface SettingsViewProps {
   isPartner?: boolean;
 }
 
-export function SettingsView({ user, household, isPartner = false }: SettingsViewProps) {
+export function SettingsView({ user, household, isPartner = false, avatarEnabled = false }: SettingsViewProps) {
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
       <div className="mb-8">
@@ -51,7 +52,7 @@ export function SettingsView({ user, household, isPartner = false }: SettingsVie
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="space-y-6 mt-6">
-          <ProfileTab user={user} isPartner={isPartner} />
+          <ProfileTab user={user} isPartner={isPartner} avatarEnabled={avatarEnabled} />
         </TabsContent>
         <TabsContent value="household" className="space-y-6 mt-6">
           <HouseholdTab

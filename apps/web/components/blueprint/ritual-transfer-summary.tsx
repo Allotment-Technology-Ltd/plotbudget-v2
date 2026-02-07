@@ -11,6 +11,7 @@ interface RitualTransferSummaryProps {
   seeds: Seed[];
   household: Household;
   userAvatarUrl?: string | null;
+  avatarEnabled?: boolean;
 }
 
 /**
@@ -73,6 +74,7 @@ export function RitualTransferSummary({
   seeds,
   household,
   userAvatarUrl,
+  avatarEnabled = false,
 }: RitualTransferSummaryProps) {
   const { totalJointTransfer, userJointTransfer, partnerJointTransfer } =
     getJointTransfer(seeds);
@@ -110,7 +112,7 @@ export function RitualTransferSummary({
 
         <div className="space-y-2 flex flex-col">
           <div className="flex items-center gap-2">
-            {userAvatarUrl ? (
+            {avatarEnabled && userAvatarUrl ? (
               <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
                 <AvatarImage src={userAvatarUrl} alt="" className="avatar-pixelated object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm">

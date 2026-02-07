@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { SettingsView } from '@/components/settings/settings-view';
 
 export const metadata: Metadata = {
@@ -63,6 +64,8 @@ export default async function SettingsPage() {
 
   if (!household) redirect('/onboarding');
 
+  const avatarEnabled = getAvatarEnabledFromEnv();
+
   return (
     <div className="content-wrapper section-padding">
       <SettingsView
@@ -72,6 +75,7 @@ export default async function SettingsPage() {
           displayName,
           avatarUrl,
         }}
+        avatarEnabled={avatarEnabled}
         household={{
           id: household.id,
           name: household.name,

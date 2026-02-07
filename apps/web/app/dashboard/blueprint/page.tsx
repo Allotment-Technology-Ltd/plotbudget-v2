@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
+import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import type { Database } from '@/lib/supabase/database.types';
@@ -107,6 +108,7 @@ export default async function BlueprintPage({
 
   const activePaycycle = allPaycycles.find((p) => p.status === 'active');
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
+  const avatarEnabled = getAvatarEnabledFromEnv();
 
   return (
     <BlueprintClient
@@ -118,7 +120,8 @@ export default async function BlueprintPage({
       allPaycycles={allPaycycles}
       activePaycycleId={activePaycycle?.id ?? null}
       hasDraftCycle={hasDraftCycle}
-      userAvatarUrl={profile?.avatar_url ?? null}
+      userAvatarUrl={avatarEnabled ? profile?.avatar_url ?? null : null}
+      avatarEnabled={avatarEnabled}
     />
   );
 }
