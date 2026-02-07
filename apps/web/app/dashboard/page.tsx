@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
+import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
 
 export default async function DashboardPage() {
@@ -67,6 +68,10 @@ export default async function DashboardPage() {
       .eq('id', currentPaycycleId)
       .single();
     currentPaycycle = paycycle ?? null;
+
+    if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
+      await markOverdueSeedsPaid(currentPaycycleId);
+    }
 
     const { data: seedsData } = await supabase
       .from('seeds')

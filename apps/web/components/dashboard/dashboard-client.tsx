@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { format } from 'date-fns';
+import { Calendar } from 'lucide-react';
 import { HeroMetrics } from './hero-metrics';
 import { QuickActions } from './quick-actions';
 import { FinancialHealthCard } from './financial-health-card';
@@ -75,6 +77,9 @@ export function DashboardClient({
     );
   }
 
+  const paycycleStart = format(new Date(currentPaycycle.start_date), 'MMM d');
+  const paycycleEnd = format(new Date(currentPaycycle.end_date), 'MMM d, yyyy');
+
   return (
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
       <header className="border-b border-border bg-card">
@@ -82,8 +87,15 @@ export function DashboardClient({
           <h1 className="font-heading text-headline-sm md:text-headline uppercase">
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your financial overview
+          <p className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>Your financial overview</span>
+            <span
+              className="flex items-center gap-1"
+              aria-label="Current pay cycle dates"
+            >
+              <Calendar className="w-4 h-4 shrink-0" aria-hidden />
+              {paycycleStart} – {paycycleEnd}
+            </span>
           </p>
         </div>
       </header>

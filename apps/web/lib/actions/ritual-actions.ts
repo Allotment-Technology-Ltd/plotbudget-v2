@@ -254,3 +254,89 @@ export async function unmarkSeedPaid(
   revalidatePath('/dashboard/blueprint');
   return { success: true };
 }
+
+/**
+ * Close the cycle ritual: lock the budget for this paycycle (user-triggered dopamine moment).
+ */
+export async function closeRitual(
+  paycycleId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+
+  const { data: paycycleData } = await supabase
+    .from('paycycles')
+    .select('household_id')
+    .eq('id', paycycleId)
+    .single();
+
+  const paycycle = paycycleData as { household_id: string } | null;
+  if (!paycycle) return { error: 'Paycycle not found' };
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user?.id ?? '')
+    .maybeSingle();
+
+  const profileRow = profile as { household_id: string | null } | null;
+  const ownHousehold = profileRow?.household_id === paycycle.household_id;
+  const partnerHousehold = isPartner && partnerHouseholdId === paycycle.household_id;
+  if (!ownHousehold && !partnerHousehold) return { error: 'Paycycle not found' };
+
+  const { error } = await (supabase.from('paycycles') as any)
+    .update({ ritual_closed_at: new Date().toISOString() })
+    .eq('id', paycycleId);
+
+  if (error) return { error: (error as { message: string }).message };
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+/**
+ * Unlock the cycle so the user can edit again (e.g. new bill came in).
+ */
+export async function unlockRitual(
+  paycycleId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+
+  const { data: paycycleData } = await supabase
+    .from('paycycles')
+    .select('household_id')
+    .eq('id', paycycleId)
+    .single();
+
+  const paycycle = paycycleData as { household_id: string } | null;
+  if (!paycycle) return { error: 'Paycycle not found' };
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user?.id ?? '')
+    .maybeSingle();
+
+  const profileRow = profile as { household_id: string | null } | null;
+  const ownHousehold = profileRow?.household_id === paycycle.household_id;
+  const partnerHousehold = isPartner && partnerHouseholdId === paycycle.household_id;
+  if (!ownHousehold && !partnerHousehold) return { error: 'Paycycle not found' };
+
+  const { error } = await (supabase.from('paycycles') as any)
+    .update({ ritual_closed_at: null })
+    .eq('id', paycycleId);
+
+  if (error) return { error: (error as { message: string }).message };
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
+  return { success: true };
+}

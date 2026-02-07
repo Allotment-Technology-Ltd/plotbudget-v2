@@ -40,6 +40,14 @@ const singularLabels: Record<SeedType, string> = {
   repay: 'Repayment',
 };
 
+/** Short situational subtitle: what belongs in this category. */
+const categorySubtitles: Record<SeedType, string> = {
+  need: 'Essentials you must pay — rent, utilities, groceries, insurance.',
+  want: 'Discretionary spending — subscriptions, eating out, hobbies, non-essential shopping.',
+  savings: 'Money you set aside this cycle — goals, emergency fund, holiday.',
+  repay: 'Extra debt repayment — paying down loans or cards beyond the minimum.',
+};
+
 interface SeedsListProps {
   category: SeedType;
   seeds: Seed[];
@@ -48,6 +56,7 @@ interface SeedsListProps {
   pots: Pot[];
   repayments: Repayment[];
   isRitualMode?: boolean;
+  isCycleLocked?: boolean;
   onAdd: () => void;
   onEdit: (seed: Seed) => void;
   onDelete: (seed: Seed) => void;
@@ -62,6 +71,7 @@ export function SeedsList({
   pots,
   repayments,
   isRitualMode = false,
+  isCycleLocked = false,
   onAdd,
   onEdit,
   onDelete,
@@ -77,9 +87,10 @@ export function SeedsList({
     <section
       className="bg-card rounded-lg p-6 border border-border"
       aria-labelledby={`seeds-${category}-heading`}
+      aria-describedby={`seeds-${category}-subtitle`}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-4 mb-2">
+        <div className="flex items-center gap-3 flex-wrap min-w-0">
           <h2
             id={`seeds-${category}-heading`}
             className="font-heading text-xl uppercase tracking-wider text-foreground"
@@ -95,24 +106,29 @@ export function SeedsList({
             </span>
           )}
         </div>
-        <Button
-          variant="outline"
-          className="px-4 py-2 text-sm"
-          onClick={onAdd}
-          data-testid={
-            category === 'need'
-              ? 'add-seed-button'
-              : category === 'savings'
-                ? 'add-pot-button'
-                : category === 'repay'
-                  ? 'add-repayment-button'
-                  : undefined
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" aria-hidden />
-          Add {singularLabel}
-        </Button>
+        {!isCycleLocked && (
+          <Button
+            variant="outline"
+            className="px-4 py-2 text-sm"
+            onClick={onAdd}
+            data-testid={
+              category === 'need'
+                ? 'add-seed-button'
+                : category === 'savings'
+                  ? 'add-pot-button'
+                  : category === 'repay'
+                    ? 'add-repayment-button'
+                    : undefined
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" aria-hidden />
+            Add {singularLabel}
+          </Button>
+        )}
       </div>
+      <p className="text-sm text-muted-foreground mb-4" id={`seeds-${category}-subtitle`}>
+        {categorySubtitles[category]}
+      </p>
 
       {seeds.length === 0 ? (
         <div
@@ -154,6 +170,7 @@ export function SeedsList({
                   onEdit={() => onEdit(seed)}
                   onDelete={() => onDelete(seed)}
                   isRitualMode={isRitualMode}
+                  isCycleLocked={isCycleLocked}
                   onMarkPaid={onMarkPaid}
                   onUnmarkPaid={onUnmarkPaid}
                 />

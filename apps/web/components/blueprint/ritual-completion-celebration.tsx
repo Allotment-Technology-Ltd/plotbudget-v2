@@ -2,23 +2,19 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, PieChart, AlertCircle, Sparkles } from 'lucide-react';
 
 interface RitualCompletionCelebrationProps {
   open: boolean;
   onClose: () => void;
-  /** Total allocated this cycle (sum of seeds) */
   totalAllocated: number;
-  /** Total income for this cycle */
   totalIncome: number;
 }
 
 type BudgetState = 'within' | 'over' | 'under';
 
 /**
- * Full-screen celebration overlay when all seeds are marked paid.
- * Message reflects whether allocations are within, over, or under income—factual and non-judgmental.
+ * Full-screen celebration overlay: terminal/cyberpunk aesthetic.
+ * Green-on-black, monospace, scanlines; budget state as terminal output.
  */
 export function RitualCompletionCelebration({
   open,
@@ -41,32 +37,30 @@ export function RitualCompletionCelebration({
     switch (budgetState) {
       case 'within':
         return {
-          icon: PieChart,
           heading: 'Your allocations are within your income this cycle.',
           body: 'Everything you planned to spend fits your budget.',
         };
       case 'over':
         return {
-          icon: AlertCircle,
           heading: 'Your allocations are above your income this cycle.',
-          body: 'You can review your blueprint anytime if you’d like to adjust.',
+          body: "You can review your blueprint anytime if you'd like to adjust.",
         };
       case 'under':
         return {
-          icon: Sparkles,
           heading: 'You have headroom in your budget this cycle.',
           body: 'Your planned spending is below your income.',
         };
     }
   }, [budgetState]);
 
-  const StateIcon = stateMessage.icon;
+  const stateBorderColor =
+    budgetState === 'over'
+      ? 'border-amber-500/40 bg-amber-950/20'
+      : 'border-emerald-500/30 bg-emerald-950/20';
 
   useEffect(() => {
     if (!open) return;
-
     closeButtonRef.current?.focus();
-
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -85,90 +79,110 @@ export function RitualCompletionCelebration({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4"
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
           onClick={handleOverlayClick}
           role="dialog"
           aria-modal="true"
           aria-labelledby="ritual-complete-heading"
           aria-describedby="ritual-complete-description"
         >
+          {/* Subtle scanline overlay */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]"
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.03) 2px,
+                rgba(255,255,255,0.03) 4px
+              )`,
+            }}
+            aria-hidden
+          />
+
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-            className="bg-card rounded-lg p-8 max-w-md w-full border border-primary/30 shadow-lg"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-md rounded border-2 border-emerald-500/60 bg-black shadow-[0_0_30px_rgba(16,185,129,0.15)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-center space-y-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                  delay: 0.2,
-                  type: 'spring',
-                  stiffness: 200,
-                }}
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10"
-                aria-hidden
-              >
-                <CheckCircle2 className="w-10 h-10 text-primary" />
-              </motion.div>
+            {/* Terminal title bar */}
+            <div className="border-b border-emerald-500/40 bg-emerald-950/40 px-4 py-2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500/80" aria-hidden />
+              <span className="h-2 w-2 rounded-full bg-amber-500/60" aria-hidden />
+              <span className="h-2 w-2 rounded-full bg-emerald-700/60" aria-hidden />
+              <span className="font-mono text-xs text-emerald-400/80 ml-2 tracking-widest">
+                PLOT — RITUAL
+              </span>
+            </div>
 
-              <div>
-                <h2
+            <div className="p-6 font-mono text-sm space-y-5">
+              <div className="text-center space-y-2">
+                <motion.h2
                   id="ritual-complete-heading"
-                  className="font-heading text-2xl md:text-3xl uppercase tracking-wider text-primary mb-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-xl font-heading uppercase tracking-wider text-emerald-400"
                 >
                   Ritual Complete!
-                </h2>
-                <p
+                </motion.h2>
+                <motion.p
                   id="ritual-complete-description"
-                  className="text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-muted-foreground text-sm"
                 >
-                  All bills marked as paid for this cycle.
-                </p>
+                  You closed your cycle. Budget locked for the month.
+                </motion.p>
               </div>
 
-              <div
-                className={`p-4 rounded-md border ${
-                  budgetState === 'over'
-                    ? 'bg-amber-500/10 border-amber-500/30'
-                    : 'bg-primary/10 border-primary/30'
-                }`}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35 }}
+                className={`rounded border p-4 ${stateBorderColor}`}
               >
-                <div className="flex items-center justify-center gap-2 text-primary mb-2">
-                  <StateIcon
-                    className={`w-5 h-5 ${
-                      budgetState === 'over' ? 'text-amber-600 dark:text-amber-400' : 'text-primary'
-                    }`}
-                    aria-hidden
-                  />
-                  <p className="font-medium">{stateMessage.heading}</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
+                <p
+                  className={`font-medium mb-1 ${
+                    budgetState === 'over' ? 'text-amber-400' : 'text-emerald-400/95'
+                  }`}
+                >
+                  {stateMessage.heading}
+                </p>
+                <p className="text-xs text-muted-foreground">
                   {stateMessage.body}
                 </p>
-              </div>
+                <motion.span
+                  className="inline-block w-2 h-4 ml-0.5 bg-emerald-400/80 align-middle mt-1"
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  aria-hidden
+                />
+              </motion.div>
 
-              <div className="space-y-3">
-                <Button
+              <div className="pt-1 flex flex-wrap gap-3">
+                <button
                   ref={closeButtonRef}
                   onClick={onClose}
-                  className="w-full"
+                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-emerald-500/60 text-emerald-400 bg-emerald-950/40 hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 transition-colors"
                   data-testid="ritual-celebration-close"
                 >
                   Back to Blueprint
-                </Button>
-                <Button
-                  variant="outline"
+                </button>
+                <button
+                  type="button"
                   onClick={() => (window.location.href = '/dashboard')}
-                  className="w-full"
+                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-white/20 text-muted-foreground hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
                   data-testid="ritual-celebration-dashboard"
                 >
                   View Dashboard
-                </Button>
+                </button>
               </div>
             </div>
           </motion.div>

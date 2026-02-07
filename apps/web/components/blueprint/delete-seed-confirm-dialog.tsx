@@ -40,7 +40,7 @@ export function DeleteSeedConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete bill</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete &quot;{seed?.name}&quot;? This action
+            Are you sure you want to delete &quot;<span className="uppercase">{seed?.name}</span>&quot;? This action
             cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>

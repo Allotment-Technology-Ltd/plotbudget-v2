@@ -3,6 +3,7 @@ import { getPartnerContext } from '@/lib/partner-context';
 import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
+import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Pot = Database['public']['Tables']['pots']['Row'];
@@ -23,7 +24,7 @@ type UserProfile = Pick<
 export default async function BlueprintPage({
   searchParams,
 }: {
-  searchParams: { cycle?: string };
+  searchParams: { cycle?: string; edit?: string; newCycle?: string };
 }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -78,6 +79,11 @@ export default async function BlueprintPage({
 
   if (!paycycle) redirect('/dashboard');
 
+  const paycycleRow = paycycle as { id: string; status: string };
+  if (paycycleRow.status === 'active') {
+    await markOverdueSeedsPaid(paycycleRow.id);
+  }
+
   const { data: seeds } = await supabase
     .from('seeds')
     .select('*')
@@ -110,6 +116,9 @@ export default async function BlueprintPage({
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
   const avatarEnabled = getAvatarEnabledFromEnv();
 
+  const editSeedId = searchParams.edit ?? null;
+  const showNewCycleCelebration = searchParams.newCycle != null;
+
   return (
     <BlueprintClient
       household={household}
@@ -122,6 +131,8 @@ export default async function BlueprintPage({
       hasDraftCycle={hasDraftCycle}
       userAvatarUrl={avatarEnabled ? profile?.avatar_url ?? null : null}
       avatarEnabled={avatarEnabled}
+      initialEditSeedId={editSeedId}
+      initialNewCycleCelebration={showNewCycleCelebration}
     />
   );
 }

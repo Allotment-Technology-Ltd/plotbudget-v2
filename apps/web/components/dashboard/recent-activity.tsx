@@ -158,11 +158,16 @@ export function RecentActivity({
               : item.type === 'pot'
                 ? PiggyBank
                 : CreditCard;
-          return (
-            <li
-              key={`${item.type}-${item.id}-${item.at}-${index}`}
-              className="flex gap-3 text-sm"
-            >
+          const isSeed = item.type === 'seed';
+          const isPot = item.type === 'pot';
+          const isRepayment = item.type === 'repayment';
+          const editHref = isSeed
+            ? `/dashboard/blueprint?edit=${item.id}`
+            : isPot || isRepayment
+              ? '/dashboard/blueprint'
+              : null;
+          const rowContent = (
+            <>
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted"
                 aria-hidden
@@ -170,7 +175,7 @@ export function RecentActivity({
                 <Icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-body text-foreground truncate">
+                <p className="font-body text-foreground truncate uppercase">
                   {item.label}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -178,6 +183,24 @@ export function RecentActivity({
                   {formatDistanceToNow(new Date(item.at), { addSuffix: true })}
                 </p>
               </div>
+            </>
+          );
+          return (
+            <li
+              key={`${item.type}-${item.id}-${item.at}-${index}`}
+              className="flex gap-3 text-sm"
+            >
+              {editHref ? (
+                <Link
+                  href={editHref}
+                  className="flex gap-3 min-w-0 flex-1 rounded-md hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 -m-1 p-1"
+                  aria-label={isSeed ? `Edit ${item.label}` : `View ${item.label} in Blueprint`}
+                >
+                  {rowContent}
+                </Link>
+              ) : (
+                rowContent
+              )}
             </li>
           );
         })}

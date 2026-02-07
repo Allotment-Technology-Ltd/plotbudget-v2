@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -190,13 +190,25 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
           className="cursor-pointer transition-colors duration-200"
         >
           <a
+            href="mailto:hello@plotbudget.com"
+            className="flex items-center focus:bg-primary/10 focus:text-primary"
+          >
+            <HelpCircle className="mr-2 h-4 w-4" aria-hidden />
+            Help
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer transition-colors duration-200"
+        >
+          <a
             href={marketingUrl('/')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center focus:bg-primary/10 focus:text-primary"
           >
-            <HelpCircle className="mr-2 h-4 w-4" aria-hidden />
-            Help
+            <CreditCard className="mr-2 h-4 w-4" aria-hidden />
+            Pricing
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

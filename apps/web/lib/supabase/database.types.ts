@@ -178,6 +178,7 @@ export type Database = {
           rem_repay_me: number;
           rem_repay_partner: number;
           rem_repay_joint: number;
+          ritual_closed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -216,6 +217,7 @@ export type Database = {
           rem_repay_me?: number;
           rem_repay_partner?: number;
           rem_repay_joint?: number;
+          ritual_closed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -254,6 +256,7 @@ export type Database = {
           rem_repay_me?: number;
           rem_repay_partner?: number;
           rem_repay_joint?: number;
+          ritual_closed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -279,6 +282,7 @@ export type Database = {
           linked_pot_id: string | null;
           linked_repayment_id: string | null;
           created_by_owner: boolean | null;
+          due_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -302,6 +306,7 @@ export type Database = {
           linked_pot_id?: string | null;
           linked_repayment_id?: string | null;
           created_by_owner?: boolean;
+          due_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -325,6 +330,7 @@ export type Database = {
           linked_pot_id?: string | null;
           linked_repayment_id?: string | null;
           created_by_owner?: boolean;
+          due_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
