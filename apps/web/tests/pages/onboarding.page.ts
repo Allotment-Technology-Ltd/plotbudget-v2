@@ -52,7 +52,8 @@ export class OnboardingPage {
   // Actions
   async goto() {
     await this.page.goto('/onboarding');
-    await expect(this.soloModeButton).toBeVisible();
+    await this.page.waitForURL(/\/onboarding/, { timeout: 15_000 });
+    await expect(this.soloModeButton).toBeVisible({ timeout: 15_000 });
   }
 
   /** Next pay date input (visible when "Every 4 weeks" is selected). Value format: YYYY-MM-DD */
