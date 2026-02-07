@@ -106,9 +106,16 @@ export class BlueprintPage {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
-    await expect(
-      this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state')).first()
-    ).toBeVisible({ timeout: 10_000 });
+    // When cycle is locked, Add buttons are hidden; wait for either editable state or Unlock button
+    const addOrEmpty = this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state'));
+    const unlockBtn = this.page.getByRole('button', { name: /Unlock/i });
+    const editableOrLocked = addOrEmpty.or(unlockBtn);
+    await expect(editableOrLocked.first()).toBeVisible({ timeout: 15_000 });
+    // If locked, unlock so tests can add seeds
+    if (await unlockBtn.isVisible()) {
+      await unlockBtn.click();
+      await expect(addOrEmpty.first()).toBeVisible({ timeout: 15_000 });
+    }
   }
 
   async addSeed(params: {

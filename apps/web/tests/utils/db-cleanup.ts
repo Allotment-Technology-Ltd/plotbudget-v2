@@ -86,6 +86,11 @@ export async function cleanupTestUser(email: string) {
     }
     // Ensure user.current_paycycle_id points to the kept paycycle (avoids FK on seeds)
     await supabase.from('users').update({ current_paycycle_id: cycles[0].id }).eq('id', user.id);
+    // Reset ritual_closed_at so "Close cycle" CTA can appear again in ritual e2e tests
+    await supabase
+      .from('paycycles')
+      .update({ ritual_closed_at: null })
+      .eq('id', cycles[0].id);
   }
 
   console.log(`✅ Cleaned up test data for ${email}`);
