@@ -122,6 +122,12 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install
+      - name: Build app
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build
       - name: Deploy to Vercel Preview
         id: vercel-deploy
         uses: amondnet/vercel-action@v25
