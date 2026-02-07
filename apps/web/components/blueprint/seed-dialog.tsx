@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -59,6 +59,8 @@ interface SeedDialogProps {
   pots: Pot[];
   repayments: Repayment[];
   onSuccess: () => void;
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 function parseAmount(value: unknown): number {
@@ -103,9 +105,12 @@ export function SeedDialog({
   pots,
   repayments,
   onSuccess,
+  isPartner: _isPartner = false,
+  otherLabel = 'Partner',
 }: SeedDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formScrollRef = useRef<HTMLFormElement>(null);
 
   const editMode = !!seed;
   const linkedPot = seed?.linked_pot_id
@@ -371,13 +376,29 @@ export function SeedDialog({
   };
   const namePlaceholder = category ? namePlaceholders[category] : 'e.g. Rent, Electric bill';
 
+  const handleFocusIn = useCallback((e: FocusEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target || !formScrollRef.current?.contains(target)) return;
+    if (!/^(INPUT|SELECT|TEXTAREA|BUTTON)$/i.test(target.tagName)) return;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ block: 'center', behavior: 'smooth', inline: 'nearest' });
+    });
+  }, []);
+
+  useEffect(() => {
+    const form = formScrollRef.current;
+    if (!form) return;
+    form.addEventListener('focusin', handleFocusIn);
+    return () => form.removeEventListener('focusin', handleFocusIn);
+  }, [handleFocusIn, open]);
+
   // UX: Constrain dialog height (max-h-[90vh]) so it never fills the viewport;
   // form content scrolls inside. Keeps focus and works on mobile/desktop.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={true}
-        className="max-w-md max-h-[90vh] flex flex-col gap-4 overflow-hidden"
+        className="max-w-md max-h-[85dvh] sm:max-h-[90vh] flex flex-col gap-4 overflow-hidden"
         aria-describedby={undefined}
       >
         <DialogHeader className="shrink-0">
@@ -386,7 +407,12 @@ export function SeedDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-6 overflow-y-auto min-h-0 flex-1 pr-1 -mr-1 focus:outline-none" noValidate>
+        <form
+          ref={formScrollRef}
+          onSubmit={onSubmit}
+          className="space-y-6 overflow-y-auto min-h-0 flex-1 pl-3 pr-4 focus:outline-none min-w-0 [&_input]:scroll-mt-6 [&_input]:scroll-mb-24 [&_select]:scroll-mt-6 [&_select]:scroll-mb-24 [&_button]:scroll-mt-4 [&_button]:scroll-mb-8"
+          noValidate
+        >
           {category && (
             <div className="sr-only" aria-hidden>
               <Label htmlFor="seed-category">Category</Label>
@@ -444,7 +470,7 @@ export function SeedDialog({
           )}
 
           {category === 'savings' && (
-            <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
+            <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30 min-w-0">
               <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">
                 Savings Goal (Optional)
               </h4>
@@ -480,8 +506,8 @@ export function SeedDialog({
               )}
               {((!form.watch('link_pot_id') || form.watch('link_pot_id') === 'none') || (editMode && !!linkedPot)) && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4 max-[400px]:grid-cols-1">
+                    <div className="space-y-2 min-w-0">
                       <Label htmlFor="pot-current">Current (£)</Label>
                       <Controller
                         name="pot_current_str"
@@ -501,7 +527,7 @@ export function SeedDialog({
                         )}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 min-w-0">
                       <Label htmlFor="pot-target">Target (£)</Label>
                       <Controller
                         name="pot_target_str"
@@ -570,11 +596,11 @@ export function SeedDialog({
             </div>
           )}
 
-          {category === 'repay' && (
-            <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
-              <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">
-                Debt / Repayment (Optional)
-              </h4>
+{category === 'repay' && (
+              <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30 min-w-0">
+                <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                  Debt / Repayment (Optional)
+                </h4>
               {repayments.length > 0 && (
                 <div className="space-y-2">
                   <Label>Link to existing repayment</Label>
@@ -675,18 +701,20 @@ export function SeedDialog({
           )}
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="seed-amount">Amount (£)</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Label htmlFor="seed-amount" className="min-w-0 shrink-0">Amount (£)</Label>
               {suggestedAmount != null && (
                 <Button
                   type="button"
                   variant="outline"
-                  className="text-xs px-3 py-1.5"
+                  className="text-xs px-3 py-1.5 shrink-0"
                   onClick={() =>
                     form.setValue('amountStr', suggestedAmount.toFixed(2))
                   }
                 >
-                  Use suggested (£{suggestedAmount.toFixed(2)})
+                  {category === 'repay'
+                    ? `Use suggested minimum (£${suggestedAmount.toFixed(2)})`
+                    : `Use suggested (£${suggestedAmount.toFixed(2)})`}
                 </Button>
               )}
             </div>
@@ -745,7 +773,7 @@ export function SeedDialog({
                         data-testid="seed-source-select"
                       >
                     <RadioGroupItem value="me" label="Me" />
-                    <RadioGroupItem value="partner" label={household.partner_name || 'Partner'} />
+                    <RadioGroupItem value="partner" label={otherLabel} />
                     <RadioGroupItem value="joint" label="Joint" />
                   </RadioGroup>
                 )}
@@ -758,7 +786,7 @@ export function SeedDialog({
               <div className="space-y-3">
                 <Label>Split Ratio</Label>
                 <p className="text-sm text-muted-foreground">
-                  Your share: {splitRatio}% / {household.partner_name || 'Partner'}: {100 - splitRatio}%
+                  Your share: {splitRatio}% / {otherLabel}: {100 - splitRatio}%
                 </p>
                 <Controller
                   name="split_ratio"
@@ -767,7 +795,7 @@ export function SeedDialog({
                     <Slider
                       min={0}
                       max={100}
-                      step={5}
+                      step={1}
                       value={[field.value ?? 50]}
                       onValueChange={(v) => field.onChange(v[0])}
                       aria-label="Your share of joint bills (percentage)"
@@ -776,7 +804,7 @@ export function SeedDialog({
                 />
                 {previewSplit && amount > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    You: £{previewSplit.me.toFixed(2)} • {household.partner_name || 'Partner'}: £
+                    You: £{previewSplit.me.toFixed(2)} • {otherLabel}: £
                     {previewSplit.partner.toFixed(2)}
                   </p>
                 )}
@@ -838,6 +866,7 @@ export function SeedDialog({
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => onOpenChange(false)}
             >
               Cancel
@@ -846,6 +875,7 @@ export function SeedDialog({
               type="submit"
               disabled={isSubmitting}
               isLoading={isSubmitting}
+              className="w-full sm:w-auto"
               data-testid="submit-seed-form"
             >
               {editMode ? 'Save Changes' : 'Add'}

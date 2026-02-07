@@ -53,10 +53,10 @@ export function DeleteAccountDialog() {
         <Button
           type="button"
           variant="outline"
-          className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
+          className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive min-w-0 shrink-0 overflow-hidden text-ellipsis whitespace-nowrap"
         >
-          <Trash2 className="mr-2 h-4 w-4" aria-hidden />
-          Delete My Account
+          <Trash2 className="mr-2 h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 overflow-hidden text-ellipsis">Delete My Account</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent
@@ -101,6 +101,9 @@ export function DeleteAccountDialog() {
               disabled={isLoading}
               className={isValid ? 'pr-10 border-destructive/50' : ''}
               autoComplete="off"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
               aria-invalid={confirmText.length > 0 && !isValid}
             />
             {isValid && (

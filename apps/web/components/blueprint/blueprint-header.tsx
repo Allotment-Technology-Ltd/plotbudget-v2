@@ -86,7 +86,7 @@ export function BlueprintHeader({
           </div>
 
           <div
-            className="flex items-center gap-3 flex-nowrap min-w-0 sm:min-w-[320px] sm:justify-end"
+            className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:gap-3 sm:flex-nowrap sm:min-w-[320px] sm:justify-end"
             aria-label="Blueprint controls"
           >
             <Select
@@ -94,7 +94,7 @@ export function BlueprintHeader({
               onValueChange={onCycleChange}
               aria-label="Select pay cycle"
             >
-              <SelectTrigger className="min-w-[200px] w-full max-w-[280px]">
+              <SelectTrigger className="w-full min-w-0 sm:min-w-[200px] sm:max-w-[280px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -122,7 +122,7 @@ export function BlueprintHeader({
             {paycycle.status === 'active' && onCreateNext && (
               <Button
                 variant="outline"
-                className="px-4 py-2 text-sm shrink-0"
+                className="w-full sm:w-auto px-4 py-2 text-sm shrink-0"
                 onClick={onCreateNext}
               >
                 <Plus className="w-4 h-4 mr-2" aria-hidden />
@@ -132,7 +132,7 @@ export function BlueprintHeader({
             {paycycle.status === 'draft' && onResyncDraft && (
               <Button
                 variant="outline"
-                className="px-4 py-2 text-sm shrink-0"
+                className="w-full sm:w-auto px-4 py-2 text-sm shrink-0"
                 onClick={onResyncDraft}
               >
                 <RefreshCw className="w-4 h-4 mr-2" aria-hidden />

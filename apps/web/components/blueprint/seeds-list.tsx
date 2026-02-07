@@ -62,6 +62,8 @@ interface SeedsListProps {
   onDelete: (seed: Seed) => void;
   onMarkPaid?: (seedId: string, payer: Payer) => void;
   onUnmarkPaid?: (seedId: string, payer: Payer) => void;
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 export function SeedsList({
@@ -77,6 +79,8 @@ export function SeedsList({
   onDelete,
   onMarkPaid,
   onUnmarkPaid,
+  isPartner = false,
+  otherLabel = 'Partner',
 }: SeedsListProps) {
   const categoryLabel = categoryLabels[category];
   const singularLabel = singularLabels[category];
@@ -89,11 +93,11 @@ export function SeedsList({
       aria-labelledby={`seeds-${category}-heading`}
       aria-describedby={`seeds-${category}-subtitle`}
     >
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <div className="flex items-center gap-3 flex-wrap min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+        <div className="min-w-0 flex-1">
           <h2
             id={`seeds-${category}-heading`}
-            className="font-heading text-xl uppercase tracking-wider text-foreground"
+            className="font-heading text-xl uppercase tracking-wider text-foreground break-words"
           >
             {categoryLabel} ({seeds.length})
           </h2>
@@ -109,7 +113,7 @@ export function SeedsList({
         {!isCycleLocked && (
           <Button
             variant="outline"
-            className="px-4 py-2 text-sm"
+            className="px-4 py-2 text-sm shrink-0"
             onClick={onAdd}
             data-testid={
               category === 'need'
@@ -173,6 +177,8 @@ export function SeedsList({
                   isCycleLocked={isCycleLocked}
                   onMarkPaid={onMarkPaid}
                   onUnmarkPaid={onUnmarkPaid}
+                  isPartner={isPartner}
+                  otherLabel={otherLabel}
                 />
               </li>
             );

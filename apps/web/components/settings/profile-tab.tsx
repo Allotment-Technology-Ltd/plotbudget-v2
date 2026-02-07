@@ -57,7 +57,22 @@ export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: P
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Profile Information
         </h2>
-        {isPartner ? (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Display Name</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter your name"
+              maxLength={50}
+              disabled={isLoading}
+              aria-describedby="displayName-help"
+            />
+            <p id="displayName-help" className="text-sm text-muted-foreground">
+              This is how your name will appear in the app.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -70,48 +85,22 @@ export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: P
               aria-describedby="email-help"
             />
             <p id="email-help" className="text-sm text-muted-foreground">
-              You are viewing this household as the invited partner. Use &quot;Leave&quot; in the menu to sign out.
+              {isPartner
+                ? 'To change your email, use the account provider you signed up with (e.g. sign in again with a different email).'
+                : 'Managed by your account authentication.'}
             </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter your name"
-                maxLength={50}
-                disabled={isLoading}
-                aria-describedby="displayName-help"
-              />
-              <p id="displayName-help" className="text-sm text-muted-foreground">
-                This is how your name will appear in the app.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={user.email}
-                readOnly
-                disabled
-                className="bg-muted/50 cursor-not-allowed normal-case"
-                aria-describedby="email-help"
-              />
-              <p id="email-help" className="text-sm text-muted-foreground">
-                Managed by your account authentication.
-              </p>
-            </div>
-            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-              {isLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-              )}
-              Save Changes
-            </Button>
-          </form>
+          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+            {isLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            )}
+            Save Changes
+          </Button>
+        </form>
+        {isPartner && (
+          <p className="text-sm text-muted-foreground mt-4">
+            You are viewing this household as the invited partner. Use &quot;Leave&quot; in the menu to sign out.
+          </p>
         )}
       </section>
 

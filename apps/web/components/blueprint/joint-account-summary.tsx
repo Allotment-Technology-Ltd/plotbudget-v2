@@ -12,6 +12,8 @@ interface JointAccountSummaryProps {
   seeds: Seed[];
   userAvatarUrl?: string | null;
   avatarEnabled?: boolean;
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 export function JointAccountSummary({
@@ -19,10 +21,12 @@ export function JointAccountSummary({
   seeds,
   userAvatarUrl,
   avatarEnabled = false,
+  isPartner = false,
+  otherLabel = 'Partner',
 }: JointAccountSummaryProps) {
   if (!household.is_couple) return null;
 
-  const partnerName = household.partner_name || 'Partner';
+  const otherName = otherLabel;
 
   const jointSeeds = seeds.filter((s) => s.payment_source === 'joint');
   const jointTransferSeeds = jointSeeds.filter((s) => s.uses_joint_account);
@@ -88,8 +92,8 @@ export function JointAccountSummary({
                 £{jointTotal.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                You: £{userJointTransfer.toFixed(2)} • {partnerName}: £
-                {partnerJointTransfer.toFixed(2)}
+                You: £{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)} • {otherName}: £
+                {(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}
               </p>
             </div>
           </div>
@@ -111,11 +115,12 @@ export function JointAccountSummary({
               Your Set-Aside
             </p>
             <p className="text-xl font-display text-foreground">
-              £{userTotalSetAside.toFixed(2)}
+              £{(isPartner ? partnerTotalSetAside : userTotalSetAside).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Your bills (£{userMeTotal.toFixed(2)}) + your share of joint
-              paid from own account (£{userJointOwnAccount.toFixed(2)})
+              {isPartner
+                ? `Your bills (£${partnerTotal.toFixed(2)}) + your share of joint paid from own account (£${partnerJointOwnAccount.toFixed(2)})`
+                : `Your bills (£${userMeTotal.toFixed(2)}) + your share of joint paid from own account (£${userJointOwnAccount.toFixed(2)})`}
             </p>
           </div>
         </div>
@@ -124,10 +129,10 @@ export function JointAccountSummary({
           <User className="w-5 h-5 text-primary mt-0.5" aria-hidden />
           <div>
             <p className="font-heading text-sm uppercase tracking-wider text-muted-foreground">
-              {partnerName}&apos;s Set-Aside
+              {otherName}&apos;s Set-Aside
             </p>
             <p className="text-xl font-display text-foreground">
-              £{partnerTotalSetAside.toFixed(2)}
+              £{(isPartner ? userTotalSetAside : partnerTotalSetAside).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Their bills (£{partnerTotal.toFixed(2)}) + their share of joint

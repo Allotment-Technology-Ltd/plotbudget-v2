@@ -64,7 +64,7 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const joinUrl = `/partner/join?t=${encodeURIComponent(token)}`;
+  const completeUrl = `/partner/complete?t=${encodeURIComponent(token)}`;
 
   // Authenticated user with valid token: accept invite and go straight to dashboard (no extra screen)
   if (user) {
@@ -99,14 +99,14 @@ export default async function PartnerJoinPage({ searchParams }: Props) {
 
         <div className="flex flex-col gap-3">
           <Link
-            href={`/signup?redirect=${encodeURIComponent(joinUrl)}`}
+            href={`/signup?redirect=${encodeURIComponent(completeUrl)}`}
             data-testid="partner-join-signup"
             className="btn-primary inline-flex w-full items-center justify-center rounded-md px-6 py-3 font-heading text-cta uppercase tracking-widest"
           >
             Create account
           </Link>
           <Link
-            href={`/login?redirect=${encodeURIComponent(joinUrl)}`}
+            href={`/login?redirect=${encodeURIComponent(completeUrl)}`}
             data-testid="partner-join-login"
             className="inline-flex w-full items-center justify-center rounded-md border border-input bg-transparent px-6 py-3 font-heading text-cta uppercase tracking-widest transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >

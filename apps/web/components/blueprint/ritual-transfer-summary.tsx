@@ -12,6 +12,8 @@ interface RitualTransferSummaryProps {
   household: Household;
   userAvatarUrl?: string | null;
   avatarEnabled?: boolean;
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 /**
@@ -72,15 +74,17 @@ function getPartnerSetAside(seeds: Seed[]) {
 
 export function RitualTransferSummary({
   seeds,
-  household,
+  household: _household,
   userAvatarUrl,
   avatarEnabled = false,
+  isPartner = false,
+  otherLabel = 'Partner',
 }: RitualTransferSummaryProps) {
   const { totalJointTransfer, userJointTransfer, partnerJointTransfer } =
     getJointTransfer(seeds);
   const userSetAside = getUserSetAside(seeds);
   const partnerSetAside = getPartnerSetAside(seeds);
-  const partnerName = household.partner_name || 'Partner';
+  const otherName = otherLabel;
 
   return (
     <div
@@ -104,8 +108,8 @@ export function RitualTransferSummary({
               £{totalJointTransfer.toFixed(2)}
             </p>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>You: £{userJointTransfer.toFixed(2)}</p>
-              <p>{partnerName}: £{partnerJointTransfer.toFixed(2)}</p>
+              <p>You: £{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)}</p>
+              <p>{otherName}: £{(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}</p>
             </div>
           </div>
         )}
@@ -125,7 +129,7 @@ export function RitualTransferSummary({
             </p>
           </div>
           <p className="text-3xl font-display text-foreground">
-            £{userSetAside.toFixed(2)}
+            £{(isPartner ? partnerSetAside : userSetAside).toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground">
             Keep this in your account for your bills
@@ -134,10 +138,10 @@ export function RitualTransferSummary({
 
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground uppercase tracking-wider">
-            {partnerName}&apos;s Set-Aside
+            {otherName}&apos;s Set-Aside
           </p>
           <p className="text-3xl font-display text-foreground">
-            £{partnerSetAside.toFixed(2)}
+            £{(isPartner ? userSetAside : partnerSetAside).toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground">
             They keep this for their bills

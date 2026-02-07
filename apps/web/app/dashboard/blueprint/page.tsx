@@ -62,13 +62,24 @@ export default async function BlueprintPage({
     redirect('/onboarding');
   }
 
-  const { data: household } = await supabase
+  type HouseholdRow = Database['public']['Tables']['households']['Row'];
+  const { data: household } = (await supabase
     .from('households')
     .select('*')
     .eq('id', householdId)
-    .single();
+    .single()) as { data: HouseholdRow | null };
 
   if (!household) redirect('/onboarding');
+
+  let ownerDisplayName: string | null = null;
+  if (isPartner && household.owner_id) {
+    const { data: ownerRow } = await supabase
+      .from('users')
+      .select('display_name')
+      .eq('id', household.owner_id)
+      .single();
+    ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
+  }
 
   const targetCycleId = searchParams.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
@@ -157,6 +168,8 @@ export default async function BlueprintPage({
       initialEditSeedId={editSeedId}
       initialNewCycleCelebration={showNewCycleCelebration}
       incomeEvents={incomeEvents}
+      isPartner={isPartner}
+      ownerDisplayName={ownerDisplayName}
     />
   );
 }

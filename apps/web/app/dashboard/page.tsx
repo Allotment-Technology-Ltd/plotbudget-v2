@@ -47,13 +47,23 @@ export default async function DashboardPage() {
     redirect('/onboarding');
   }
 
-  const { data: household } = await supabase
+  const { data: household } = (await supabase
     .from('households')
     .select('*')
     .eq('id', householdId)
-    .single();
+    .single()) as { data: Household | null };
 
   if (!household) redirect('/onboarding');
+
+  let ownerDisplayName: string | null = null;
+  if (isPartner && household.owner_id) {
+    const { data: ownerRow } = await supabase
+      .from('users')
+      .select('display_name')
+      .eq('id', household.owner_id)
+      .single();
+    ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
+  }
 
   let currentPaycycle: PayCycle | null = null;
   let seeds: Seed[] = [];
@@ -145,6 +155,8 @@ export default async function DashboardPage() {
       historicalCycles={historicalCycles}
       hasDraftCycle={hasDraftCycle}
       incomeEvents={incomeEvents}
+      isPartner={isPartner}
+      ownerDisplayName={ownerDisplayName}
     />
   );
 }

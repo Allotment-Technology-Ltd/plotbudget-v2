@@ -380,7 +380,9 @@ export async function linkPartnerToHousehold(ownerEmail: string, partnerEmail: s
 }
 
 /**
- * Cleanup all test users (run before test suite)
+ * Cleanup all test users (run before test suite).
+ * Do NOT add manual-solo@plotbudget.test or manual-couple@plotbudget.test —
+ * those are for manual regression only (see apps/web/scripts/seed-manual-regression.sql).
  */
 export async function cleanupAllTestUsers() {
   await cleanupTestUser('solo@plotbudget.test');

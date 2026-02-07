@@ -53,6 +53,16 @@ const PAYMENT_SOURCE_LABELS: Record<PaymentSource, string> = {
   joint: 'Joint',
 };
 
+/** When viewer is partner, "Me" means the partner (you). */
+function getPaymentSourceLabels(isPartner: boolean): Record<PaymentSource, string> {
+  if (!isPartner) return PAYMENT_SOURCE_LABELS;
+  return {
+    me: 'You',
+    partner: 'Account owner',
+    joint: 'Joint',
+  };
+}
+
 interface IncomeSourcesTabProps {
   householdId: string;
   incomeSources: IncomeSource[];
@@ -102,7 +112,7 @@ export function IncomeSourcesTab({
 
   const openAdd = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    setForm(isPartner ? { ...emptyForm, payment_source: 'partner' } : emptyForm);
     setDialogOpen(true);
   };
 
@@ -213,8 +223,7 @@ export function IncomeSourcesTab({
               projected correctly (including 4‑weekly double‑dip).
             </p>
           </div>
-          {!isPartner && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button type="button" onClick={openAdd}>
                   <Plus className="mr-2 h-4 w-4" aria-hidden />
@@ -316,19 +325,22 @@ export function IncomeSourcesTab({
                       onValueChange={(v) =>
                         setForm((f) => ({ ...f, payment_source: v as PaymentSource }))
                       }
-                      disabled={isSaving}
+                      disabled={isSaving || (isPartner && !editingId)}
                     >
                       <SelectTrigger id="income-source">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.keys(PAYMENT_SOURCE_LABELS) as PaymentSource[]).map((k) => (
+                        {(Object.keys(getPaymentSourceLabels(isPartner)) as PaymentSource[]).map((k) => (
                           <SelectItem key={k} value={k}>
-                            {PAYMENT_SOURCE_LABELS[k]}
+                            {getPaymentSourceLabels(isPartner)[k]}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {isPartner && !editingId && (
+                      <p className="text-xs text-muted-foreground">New income is added as yours (partner).</p>
+                    )}
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <Button
@@ -349,7 +361,6 @@ export function IncomeSourcesTab({
                 </form>
               </DialogContent>
             </Dialog>
-          )}
         </div>
 
         {incomeSources.length === 0 ? (
@@ -374,11 +385,10 @@ export function IncomeSourcesTab({
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     £{Number(source.amount).toLocaleString('en-GB')} · {frequencySubline(source)} ·{' '}
-                    {PAYMENT_SOURCE_LABELS[source.payment_source]}
+                    {getPaymentSourceLabels(isPartner)[source.payment_source]}
                   </p>
                 </div>
-                {!isPartner && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <Switch
                       checked={source.is_active}
                       onCheckedChange={() => toggleActive(source)}
@@ -403,7 +413,6 @@ export function IncomeSourcesTab({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                )}
               </li>
             ))}
           </ul>

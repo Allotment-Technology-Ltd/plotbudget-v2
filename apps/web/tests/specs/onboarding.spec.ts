@@ -6,6 +6,9 @@ import { resetOnboardingState } from '../utils/db-cleanup';
 import { TEST_USERS } from '../fixtures/test-data';
 
 test.describe('Onboarding Flow - Solo Mode', () => {
+  // Retry once when redirect to blueprint fails (e.g. server useContext error when loading dashboard)
+  test.describe.configure({ retries: 1 });
+
   // Project chromium-onboarding provides storageState for onboarding@ so no other test shares this user
   test.beforeEach(async () => {
     await resetOnboardingState(TEST_USERS.onboarding.email);

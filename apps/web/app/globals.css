@@ -240,8 +240,14 @@
 
 @layer utilities {
   .content-wrapper {
-    @apply w-full mx-auto px-6;
+    @apply w-full mx-auto px-4;
     max-width: 1200px;
+  }
+
+  @media (min-width: 640px) {
+    .content-wrapper {
+      @apply px-6;
+    }
   }
 
   @media (min-width: 810px) {

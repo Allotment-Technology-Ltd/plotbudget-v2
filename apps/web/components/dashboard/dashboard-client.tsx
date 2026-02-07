@@ -38,6 +38,8 @@ export interface DashboardClientProps {
   historicalCycles: HistoricalCycle[];
   hasDraftCycle: boolean;
   incomeEvents?: IncomeEventDisplay[];
+  isPartner?: boolean;
+  ownerDisplayName?: string | null;
 }
 
 export function DashboardClient({
@@ -49,7 +51,12 @@ export function DashboardClient({
   historicalCycles,
   hasDraftCycle,
   incomeEvents = [],
+  isPartner = false,
+  ownerDisplayName = null,
 }: DashboardClientProps) {
+  const otherLabel = isPartner
+    ? (ownerDisplayName?.trim() || 'Account owner')
+    : (household.partner_name?.trim() || 'Partner');
   const [, setSelectedCategory] = useState<string | null>(null);
 
   if (!currentPaycycle) {
@@ -143,6 +150,8 @@ export function DashboardClient({
                 household={household}
                 paycycle={currentPaycycle}
                 seeds={seeds}
+                isPartner={isPartner}
+                otherLabel={otherLabel}
               />
             )}
           </div>

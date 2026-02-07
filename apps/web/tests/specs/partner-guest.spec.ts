@@ -45,7 +45,8 @@ test.describe('Partner invite (unauthenticated)', () => {
     await partnerPage.clickCreateAccount();
     await page.waitForURL(/\/signup/, { timeout: 15_000 });
     expect(page.url()).toContain('redirect=');
-    expect(page.url()).toContain(encodeURIComponent('/partner/join'));
+    // Join page sends redirect to /partner/complete so user lands there after auth
+    expect(page.url()).toContain(encodeURIComponent('/partner/complete'));
 
     await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
       waitUntil: 'domcontentloaded',
@@ -56,7 +57,7 @@ test.describe('Partner invite (unauthenticated)', () => {
     await partnerPage.clickLogin();
     await page.waitForURL(/\/login/, { timeout: 15_000 });
     expect(page.url()).toContain('redirect=');
-    expect(page.url()).toContain(encodeURIComponent('/partner/join'));
+    expect(page.url()).toContain(encodeURIComponent('/partner/complete'));
   });
 });
 

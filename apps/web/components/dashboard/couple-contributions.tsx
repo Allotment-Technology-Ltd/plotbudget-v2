@@ -7,6 +7,8 @@ interface CoupleContributionsProps {
   household: Household;
   paycycle: PayCycle;
   seeds: Seed[];
+  isPartner?: boolean;
+  otherLabel?: string;
 }
 
 /**
@@ -48,6 +50,8 @@ function jointSplit(
 export function CoupleContributions({
   household,
   paycycle,
+  isPartner = false,
+  otherLabel = 'Partner',
 }: CoupleContributionsProps) {
   const totals = sumBySource(paycycle);
   const ratio = household.joint_ratio ?? 0.5;
@@ -58,6 +62,10 @@ export function CoupleContributions({
 
   const youTotal = totals.me + jointMe;
   const partnerTotal = totals.partner + jointPartner;
+  const youDisplayTotal = isPartner ? partnerTotal : youTotal;
+  const otherDisplayTotal = isPartner ? youTotal : partnerTotal;
+  const youJoint = isPartner ? jointPartner : jointMe;
+  const otherJoint = isPartner ? jointMe : jointPartner;
 
   return (
     <motion.section
@@ -74,16 +82,16 @@ export function CoupleContributions({
       <div className="space-y-4">
         <div className="flex justify-between items-baseline">
           <span className="text-sm text-muted-foreground">You</span>
-          <span className="font-display text-lg">
-            £{youTotal.toFixed(2)}
+          <span className="font-display text-lg min-w-0 break-all">
+            £{youDisplayTotal.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between items-baseline">
           <span className="text-sm text-muted-foreground">
-            {household.partner_name || 'Partner'}
+            {otherLabel}
           </span>
-          <span className="font-display text-lg">
-            £{partnerTotal.toFixed(2)}
+          <span className="font-display text-lg min-w-0 break-all">
+            £{otherDisplayTotal.toFixed(2)}
           </span>
         </div>
 
@@ -95,9 +103,9 @@ export function CoupleContributions({
             <p className="text-sm text-foreground mb-2">
               £{totals.joint.toFixed(2)} total
             </p>
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <span>You: £{jointMe.toFixed(2)}</span>
-              <span>Partner: £{jointPartner.toFixed(2)}</span>
+            <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+              <span>You: £{youJoint.toFixed(2)}</span>
+              <span>{otherLabel}: £{otherJoint.toFixed(2)}</span>
             </div>
           </div>
         )}

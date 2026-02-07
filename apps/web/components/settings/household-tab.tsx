@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import {
   updateHouseholdName,
   updatePartnerName,
+  updateMyPartnerName,
 } from '@/lib/actions/settings-actions';
 import {
   Dialog,
@@ -44,6 +45,8 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
   const [partnerName, setPartnerName] = useState(household.partner_name || '');
   const [isPartnerSaving, setIsPartnerSaving] = useState(false);
+  const [myName, setMyName] = useState(household.partner_name || '');
+  const [isMyNameSaving, setIsMyNameSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +76,21 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
       toast.error(message);
     } finally {
       setIsPartnerSaving(false);
+    }
+  };
+
+  const handleMyNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsMyNameSaving(true);
+    try {
+      await updateMyPartnerName(household.id, myName.trim());
+      toast.success('Your name updated');
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update your name';
+      toast.error(message);
+    } finally {
+      setIsMyNameSaving(false);
     }
   };
 
@@ -138,9 +156,31 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
         <>
           <section className="bg-card rounded-lg border border-border p-6">
             <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
-              Partner Details
+              {isPartner ? 'Your Details' : 'Partner Details'}
             </h2>
             <div className="space-y-4">
+              {isPartner ? (
+                <form onSubmit={handleMyNameSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="myPartnerName">Your name (as shown in this household)</Label>
+                    <Input
+                      id="myPartnerName"
+                      value={myName}
+                      onChange={(e) => setMyName(e.target.value)}
+                      placeholder="Your name"
+                      maxLength={50}
+                      disabled={isMyNameSaving}
+                    />
+                  </div>
+                  <Button type="submit" disabled={isMyNameSaving} aria-busy={isMyNameSaving}>
+                    {isMyNameSaving && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    )}
+                    Save
+                  </Button>
+                </form>
+              ) : (
+              <>
               <div>
                 <p className="text-sm font-medium text-foreground mb-1">
                   Partner Name
@@ -159,7 +199,6 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
                 </Link>
                 .
               </p>
-              {!isPartner && (
               <Dialog open={partnerDialogOpen} onOpenChange={setPartnerDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="secondary" type="button">
@@ -206,6 +245,7 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
                   </form>
                 </DialogContent>
               </Dialog>
+              </>
               )}
             </div>
           </section>

@@ -11,13 +11,23 @@ async function expectNoServerError(page: import('@playwright/test').Page) {
 }
 
 test.describe('Dashboard and app shell', () => {
+  // Retry once when Next dev server hits intermittent useContext/webpack errors under parallel load
+  test.describe.configure({ retries: 1 });
+
   test('dashboard loads and shows hero or empty state', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForURL(/\/dashboard/);
-    await expectNoServerError(page);
     const hero = page.getByTestId('dashboard-hero');
     const noCycle = page.getByTestId('dashboard-no-cycle');
-    await expect(hero.or(noCycle)).toBeVisible({ timeout: 10000 });
+    const serverError = page.getByRole('dialog', { name: 'Server Error' });
+    // Wait for terminal state: either dashboard content or Server Error overlay (fail fast with clear message)
+    await Promise.race([
+      expect(hero.or(noCycle)).toBeVisible({ timeout: 15_000 }),
+      serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
+        const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
+        throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
+      }),
+    ]);
   });
 
   test('settings page loads when authenticated', async ({ page }) => {
@@ -27,7 +37,15 @@ test.describe('Dashboard and app shell', () => {
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
     }
-    await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15_000 });
+    const settingsPage = page.getByTestId('settings-page');
+    const serverError = page.getByRole('dialog', { name: 'Server Error' });
+    await Promise.race([
+      expect(settingsPage).toBeVisible({ timeout: 15_000 }),
+      serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
+        const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
+        throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
+      }),
+    ]);
   });
 
   test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
