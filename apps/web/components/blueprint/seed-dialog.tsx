@@ -105,7 +105,7 @@ export function SeedDialog({
   pots,
   repayments,
   onSuccess,
-  isPartner = false,
+  isPartner: _isPartner = false,
   otherLabel = 'Partner',
 }: SeedDialogProps) {
   const [error, setError] = useState<string | null>(null);

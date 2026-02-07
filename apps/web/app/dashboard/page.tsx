@@ -47,11 +47,11 @@ export default async function DashboardPage() {
     redirect('/onboarding');
   }
 
-  const { data: household } = await supabase
+  const { data: household } = (await supabase
     .from('households')
     .select('*')
     .eq('id', householdId)
-    .single();
+    .single()) as { data: Household | null };
 
   if (!household) redirect('/onboarding');
 

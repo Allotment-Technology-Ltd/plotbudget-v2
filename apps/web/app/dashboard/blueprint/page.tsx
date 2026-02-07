@@ -62,11 +62,12 @@ export default async function BlueprintPage({
     redirect('/onboarding');
   }
 
-  const { data: household } = await supabase
+  type HouseholdRow = Database['public']['Tables']['households']['Row'];
+  const { data: household } = (await supabase
     .from('households')
     .select('*')
     .eq('id', householdId)
-    .single();
+    .single()) as { data: HouseholdRow | null };
 
   if (!household) redirect('/onboarding');
 

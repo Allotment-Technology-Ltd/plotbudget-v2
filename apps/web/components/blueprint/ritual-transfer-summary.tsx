@@ -74,7 +74,7 @@ function getPartnerSetAside(seeds: Seed[]) {
 
 export function RitualTransferSummary({
   seeds,
-  household,
+  household: _household,
   userAvatarUrl,
   avatarEnabled = false,
   isPartner = false,
