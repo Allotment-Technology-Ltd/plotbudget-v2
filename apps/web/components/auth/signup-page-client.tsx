@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { SignupGatedView } from '@/components/auth/signup-gated-view';
+import { RegionRestrictedView } from '@/components/auth/region-restricted-view';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
+import { getSignupRegionAllowed } from '@/app/actions/auth';
 
 const REDIRECT_AFTER_AUTH_COOKIE = 'redirect_after_auth';
 const COOKIE_MAX_AGE = 60 * 10; // 10 minutes
@@ -30,15 +32,29 @@ export function SignupPageClient() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect');
   const { signupGated, waitlistUrl } = useAuthFeatureFlags();
+  const [regionAllowed, setRegionAllowed] = useState<boolean | null>(null);
 
   const allowSignupForPartnerInvite = isPartnerInviteRedirect(redirectTo);
   const showGated = signupGated && !allowSignupForPartnerInvite;
+
+  useEffect(() => {
+    getSignupRegionAllowed().then(({ allowed }) => setRegionAllowed(allowed));
+  }, []);
 
   if (showGated) {
     return (
       <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
         <DeletedAccountToast />
         <SignupGatedView waitlistUrl={waitlistUrl} />
+      </div>
+    );
+  }
+
+  if (regionAllowed === false && !allowSignupForPartnerInvite) {
+    return (
+      <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
+        <DeletedAccountToast />
+        <RegionRestrictedView />
       </div>
     );
   }

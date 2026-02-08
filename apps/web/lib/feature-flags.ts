@@ -24,3 +24,8 @@ export function getAvatarEnabledFromEnv(): boolean {
 export function getWaitlistUrlFromEnv(): string {
   return getEnv().NEXT_PUBLIC_WAITLIST_URL || 'https://plotbudget.com';
 }
+
+/** When true, pricing page and subscription/limit logic are enabled. Controlled by PostHog flag "pricing-enabled" when set. */
+export function getPricingEnabledFromEnv(): boolean {
+  return getEnv().NEXT_PUBLIC_PRICING_ENABLED === 'true';
+}

@@ -24,6 +24,7 @@ export type Database = {
           subscription_tier: 'free' | 'pro';
           subscription_status: 'active' | 'cancelled' | 'past_due' | null;
           polar_customer_id: string | null;
+          founding_member_until: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -41,6 +42,7 @@ export type Database = {
           subscription_tier?: 'free' | 'pro';
           subscription_status?: 'active' | 'cancelled' | 'past_due' | null;
           polar_customer_id?: string | null;
+          founding_member_until?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -58,6 +60,7 @@ export type Database = {
           subscription_tier?: 'free' | 'pro';
           subscription_status?: 'active' | 'cancelled' | 'past_due' | null;
           polar_customer_id?: string | null;
+          founding_member_until?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -79,6 +82,7 @@ export type Database = {
           pay_cycle_type: 'specific_date' | 'last_working_day' | 'every_4_weeks';
           pay_cycle_anchor: string | null;
           joint_ratio: number;
+          currency: 'GBP' | 'USD' | 'EUR';
           created_at: string;
           updated_at: string;
           partner_email: string | null;
@@ -105,6 +109,7 @@ export type Database = {
           pay_cycle_type?: 'specific_date' | 'last_working_day' | 'every_4_weeks';
           pay_cycle_anchor?: string | null;
           joint_ratio?: number;
+          currency?: 'GBP' | 'USD' | 'EUR';
           created_at?: string;
           updated_at?: string;
           partner_email?: string | null;
@@ -131,6 +136,7 @@ export type Database = {
           pay_cycle_type?: 'specific_date' | 'last_working_day' | 'every_4_weeks';
           pay_cycle_anchor?: string | null;
           joint_ratio?: number;
+          currency?: 'GBP' | 'USD' | 'EUR';
           created_at?: string;
           updated_at?: string;
           partner_email?: string | null;

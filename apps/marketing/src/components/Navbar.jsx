@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  *  - "JOIN WAITLIST" CTA scrolls to hero form
  *  - Responsive: CTA text shortens on mobile
  */
-export default function Navbar({ theme, onToggleTheme }) {
+export default function Navbar({ theme, onToggleTheme, pricingEnabled = false }) {
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [atTop, setAtTop] = useState(true);
@@ -36,6 +36,11 @@ export default function Navbar({ theme, onToggleTheme }) {
   const scrollToForm = () => {
     const el = document.getElementById('hero-form');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const scrollToPricing = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -69,8 +74,18 @@ export default function Navbar({ theme, onToggleTheme }) {
         PLOT
       </a>
 
-      {/* Right side: primary Log in + Join link + theme toggle */}
+      {/* Right side: Pricing + Log in + Join link + theme toggle */}
       <div className="flex items-center gap-4">
+        {/* Pricing — scrolls to pricing section when pricing is enabled */}
+        {pricingEnabled && (
+          <button
+            onClick={scrollToPricing}
+            className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors hidden sm:inline"
+            aria-label="View pricing"
+          >
+            Pricing
+          </button>
+        )}
         {/* Log in — primary CTA; use VITE_APP_URL locally so login stays on local app */}
         <a
           href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login`}
