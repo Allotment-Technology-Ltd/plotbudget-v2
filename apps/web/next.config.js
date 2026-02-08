@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/ui', '@repo/logic'],
+  // Avoid sharp install on Vercel (build was hanging at sharp install step).
+  images: { unoptimized: true },
   webpack: (config, { dev }) => {
     // In dev, use memory-only cache so webpack doesn't serialize large strings to disk (which
     // triggers "Serializing big strings" warning). The "use Buffer" approach would require
