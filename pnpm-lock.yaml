@@ -54,9 +54,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      vercel:
-        specifier: ^37.0.0
-        version: 37.14.0
 
   apps/marketing:
     dependencies:
