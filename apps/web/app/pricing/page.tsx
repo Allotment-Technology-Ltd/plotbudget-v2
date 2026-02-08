@@ -1,20 +1,9 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PricingMatrix } from '@/components/pricing/pricing-matrix';
 import { getPricingEnabledFromEnv, getAvatarEnabledFromEnv } from '@/lib/feature-flags';
-import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { UserMenu } from '@/components/navigation/user-menu';
-
-const DashboardNavClient = dynamic(
-  () => Promise.resolve(DashboardNav),
-  { ssr: false }
-);
-const UserMenuClient = dynamic(
-  () => Promise.resolve(UserMenu),
-  { ssr: false }
-);
+import { PricingHeaderNavClient } from './pricing-header-nav-client';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -71,36 +60,18 @@ export default async function PricingPage() {
             PLOT
           </Link>
           <nav className="flex items-center gap-6">
-            {user ? (
-              <>
-                <DashboardNavClient />
-                <UserMenuClient
-                  user={{
-                    id: user.id,
-                    email: user.email ?? '',
-                    display_name: displayName,
-                    avatar_url: avatarEnabled ? avatarUrl : null,
-                  }}
-                  isPartner={isPartner}
-                  avatarEnabled={avatarEnabled}
-                />
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/signup"
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
-                  Get started
-                </Link>
-              </>
-            )}
+            <PricingHeaderNavClient
+              userMenuProps={user ? {
+                user: {
+                  id: user.id,
+                  email: user.email ?? '',
+                  display_name: displayName,
+                  avatar_url: avatarEnabled ? avatarUrl : null,
+                },
+                isPartner,
+                avatarEnabled,
+              } : null}
+            />
           </nav>
         </div>
       </header>
