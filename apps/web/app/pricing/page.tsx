@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PricingMatrix } from '@/components/pricing/pricing-matrix';
 import { getPricingEnabledFromEnv, getAvatarEnabledFromEnv } from '@/lib/feature-flags';
@@ -14,6 +15,9 @@ export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   const pricingEnabled = getPricingEnabledFromEnv();
+  if (!pricingEnabled) {
+    redirect(user ? '/dashboard' : '/login');
+  }
   const avatarEnabled = getAvatarEnabledFromEnv();
 
   let displayName: string | null = null;

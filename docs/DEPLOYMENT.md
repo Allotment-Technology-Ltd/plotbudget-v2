@@ -76,8 +76,10 @@ In the Vercel project: **Settings → Environment Variables**. Add these for **P
 |------|--------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Supabase Dashboard → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key | Same place |
-| `NEXT_PUBLIC_APP_URL` | Your Vercel URL | e.g. `https://your-project.vercel.app` (optional; for redirects) |
+| `NEXT_PUBLIC_APP_URL` | Your production app URL | **Production only.** e.g. `https://app.plotbudget.com`. Do **not** set for Preview — the build sets it from `VERCEL_URL` so preview links stay on the preview deployment. |
 | `NEXT_PUBLIC_APP_ENV` | `production` | Optional; for feature flags or analytics |
+
+**Preview (feature branches):** In-app links (sign-out, Pricing, etc.) use the current deployment URL. Set `NEXT_PUBLIC_APP_URL` only in **Production** so preview builds use `VERCEL_URL` and users don’t get sent to live.
 
 **Optional (server-side only):**
 

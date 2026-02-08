@@ -4,5 +4,6 @@
   "installCommand": "cd ../.. && pnpm install",
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [{ "source": "/pricing", "destination": "/" }]
 }
