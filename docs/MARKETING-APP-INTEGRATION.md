@@ -11,9 +11,10 @@ This doc describes how users get from **plotbudget.com** (marketing) to the app,
 That means:
 
 1. **One clear path in:** Marketing CTAs (Sign Up, Get Started, Log In) send users to the app’s auth pages.
-2. **No dead ends:** Every app link from marketing works (signup, login, pricing → signup).
-3. **Consistent branding:** Same product name, look, and tone on both sides.
-4. **Auth that works across the handoff:** Supabase redirect URLs and cookies are correct for the app domain (or same domain).
+2. **Pricing on marketing, payment in app:** Visitors see pricing (Trial / Free / Premium) on the marketing site. Payment is only taken inside the app after signup when they choose to upgrade (industry best practice).
+3. **No dead ends:** Every app link from marketing works (signup, login, pricing section CTAs → signup).
+4. **Consistent branding:** Same product name, look, and tone on both sides.
+5. **Auth that works across the handoff:** Supabase redirect URLs and cookies are correct for the app domain (or same domain).
 
 ---
 
@@ -89,10 +90,11 @@ Both can be seamless; Option B is simpler operationally, Option A is better if m
 
 **Marketing site (plotbudget.com):**
 
+- [ ] **Pricing section or page** with same tiers as app (Trial, Free, Premium); nav “Pricing” and footer “Pricing” link to it.
 - [ ] “Sign Up” / “Get Started” → `https://app.plotbudget.com/signup`
 - [ ] “Log In” → `https://app.plotbudget.com/login`
-- [ ] Pricing / “Choose plan” → `https://app.plotbudget.com/signup?plan=...` (if applicable)
-- [ ] No auth or app logic on marketing; it only links out.
+- [ ] Pricing section “Start free trial” / “Get started” → `https://app.plotbudget.com/signup` (payment happens in app after signup).
+- [ ] No auth or payment on marketing; it only shows pricing and links to the app.
 
 **App (app.plotbudget.com, this repo):**
 

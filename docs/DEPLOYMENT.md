@@ -76,8 +76,10 @@ In the Vercel project: **Settings → Environment Variables**. Add these for **P
 |------|--------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Supabase Dashboard → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key | Same place |
-| `NEXT_PUBLIC_APP_URL` | Your Vercel URL | e.g. `https://your-project.vercel.app` (optional; for redirects) |
+| `NEXT_PUBLIC_APP_URL` | Your production app URL | **Production only.** e.g. `https://app.plotbudget.com`. Do **not** set for Preview — the build sets it from `VERCEL_URL` so preview links stay on the preview deployment. |
 | `NEXT_PUBLIC_APP_ENV` | `production` | Optional; for feature flags or analytics |
+
+**Preview (feature branches):** In-app links (sign-out, Pricing, etc.) use the current deployment URL. Set `NEXT_PUBLIC_APP_URL` only in **Production** so preview builds use `VERCEL_URL` and users don’t get sent to live.
 
 **Optional (server-side only):**
 
@@ -134,6 +136,8 @@ In Vercel: **Settings → Domains** → add your domain and follow the DNS instr
 ## Optional: preview deployments
 
 Every branch/PR can get a preview URL. Use the same env vars for Preview if previews should hit the same Supabase project, or add a separate Supabase project and different env vars for Preview. Preview health is best-effort: rely on Vercel's "Deployment has completed" status on the PR and optionally open the preview link to confirm the app loads before merge.
+
+**Preview smoke in CI:** We do **not** run a CI job that deploys to Vercel preview or runs smoke tests against the preview URL (such as `amondnet/vercel-action`). That approach has proven brittle (Vercel CLI root-directory/config issues, generic API errors). If you have such a job in a workflow, remove or disable it and rely on Vercel's deployment status and manual checks until a more viable solution is available.
 
 ## Testing the pipeline
 

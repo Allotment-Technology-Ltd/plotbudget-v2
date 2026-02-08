@@ -1,26 +1,9 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
-import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { UserMenu } from '@/components/navigation/user-menu';
-import { AppFooter } from '@/components/navigation/app-footer';
-
-// Mount nav, user menu, and footer only on client so usePathname/useTheme context is available (avoids "useContext null" Server Error in some envs)
-const DashboardNavClient = dynamic(
-  () => Promise.resolve(DashboardNav),
-  { ssr: false }
-);
-const UserMenuClient = dynamic(
-  () => Promise.resolve(UserMenu),
-  { ssr: false }
-);
-const AppFooterClient = dynamic(
-  () => Promise.resolve(AppFooter),
-  { ssr: false }
-);
+import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -81,24 +64,23 @@ export default async function DashboardLayout({
           >
             PLOT
           </Link>
-          <nav className="flex items-center gap-6">
-            <DashboardNavClient />
-            <UserMenuClient
-              user={{
+          <DashboardHeaderNavClient
+            userMenuProps={{
+              user: {
                 id: user.id,
                 email,
                 display_name: displayName,
                 avatar_url: avatarEnabled ? avatarUrl : null,
-              }}
-              isPartner={isPartner}
-              avatarEnabled={avatarEnabled}
-            />
-          </nav>
+              },
+              isPartner,
+              avatarEnabled,
+            }}
+          />
         </div>
       </header>
       <div className="flex min-h-[calc(100vh-4rem)] flex-col">
         <div className="flex-1">{children}</div>
-        <AppFooterClient />
+        <DashboardFooterClient />
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ In **Settings → Branches** → Add/Edit rule for `main`:
 ## Vercel
 
 - [ ] **Environment variables** — Set for **Production** and **Preview** as in [DEPLOYMENT.md](./DEPLOYMENT.md). Preview should use the non-production Supabase project so production data is never used in previews.
-- [ ] **Preview health** — CI does not run automated smoke tests against the preview URL. Rely on Vercel's "Deployment has completed" status on the PR and optionally open the preview link to confirm the app loads before merge.
+- [ ] **Preview health** — CI does not run automated smoke tests against the preview URL. Rely on Vercel's "Deployment has completed" status on the PR and optionally open the preview link to confirm the app loads before merge. If a workflow still runs a Vercel preview/smoke step (e.g. `amondnet/vercel-action`), remove or disable that job—it is intentionally off until a more viable approach exists.
 
 ---
 

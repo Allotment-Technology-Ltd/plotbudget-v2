@@ -5,7 +5,8 @@ import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard } from 'lu
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
-import { marketingUrl } from '@/lib/marketing-url';
+import { getAppBaseUrl } from '@/lib/app-url';
+import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -36,6 +37,7 @@ interface UserMenuProps {
 
 export function UserMenu({ user, isPartner = false, avatarEnabled = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { pricingEnabled } = useAuthFeatureFlags();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -75,7 +77,7 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
       }
       await signOut();
       toast.success("You've been logged out");
-      window.location.href = marketingUrl('/');
+      window.location.href = `${getAppBaseUrl()}/`;
     } catch {
       toast.error('Failed to log out');
     }
@@ -197,20 +199,20 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
             Help
           </a>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer transition-colors duration-200"
-        >
-          <a
-            href={marketingUrl('/')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center focus:bg-primary/10 focus:text-primary"
+        {pricingEnabled && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer transition-colors duration-200"
           >
-            <CreditCard className="mr-2 h-4 w-4" aria-hidden />
-            Pricing
-          </a>
-        </DropdownMenuItem>
+            <Link
+              href="/pricing"
+              className="flex items-center focus:bg-primary/10 focus:text-primary"
+            >
+              <CreditCard className="mr-2 h-4 w-4" aria-hidden />
+              Pricing
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer transition-colors duration-200 focus:bg-destructive/10 focus:text-destructive"

@@ -4,6 +4,13 @@
 
 ---
 
+## Pricing and payment (industry best practice)
+
+- **Pricing information on marketing:** Visitors should see what they get and what it costs before signing up. The marketing site includes a **Pricing** section (or page) with the same tiers as the app: Trial, Free, Premium (£4.99/month, £49.99/year). Nav and footer link to it.
+- **Payment starts in the app after signup:** We do not collect payment on the marketing site. CTAs on marketing (e.g. “Start free trial”) send users to **app.plotbudget.com/signup**. After signup they use the app; when they choose to upgrade, payment (Polar) happens inside the app. This keeps one source of truth for checkout and subscription state.
+
+---
+
 ## 1. App context
 
 - **Product name:** PLOT / PlotBudget  
@@ -40,6 +47,8 @@ Use a single base URL for all app links so you can change environments (e.g. sta
 
 Use this variable when building links (see section 4). If you don’t use env vars, hardcode `https://app.plotbudget.com` and keep it in sync when the app URL changes.
 
+**Pricing visibility:** Set `VITE_PRICING_ENABLED=true` in the marketing app when you want the pricing section and Pricing nav/footer links to show. Keep this in sync with the app’s pricing flag so marketing and app go live together.
+
 ### 2.2 No auth or Supabase on marketing
 
 - The **marketing site does not** need Supabase keys, auth, or API calls.
@@ -72,18 +81,19 @@ Every CTA that should start signup or login must point at the app using the URLs
 
 ### 4.1 Checklist
 
+- [ ] **Pricing section or page** on marketing with same tiers as app (Trial, Free, Premium); nav and footer link to it (e.g. “Pricing” → `#pricing` or `/pricing`).
 - [ ] **Header / nav “Sign Up” (or “Get Started”)** → app `/signup`
 - [ ] **Header / nav “Log In”** → app `/login`
 - [ ] **Hero / above-the-fold primary CTA** → app `/signup`
-- [ ] **Pricing table “Get started” / “Choose plan”** → app `/signup` or `/signup?plan=pro` (or equivalent)
-- [ ] **Footer “Log in”** → app `/login`
-- [ ] **Footer “Sign up”** → app `/signup`
+- [ ] **Pricing section “Start free trial” / “Get started”** → app `/signup` (payment happens in app after signup).
+- [ ] **Footer “Pricing”** → in-page `#pricing` or marketing `/pricing`; **Footer “Log in”** → app `/login`; **Footer “Sign up”** → app `/signup`
 - [ ] **Any “Forgot password?”** → app `/reset-password`
 - [ ] **Email CTAs (if you send from marketing)** → same app URLs (e.g. `https://app.plotbudget.com/signup`)
 
 ### 4.2 What not to link to the app
 
-- Blog, docs, pricing, terms, privacy: keep on **plotbudget.com** unless you explicitly move them to the app.
+- Blog, docs, terms, privacy: keep on **plotbudget.com** unless you explicitly move them to the app.
+- **Pricing:** Keep pricing *information* on marketing (section or page). Optionally add “See full pricing” → `https://app.plotbudget.com/pricing` for logged-in users; marketing’s Pricing section is enough for pre-signup visitors.
 - “Contact” / “Support”: use your own flow (e.g. plotbudget.com/contact or external tool).
 
 ---

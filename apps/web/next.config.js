@@ -2,6 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/ui', '@repo/logic'],
+  // Avoid sharp install on Vercel (build was hanging at sharp install step).
+  images: { unoptimized: true },
+  // So preview (and client code) use current deployment URL; Production should set NEXT_PUBLIC_APP_URL in Vercel.
+  env: {
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
+  },
   webpack: (config, { dev }) => {
     // In dev, use memory-only cache so webpack doesn't serialize large strings to disk (which
     // triggers "Serializing big strings" warning). The "use Buffer" approach would require
