@@ -16,7 +16,7 @@ We use two environments only:
 
 ### Branching rules
 
-- **`main`** is protected: all changes must go through a Pull Request. Required status checks (lint, type-check, unit tests, E2E on localhost, E2E smoke on Vercel Preview) must pass before merge. No direct push to `main`.
+- **`main`** is protected: all changes must go through a Pull Request. Required status checks (lint, type-check, unit tests, E2E on localhost) must pass before merge. No direct push to `main`.
 - PRs target `main` and receive a Vercel Preview URL; `main` deploys to Production.
 
 ### Data safety
@@ -33,14 +33,13 @@ flowchart LR
     Type[type-check]
     Unit[Unit tests]
     E2ELocal[E2E localhost]
-    E2EPreview[E2E smoke on Preview]
   end
   subgraph main [Push to main]
     Migrate[Migrations]
     Release[semantic-release]
     Vercel[Vercel deploy]
   end
-  PR --> Lint --> Type --> Unit --> E2ELocal --> E2EPreview
+  PR --> Lint --> Type --> Unit --> E2ELocal
   Merge --> Migrate --> Release
   PushMain[push main] --> Vercel
   Release -.->|tags/version| PushMain
@@ -134,4 +133,8 @@ In Vercel: **Settings → Domains** → add your domain and follow the DNS instr
 
 ## Optional: preview deployments
 
-Every branch/PR can get a preview URL. Use the same env vars for Preview if previews should hit the same Supabase project, or add a separate Supabase project and different env vars for Preview.
+Every branch/PR can get a preview URL. Use the same env vars for Preview if previews should hit the same Supabase project, or add a separate Supabase project and different env vars for Preview. Preview health is best-effort: rely on Vercel's "Deployment has completed" status on the PR and optionally open the preview link to confirm the app loads before merge.
+
+## Testing the pipeline
+
+To verify the full CI and deployment pipeline: open a PR to `main`. GitHub Actions will run lint, type-check, unit tests, and E2E on localhost. All jobs must pass before merge.
