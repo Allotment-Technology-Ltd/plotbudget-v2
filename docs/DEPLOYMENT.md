@@ -135,6 +135,8 @@ In Vercel: **Settings → Domains** → add your domain and follow the DNS instr
 
 Every branch/PR can get a preview URL. Use the same env vars for Preview if previews should hit the same Supabase project, or add a separate Supabase project and different env vars for Preview. Preview health is best-effort: rely on Vercel's "Deployment has completed" status on the PR and optionally open the preview link to confirm the app loads before merge.
 
+**Preview smoke in CI:** We do **not** run a CI job that deploys to Vercel preview or runs smoke tests against the preview URL (such as `amondnet/vercel-action`). That approach has proven brittle (Vercel CLI root-directory/config issues, generic API errors). If you have such a job in a workflow, remove or disable it and rely on Vercel's deployment status and manual checks until a more viable solution is available.
+
 ## Testing the pipeline
 
 To verify the full CI and deployment pipeline: open a PR to `main`. GitHub Actions will run lint, type-check, unit tests, and E2E on localhost. All jobs must pass before merge.

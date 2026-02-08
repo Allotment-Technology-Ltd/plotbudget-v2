@@ -156,5 +156,6 @@ export const config = {
     '/signup',
     '/onboarding/:path*',
     '/partner/:path*',
+    '/pricing',
   ],
 };
