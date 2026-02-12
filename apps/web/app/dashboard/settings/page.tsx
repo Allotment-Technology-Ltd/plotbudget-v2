@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { getAvatarEnabledFromEnv, getPaymentUiVisibleFromEnv } from '@/lib/feature-flags';
 import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
 import { SettingsView } from '@/components/settings/settings-view';
 
@@ -41,6 +41,8 @@ export default async function SettingsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const paymentUiVisible = getPaymentUiVisibleFromEnv();
 
   const email = user.email ?? '';
   type ProfileRow = { display_name: string | null; avatar_url: string | null };
@@ -107,6 +109,17 @@ export default async function SettingsPage({
 
   const avatarEnabled = getAvatarEnabledFromEnv();
 
+  // Fetch subscription when payment/pricing UI is visible (state 2 or 3)
+  let subscription: SubscriptionRow | null = null;
+  if (paymentUiVisible) {
+    const { data: subData } = await supabase
+      .from('subscriptions')
+      .select('status, current_tier, trial_end_date, polar_product_id')
+      .eq('household_id', household.id)
+      .maybeSingle();
+    subscription = subData as SubscriptionRow | null;
+  }
+
   return (
     <div className="content-wrapper section-padding">
       <SettingsView
@@ -117,6 +130,8 @@ export default async function SettingsPage({
           avatarUrl,
         }}
         avatarEnabled={avatarEnabled}
+        pricingEnabled={paymentUiVisible}
+        subscription={subscription}
         household={{
           id: household.id,
           name: household.name,

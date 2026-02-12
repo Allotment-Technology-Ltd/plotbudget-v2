@@ -70,11 +70,24 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 
 | Variable | Values | Effect |
 |----------|--------|--------|
-| `NEXT_PUBLIC_SIGNUP_GATED` | `true` / unset | When `true`, `/signup` shows a waitlist CTA instead of the form; login shows beta message and hides Forgot password + Google login. |
+| `NEXT_PUBLIC_SIGNUP_GATED` | `true` / unset | When `true`, `/signup` shows a waitlist CTA instead of the form; login shows beta message and hides Forgot password + Google login. **Also:** when `true`, all payment/pricing UI is hidden (no `/pricing`, no Pricing link in user menu, no Subscription tab in settings). |
 | `NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED` | `true` / unset | When `true`, the Google login option is shown on auth forms. |
 | `NEXT_PUBLIC_WAITLIST_URL` | URL | Link for "Register for the waitlist" when signup is gated (e.g. MailerLite form or `https://plotbudget.com`). Defaults to `https://plotbudget.com` if unset. |
+| `NEXT_PUBLIC_PRICING_ENABLED` | `true` / unset | When `true` (and signup not gated), full premium pricing (fixed tiers) is shown on the pricing page. PostHog flag `pricing-enabled` overrides when set. **Marketing site:** set `VITE_PRICING_ENABLED=true` in the marketing app so the pricing section and Pricing nav/footer links appear there too; keep in sync with the app flag. |
 
-**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated` and `google-login-enabled` from PostHog override the env vars above. Create these flags in PostHog → Feature Flags.
+**Payment/pricing three states:**
+
+1. **signup-gated ON** — No pricing or payment: `/pricing` redirects, no Pricing link in user menu (avatar), no Subscription tab in settings.
+2. **signup-gated OFF** — PWYL pricing page, Pricing link in user menu, Subscription tab in settings visible.
+3. **pricing-enabled ON** (and signup-gated OFF) — Full premium pricing configuration visible on the pricing page in addition to PWYL.
+
+**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, `avatar-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags.
+
+**Local development – payment toggle:** On develop (e.g. `NODE_ENV=development` or `NEXT_PUBLIC_APP_URL` contains `localhost`), you can set `NEXT_PUBLIC_DEV_PAYMENTS` in `.env.local` to quickly switch payment state without changing other flags: `off` (state 1), `pwyl` (state 2), or `full` (state 3). Only applied in development context.
+
+**Region restriction:** Signup is only allowed from the UK, EU, USA, and Canada. Country is set from Vercel geo (`request.geo.country`) in middleware; if the country is not in the allowed list, the signup page shows a region-restricted message and waitlist CTA. Partner-invite flows bypass this check.
+
+**Founding Members (first 50):** Marketing and FAQ state that the first 50 users get one year of Premium free. This is enforced in the database: trigger `on_user_created_set_founding_member` runs after each insert into `public.users`; if total user count is ≤ 50, it sets `founding_member_until = NOW() + 1 year` for that user. No manual script required.
 
 ---
 

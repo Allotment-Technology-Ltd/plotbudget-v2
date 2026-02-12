@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { marketingUrl } from '@/lib/marketing-url';
+import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -36,6 +37,7 @@ interface UserMenuProps {
 
 export function UserMenu({ user, isPartner = false, avatarEnabled = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { paymentUiVisible } = useAuthFeatureFlags();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -142,6 +144,21 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
             Settings
           </Link>
         </DropdownMenuItem>
+        {paymentUiVisible && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer transition-colors duration-200"
+          >
+            <Link
+              href="/pricing"
+              className="flex items-center focus:bg-primary/10 focus:text-primary"
+              data-testid="user-menu-pricing"
+            >
+              <CreditCard className="mr-2 h-4 w-4" aria-hidden />
+              Pricing
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger
             className="transition-colors duration-200"
@@ -195,20 +212,6 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
           >
             <HelpCircle className="mr-2 h-4 w-4" aria-hidden />
             Help
-          </a>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer transition-colors duration-200"
-        >
-          <a
-            href={marketingUrl('/')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center focus:bg-primary/10 focus:text-primary"
-          >
-            <CreditCard className="mr-2 h-4 w-4" aria-hidden />
-            Pricing
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
