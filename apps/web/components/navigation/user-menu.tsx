@@ -37,7 +37,7 @@ interface UserMenuProps {
 
 export function UserMenu({ user, isPartner = false, avatarEnabled = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { pricingEnabled } = useAuthFeatureFlags();
+  const { paymentUiVisible } = useAuthFeatureFlags();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -144,6 +144,21 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
             Settings
           </Link>
         </DropdownMenuItem>
+        {paymentUiVisible && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer transition-colors duration-200"
+          >
+            <Link
+              href="/pricing"
+              className="flex items-center focus:bg-primary/10 focus:text-primary"
+              data-testid="user-menu-pricing"
+            >
+              <CreditCard className="mr-2 h-4 w-4" aria-hidden />
+              Pricing
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger
             className="transition-colors duration-200"
@@ -199,20 +214,6 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
             Help
           </a>
         </DropdownMenuItem>
-        {pricingEnabled && (
-          <DropdownMenuItem
-            asChild
-            className="cursor-pointer transition-colors duration-200"
-          >
-            <Link
-              href="/pricing"
-              className="flex items-center focus:bg-primary/10 focus:text-primary"
-            >
-              <CreditCard className="mr-2 h-4 w-4" aria-hidden />
-              Pricing
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer transition-colors duration-200 focus:bg-destructive/10 focus:text-destructive"
