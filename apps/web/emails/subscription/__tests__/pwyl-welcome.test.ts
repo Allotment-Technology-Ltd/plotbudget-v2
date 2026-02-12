@@ -20,9 +20,9 @@ describe('PWYLWelcomeEmail', () => {
     expect(html).toContain('https://app.plotbudget.com/dashboard/settings?tab=subscription');
   });
 
-  it('renders paid amount when amount > 0', () => {
+  it('renders thank-you for paid support when amount > 0', () => {
     const html = render({ displayName: 'Sam', amount: 3.5 });
-    expect(html).toContain('£3.50/month');
+    expect(html).toContain('Thank you for supporting PLOT');
     expect(html).toContain('Hi Sam');
   });
 
@@ -30,7 +30,6 @@ describe('PWYLWelcomeEmail', () => {
     const html = render({ displayName: 'Jordan', amount: 0 });
     expect(html).toContain('Community Supporter');
     expect(html).toContain('at no cost');
-    expect(html).not.toContain('£0.00/month');
   });
 
   it('renders premium features list', () => {

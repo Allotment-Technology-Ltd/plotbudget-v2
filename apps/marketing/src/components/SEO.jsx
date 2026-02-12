@@ -11,8 +11,8 @@ import { Helmet } from 'react-helmet-async';
  *  - Canonical URL
  */
 export default function SEO({
-  title = 'PLOT — Budgeting for Couples | Privacy-First Payday Ritual',
-  description = 'The 15-minute payday ritual for UK couples who want to manage money together — without sharing bank access. No Open Banking. No data scraping. Join the waitlist.',
+  title = 'PLOT — Budgeting for Households | Privacy-First Payday Ritual',
+  description = 'The 20-minute payday ritual that replaces every awkward money conversation. For UK households — no bank access, no data scraping. Join the waitlist.',
   url = 'https://plotbudget.com',
   ogImage = 'https://plotbudget.com/og-image.png',
   siteName = 'PLOT Budget',
