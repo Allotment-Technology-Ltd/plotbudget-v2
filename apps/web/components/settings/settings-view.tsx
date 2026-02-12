@@ -56,8 +56,11 @@ export function SettingsView({
   pricingEnabled = false,
   initialTab,
 }: SettingsViewProps) {
-  const validTabs = ['profile', 'household', 'income', 'privacy', 'advanced', 'subscription'];
-  const defaultTab = initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
+  const validTabs = pricingEnabled
+    ? ['profile', 'household', 'income', 'privacy', 'advanced', 'subscription']
+    : ['profile', 'household', 'income', 'privacy', 'advanced'];
+  const defaultTab =
+    initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
