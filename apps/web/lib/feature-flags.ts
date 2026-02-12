@@ -1,6 +1,9 @@
 /**
  * Auth-related feature flags and config.
  * Used when PostHog is not configured; PostHog flags override these when available.
+ *
+ * For server-side (middleware, server components), use getServerFeatureFlags() from
+ * lib/posthog-server-flags.ts to evaluate flags via PostHog API when configured.
  */
 
 function getEnv(): Record<string, string | undefined> {
@@ -82,4 +85,29 @@ export function getFullPremiumVisibleFromEnv(): boolean {
   if (override === 'full') return true;
   if (override === 'off' || override === 'pwyl') return false;
   return getPricingEnabledFromEnv();
+}
+
+/**
+ * Derive payment UI visibility from server flags (PostHog or env).
+ * Use when you have server flags from getServerFeatureFlags().
+ */
+export function getPaymentUiVisibleFromServerFlags(flags: {
+  signupGated: boolean;
+}): boolean {
+  const override = getDevPaymentsOverrideFromEnv();
+  if (override === 'off') return false;
+  if (override === 'pwyl' || override === 'full') return true;
+  return !flags.signupGated;
+}
+
+/**
+ * Derive full premium visibility from server flags.
+ */
+export function getFullPremiumVisibleFromServerFlags(flags: {
+  pricingEnabled: boolean;
+}): boolean {
+  const override = getDevPaymentsOverrideFromEnv();
+  if (override === 'full') return true;
+  if (override === 'off' || override === 'pwyl') return false;
+  return flags.pricingEnabled;
 }

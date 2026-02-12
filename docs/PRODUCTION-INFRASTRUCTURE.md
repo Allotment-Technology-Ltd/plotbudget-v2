@@ -97,7 +97,7 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 2. **signup-gated OFF** — PWYL pricing page, Pricing link in user menu, Subscription tab in settings visible.
 3. **pricing-enabled ON** (and signup-gated OFF) — Full premium pricing configuration visible on the pricing page in addition to PWYL.
 
-**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, `avatar-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags.
+**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, `avatar-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags. **Server-side evaluation:** Middleware, the pricing page, settings page, dashboard layout, and avatar actions all fetch flags from PostHog's `/flags` API when the key is set, so PostHog flags apply on both client and server. Env vars are used only when PostHog is not configured.
 
 **Local development – payment toggle:** On develop (e.g. `NODE_ENV=development` or `NEXT_PUBLIC_APP_URL` contains `localhost`), you can set `NEXT_PUBLIC_DEV_PAYMENTS` in `.env.local` to quickly switch payment state without changing other flags: `off` (state 1), `pwyl` (state 2), or `full` (state 3). Only applied in development context.
 

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAvatarEnabledFromEnv, getPaymentUiVisibleFromEnv } from '@/lib/feature-flags';
+import { getPaymentUiVisibleFromServerFlags } from '@/lib/feature-flags';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
 import { SettingsView } from '@/components/settings/settings-view';
 
@@ -49,7 +50,8 @@ export default async function SettingsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const paymentUiVisible = getPaymentUiVisibleFromEnv();
+  const flags = await getServerFeatureFlags(user.id);
+  const paymentUiVisible = getPaymentUiVisibleFromServerFlags(flags);
 
   const email = user.email ?? '';
   type ProfileRow = { display_name: string | null; avatar_url: string | null };
@@ -114,7 +116,7 @@ export default async function SettingsPage({
     }
   }
 
-  const avatarEnabled = getAvatarEnabledFromEnv();
+  const avatarEnabled = flags.avatarEnabled;
 
   // Fetch subscription when payment/pricing UI is visible (state 2 or 3)
   let subscription: SubscriptionRow | null = null;
