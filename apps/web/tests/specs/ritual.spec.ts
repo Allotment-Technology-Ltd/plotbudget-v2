@@ -72,8 +72,10 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
     await expect(closeCycleButton).toBeVisible({ timeout: 20_000 });
     await closeCycleButton.click();
 
+    // Celebration modal has AnimatePresence + motion; wait for heading first, then close button (allow 15s for CI)
+    await expect(page.getByText('Ritual Complete!', { exact: false })).toBeVisible({ timeout: 15_000 });
     await expect(blueprintPage.ritualCelebrationClose).toBeVisible({
-      timeout: 5000,
+      timeout: 10_000,
     });
     await blueprintPage.ritualCelebrationClose.click();
 

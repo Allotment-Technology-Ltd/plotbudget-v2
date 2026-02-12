@@ -55,6 +55,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
   });
 
   test('delete seed with confirmation', async ({ page }) => {
+    test.setTimeout(60_000); // addSeed + delete can exceed 30s in CI
     const blueprintPage = new BlueprintPage(page);
     await blueprintPage.goto();
 

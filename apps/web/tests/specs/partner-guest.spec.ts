@@ -51,8 +51,12 @@ test.describe('Partner invite (unauthenticated)', () => {
     await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
       waitUntil: 'domcontentloaded',
     });
-    // Wait for unauthenticated view to render before asserting on login link (avoids flakiness on CI)
-    await expect(partnerPage.unauthenticatedContainer).toBeVisible({ timeout: 20_000 });
+    // Wait for unauthenticated view; server render can be slow on CI; join heading is also a valid indicator
+    const unauthenticatedOrHeading = partnerPage.unauthenticatedContainer.or(
+      page.getByRole('heading', { name: /Join as partner/i })
+    );
+    await expect(unauthenticatedOrHeading.first()).toBeVisible({ timeout: 25_000 });
+    await expect(partnerPage.unauthenticatedContainer).toBeVisible({ timeout: 5_000 });
     await expect(partnerPage.loginLink).toBeVisible({ timeout: 10_000 });
     await partnerPage.clickLogin();
     await page.waitForURL(/\/login/, { timeout: 15_000 });
