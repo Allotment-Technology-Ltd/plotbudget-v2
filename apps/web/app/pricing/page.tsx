@@ -4,7 +4,13 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PricingMatrix } from '@/components/pricing/pricing-matrix';
 import { PWYLPricingMatrix } from '@/components/pricing/pricing-matrix-pwyl';
-import { getPricingEnabledFromEnv, getPWYLPricingEnabledFromEnv, getFixedPricingEnabledFromEnv, getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import {
+  getPaymentUiVisibleFromEnv,
+  getPricingEnabledFromEnv,
+  getPWYLPricingEnabledFromEnv,
+  getFixedPricingEnabledFromEnv,
+  getAvatarEnabledFromEnv,
+} from '@/lib/feature-flags';
 import { PricingHeaderNavClient } from './pricing-header-nav-client';
 
 export const metadata: Metadata = {
@@ -15,15 +21,16 @@ export const metadata: Metadata = {
 export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const pricingEnabled = getPricingEnabledFromEnv();
-  if (!pricingEnabled) {
+  const paymentUiVisible = getPaymentUiVisibleFromEnv();
+  if (!paymentUiVisible) {
     redirect(user ? '/dashboard' : '/login');
   }
-  
+
+  const pricingEnabled = getPricingEnabledFromEnv();
   const pwylEnabled = getPWYLPricingEnabledFromEnv();
   const fixedEnabled = getFixedPricingEnabledFromEnv();
   const avatarEnabled = getAvatarEnabledFromEnv();
-  
+
   // Default to PWYL if neither flag is explicitly set
   const showPWYL = pwylEnabled || (!pwylEnabled && !fixedEnabled);
 

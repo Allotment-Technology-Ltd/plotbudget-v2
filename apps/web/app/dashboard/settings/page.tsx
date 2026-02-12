@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAvatarEnabledFromEnv, getPricingEnabledFromEnv } from '@/lib/feature-flags';
+import { getAvatarEnabledFromEnv, getPaymentUiVisibleFromEnv } from '@/lib/feature-flags';
 import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
 import { SettingsView } from '@/components/settings/settings-view';
 
@@ -27,15 +27,15 @@ type HouseholdRow = {
   partner_last_login_at: string | null;
 };
 
-const householdSelect =
-  'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at';
-
 type SubscriptionRow = {
   status: 'active' | 'cancelled' | 'past_due' | 'trialing';
   current_tier: 'free' | 'pro' | null;
   trial_end_date: string | null;
   polar_product_id: string | null;
 };
+
+const householdSelect =
+  'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at';
 
 export default async function SettingsPage({
   searchParams,
@@ -49,7 +49,7 @@ export default async function SettingsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const pricingEnabled = getPricingEnabledFromEnv();
+  const paymentUiVisible = getPaymentUiVisibleFromEnv();
 
   const email = user.email ?? '';
   type ProfileRow = { display_name: string | null; avatar_url: string | null };
@@ -116,9 +116,9 @@ export default async function SettingsPage({
 
   const avatarEnabled = getAvatarEnabledFromEnv();
 
-  // Fetch subscription for the household if pricing is enabled
+  // Fetch subscription when payment/pricing UI is visible (state 2 or 3)
   let subscription: SubscriptionRow | null = null;
-  if (pricingEnabled) {
+  if (paymentUiVisible) {
     const { data: subData } = await supabase
       .from('subscriptions')
       .select('status, current_tier, trial_end_date, polar_product_id')
@@ -137,7 +137,7 @@ export default async function SettingsPage({
           avatarUrl,
         }}
         avatarEnabled={avatarEnabled}
-        pricingEnabled={pricingEnabled}
+        pricingEnabled={paymentUiVisible}
         subscription={subscription}
         household={{
           id: household.id,
