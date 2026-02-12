@@ -15,7 +15,7 @@ describe('TrialEndingSoonEmail', () => {
     expect(html).toContain('trial ends in about 3 days');
     expect(html).toContain('Free tier');
     expect(html).toContain('Premium');
-    expect(html).toContain('pay what you like');
+    expect(html).toContain('you choose what to pay');
   });
 
   it('includes blueprint or settings CTA URL', () => {

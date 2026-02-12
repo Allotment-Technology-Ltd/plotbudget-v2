@@ -31,7 +31,7 @@ export default function TrialEndedActionRequiredEmail({
       <Heading style={h1}>Your trial has ended — what happens next</Heading>
       <Text style={text}>Hi {displayName},</Text>
       <Text style={text}>
-        Your PLOT trial has ended. You’re currently over the Free tier limits. To keep all your pots, upgrade to Premium (pay what you like, from £0/month) or reduce to Free limits within {graceDays} days.
+        Your PLOT trial has ended. You’re currently over the Free tier limits. To keep all your pots, upgrade to Premium (you choose what to pay) or reduce to Free limits within {graceDays} days.
       </Text>
 
       <Section style={warningBox}>
@@ -49,7 +49,7 @@ export default function TrialEndedActionRequiredEmail({
       </Section>
 
       <Button href="https://app.plotbudget.com/pricing" style={button}>
-        Upgrade with PWYL (from £0/month)
+        Upgrade with Pay-What-You-Like
       </Button>
       <Button href="https://app.plotbudget.com/dashboard/blueprint" style={buttonSecondary}>
         Reduce to Free Tier Limits

@@ -39,17 +39,18 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/favicon-light.svg',
+        url: '/favicon-light.svg?v=3',
         type: 'image/svg+xml',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/favicon-dark.svg',
+        url: '/favicon-dark.svg?v=3',
         type: 'image/svg+xml',
         media: '(prefers-color-scheme: dark)',
       },
-      { url: '/favicon-dark.svg', type: 'image/svg+xml' },
+      { url: '/favicon-dark.svg?v=3', type: 'image/svg+xml' },
     ],
+    apple: [{ url: '/apple-touch-icon.svg?v=3', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
         url: `${MARKETING_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'PLOT — The 20-minute payday ritual for UK couples',
+        alt: 'PLOT — The 20-minute payday ritual for UK households',
       },
     ],
   },

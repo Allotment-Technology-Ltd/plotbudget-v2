@@ -49,13 +49,13 @@ export default function TrialEndingSoonEmail({
       <Text style={text}>Hi {displayName},</Text>
       <Text style={text}>
         Your trial ends in about {daysRemaining} days{trialEndsOn ? ` (around ${trialEndsOn})` : ''}. After that,
-        you can stay on Free tier (limited pots) or upgrade to Premium to keep your full payday ritual (pay what you like, from £0/month).
+        you can stay on Free tier (limited pots) or upgrade to Premium to keep your full payday ritual — you choose what to pay.
       </Text>
 
       <Section style={list}>
         <Text style={listItem}>✓ Trial status: ending soon</Text>
         <Text style={listItem}>✓ Free tier limits: {freeTierLimits.pots} pots, {freeTierLimits.repayments} repayments</Text>
-        <Text style={listItem}>✓ Premium: unlimited, pay what you want (£0-£10/month)</Text>
+        <Text style={listItem}>✓ Premium: unlimited; you decide what it’s worth to you</Text>
       </Section>
 
       {(overPots > 0 || overRepay > 0) && (

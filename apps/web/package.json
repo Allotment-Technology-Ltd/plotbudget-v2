@@ -15,6 +15,7 @@
     "test:api:watch": "vitest tests/api",
     "test:emails": "vitest run emails",
     "email": "email dev --dir emails",
+    "send-email-examples": "tsx scripts/send-email-examples.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",

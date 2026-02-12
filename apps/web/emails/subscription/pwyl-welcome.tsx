@@ -27,10 +27,7 @@ export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: 
       ) : (
         <>
           <Text style={text}>
-            Thank you for supporting PLOT with your contribution of <strong>£{amount.toFixed(2)}/month</strong>!
-          </Text>
-          <Text style={supportText}>
-            Your support helps us build a better PLOT for everyone.
+            Thank you for supporting PLOT — your contribution helps us build a better product for everyone.
           </Text>
         </>
       )}
@@ -56,10 +53,3 @@ export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: 
     </EmailLayout>
   );
 }
-
-const supportText = {
-  color: '#666',
-  fontSize: '14px',
-  fontStyle: 'italic' as const,
-  margin: '12px 0',
-};

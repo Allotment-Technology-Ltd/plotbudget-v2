@@ -1,16 +1,18 @@
 # Favicon Design Brief
 
-**Status:** Placeholder assets in place. New design to be created by graphic designer.  
+**Status:** Aligned with Figma design system ([stage-fully-79803730.figma.site](https://stage-fully-79803730.figma.site/)).  
 **Approval:** User + Design Lead
 
 ---
 
 ## Current State
 
-- **Placeholder:** `#` symbol (JetBrains Mono, bold) on rounded square
-- **Light variant:** `#0E8345` on `#F5F0EA` background
-- **Dark variant:** `#69F0AE` on `#111111` background
+- **Design source:** Figma Complete Logo System for PLOT
+- **Light variant:** Forest Green `#008845` on `#f5f5f0` background
+- **Dark variant:** Mint `#69F0AE` on `#0a0a0a` background
 - **Locations:** `apps/marketing/public/`, `apps/web/public/`
+- **Assets:** favicon-light.svg, favicon-dark.svg, favicon.svg, apple-touch-icon.svg, og-image.png
+- **OG copy:** See [OG-IMAGE-COPY.md](OG-IMAGE-COPY.md) — marketing approved
 
 ---
 

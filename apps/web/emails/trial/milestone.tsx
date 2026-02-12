@@ -33,7 +33,7 @@ export default function TrialMilestoneEmail({
         <Text style={listItem}>✓ All premium features remain active during trial</Text>
       </Section>
       <Text style={text}>
-        After your next pay cycle, you can stay on Free (limited pots) or upgrade to Premium to keep your full ritual — pay what you like, from £0/month.
+        After your next pay cycle, you can stay on Free (limited pots) or upgrade to Premium to keep your full ritual — you choose what to pay.
       </Text>
       <Button href="https://app.plotbudget.com/pricing" style={button}>
         View Pricing Options

@@ -72,6 +72,26 @@ If the invite fails, the UI will show an error (e.g. “RESEND_API_KEY is not se
 
 ---
 
+## 6. Send example emails to yourself
+
+To receive one of each transactional email (partner invite, trial ending soon, trial ended, grace reminder, trial milestone, PWYL welcome) at **hello@plotbudget.com** for design/copy review:
+
+From the repo root:
+
+```bash
+pnpm --filter @repo/web send-email-examples
+```
+
+Or from `apps/web`:
+
+```bash
+pnpm run send-email-examples
+```
+
+Requires `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in `apps/web/.env.local`. Subjects are prefixed with `[PLOT Examples]` so you can filter them.
+
+---
+
 ## Quick reference
 
 | Variable             | Required | Example / note                                      |
