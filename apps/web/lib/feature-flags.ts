@@ -29,3 +29,13 @@ export function getWaitlistUrlFromEnv(): string {
 export function getPricingEnabledFromEnv(): boolean {
   return getEnv().NEXT_PUBLIC_PRICING_ENABLED === 'true';
 }
+
+/** When true, show pay-what-you-like pricing model (default for new users). */
+export function getPWYLPricingEnabledFromEnv(): boolean {
+  return getEnv().NEXT_PUBLIC_PWYL_PRICING_ENABLED === 'true';
+}
+
+/** When true, show fixed pricing model (£4.99/month, £49.99/year - legacy users). */
+export function getFixedPricingEnabledFromEnv(): boolean {
+  return getEnv().NEXT_PUBLIC_FIXED_PRICING_ENABLED === 'true';
+}

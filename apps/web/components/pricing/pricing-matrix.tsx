@@ -6,6 +6,8 @@ import { Check } from 'lucide-react';
 interface PricingMatrixProps {
   pricingEnabled: boolean;
   isLoggedIn: boolean;
+  householdId?: string | null;
+  userId?: string | null;
 }
 
 const TIERS = [
@@ -59,12 +61,16 @@ const TIERS = [
       'Unlimited repayments',
     ],
     cta: 'Upgrade to Premium',
-    ctaLink: '/dashboard/settings', // Will link to checkout when implemented
+    ctaLink: '/api/checkout?product=monthly',
     highlighted: true,
   },
 ] as const;
 
-export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps) {
+export function PricingMatrix({ pricingEnabled, isLoggedIn, householdId, userId }: PricingMatrixProps) {
+  const premiumCtaHref = householdId
+    ? `/api/checkout?product=monthly&household_id=${encodeURIComponent(householdId)}${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`
+    : '/api/checkout?product=monthly';
+
   return (
     <div className="grid gap-6 md:grid-cols-3 md:gap-8">
       {TIERS.map((tier) => (
@@ -121,7 +127,7 @@ export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps
           </ul>
           {tier.ctaLink && pricingEnabled && isLoggedIn ? (
             <Link
-              href={tier.ctaLink}
+              href={tier.id === 'premium' ? premiumCtaHref : tier.ctaLink}
               className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {tier.cta}

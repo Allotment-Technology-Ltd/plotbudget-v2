@@ -36,6 +36,12 @@ Polar’s [Handle & monitor webhook deliveries](https://polar.sh/docs/integrate/
 3. **Confirm** in the delivery overview that the request was sent and (if applicable) redeliver until you get 2xx.
 4. **Verify** in your app/DB: `subscriptions` row upserted with correct `household_id`, `status`, `current_tier` (e.g. `pro`).
 
+Testing interactively
+When testing interactively, use a card number, such as 4242 4242 4242 4242. Enter the card number in the Dashboard or in any payment form.
+
+Use a valid future date, such as 12/34.
+Use any three-digit CVC (four digits for American Express cards).
+Use any value you like for other form fields.
 **Troubleshooting (from Polar docs):**
 
 - **Not receiving webhooks:** Start ngrok/CLI; add logging in the handler; ensure no redirect (3xx) and webhook route is excluded from auth middleware; if using Cloudflare, consider Bot Fight Mode and WAF (see Polar’s “Not receiving webhooks”).

@@ -1,0 +1,151 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { Polar } from '@polar-sh/sdk';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+
+// Polar SDK checkout: supports fixed pricing (monthly/annual) and PWYL (custom amounts)
+// Query params:
+//   - product=monthly|annual|pwyl
+//   - amount=X.XX (for PWYL, £0-£10)
+//   - household_id (required for metadata)
+//   - user_id (optional for metadata)
+// Env required: POLAR_ACCESS_TOKEN, POLAR_SUCCESS_URL, product IDs
+
+interface CheckoutConfig {
+  mode: 'fixed' | 'pwyl_free' | 'pwyl_custom';
+  productId?: string;
+  amount?: number;
+}
+
+function resolveCheckoutConfig(req: NextRequest): CheckoutConfig {
+  const productParam = req.nextUrl.searchParams.get('product');
+  
+  // PWYL mode - Polar's native PWYL handles amount selection
+  if (productParam === 'pwyl') {
+    return {
+      mode: 'pwyl_custom',
+      productId: process.env.POLAR_PWYL_BASE_PRODUCT_ID,
+    };
+  }
+  
+  // Fixed pricing mode (legacy)
+  const monthlyProduct = process.env.POLAR_PREMIUM_PRODUCT_ID;
+  const annualProduct = process.env.POLAR_PREMIUM_ANNUAL_PRODUCT_ID;
+  
+  return {
+    mode: 'fixed',
+    productId: productParam === 'annual' ? annualProduct : monthlyProduct,
+  };
+}
+
+async function handleFreePremium(req: NextRequest): Promise<NextResponse> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return NextResponse.redirect(new URL('/login', req.url), 302);
+  }
+  
+  const householdId = req.nextUrl.searchParams.get('household_id');
+  
+  if (!householdId) {
+    return NextResponse.json({ error: 'Missing household_id for £0 subscription' }, { status: 400 });
+  }
+  
+  // Create "local" subscription (no Polar, free premium access)
+  const { error } = await (supabase as any).from('subscriptions').insert({
+    household_id: householdId,
+    polar_subscription_id: `local_free_${householdId}_${Date.now()}`,
+    status: 'active',
+    current_tier: 'pro',
+    polar_product_id: 'pwyl_free',
+  });
+  
+  if (error) {
+    console.error('[checkout] Failed to create free premium subscription', error);
+    return NextResponse.json({ error: 'Failed to create free subscription' }, { status: 500 });
+  }
+  
+  // Update user tier for quick access
+  await (supabase as any).from('users')
+    .update({
+      subscription_tier: 'pro',
+      subscription_status: 'active',
+    })
+    .eq('id', user.id);
+  
+  console.log('[checkout] Created free premium subscription', { householdId, userId: user.id });
+  
+  return NextResponse.redirect(new URL('/dashboard?upgrade=success', req.url), 302);
+}
+
+export const GET = async (req: NextRequest) => {
+  const config = resolveCheckoutConfig(req);
+  
+  console.log('[checkout] Config resolved', {
+    mode: config.mode,
+    productId: config.productId,
+    amount: config.amount,
+    accessTokenPresent: !!process.env.POLAR_ACCESS_TOKEN,
+    successUrlPresent: !!process.env.POLAR_SUCCESS_URL,
+  });
+  
+  
+  // Validate required config
+  if (!config.productId) {
+    return NextResponse.json({
+      error: 'Missing Polar product ID. Set POLAR_PREMIUM_PRODUCT_ID (fixed) or POLAR_PWYL_BASE_PRODUCT_ID (PWYL).',
+    }, { status: 400 });
+  }
+  
+  if (!process.env.POLAR_ACCESS_TOKEN || !process.env.POLAR_SUCCESS_URL) {
+    return NextResponse.json({ 
+      error: 'Missing POLAR_ACCESS_TOKEN or POLAR_SUCCESS_URL' 
+    }, { status: 500 });
+  }
+  
+  const householdId = req.nextUrl.searchParams.get('household_id') ?? undefined;
+  const userId = req.nextUrl.searchParams.get('user_id') ?? undefined;
+  
+  try {
+    const polar = new Polar({ 
+      accessToken: process.env.POLAR_ACCESS_TOKEN!,
+      server: 'sandbox' as any,
+    });
+    
+    // Create checkout with Polar's native PWYL or fixed pricing
+    console.log('[checkout] Creating checkout', {
+      mode: config.mode,
+      productId: config.productId,
+    });
+    
+    const checkout = await polar.checkouts.create({
+      products: [config.productId!],
+      successUrl: process.env.POLAR_SUCCESS_URL!,
+      metadata: {
+        ...(householdId ? { household_id: householdId } : {}),
+        ...(userId ? { user_id: userId } : {}),
+        pricing_mode: config.mode === 'pwyl_custom' ? 'pwyl' : 'fixed',
+      },
+    });
+    
+    if (checkout?.url) {
+      console.log('[checkout] Checkout created successfully', {
+        checkoutUrl: checkout.url,
+        mode: config.mode,
+      });
+      return NextResponse.redirect(checkout.url, 302);
+    }
+    
+    return NextResponse.json({ 
+      error: 'Checkout created without URL', 
+      checkout 
+    }, { status: 500 });
+  } catch (error: any) {
+    console.error('[checkout] Polar create error', error?.response?.data ?? error);
+    return NextResponse.json({
+      error: 'Polar checkout creation failed',
+      detail: error?.response?.data ?? String(error),
+      mode: config.mode,
+    }, { status: 500 });
+  }
+};

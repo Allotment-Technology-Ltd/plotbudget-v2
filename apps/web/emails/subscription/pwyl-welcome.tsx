@@ -1,0 +1,102 @@
+import { Heading, Text, Button, Section } from '@react-email/components';
+import * as React from 'react';
+import { EmailLayout } from '../components/email-layout';
+
+interface PWYLWelcomeEmailProps {
+  displayName: string;
+  amount: number;
+}
+
+export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: PWYLWelcomeEmailProps) {
+  const isFree = amount === 0;
+  
+  return (
+    <EmailLayout>
+      <Heading style={h1}>Welcome to PLOT Premium!</Heading>
+      
+      <Text style={text}>Hi {displayName},</Text>
+      
+      {isFree ? (
+        <>
+          <Text style={text}>
+            You're now using PLOT Premium as a <strong>Community Supporter</strong> at no cost.
+            Thank you for being part of our community!
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text style={text}>
+            Thank you for supporting PLOT with your contribution of <strong>£{amount.toFixed(2)}/month</strong>!
+          </Text>
+          <Text style={supportText}>
+            Your support helps us build a better PLOT for everyone.
+          </Text>
+        </>
+      )}
+      
+      <Text style={text}>Your premium features are now active:</Text>
+      
+      <Section style={list}>
+        <Text style={listItem}>✓ Unlimited bills and wants</Text>
+        <Text style={listItem}>✓ Unlimited savings pots</Text>
+        <Text style={listItem}>✓ Unlimited repayments</Text>
+      </Section>
+      
+      <Button
+        href="https://app.plotbudget.com/dashboard/settings?tab=subscription"
+        style={button}
+      >
+        Manage Subscription
+      </Button>
+      
+      <Text style={text}>
+        You can change your contribution amount or cancel anytime through Settings.
+      </Text>
+    </EmailLayout>
+  );
+}
+
+const h1 = {
+  color: '#1a1a1a',
+  fontSize: '24px',
+  fontWeight: 'bold',
+  margin: '20px 0',
+};
+
+const text = {
+  color: '#404040',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '16px 0',
+};
+
+const supportText = {
+  color: '#666',
+  fontSize: '14px',
+  fontStyle: 'italic',
+  margin: '12px 0',
+};
+
+const list = {
+  margin: '16px 0',
+};
+
+const listItem = {
+  color: '#404040',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '8px 0',
+};
+
+const button = {
+  backgroundColor: '#000',
+  borderRadius: '6px',
+  color: '#fff',
+  fontSize: '16px',
+  fontWeight: 'bold' as const,
+  textDecoration: 'none',
+  textAlign: 'center' as const,
+  display: 'block',
+  padding: '12px 24px',
+  margin: '24px 0',
+};

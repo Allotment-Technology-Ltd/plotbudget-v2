@@ -6,6 +6,7 @@ import { HouseholdTab } from './household-tab';
 import { IncomeSourcesTab } from './income-sources-tab';
 import { PrivacyTab } from './privacy-tab';
 import { ProfileTab } from './profile-tab';
+import { SubscriptionTab } from './subscription-tab';
 import type { IncomeSource } from '@/lib/supabase/database.types';
 
 export interface SettingsViewProps {
@@ -16,6 +17,13 @@ export interface SettingsViewProps {
     avatarUrl?: string | null;
   };
   avatarEnabled?: boolean;
+  pricingEnabled?: boolean;
+  subscription?: {
+    status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+    current_tier: 'free' | 'pro' | null;
+    trial_end_date: string | null;
+    polar_product_id: string | null;
+  } | null;
   household: {
     id: string;
     name: string | null;
@@ -42,14 +50,14 @@ export function SettingsView({
   user,
   household,
   incomeSources = [],
+  subscription,
   isPartner = false,
   avatarEnabled = false,
+  pricingEnabled = false,
   initialTab,
 }: SettingsViewProps) {
-  const defaultTab =
-    initialTab === 'income' || initialTab === 'household' || initialTab === 'privacy' || initialTab === 'advanced'
-      ? initialTab
-      : 'profile';
+  const validTabs = ['profile', 'household', 'income', 'privacy', 'advanced', 'subscription'];
+  const defaultTab = initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
@@ -66,6 +74,7 @@ export function SettingsView({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
+          {pricingEnabled && <TabsTrigger value="subscription">Subscription</TabsTrigger>}
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
@@ -96,6 +105,15 @@ export function SettingsView({
             isPartner={isPartner}
           />
         </TabsContent>
+        {pricingEnabled && (
+          <TabsContent value="subscription" className="space-y-6 mt-6">
+            <SubscriptionTab
+              subscription={subscription ?? null}
+              householdId={household.id}
+              userId={user.id}
+            />
+          </TabsContent>
+        )}
         <TabsContent value="privacy" className="space-y-6 mt-6">
           <PrivacyTab userId={user.id} isPartner={isPartner} />
         </TabsContent>
