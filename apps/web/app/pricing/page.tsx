@@ -2,25 +2,56 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getPaymentUiVisibleFromEnv } from '@/lib/feature-flags';
+import { PricingMatrix } from '@/components/pricing/pricing-matrix';
+import { getPaymentUiVisibleFromEnv, getPricingEnabledFromEnv, getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { PricingHeaderNavClient } from './pricing-header-nav-client';
 
 export const metadata: Metadata = {
   title: 'Pricing',
   description: 'PLOT pricing: start free, unlock more pots when you need them.',
 };
 
-/**
- * Pricing page: gated by payment UI visibility (signup-gated off or dev override).
- * When payment UI is hidden, redirects to dashboard/login.
- * Placeholder content until pricing components (PricingMatrix, PWYLPricingMatrix,
- * PricingHeaderNavClient) are available on this branch.
- */
 export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   const paymentUiVisible = getPaymentUiVisibleFromEnv();
   if (!paymentUiVisible) {
     redirect(user ? '/dashboard' : '/login');
+  }
+  const pricingEnabled = getPricingEnabledFromEnv();
+  const avatarEnabled = getAvatarEnabledFromEnv();
+
+  let displayName: string | null = null;
+  let avatarUrl: string | null = null;
+  let isPartner = false;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('display_name, avatar_url')
+      .eq('id', user.id)
+      .maybeSingle();
+    type ProfileRow = { display_name: string | null; avatar_url: string | null };
+    const profileRow = profile as ProfileRow | null;
+    displayName = profileRow?.display_name ?? null;
+    avatarUrl = profileRow?.avatar_url ?? null;
+
+    const { data: owned } = await supabase
+      .from('households')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+    const { data: partnerOfData } = await supabase
+      .from('households')
+      .select('id, partner_name')
+      .eq('partner_user_id', user.id)
+      .maybeSingle();
+    type PartnerHousehold = { id: string; partner_name: string | null };
+    const partnerOf = partnerOfData as PartnerHousehold | null;
+    isPartner = !owned && !!partnerOf;
+    if (isPartner && partnerOf) {
+      displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
+    }
   }
 
   return (
@@ -33,6 +64,20 @@ export default async function PricingPage() {
           >
             PLOT
           </Link>
+          <nav className="flex items-center gap-6">
+            <PricingHeaderNavClient
+              userMenuProps={user ? {
+                user: {
+                  id: user.id,
+                  email: user.email ?? '',
+                  display_name: displayName,
+                  avatar_url: avatarEnabled ? avatarUrl : null,
+                },
+                isPartner,
+                avatarEnabled,
+              } : null}
+            />
+          </nav>
         </div>
       </header>
 
@@ -41,16 +86,12 @@ export default async function PricingPage() {
           <h1 className="font-heading text-headline md:text-headline-lg uppercase tracking-wider text-foreground mb-4">
             Simple, honest pricing
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Start with a free trial. Keep what works for you. Upgrade when you want more pots and no limits.
           </p>
-          <Link
-            href={user ? '/dashboard' : '/login'}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {user ? 'Back to dashboard' : 'Log in'}
-          </Link>
         </div>
+
+        <PricingMatrix pricingEnabled={pricingEnabled} isLoggedIn={!!user} />
       </div>
     </div>
   );

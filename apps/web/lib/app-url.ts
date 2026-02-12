@@ -1,6 +1,6 @@
 /**
- * Server-side base URL for the app. Used for links in emails (e.g. partner invite).
- * Prefer NEXT_PUBLIC_APP_URL. On Vercel Preview, VERCEL_URL is set (hostname only).
+ * Base URL for the app (used in emails, sign-out redirect, and any link that should stay in the current deployment).
+ * Prefer NEXT_PUBLIC_APP_URL when set (e.g. in Production). On Preview, next.config sets it from VERCEL_URL at build time so client and server use the preview URL.
  */
 export function getAppBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {

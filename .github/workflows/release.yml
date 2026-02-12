@@ -19,7 +19,7 @@ jobs:
       - name: Push migrations
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_PROD_DATABASE_URL }}
-        run: supabase db push --db-url "$DATABASE_URL" --include-all --yes
+        run: supabase db push --db-url "$DATABASE_URL" --include-all
 
   release:
     name: semantic-release

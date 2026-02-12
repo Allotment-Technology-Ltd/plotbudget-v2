@@ -26,8 +26,9 @@ type UserProfile = Pick<
 export default async function BlueprintPage({
   searchParams,
 }: {
-  searchParams: { cycle?: string; edit?: string; newCycle?: string };
+  searchParams: Promise<{ cycle?: string; edit?: string; newCycle?: string }>;
 }) {
+  const params = await searchParams;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -81,7 +82,7 @@ export default async function BlueprintPage({
     ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
   }
 
-  const targetCycleId = searchParams.cycle || currentPaycycleId;
+  const targetCycleId = params.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
 
   const { data: paycycleData } = await supabase
@@ -130,8 +131,8 @@ export default async function BlueprintPage({
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
   const avatarEnabled = getAvatarEnabledFromEnv();
 
-  const editSeedId = searchParams.edit ?? null;
-  const showNewCycleCelebration = searchParams.newCycle != null;
+  const editSeedId = params.edit ?? null;
+  const showNewCycleCelebration = params.newCycle != null;
 
   const { data: incomeSources } = await supabase
     .from('income_sources')

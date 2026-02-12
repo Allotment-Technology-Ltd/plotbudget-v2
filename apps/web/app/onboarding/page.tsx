@@ -36,6 +36,7 @@ function parseIncome(value: unknown): number {
 const onboardingSchema = z
   .object({
     mode: z.enum(['solo', 'couple']),
+    currency: z.enum(['GBP', 'USD', 'EUR']),
     myIncome: z
       .union([z.string(), z.number(), z.undefined()])
       .transform((v) => {
@@ -158,6 +159,7 @@ export default function OnboardingPage() {
     resolver: zodResolver(onboardingSchema) as Resolver<OnboardingFormData>,
     defaultValues: {
       mode: 'solo',
+      currency: 'GBP',
       myIncome: undefined,
       partnerIncome: undefined,
       partnerName: '',
@@ -212,6 +214,7 @@ export default function OnboardingPage() {
         pay_day: data.payDay ?? null,
         pay_cycle_anchor: data.anchorDate ?? null,
         joint_ratio: finalJointRatio,
+        currency: data.currency,
       };
       type HouseholdRow = Database['public']['Tables']['households']['Row'];
       const householdResult = await supabase
@@ -336,6 +339,35 @@ export default function OnboardingPage() {
                     </RadioGroup>
                   )}
                 />
+              </div>
+
+              {/* Currency */}
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Controller
+                  name="currency"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      aria-label="Currency for income and bills"
+                      data-testid="currency-select"
+                    >
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                        <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used for all income and bills in your budget.
+                </p>
               </div>
 
               {/* Section 2: Income */}

@@ -11,7 +11,7 @@ import {
 } from '@/lib/feature-flags';
 
 /**
- * Auth feature flags: signup gating (beta waitlist), Google login visibility, avatar.
+ * Auth feature flags: signup gating (beta waitlist), Google login visibility, avatar, pricing.
  * Uses PostHog when configured; otherwise falls back to env vars.
  * PostHog flags: "signup-gated", "google-login-enabled", "avatar-enabled", "pricing-enabled".
  *

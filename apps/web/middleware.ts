@@ -1,12 +1,27 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const COUNTRY_COOKIE_NAME = 'x-plot-country';
+
+// Vercel Edge adds geo to the request; not in NextRequest types
+type RequestWithGeo = NextRequest & { geo?: { country?: string } };
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
+
+  // Set country from Vercel geo for region checks (signup allowed: UK, EU, USA, Canada)
+  const country = (request as RequestWithGeo).geo?.country;
+  if (country) {
+    response.cookies.set(COUNTRY_COOKIE_NAME, country, {
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24h
+      sameSite: 'lax',
+    });
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -141,5 +156,6 @@ export const config = {
     '/signup',
     '/onboarding/:path*',
     '/partner/:path*',
+    '/pricing',
   ],
 };

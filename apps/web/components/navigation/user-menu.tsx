@@ -5,7 +5,7 @@ import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard } from 'lu
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
-import { marketingUrl } from '@/lib/marketing-url';
+import { getAppBaseUrl } from '@/lib/app-url';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 import { createClient } from '@/lib/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -77,7 +77,7 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
       }
       await signOut();
       toast.success("You've been logged out");
-      window.location.href = marketingUrl('/');
+      window.location.href = `${getAppBaseUrl()}/`;
     } catch {
       toast.error('Failed to log out');
     }
