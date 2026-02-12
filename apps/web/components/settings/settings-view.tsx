@@ -34,6 +34,14 @@ export interface SettingsViewProps {
   };
   incomeSources?: IncomeSource[];
   isPartner?: boolean;
+  /** When true, show Subscription tab (and pass subscription data). */
+  pricingEnabled?: boolean;
+  subscription?: {
+    status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+    current_tier: 'free' | 'pro' | null;
+    trial_end_date: string | null;
+    polar_product_id: string | null;
+  } | null;
   /** Open a specific tab from URL (e.g. ?tab=income) */
   initialTab?: string;
 }
@@ -44,12 +52,14 @@ export function SettingsView({
   incomeSources = [],
   isPartner = false,
   avatarEnabled = false,
+  pricingEnabled = false,
   initialTab,
 }: SettingsViewProps) {
+  const validTabs = pricingEnabled
+    ? ['profile', 'household', 'income', 'privacy', 'advanced', 'subscription']
+    : ['profile', 'household', 'income', 'privacy', 'advanced'];
   const defaultTab =
-    initialTab === 'income' || initialTab === 'household' || initialTab === 'privacy' || initialTab === 'advanced'
-      ? initialTab
-      : 'profile';
+    initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="settings-page">
@@ -66,6 +76,7 @@ export function SettingsView({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
+          {pricingEnabled && <TabsTrigger value="subscription">Subscription</TabsTrigger>}
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
@@ -96,6 +107,11 @@ export function SettingsView({
             isPartner={isPartner}
           />
         </TabsContent>
+        {pricingEnabled && (
+          <TabsContent value="subscription" className="space-y-6 mt-6">
+            <p className="text-sm text-muted-foreground">Subscription details will appear here when the Subscription tab component is available.</p>
+          </TabsContent>
+        )}
         <TabsContent value="privacy" className="space-y-6 mt-6">
           <PrivacyTab userId={user.id} isPartner={isPartner} />
         </TabsContent>

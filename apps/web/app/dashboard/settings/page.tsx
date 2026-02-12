@@ -27,6 +27,13 @@ type HouseholdRow = {
   partner_last_login_at: string | null;
 };
 
+type SubscriptionRow = {
+  status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+  current_tier: 'free' | 'pro' | null;
+  trial_end_date: string | null;
+  polar_product_id: string | null;
+};
+
 const householdSelect =
   'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at';
 
