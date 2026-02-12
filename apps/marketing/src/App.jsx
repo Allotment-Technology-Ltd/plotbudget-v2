@@ -100,11 +100,11 @@ function Hero() {
           custom={0}
           className="section-label"
         >
-          Budgeting for couples. Privacy by default.
+          Budgeting for households. Privacy by default.
         </motion.p>
 
         {/* Headline with terminal typing effect */}
-        <TerminalHeadline text="PLOT YOUR FUTURE TOGETHER" />
+        <TerminalHeadline text="PLOT YOUR FUTURE" />
 
         {/* Subheadline */}
         <motion.p
@@ -114,8 +114,8 @@ function Hero() {
           custom={0.8}
           className="font-body text-lg md:text-xl text-plot-muted max-w-narrow"
         >
-          The 15-minute payday ritual that keeps both partners on the
-          same page — without sharing bank access.
+          The 20-minute payday ritual that replaces every awkward money
+          conversation — without sharing bank access.
         </motion.p>
 
         {/* Email form */}
@@ -233,7 +233,7 @@ function SocialProofStrip() {
         uppercase tracking-[0.15em] text-plot-accent
         content-wrapper
       ">
-        Built for UK couples who budget with spreadsheets — and want something better.
+        Built for UK couples who budget with spreadsheets — and for anyone who wants to plan their household finances, with or without a partner.
       </p>
     </motion.section>
   );
@@ -318,17 +318,17 @@ const steps = [
   {
     num: '01',
     title: 'Set your blueprint',
-    body: 'Add your household bills, savings goals, and debt repayments. Split them between you and your partner however you like — 50/50, 60/40, or any ratio that works for your life.',
+    body: 'Add your household bills, savings goals, and debt repayments. Allocate them however you like — 50/50, 60/40, or any ratio that works for your household.',
   },
   {
     num: '02',
     title: 'Run the ritual',
-    body: 'On payday, open PLOT. Review your allocations. Check off bills. Adjust anything that\'s changed. 15 minutes, done.',
+    body: 'On payday, open PLOT. Review your allocations. Check off bills. Adjust anything that\'s changed. 20 minutes, done.',
   },
   {
     num: '03',
     title: 'Live your month',
-    body: 'Your needs are covered. Your savings are growing. Your debt is shrinking. Both of you can see exactly where things stand — without a single awkward conversation about money.',
+    body: 'Your needs are covered. Your savings are growing. Your debt is shrinking. You can see exactly where things stand — without a single awkward conversation about money.',
   },
 ];
 
@@ -355,14 +355,14 @@ function SolutionSection() {
             id="solution-headline"
             className="section-headline"
           >
-            Your 15-minute payday ritual
+            Your 20-minute payday ritual
           </motion.h2>
 
           <motion.p
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow"
           >
-            Once a month, on payday, sit down together. Allocate your income.
+            Once a month, on payday, sit down. Allocate your income.
             Move on with your life. PLOT handles the rest.
           </motion.p>
 
@@ -537,8 +537,8 @@ const features = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
-    title: 'Built for two',
-    body: 'PLOT is designed from the ground up for couples. Shared budgets with individual visibility. Together, not merged.',
+    title: 'Built for one or two',
+    body: 'PLOT works for solo use or with a partner. Invite someone to join your household anytime — or not. Designed for shared budgets with individual visibility when you do share. Together, not merged.',
   },
   {
     icon: (
@@ -830,12 +830,16 @@ const faqs = [
     a: 'Never. PLOT is privacy-first. You enter your income and bills manually — which is actually faster than you\'d think, because you only do it once and PLOT remembers everything for next month.',
   },
   {
+    q: 'Can I use PLOT on my own?',
+    a: 'Yes. PLOT works for solo use or with a partner. You can invite someone to join your household anytime — or not. It\'s your choice.',
+  },
+  {
     q: 'What if my partner doesn\'t want to use it?',
-    a: 'PLOT works brilliantly for solo use too. But when your partner sees how simple it makes everything, they\'ll want in. You can invite them anytime.',
+    a: 'PLOT works brilliantly for solo use. If you have a partner, you can invite them anytime — and when they see how simple it makes everything, they may want in.',
   },
   {
     q: 'Is this just another budgeting app?',
-    a: 'Most budgeting apps want you to track every coffee. PLOT doesn\'t. We believe in allocating your money on payday and then getting on with your life. It\'s a 15-minute ritual, not a lifestyle change.',
+    a: 'Most budgeting apps want you to track every coffee. PLOT doesn\'t. We believe in allocating your money on payday and then getting on with your life. It\'s a 20-minute ritual, not a lifestyle change.',
   },
   {
     q: 'When does it launch?',
@@ -1007,7 +1011,7 @@ function Footer() {
               PLOT
             </span>
             <p className="font-body text-sm text-plot-muted">
-              Household budgeting for couples.
+              Household budgeting.
             </p>
           </div>
 

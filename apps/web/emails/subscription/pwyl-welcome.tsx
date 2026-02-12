@@ -1,6 +1,7 @@
 import { Heading, Text, Button, Section } from '@react-email/components';
 import * as React from 'react';
 import { EmailLayout } from '../components/email-layout';
+import { h1, text, button, list, listItem } from '../styles';
 
 interface PWYLWelcomeEmailProps {
   displayName: string;
@@ -34,7 +35,7 @@ export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: 
         </>
       )}
       
-      <Text style={text}>Your premium features are now active:</Text>
+      <Text style={text}>Your payday ritual just got an upgrade — everything you need to plan together:</Text>
       
       <Section style={list}>
         <Text style={listItem}>✓ Unlimited bills and wants</Text>
@@ -56,47 +57,9 @@ export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: 
   );
 }
 
-const h1 = {
-  color: '#1a1a1a',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '20px 0',
-};
-
-const text = {
-  color: '#404040',
-  fontSize: '16px',
-  lineHeight: '24px',
-  margin: '16px 0',
-};
-
 const supportText = {
   color: '#666',
   fontSize: '14px',
-  fontStyle: 'italic',
+  fontStyle: 'italic' as const,
   margin: '12px 0',
-};
-
-const list = {
-  margin: '16px 0',
-};
-
-const listItem = {
-  color: '#404040',
-  fontSize: '16px',
-  lineHeight: '24px',
-  margin: '8px 0',
-};
-
-const button = {
-  backgroundColor: '#000',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '16px',
-  fontWeight: 'bold' as const,
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'block',
-  padding: '12px 24px',
-  margin: '24px 0',
 };

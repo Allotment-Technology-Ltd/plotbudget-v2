@@ -139,6 +139,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.0
         version: 1.2.8(@types/react-dom@18.3.7)(@types/react@18.3.27)(react-dom@18.3.1)(react@18.3.1)
+      '@react-email/render':
+        specifier: ^2.0.4
+        version: 2.0.4(react-dom@18.3.1)(react@18.3.1)
       '@repo/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
@@ -192,7 +195,7 @@ importers:
         version: 3.7.0(@types/react@18.3.27)(react-dom@18.3.1)(react-is@19.2.4)(react@18.3.1)(redux@5.0.1)
       resend:
         specifier: ^6.9.1
-        version: 6.9.1
+        version: 6.9.1(@react-email/render@2.0.4)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@18.3.1)(react@18.3.1)
@@ -3153,7 +3156,6 @@ packages:
       prettier: 3.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    dev: true
 
   /@react-email/row@0.0.13(react@18.3.1):
     resolution: {integrity: sha512-bYnOac40vIKCId7IkwuLAAsa3fKfSfqCvv6epJKmPE0JBuu5qI4FHFCl9o9dVpIIS08s/ub+Y/txoMt0dYziGw==}
@@ -7908,7 +7910,6 @@ packages:
     resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
     hasBin: true
-    dev: true
 
   /pretty-ms@9.3.0:
     resolution: {integrity: sha512-gjVS5hOP+M3wMm5nmNOucbIrqudzs9v/57bWRHQWLYklXqoXKrVfYW2W9+glfGsqtPgpiz5WwyEEB+ksXIx3gQ==}
@@ -8289,7 +8290,7 @@ packages:
     resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
     dev: false
 
-  /resend@6.9.1:
+  /resend@6.9.1(@react-email/render@2.0.4):
     resolution: {integrity: sha512-jFY3qPP2cith1npRXvS7PVdnhbR1CcuzHg65ty5Elv55GKiXhe+nItXuzzoOlKeYJez1iJAo2+8f6ae8sCj0iA==}
     engines: {node: '>=20'}
     peerDependencies:
@@ -8298,6 +8299,7 @@ packages:
       '@react-email/render':
         optional: true
     dependencies:
+      '@react-email/render': 2.0.4(react-dom@18.3.1)(react@18.3.1)
       mailparser: 3.9.1
       svix: 1.84.1
     dev: false

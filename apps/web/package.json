@@ -14,6 +14,7 @@
     "test:api": "vitest run tests/api",
     "test:api:watch": "vitest tests/api",
     "test:emails": "vitest run emails",
+    "email": "email dev --dir emails",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
@@ -59,6 +60,7 @@
     "react-hook-form": "^7.71.1",
     "recharts": "^3.7.0",
     "resend": "^6.9.1",
+    "@react-email/render": "^2.0.4",
     "sonner": "^2.0.7",
     "zod": "^3.22.4"
   },

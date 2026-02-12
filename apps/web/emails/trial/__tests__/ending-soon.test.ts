@@ -10,9 +10,9 @@ function render(props: Parameters<typeof TrialEndingSoonEmail>[0]) {
 describe('TrialEndingSoonEmail', () => {
   it('renders trial ending copy and key phrases', () => {
     const html = render({ displayName: 'Alex', daysRemaining: 3 });
-    expect(html).toContain('Your PLOT trial ends soon');
+    expect(html).toContain('Your trial is ending soon');
     expect(html).toContain('Hi Alex');
-    expect(html).toContain('trial will end in about 3 days');
+    expect(html).toContain('trial ends in about 3 days');
     expect(html).toContain('Free tier');
     expect(html).toContain('Premium');
     expect(html).toContain('pay what you like');
