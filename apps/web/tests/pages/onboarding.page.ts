@@ -99,8 +99,11 @@ export class OnboardingPage {
   }
 
   async expectRedirectToBlueprint() {
-    // Celebration animation can take ~3.3s; use 'commit' so client-side nav counts (no full load event)
-    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000, waitUntil: 'commit' });
+    // Celebration animation takes ~3.3s; use 'load' for reliable URL match after client-side nav
+    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000, waitUntil: 'load' });
+    // Blueprint page must load server data; add-seed-button OR blueprint-empty-state indicates ready (allow 20s for CI)
+    const ready = this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state'));
+    await expect(ready.first()).toBeVisible({ timeout: 20_000 });
     await expect(this.page.getByTestId('blueprint-empty-state')).toBeVisible();
   }
 

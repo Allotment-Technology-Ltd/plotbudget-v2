@@ -27,7 +27,6 @@ export default async function handler(req, res) {
   const GROUP_ID = process.env.MAILERLITE_GROUP_ID;
 
   if (!API_KEY) {
-    console.error('MAILERLITE_API_KEY is not set in environment variables.');
     return res.status(500).json({ message: 'Server configuration error.' });
   }
 
@@ -62,13 +61,11 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, alreadySubscribed: true });
       }
 
-      console.error('MailerLite error:', response.status, data);
       return res.status(response.status).json({ message: mlMessage });
     }
 
     return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Subscribe proxy error:', error);
+  } catch {
     return res.status(500).json({ message: 'Internal server error. Please try again.' });
   }
 }

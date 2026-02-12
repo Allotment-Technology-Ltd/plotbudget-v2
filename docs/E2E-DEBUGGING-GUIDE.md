@@ -4,6 +4,8 @@ Use this when CI fails on **Blueprint “add a new recurring need seed”** (see
 
 **See also:** `docs/E2E-TEST-APPROACH.md` for the rethought approach (separate dashboard user, goto-after-add-seed, global setup order).
 
+**Prerequisites:** The Supabase project used for E2E (e.g. `NEXT_PUBLIC_SUPABASE_URL`) should have all migrations applied. If onboarding tests fail with "Could not find the 'currency' column of 'households' in the schema cache", apply migrations (e.g. `supabase db push` or run `supabase/migrations/20250209120001_household_currency.sql`). The app will retry the household insert without `currency` when this error occurs so tests can pass even if that migration is missing (household will use default GBP).
+
 ---
 
 ## Failure 1: Seed card never appears after add (“add a new recurring need seed”)

@@ -38,16 +38,7 @@ function resolveCheckoutConfig(req: NextRequest): CheckoutConfig {
 
 export const GET = async (req: NextRequest) => {
   const config = resolveCheckoutConfig(req);
-  
-  console.log('[checkout] Config resolved', {
-    mode: config.mode,
-    productId: config.productId,
-    amount: config.amount,
-    accessTokenPresent: !!process.env.POLAR_ACCESS_TOKEN,
-    successUrlPresent: !!process.env.POLAR_SUCCESS_URL,
-  });
-  
-  
+
   // Validate required config
   if (!config.productId) {
     return NextResponse.json({
@@ -69,13 +60,7 @@ export const GET = async (req: NextRequest) => {
       accessToken: process.env.POLAR_ACCESS_TOKEN!,
       server: 'sandbox' as any,
     });
-    
-    // Create checkout with Polar's native PWYL or fixed pricing
-    console.log('[checkout] Creating checkout', {
-      mode: config.mode,
-      productId: config.productId,
-    });
-    
+
     const checkout = await polar.checkouts.create({
       products: [config.productId!],
       successUrl: process.env.POLAR_SUCCESS_URL!,
@@ -87,23 +72,17 @@ export const GET = async (req: NextRequest) => {
     });
     
     if (checkout?.url) {
-      console.log('[checkout] Checkout created successfully', {
-        checkoutUrl: checkout.url,
-        mode: config.mode,
-      });
       return NextResponse.redirect(checkout.url, 302);
     }
-    
-    return NextResponse.json({ 
-      error: 'Checkout created without URL', 
-      checkout 
-    }, { status: 500 });
-  } catch (error: any) {
-    console.error('[checkout] Polar create error', error?.response?.data ?? error);
-    return NextResponse.json({
-      error: 'Polar checkout creation failed',
-      detail: error?.response?.data ?? String(error),
-      mode: config.mode,
-    }, { status: 500 });
+
+    return NextResponse.json(
+      { error: 'Checkout created without URL' },
+      { status: 500 }
+    );
+  } catch {
+    return NextResponse.json(
+      { error: 'Polar checkout creation failed' },
+      { status: 500 }
+    );
   }
 };

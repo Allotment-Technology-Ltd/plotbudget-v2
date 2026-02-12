@@ -178,10 +178,9 @@ cursor apps/web/app/page.tsx
 
 ## 🔐 Environment Variables
 ```bash
-# Create .env.local (from apps/web)
+# From repo root; env lives in apps/web only
+cd apps/web
 touch .env.local
-
-# Edit in nano
 nano .env.local
 # Save: Ctrl+X, then Y, then Enter
 

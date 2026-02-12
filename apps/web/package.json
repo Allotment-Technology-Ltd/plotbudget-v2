@@ -11,6 +11,9 @@
     "clean": "rm -rf .next .turbo node_modules",
     "test": "vitest run",
     "test:unit": "vitest run",
+    "test:api": "vitest run tests/api",
+    "test:api:watch": "vitest tests/api",
+    "test:emails": "vitest run emails",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
@@ -21,6 +24,7 @@
     "test:e2e:layout": "playwright test --project=mobile-layout",
     "test:e2e:visual": "playwright test --project=visual-desktop --project=visual-mobile",
     "test:e2e:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
+    "test:e2e:pwyl": "playwright test --project=chromium-pwyl",
     "audit:test-ids": "tsx scripts/audit-test-ids.ts"
   },
   "dependencies": {

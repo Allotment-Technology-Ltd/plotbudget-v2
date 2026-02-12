@@ -30,7 +30,7 @@ export default async function PricingPage() {
   const pwylEnabled = getPWYLPricingEnabledFromEnv();
   const fixedEnabled = getFixedPricingEnabledFromEnv();
   const avatarEnabled = getAvatarEnabledFromEnv();
-
+  
   // Default to PWYL if neither flag is explicitly set
   const showPWYL = pwylEnabled || (!pwylEnabled && !fixedEnabled);
 

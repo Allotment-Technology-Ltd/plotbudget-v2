@@ -12,6 +12,20 @@ PlotBudget V2 production launch: separate dev/staging and production environment
 
 ---
 
+## Vercel projects (App + Marketing)
+
+Both the main app and the marketing site deploy from the same repo (`plotbudget`). Use two Vercel projects so each has its own URL and build.
+
+| Project     | Purpose        | Root Directory   | Build / config                                                                 | Typical URL              |
+|-------------|----------------|------------------|---------------------------------------------------------------------------------|--------------------------|
+| **App**     | Next.js app    | `plotbudget`     | From `apps/web/vercel.json`: `pnpm turbo build --filter=@repo/web`, install from repo root. | https://app.plotbudget.com |
+| **Marketing** | Vite marketing site | `plotbudget` → app root `apps/marketing` | From `apps/marketing/vercel.json`: framework Vite, output `dist`, install `cd ../.. && pnpm install`. | https://plotbudget.com   |
+
+- **App:** Set Vercel project Root Directory to `plotbudget` (or repo root if the repo is already `plotbudget`). The build runs from monorepo root and targets `@repo/web`. Env vars: Supabase, Resend, Polar, PostHog, `NEXT_PUBLIC_*`, `CRON_SECRET`, etc. (see Step 2).
+- **Marketing:** Same repo; set Root Directory so the application root is `apps/marketing` (e.g. Root Directory = `plotbudget/apps/marketing` if repo root is the parent of `plotbudget`). Env vars: `VITE_*` only (e.g. `VITE_GA_MEASUREMENT_ID`, `VITE_PRICING_ENABLED`); no Supabase or server secrets. Uses MailerLite (or similar) for waitlist; configure in the marketing app’s env in Vercel.
+
+---
+
 ## Step 1: Supabase Project Structure
 
 ### 1.1 Development/Staging (`plotbudget-dev`)
@@ -34,6 +48,8 @@ PlotBudget V2 production launch: separate dev/staging and production environment
 ## Step 2: Environment Variables
 
 ### Local (`apps/web/.env.local`)
+
+All local env for the Next.js app lives in **`apps/web/.env.local`** only (no root `.env.local`). Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in values.
 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` → dev project.
 - `NEXT_PUBLIC_APP_URL=http://localhost:3000`
