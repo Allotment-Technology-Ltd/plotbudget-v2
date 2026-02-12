@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Polar } from '@polar-sh/sdk';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 // Polar SDK checkout: supports fixed pricing (monthly/annual) and PWYL (custom amounts)
 // Query params:
@@ -35,47 +34,6 @@ function resolveCheckoutConfig(req: NextRequest): CheckoutConfig {
     mode: 'fixed',
     productId: productParam === 'annual' ? annualProduct : monthlyProduct,
   };
-}
-
-async function handleFreePremium(req: NextRequest): Promise<NextResponse> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return NextResponse.redirect(new URL('/login', req.url), 302);
-  }
-  
-  const householdId = req.nextUrl.searchParams.get('household_id');
-  
-  if (!householdId) {
-    return NextResponse.json({ error: 'Missing household_id for £0 subscription' }, { status: 400 });
-  }
-  
-  // Create "local" subscription (no Polar, free premium access)
-  const { error } = await (supabase as any).from('subscriptions').insert({
-    household_id: householdId,
-    polar_subscription_id: `local_free_${householdId}_${Date.now()}`,
-    status: 'active',
-    current_tier: 'pro',
-    polar_product_id: 'pwyl_free',
-  });
-  
-  if (error) {
-    console.error('[checkout] Failed to create free premium subscription', error);
-    return NextResponse.json({ error: 'Failed to create free subscription' }, { status: 500 });
-  }
-  
-  // Update user tier for quick access
-  await (supabase as any).from('users')
-    .update({
-      subscription_tier: 'pro',
-      subscription_status: 'active',
-    })
-    .eq('id', user.id);
-  
-  console.log('[checkout] Created free premium subscription', { householdId, userId: user.id });
-  
-  return NextResponse.redirect(new URL('/dashboard?upgrade=success', req.url), 302);
 }
 
 export const GET = async (req: NextRequest) => {

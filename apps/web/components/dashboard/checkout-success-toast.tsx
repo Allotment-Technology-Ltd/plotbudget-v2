@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check } from 'lucide-react';
 
 export function CheckoutSuccessToast() {
   const searchParams = useSearchParams();

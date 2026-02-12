@@ -43,7 +43,7 @@ function getStatusBadgeVariant(status: string | null): 'default' | 'secondary' |
   }
 }
 
-export function SubscriptionTab({ subscription, householdId, userId }: SubscriptionTabProps) {
+export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
   const tier = subscription?.current_tier ?? 'free';
   const status = subscription?.status ?? null;
   const isActive = status === 'active' || status === 'trialing';
