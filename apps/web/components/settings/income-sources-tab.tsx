@@ -318,30 +318,29 @@ export function IncomeSourcesTab({
                       </p>
                     </div>
                   )}
-                  <div className="space-y-2">
-                    <Label htmlFor="income-source">Who gets this income</Label>
-                    <Select
-                      value={form.payment_source}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, payment_source: v as PaymentSource }))
-                      }
-                      disabled={isSaving || (isPartner && !editingId)}
-                    >
-                      <SelectTrigger id="income-source">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(getPaymentSourceLabels(isPartner)) as PaymentSource[]).map((k) => (
-                          <SelectItem key={k} value={k}>
-                            {getPaymentSourceLabels(isPartner)[k]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {isPartner && !editingId && (
-                      <p className="text-xs text-muted-foreground">New income is added as yours (partner).</p>
-                    )}
-                  </div>
+                  {!isPartner && (
+                    <div className="space-y-2">
+                      <Label htmlFor="income-source">Who gets this income</Label>
+                      <Select
+                        value={form.payment_source}
+                        onValueChange={(v) =>
+                          setForm((f) => ({ ...f, payment_source: v as PaymentSource }))
+                        }
+                        disabled={isSaving}
+                      >
+                        <SelectTrigger id="income-source">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(getPaymentSourceLabels(isPartner)) as PaymentSource[]).map((k) => (
+                            <SelectItem key={k} value={k}>
+                              {getPaymentSourceLabels(isPartner)[k]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2 pt-2">
                     <Button
                       type="button"

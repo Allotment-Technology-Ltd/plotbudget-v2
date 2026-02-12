@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
+import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
 import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
@@ -146,17 +148,22 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardClient
-      household={household as Household}
-      currentPaycycle={currentPaycycle}
-      seeds={seeds}
-      pots={pots ?? []}
-      repayments={repayments ?? []}
-      historicalCycles={historicalCycles}
-      hasDraftCycle={hasDraftCycle}
-      incomeEvents={incomeEvents}
-      isPartner={isPartner}
-      ownerDisplayName={ownerDisplayName}
-    />
+    <>
+      <Suspense fallback={null}>
+        <CheckoutSuccessToast />
+      </Suspense>
+      <DashboardClient
+        household={household as Household}
+        currentPaycycle={currentPaycycle}
+        seeds={seeds}
+        pots={pots ?? []}
+        repayments={repayments ?? []}
+        historicalCycles={historicalCycles}
+        hasDraftCycle={hasDraftCycle}
+        incomeEvents={incomeEvents}
+        isPartner={isPartner}
+        ownerDisplayName={ownerDisplayName}
+      />
+    </>
   );
 }

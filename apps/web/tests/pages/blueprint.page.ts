@@ -166,7 +166,8 @@ export class BlueprintPage {
       throw new Error('Seed dialog did not close within 15s');
     });
     // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
-    await this.page.goto('/dashboard/blueprint');
+    // Use reload() when already on blueprint — more stable than goto() which can ERR_ABORTED on parallel runs
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
     // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode).
     // Allow 20s for CI where the new seed can take a moment to appear after reload.
@@ -182,7 +183,8 @@ export class BlueprintPage {
 
   async deleteSeed(seedName: string) {
     const countBefore = await this.seedCard(seedName).count();
-    await this.seedDeleteButton(seedName).first().click();
+    // Use force: true to avoid click being intercepted by card overlay; noWaitAfter: true so modal open doesn't hang
+    await this.seedDeleteButton(seedName).first().click({ force: true, noWaitAfter: true });
 
     // Confirm deletion in modal
     await this.page.getByTestId('confirm-delete-button').click();

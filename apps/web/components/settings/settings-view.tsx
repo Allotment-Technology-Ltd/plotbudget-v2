@@ -6,6 +6,7 @@ import { HouseholdTab } from './household-tab';
 import { IncomeSourcesTab } from './income-sources-tab';
 import { PrivacyTab } from './privacy-tab';
 import { ProfileTab } from './profile-tab';
+import { SubscriptionTab } from './subscription-tab';
 import type { IncomeSource } from '@/lib/supabase/database.types';
 
 export interface SettingsViewProps {
@@ -16,6 +17,13 @@ export interface SettingsViewProps {
     avatarUrl?: string | null;
   };
   avatarEnabled?: boolean;
+  pricingEnabled?: boolean;
+  subscription?: {
+    status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+    current_tier: 'free' | 'pro' | null;
+    trial_end_date: string | null;
+    polar_product_id: string | null;
+  } | null;
   household: {
     id: string;
     name: string | null;
@@ -34,14 +42,6 @@ export interface SettingsViewProps {
   };
   incomeSources?: IncomeSource[];
   isPartner?: boolean;
-  /** When true, show Subscription tab (and pass subscription data). */
-  pricingEnabled?: boolean;
-  subscription?: {
-    status: 'active' | 'cancelled' | 'past_due' | 'trialing';
-    current_tier: 'free' | 'pro' | null;
-    trial_end_date: string | null;
-    polar_product_id: string | null;
-  } | null;
   /** Open a specific tab from URL (e.g. ?tab=income) */
   initialTab?: string;
 }
@@ -50,6 +50,7 @@ export function SettingsView({
   user,
   household,
   incomeSources = [],
+  subscription,
   isPartner = false,
   avatarEnabled = false,
   pricingEnabled = false,
@@ -109,7 +110,11 @@ export function SettingsView({
         </TabsContent>
         {pricingEnabled && (
           <TabsContent value="subscription" className="space-y-6 mt-6">
-            <p className="text-sm text-muted-foreground">Subscription details will appear here when the Subscription tab component is available.</p>
+            <SubscriptionTab
+              subscription={subscription ?? null}
+              householdId={household.id}
+              userId={user.id}
+            />
           </TabsContent>
         )}
         <TabsContent value="privacy" className="space-y-6 mt-6">

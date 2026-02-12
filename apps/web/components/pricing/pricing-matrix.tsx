@@ -6,6 +6,8 @@ import { Check } from 'lucide-react';
 interface PricingMatrixProps {
   pricingEnabled: boolean;
   isLoggedIn: boolean;
+  householdId?: string | null;
+  userId?: string | null;
 }
 
 const TIERS = [
@@ -59,20 +61,33 @@ const TIERS = [
       'Unlimited repayments',
     ],
     cta: 'Upgrade to Premium',
-    ctaLink: '/dashboard/settings', // Will link to checkout when implemented
+    ctaLink: '/api/checkout?product=monthly',
     highlighted: true,
   },
 ] as const;
 
-export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps) {
+type PricingTier = (typeof TIERS)[number];
+
+function tierHasCtaLink(tier: PricingTier): tier is PricingTier & { ctaLink: string } {
+  return typeof tier.ctaLink === 'string' && tier.ctaLink.length > 0;
+}
+
+export function PricingMatrix({ pricingEnabled, isLoggedIn, householdId, userId }: PricingMatrixProps) {
+  const premiumCtaHref = householdId
+    ? `/api/checkout?product=monthly&household_id=${encodeURIComponent(householdId)}${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`
+    : '/api/checkout?product=monthly';
+
   return (
     <div className="grid gap-6 md:grid-cols-3 md:gap-8">
-      {TIERS.map((tier) => (
-        <div
-          key={tier.id}
-          className={`relative flex flex-col rounded-xl border bg-card p-6 text-left shadow-sm transition-shadow hover:shadow-md md:p-8 ${
-            tier.highlighted
-              ? 'border-primary ring-2 ring-primary/20'
+      {TIERS.map((tier: PricingTier) => {
+        const hasCtaLink = tierHasCtaLink(tier);
+
+        return (
+          <div
+            key={tier.id}
+            className={`relative flex flex-col rounded-xl border bg-card p-6 text-left shadow-sm transition-shadow hover:shadow-md md:p-8 ${
+              tier.highlighted
+                ? 'border-primary ring-2 ring-primary/20'
               : 'border-border'
           }`}
         >
@@ -119,14 +134,14 @@ export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps
               </li>
             ))}
           </ul>
-          {tier.ctaLink && pricingEnabled && isLoggedIn ? (
+          {hasCtaLink && pricingEnabled && isLoggedIn ? (
             <Link
-              href={tier.ctaLink}
+              href={tier.id === 'premium' ? premiumCtaHref : tier.ctaLink}
               className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {tier.cta}
             </Link>
-          ) : tier.ctaLink && pricingEnabled && !isLoggedIn ? (
+          ) : hasCtaLink && pricingEnabled && !isLoggedIn ? (
             <Link
               href="/signup"
               className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -137,7 +152,8 @@ export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps
             <p className="text-sm text-muted-foreground">{tier.cta}</p>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

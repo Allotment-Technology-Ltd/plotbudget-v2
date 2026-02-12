@@ -461,10 +461,45 @@ export type Database = {
           updated_at?: string;
         };
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          household_id: string;
+          polar_subscription_id: string;
+          polar_product_id: string | null;
+          status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+          current_tier: 'free' | 'pro' | null;
+          trial_end_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          polar_subscription_id: string;
+          polar_product_id?: string | null;
+          status?: 'active' | 'cancelled' | 'past_due' | 'trialing';
+          current_tier?: 'free' | 'pro' | null;
+          trial_end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          polar_subscription_id?: string;
+          polar_product_id?: string | null;
+          status?: 'active' | 'cancelled' | 'past_due' | 'trialing';
+          current_tier?: 'free' | 'pro' | null;
+          trial_end_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Enums: {
       subscription_tier: 'free' | 'pro';
-      subscription_status: 'active' | 'cancelled' | 'past_due';
+      subscription_status: 'active' | 'cancelled' | 'past_due' | 'trialing';
       pay_cycle_type: 'specific_date' | 'last_working_day' | 'every_4_weeks';
       paycycle_status: 'active' | 'draft' | 'completed' | 'archived';
       seed_type: 'need' | 'want' | 'savings' | 'repay';

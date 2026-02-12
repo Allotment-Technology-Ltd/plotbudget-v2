@@ -87,7 +87,7 @@ In the Vercel project: **Settings → Environment Variables**. Add these for **P
 |------|--------|------|
 | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service_role key | Only if you use server-side admin APIs; keep secret |
 
-Do **not** commit these values; set them only in Vercel (and in local `.env.local` for development).
+Do **not** commit these values; set them only in Vercel (and in `apps/web/.env.local` for development).
 
 ## 3. Supabase auth redirect URLs
 

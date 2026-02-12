@@ -1,6 +1,12 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+package-lock.json
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Build outputs
 .next/
@@ -11,27 +17,33 @@ out/
 # Turbo
 .turbo/
 
-# Environment
+# Environment (never commit secrets)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
-# IDE
+# IDE & editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # OS
 .DS_Store
 Thumbs.db
+*.lnk
 
-# Logs
+# Logs & debug
 *.log
 npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Testing
 coverage/
@@ -39,6 +51,10 @@ coverage/
 playwright-report/
 test-results/
 playwright/.cache/
+**/.auth/
+
+# Linting & formatting
+.eslintcache
 
 # TypeScript
 *.tsbuildinfo
@@ -46,7 +62,11 @@ playwright/.cache/
 # Supabase CLI
 supabase/.temp/
 
-# Misc
+# Vite (marketing app cache)
+.vite/
+
+# Vercel & deployment
 .vercel/
+
+# Misc
 .cache/
-.env.test.local

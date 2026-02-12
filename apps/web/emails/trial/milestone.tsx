@@ -1,0 +1,59 @@
+'use client';
+
+import * as React from 'react';
+import { Heading, Text, Button, Section } from '@react-email/components';
+import { EmailLayout } from '../components/email-layout';
+
+interface TrialMilestoneEmailProps {
+  displayName: string;
+  cyclesCompleted: number; // expect 1
+  totalCycles: number; // expect 2
+  nextCycleEndsOn?: string | null;
+}
+
+export default function TrialMilestoneEmail({
+  displayName = 'there',
+  cyclesCompleted = 1,
+  totalCycles = 2,
+  nextCycleEndsOn,
+}: TrialMilestoneEmailProps) {
+  return (
+    <EmailLayout>
+      <Heading style={h1}>Trial Update</Heading>
+      <Text style={text}>Hi {displayName},</Text>
+      <Text style={text}>
+        You just completed pay cycle {cyclesCompleted} of {totalCycles} in your PLOT trial.
+      </Text>
+      {nextCycleEndsOn && (
+        <Text style={text}>Your next cycle is expected to end on {nextCycleEndsOn}.</Text>
+      )}
+      <Section style={list}>
+        <Text style={listItem}>✓ Trial progress: {cyclesCompleted} of {totalCycles}</Text>
+        <Text style={listItem}>✓ All premium features remain active during trial</Text>
+      </Section>
+      <Text style={text}>
+        After your next pay cycle, choose between staying on the Free tier (limited pots) or Premium with pay-what-you-like pricing (from £0/month).
+      </Text>
+      <Button href="https://app.plotbudget.com/pricing" style={button}>
+        View Pricing Options
+      </Button>
+    </EmailLayout>
+  );
+}
+
+const h1 = { color: '#1a1a1a', fontSize: '24px', fontWeight: 'bold', margin: '20px 0' };
+const text = { color: '#404040', fontSize: '16px', lineHeight: '24px', margin: '16px 0' };
+const list = { margin: '16px 0' };
+const listItem = { color: '#404040', fontSize: '16px', lineHeight: '24px', margin: '8px 0' };
+const button = {
+  backgroundColor: '#000',
+  borderRadius: '6px',
+  color: '#fff',
+  fontSize: '16px',
+  fontWeight: 'bold' as const,
+  textDecoration: 'none',
+  textAlign: 'center' as const,
+  display: 'block',
+  padding: '12px 24px',
+  margin: '24px 0',
+};
