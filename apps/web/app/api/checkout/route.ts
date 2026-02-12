@@ -60,7 +60,7 @@ export const GET = async (req: NextRequest) => {
       accessToken: process.env.POLAR_ACCESS_TOKEN!,
       server: 'sandbox' as any,
     });
-    
+
     const checkout = await polar.checkouts.create({
       products: [config.productId!],
       successUrl: process.env.POLAR_SUCCESS_URL!,
