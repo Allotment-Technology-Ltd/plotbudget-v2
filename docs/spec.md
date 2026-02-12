@@ -161,8 +161,8 @@ PLOT exists to **liberate couples from financial friction** — eliminating the 
 
 ### 3.1 Required Variables
 ```bash
-# .env.local (local development)
-# .env.production (Vercel environment)
+# apps/web/.env.local (local development)
+# Vercel env (production / preview)
 
 # ============================================
 # SUPABASE

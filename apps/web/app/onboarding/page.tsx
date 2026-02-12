@@ -217,13 +217,24 @@ export default function OnboardingPage() {
         currency: data.currency,
       };
       type HouseholdRow = Database['public']['Tables']['households']['Row'];
-      const householdResult = await supabase
+      let householdResult = await supabase
         .from('households')
         .insert(householdInsert as never)
         .select()
         .single();
-      const { data: household, error: householdError } =
-        householdResult as { data: HouseholdRow | null; error: unknown };
+      let householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
+      // Retry without currency when the project's schema cache doesn't have the column (e.g. E2E DB before migration 20250209120001_household_currency)
+      const errMsg = String((householdError as { message?: string })?.message ?? '');
+      if (householdError && errMsg.includes('currency') && errMsg.includes('schema cache')) {
+        const { currency: _c, ...insertWithoutCurrency } = householdInsert;
+        householdResult = await supabase
+          .from('households')
+          .insert(insertWithoutCurrency as never)
+          .select()
+          .single();
+        householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
+      }
+      const { data: household } = householdResult as { data: HouseholdRow | null; error: unknown };
 
       if (householdError) {
         form.setError('root', {

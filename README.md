@@ -24,6 +24,10 @@ This Turborepo includes the following packages/apps:
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
+### Documentation
+
+Project docs (setup, deployment, Polar, PWYL, etc.) live in **[docs/](docs/)**. For a quick terminal reference, see [docs/TERMINAL-CHEATSHEET.md](docs/TERMINAL-CHEATSHEET.md).
+
 ### Utilities
 
 This Turborepo has some additional tools already setup for you:

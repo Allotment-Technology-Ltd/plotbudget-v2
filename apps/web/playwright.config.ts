@@ -128,6 +128,14 @@ export default defineConfig({
         storageState: { cookies: [], origins: [] },
       },
     },
+    {
+      name: 'chromium-pwyl',
+      testMatch: [/pwyl\.checkout\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: dashboardStatePath,
+      },
+    },
 
     /* Mobile viewport layout checks — use visual user so dashboard logout doesn't invalidate session */
     {

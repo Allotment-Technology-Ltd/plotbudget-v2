@@ -63,6 +63,26 @@ jobs:
         working-directory: apps/web
         run: pnpm test:unit
 
+  test-pwyl-api:
+    name: PWYL API and email tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Run API tests
+        working-directory: apps/web
+        run: pnpm test:api
+      - name: Run email tests
+        working-directory: apps/web
+        run: pnpm test:emails
+
   test-localhost:
     name: E2E on localhost
     runs-on: ubuntu-latest
@@ -105,3 +125,41 @@ jobs:
           name: playwright-report-localhost
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # Optional: PWYL E2E (sandbox). Allow failure until stable. Requires secrets:
+  # POLAR_PWYL_BASE_PRODUCT_ID_SANDBOX, POLAR_ACCESS_TOKEN_SANDBOX, POLAR_WEBHOOK_SECRET_SANDBOX
+  test-pwyl-e2e:
+    name: PWYL E2E (sandbox)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
+      - name: Install Playwright Browsers
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run PWYL E2E
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_PRICING_ENABLED: 'true'
+          NEXT_PUBLIC_PWYL_PRICING_ENABLED: 'true'
+          POLAR_PWYL_BASE_PRODUCT_ID: ${{ secrets.POLAR_PWYL_BASE_PRODUCT_ID_SANDBOX }}
+          POLAR_ACCESS_TOKEN: ${{ secrets.POLAR_ACCESS_TOKEN_SANDBOX }}
+          POLAR_SUCCESS_URL: ${{ secrets.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000' }}/dashboard/settings?tab=subscription
+        run: pnpm test:e2e:pwyl

@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     .upsert(payload, { onConflict: 'polar_subscription_id' });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 
   // Optionally update user subscription fields for quick reads
