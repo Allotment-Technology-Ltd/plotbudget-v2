@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 
 const COUNTRY_COOKIE_NAME = 'x-plot-country';
 
@@ -71,6 +72,15 @@ export async function middleware(request: NextRequest) {
 
   // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
   const { data: { user } } = await supabase.auth.getUser();
+
+  // When signup is gated, hide pricing page (uses PostHog when configured, else env)
+  if (request.nextUrl.pathname === '/pricing') {
+    const flags = await getServerFeatureFlags(user?.id ?? null);
+    if (flags.signupGated) {
+      const url = new URL(request.url);
+      return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', url));
+    }
+  }
 
   // Root: no holding page — redirect to login or dashboard (removes app.plotbudget.com landing)
   if (request.nextUrl.pathname === '/') {

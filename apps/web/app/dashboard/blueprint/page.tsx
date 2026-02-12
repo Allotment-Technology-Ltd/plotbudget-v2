@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
-import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
@@ -129,7 +129,8 @@ export default async function BlueprintPage({
 
   const activePaycycle = allPaycycles.find((p) => p.status === 'active');
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
-  const avatarEnabled = getAvatarEnabledFromEnv();
+  const flags = await getServerFeatureFlags(user.id);
+  const avatarEnabled = flags.avatarEnabled;
 
   const editSeedId = params.edit ?? null;
   const showNewCycleCelebration = params.newCycle != null;

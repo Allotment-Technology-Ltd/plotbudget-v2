@@ -1,7 +1,7 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import type { Database } from '@/lib/supabase/database.types';
 import { revalidatePath } from 'next/cache';
 
@@ -15,10 +15,6 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
  * Call with FormData containing a single file under key "avatar".
  */
 export async function uploadAvatar(formData: FormData): Promise<{ avatarUrl?: string; error?: string }> {
-  if (!getAvatarEnabledFromEnv()) {
-    return { error: 'Avatar feature is not enabled' };
-  }
-
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -26,6 +22,11 @@ export async function uploadAvatar(formData: FormData): Promise<{ avatarUrl?: st
 
   if (!user) {
     return { error: 'Unauthorized' };
+  }
+
+  const flags = await getServerFeatureFlags(user.id);
+  if (!flags.avatarEnabled) {
+    return { error: 'Avatar feature is not enabled' };
   }
 
   const file = formData.get('avatar');

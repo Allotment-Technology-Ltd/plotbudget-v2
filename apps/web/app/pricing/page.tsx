@@ -5,12 +5,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PricingMatrix } from '@/components/pricing/pricing-matrix';
 import { PWYLPricingMatrix } from '@/components/pricing/pricing-matrix-pwyl';
 import {
-  getPaymentUiVisibleFromEnv,
-  getPricingEnabledFromEnv,
+  getPaymentUiVisibleFromServerFlags,
+  getFullPremiumVisibleFromServerFlags,
   getPWYLPricingEnabledFromEnv,
   getFixedPricingEnabledFromEnv,
-  getAvatarEnabledFromEnv,
 } from '@/lib/feature-flags';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { PricingHeaderNavClient } from './pricing-header-nav-client';
 
 export const metadata: Metadata = {
@@ -21,18 +21,19 @@ export const metadata: Metadata = {
 export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const paymentUiVisible = getPaymentUiVisibleFromEnv();
+  const flags = await getServerFeatureFlags(user?.id ?? null);
+  const paymentUiVisible = getPaymentUiVisibleFromServerFlags(flags);
   if (!paymentUiVisible) {
     redirect(user ? '/dashboard' : '/login');
   }
 
-  const pricingEnabled = getPricingEnabledFromEnv();
+  const fullPremiumVisible = getFullPremiumVisibleFromServerFlags(flags);
   const pwylEnabled = getPWYLPricingEnabledFromEnv();
   const fixedEnabled = getFixedPricingEnabledFromEnv();
-  const avatarEnabled = getAvatarEnabledFromEnv();
+  const avatarEnabled = flags.avatarEnabled;
   
-  // Default to PWYL if neither flag is explicitly set
-  const showPWYL = pwylEnabled || (!pwylEnabled && !fixedEnabled);
+  // When full premium is off, show PWYL only; otherwise PWYL vs fixed per env
+  const showPWYL = !fullPremiumVisible || pwylEnabled || (!pwylEnabled && !fixedEnabled);
 
   let displayName: string | null = null;
   let avatarUrl: string | null = null;
@@ -116,7 +117,7 @@ export default async function PricingPage() {
           />
         ) : (
           <PricingMatrix
-            pricingEnabled={pricingEnabled}
+            pricingEnabled={fullPremiumVisible}
             isLoggedIn={!!user}
             householdId={user ? (owned?.id ?? partnerOf?.id ?? null) : null}
             userId={user?.id ?? null}

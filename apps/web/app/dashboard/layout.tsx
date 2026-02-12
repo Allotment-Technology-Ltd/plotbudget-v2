@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getAvatarEnabledFromEnv } from '@/lib/feature-flags';
+import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
 
@@ -52,7 +52,8 @@ export default async function DashboardLayout({
     displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
   }
 
-  const avatarEnabled = getAvatarEnabledFromEnv();
+  const flags = await getServerFeatureFlags(user.id);
+  const avatarEnabled = flags.avatarEnabled;
 
   return (
     <div className="min-h-screen bg-background">
