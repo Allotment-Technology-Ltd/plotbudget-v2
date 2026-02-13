@@ -1,13 +1,29 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const COUNTRY_COOKIE_NAME = 'x-plot-country';
 
 // Vercel Edge adds geo to the request; not in NextRequest types
 type RequestWithGeo = NextRequest & { geo?: { country?: string } };
 
+function getClientIdentifier(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+  return ip;
+}
+
 export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const authPaths = ['/login', '/signup', '/auth/callback'];
+  if (authPaths.includes(path)) {
+    const { allowed } = await checkRateLimit(getClientIdentifier(request), 'auth');
+    if (!allowed) {
+      return new NextResponse('Too Many Requests', { status: 429 });
+    }
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -164,6 +180,7 @@ export const config = {
     '/dashboard/:path*',
     '/login',
     '/signup',
+    '/auth/:path*',
     '/onboarding/:path*',
     '/partner/:path*',
     '/pricing',

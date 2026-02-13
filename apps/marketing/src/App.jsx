@@ -10,6 +10,7 @@ import SEO from './components/SEO';
 import Navbar from './components/Navbar';
 import MailerLiteForm from './components/MailerLiteForm';
 import AppShowcasePhone from './components/AppShowcasePhone';
+import CookieConsent from './components/CookieConsent';
 
 /* ============================================================
    ANIMATION VARIANTS (shared across sections)
@@ -65,6 +66,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <CookieConsent />
     </>
   );
 }
@@ -1006,12 +1008,14 @@ function Footer() {
               ...(PRICING_ENABLED ? [{ label: 'Pricing', href: '#pricing' }] : []),
               { label: 'Log in', href: `${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login` },
               { label: 'Privacy', href: '/privacy' },
+              { label: 'Cookie settings', href: '#', onClick: (e) => { e.preventDefault(); window.dispatchEvent(new Event('plot_show_cookie_settings')); } },
               { label: 'Terms', href: '/terms' },
               { label: 'Contact', href: 'mailto:hello@plotbudget.com' },
             ].map((link) => (
               <a
                 key={link.label}
                 href={link.href}
+                onClick={link.onClick}
                 className="
                   font-heading text-label-sm uppercase tracking-wider
                   text-plot-muted hover:text-plot-accent

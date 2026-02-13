@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { leaveHouseholdAsPartner } from '@/app/actions/partner-invite';
+import { logAuditEvent } from '@/lib/audit';
 
 /**
  * Signs out the current user. Caller should redirect and show toast on success.
@@ -17,6 +18,12 @@ export async function signOut() {
   if (!session) {
     return { success: true };
   }
+
+  await logAuditEvent({
+    userId: session.user.id,
+    eventType: 'logout',
+    resource: 'auth',
+  });
 
   const { error } = await supabase.auth.signOut();
 

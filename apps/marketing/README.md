@@ -138,7 +138,6 @@ The marketing site deploys as a **separate Vercel project** with Root Directory 
 **Environment variables** (Vercel dashboard):
 - `MAILERLITE_API_KEY` — your key
 - `MAILERLITE_GROUP_ID` — optional group ID
-- `VITE_GA_MEASUREMENT_ID` — optional Google Analytics ID
 
 **Connect your domain:** Dashboard → Settings → Domains → Add plotbudget.com
 

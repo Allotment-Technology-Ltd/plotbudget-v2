@@ -44,6 +44,7 @@
       h1 { font-family: 'Space Mono', monospace; font-size: clamp(24px, 5vw, 32px); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
       .effective-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 48px; }
       h2 { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-top: 48px; margin-bottom: 16px; }
+      h3 { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; color: var(--text); margin-top: 24px; margin-bottom: 10px; }
       p { margin-bottom: 16px; color: var(--text); }
       p + p { margin-top: 0; }
       strong { font-weight: 600; }
@@ -128,9 +129,10 @@
       </p>
       <p>
         We use Resend to send transactional emails (password resets, partner
-        invites). We use PostHog for product analytics in the app to improve
-        the service — this does not include your budget data. The marketing
-        site may use Google Analytics for aggregate traffic insights.
+        invites). In the app we may use PostHog for product analytics to improve
+        the service — this does not include your budget data, and you can
+        decline analytics cookies and still use PLOT. We do not use third-party
+        advertising or tracking analytics on the marketing site.
       </p>
 
       <h2>5. How We Store and Protect Your Data</h2>
@@ -166,14 +168,37 @@
         <li><strong>Vercel</strong> — Application hosting. Subject to <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel's privacy policy</a>.</li>
         <li><strong>Resend</strong> — Transactional emails (password resets, partner invites). Subject to <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">Resend's privacy policy</a>.</li>
         <li><strong>MailerLite</strong> — Waitlist email collection on the marketing site only. Subject to <a href="https://www.mailerlite.com/legal/privacy-policy" target="_blank" rel="noopener">MailerLite's privacy policy</a>.</li>
-        <li><strong>PostHog</strong> — Product analytics in the app. Subject to <a href="https://posthog.com/privacy" target="_blank" rel="noopener">PostHog's privacy policy</a>.</li>
-        <li><strong>Google Analytics</strong> — Aggregate analytics on the marketing site (optional). Subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>.</li>
+        <li><strong>PostHog</strong> — Product analytics in the app (optional; only if you accept analytics cookies). Subject to <a href="https://posthog.com/privacy" target="_blank" rel="noopener">PostHog's privacy policy</a>.</li>
       </ul>
       <p>
         We do not share your data with any other third parties.
       </p>
 
-      <h2>7. Your Rights</h2>
+      <h2>7. Cookies and Your Choices</h2>
+      <p>
+        We use cookies and similar technologies only as needed to run PLOT and to
+        respect your preferences. You have full control over optional cookies.
+      </p>
+      <p><strong>Essential cookies</strong> are required for the app to work. They
+        include session and authentication cookies (so you can log in and stay
+        logged in) and, where used, cookies that remember your cookie preferences.
+        <strong>If you do not accept essential cookies, you will not be able to use
+        the PLOT app</strong> (log in, access your budget, or use any account features).
+        The marketing site can be browsed without accepting non-essential cookies.
+      </p>
+      <p><strong>Optional cookies</strong> (e.g. analytics) help us improve the
+        product. You can refuse them and still use PLOT. We use a cookie banner
+        or consent controls so you can choose to accept all, essential only, or
+        customise which optional cookies you allow. Your choices are stored and
+        respected on future visits.
+      </p>
+      <p>
+        For full details and to change your preferences, use the cookie settings
+        in the app or on the marketing site (cookie banner or footer link), or
+        contact us at <a href="mailto:hello@plotbudget.com">hello@plotbudget.com</a>.
+      </p>
+
+      <h2>8. Your Rights</h2>
       <p>
         Under UK GDPR, you have the right to access, correct, or delete your
         personal data. You can delete your account and all associated data
@@ -188,24 +213,34 @@
         if you believe your data rights have been violated.
       </p>
 
-      <h2>8. Children</h2>
+      <h2>9. Children</h2>
       <p>
         PLOT is not intended for use by anyone under the age of 18. We do not
         knowingly collect data from minors.
       </p>
 
-      <h2>9. Changes to This Policy</h2>
+      <h2>10. Changes to This Policy</h2>
       <p>
         If we make material changes to this privacy policy, we will notify
         registered users by email before the changes take effect. The current
         version will always be available at this URL.
       </p>
 
-      <h2>10. Contact</h2>
+      <h2>11. Contact</h2>
       <p>
         Questions about this policy or your data? Email us at
         <a href="mailto:hello@plotbudget.com">hello@plotbudget.com</a>.
       </p>
+
+      <h2 id="payment-processing">Payment Processing (Pay-What-You-Like)</h2>
+      <p>
+        When you subscribe to PLOT Premium using our pay-what-you-like model, payments are processed by Polar (polar.sh) via Stripe. Polar
+        collects payment card details, billing email, and the contribution amount. PLOT receives the subscription status, chosen amount,
+        and a reference to the Polar subscription. PLOT does not store card data.
+      </p>
+      <p>For Polar's privacy practices, see <a href="https://polar.sh/legal/privacy">Polar Privacy Policy</a>.</p>
+      <h3>Data Retention</h3>
+      <p>We retain subscription metadata (status, amount, reference ID) while your account is active and for up to 7 years for legal and accounting purposes.</p>
     </main>
 
     <footer class="footer">
@@ -216,15 +251,3 @@
     </footer>
 </body>
 </html>
-<!-- PWYL PAYMENT PROCESSING (ADDED) -->
-<section id="pwl-payment-processing">
-  <h2>Payment Processing (Pay-What-You-Like)</h2>
-  <p>
-    When you subscribe to PLOT Premium using our pay-what-you-like model, payments are processed by Polar (polar.sh) via Stripe. Polar
-    collects payment card details, billing email, and the contribution amount. PLOT receives the subscription status, chosen amount,
-    and a reference to the Polar subscription. PLOT does not store card data.
-  </p>
-  <p>For Polar's privacy practices, see <a href="https://polar.sh/legal/privacy">Polar Privacy Policy</a>.</p>
-  <h3>Data Retention</h3>
-  <p>We retain subscription metadata (status, amount, reference ID) while your account is active and for up to 7 years for legal and accounting purposes.</p>
-</section>

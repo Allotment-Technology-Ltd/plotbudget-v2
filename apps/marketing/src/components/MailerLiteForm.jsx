@@ -64,17 +64,8 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
         );
       }
 
-      setStatus(STATES.SUCCESS);      
+      setStatus(STATES.SUCCESS);
       setEmail('');
-      
-// Track waitlist signup in GA4
-      if (typeof gtag === 'function') {
-        gtag('event', 'waitlist_signup', {
-          event_category: 'engagement',
-          event_label: variant,
-        });
-      }
-
     } catch (err) {
       setStatus(STATES.ERROR);
       setErrorMsg(err.message || 'Network error. Please check your connection.');

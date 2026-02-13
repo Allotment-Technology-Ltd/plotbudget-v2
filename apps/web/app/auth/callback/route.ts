@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { logAuditEvent } from '@/lib/audit';
 
 const REDIRECT_AFTER_AUTH_COOKIE = 'redirect_after_auth';
 
@@ -10,6 +11,17 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createServerSupabaseClient();
     await supabase.auth.exchangeCodeForSession(code);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? null;
+      await logAuditEvent({
+        userId: user.id,
+        eventType: 'login',
+        resource: 'auth',
+        ipAddress: ip,
+        userAgent: request.headers.get('user-agent') ?? null,
+      });
+    }
   }
 
   const redirectPath = request.cookies.get(REDIRECT_AFTER_AUTH_COOKIE)?.value;

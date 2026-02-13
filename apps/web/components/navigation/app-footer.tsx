@@ -1,8 +1,11 @@
 'use client';
 
 import { marketingUrl } from '@/lib/marketing-url';
+import { useCookieConsentOptional } from '@/components/providers/cookie-consent-context';
 
 export function AppFooter() {
+  const cookieConsent = useCookieConsentOptional();
+
   return (
     <footer
       className="border-t border-border py-4"
@@ -24,6 +27,15 @@ export function AppFooter() {
         >
           Privacy
         </a>
+        {cookieConsent && (
+          <button
+            type="button"
+            onClick={() => cookieConsent.openSettings()}
+            className="font-heading uppercase tracking-wider hover:text-foreground transition-colors"
+          >
+            Cookie settings
+          </button>
+        )}
         <a
           href={marketingUrl('/terms')}
           target="_blank"

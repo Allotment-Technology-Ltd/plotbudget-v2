@@ -17,6 +17,7 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Security: dependency vulns (fail on high/critical) + code/secret audit (fail on dangerous patterns only).
   security:
     name: security
     runs-on: ubuntu-latest

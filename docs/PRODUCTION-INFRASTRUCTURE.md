@@ -22,7 +22,7 @@ Both the main app and the marketing site deploy from the same repo (`plotbudget`
 | **Marketing** | Vite marketing site | `plotbudget` → app root `apps/marketing` | From `apps/marketing/vercel.json`: framework Vite, output `dist`, install `cd ../.. && pnpm install`. | https://plotbudget.com   |
 
 - **App:** Set Vercel project Root Directory to `plotbudget` (or repo root if the repo is already `plotbudget`). The build runs from monorepo root and targets `@repo/web`. Env vars: Supabase, Resend, Polar, PostHog, `NEXT_PUBLIC_*`, `CRON_SECRET`, etc. (see Step 2).
-- **Marketing:** Same repo; set Root Directory so the application root is `apps/marketing` (e.g. Root Directory = `plotbudget/apps/marketing` if repo root is the parent of `plotbudget`). Env vars: `VITE_*` only (e.g. `VITE_GA_MEASUREMENT_ID`, `VITE_PRICING_ENABLED`); no Supabase or server secrets. Uses MailerLite (or similar) for waitlist; configure in the marketing app’s env in Vercel.
+- **Marketing:** Same repo; set Root Directory so the application root is `apps/marketing` (e.g. Root Directory = `plotbudget/apps/marketing` if repo root is the parent of `plotbudget`). Env vars: `VITE_*` only (e.g. `VITE_PRICING_ENABLED`); no Supabase or server secrets. Uses MailerLite (or similar) for waitlist; configure in the marketing app’s env in Vercel.
 
 ---
 
@@ -174,6 +174,7 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 - [ ] Supabase Auth: Site URL = `https://app.plotbudget.com`, Redirect URLs = `https://app.plotbudget.com/**`
 - [ ] RLS enabled on all public tables; cron routes protected with `CRON_SECRET`.
 - [ ] **Full security review and CI checks:** see [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) (assessment, findings, and pipeline).
+- [ ] **Open banking readiness and privacy:** see [OPEN-BANKING-READINESS.md](./OPEN-BANKING-READINESS.md) and [PRIVACY-DATA-GOVERNANCE.md](./PRIVACY-DATA-GOVERNANCE.md). Optional: set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (Vercel → App project) for auth rate limiting.
 
 ---
 

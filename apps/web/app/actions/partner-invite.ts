@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@/lib/supabase/database.types';
 import { sendPartnerInviteEmail } from '@/lib/email/partner-invite';
 import { getAppBaseUrl } from '@/lib/app-url';
+import { logAuditEvent } from '@/lib/audit';
 
 type HouseholdRow = Database['public']['Tables']['households']['Row'];
 
@@ -47,6 +48,13 @@ export async function invitePartner(partnerEmail: string) {
   if (updateError) throw new Error('Failed to update household');
 
   await sendPartnerInviteEmail(partnerEmail, user.email ?? '', token);
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_invite_sent',
+    resource: 'household',
+    resourceDetail: { householdId: household.id },
+  });
 
   revalidatePath('/dashboard/settings');
 
@@ -89,6 +97,13 @@ export async function createPartnerInviteLink(): Promise<{ url: string }> {
     .eq('id', household.id);
 
   if (updateError) throw new Error('Failed to create invite link');
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_invite_sent',
+    resource: 'household',
+    resourceDetail: { householdId: household.id, linkOnly: true },
+  });
 
   revalidatePath('/dashboard/settings');
 
@@ -138,6 +153,13 @@ export async function sendPartnerInviteToEmail(partnerEmail: string) {
     household.partner_auth_token
   );
 
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_invite_sent',
+    resource: 'household',
+    resourceDetail: { householdId: household.id, sendToEmail: true },
+  });
+
   revalidatePath('/dashboard/settings');
 
   return { success: true, message: 'Invitation email sent!' };
@@ -179,6 +201,13 @@ export async function resendPartnerInvite() {
     household.partner_auth_token ?? ''
   );
 
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_invite_sent',
+    resource: 'household',
+    resourceDetail: { householdId: household.id, resend: true },
+  });
+
   revalidatePath('/dashboard/settings');
 
   return { success: true, message: 'Invitation resent!' };
@@ -209,6 +238,12 @@ export async function removePartner() {
     .eq('owner_id', user.id);
 
   if (error) throw new Error('Failed to remove partner');
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_invite_revoked',
+    resource: 'household',
+  });
 
   revalidatePath('/dashboard/settings');
 
@@ -253,6 +288,13 @@ export async function acceptPartnerInvite(token: string) {
 
   if (updateError) throw new Error('Failed to accept invitation');
 
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_joined',
+    resource: 'household',
+    resourceDetail: { householdId: household.id },
+  });
+
   return { success: true, householdId: household.id };
 }
 
@@ -282,6 +324,13 @@ export async function leaveHouseholdAsPartner(): Promise<void> {
     .eq('partner_user_id', user.id);
 
   if (error) throw new Error('Failed to leave household');
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_removed',
+    resource: 'household',
+    resourceDetail: { selfLeft: true },
+  });
 }
 
 /**
@@ -319,6 +368,13 @@ export async function removePartnerAndDeleteAccount(): Promise<void> {
     .eq('owner_id', user.id);
 
   if (updateError) throw new Error('Failed to remove partner');
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'partner_removed',
+    resource: 'household',
+    resourceDetail: { removedUserId: partnerUserId },
+  });
 
   const { error: userDeleteError } = await admin
     .from('users')

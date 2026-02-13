@@ -517,6 +517,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      audit_events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          event_type: string;
+          resource: string | null;
+          resource_detail: Json | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          event_type: string;
+          resource?: string | null;
+          resource_detail?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          event_type?: string;
+          resource?: string | null;
+          resource_detail?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+      };
     };
     Enums: {
       subscription_tier: 'free' | 'pro';

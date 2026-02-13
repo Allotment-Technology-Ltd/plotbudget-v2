@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { logAuditEvent } from '@/lib/audit';
 
 const passwordSchema = z
   .string()
@@ -78,6 +79,12 @@ export async function exportUserData(): Promise<string> {
   if (!household) {
     throw new Error('No household found');
   }
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'data_export',
+    resource: 'privacy',
+  });
 
   type HouseholdRow = { id: string; [k: string]: unknown };
   const h = household as HouseholdRow;
@@ -168,6 +175,12 @@ export async function deleteUserAccount() {
     throw new Error('Not authenticated');
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'account_deleted',
+    resource: 'account',
+  });
+
   const admin = createAdminClient();
   const { data: ownedHousehold } = await supabase
     .from('households')
@@ -241,6 +254,12 @@ export async function changePassword(newPassword: string) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await logAuditEvent({
+    userId: user.id,
+    eventType: 'password_change',
+    resource: 'account',
+  });
 
   revalidatePath('/dashboard/settings');
 }

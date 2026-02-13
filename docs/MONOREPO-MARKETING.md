@@ -147,7 +147,7 @@ Ensure those pages exist on the marketing site and match the URLs the app uses.
 
 1. Root Directory: `apps/marketing` (or equivalent so the app root is that folder).
 2. Build: from `apps/marketing/vercel.json` — framework Vite, output `dist`, install from monorepo root (`cd ../.. && pnpm install`).
-3. Environment variables: `VITE_PLOTBUDGET_APP_URL`, `VITE_PRICING_ENABLED`, `VITE_GA_MEASUREMENT_ID`; MailerLite if used: `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`.
+3. Environment variables: `VITE_PLOTBUDGET_APP_URL`, `VITE_PRICING_ENABLED`; MailerLite if used: `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`.
 
 See `apps/marketing/README.md` for app-specific deployment details.
 

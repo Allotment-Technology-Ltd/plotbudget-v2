@@ -4,6 +4,8 @@ import { Toaster } from 'sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '../components/providers/theme-provider';
 import { PostHogProvider } from '../components/providers/posthog-provider';
+import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
+import { CookieBanner } from '../components/cookie-banner';
 import './globals.css';
 
 const inter = Inter({
@@ -97,17 +99,20 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <PostHogProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <main id="main-content">{children}</main>
-            <Toaster position="top-right" />
-          </ThemeProvider>
-        </PostHogProvider>
+        <CookieConsentProvider>
+          <PostHogProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <main id="main-content">{children}</main>
+              <Toaster position="top-right" />
+            </ThemeProvider>
+          </PostHogProvider>
+          <CookieBanner />
+        </CookieConsentProvider>
         <SpeedInsights />
       </body>
     </html>
