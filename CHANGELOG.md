@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.4.0...v0.4.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* **web:** remove middleware.ts, use proxy.ts only for Next.js 16 ([#42](https://github.com/adamboon1984-arch/plotbudget-v2/issues/42)) ([3b5d8c8](https://github.com/adamboon1984-arch/plotbudget-v2/commit/3b5d8c8dbb078854ac9efbb17a351e1f95102bf4))
+
 # [0.4.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.3.0...v0.4.0) (2026-02-13)
 
 
