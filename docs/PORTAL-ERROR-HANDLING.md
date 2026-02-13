@@ -94,7 +94,7 @@ To test error handling, you can:
 1. **Test missing customer ID:** Create a user without a subscription, try to access portal
    - Expected: Redirect to `/pricing`
 
-2. **Test session creation failure:** Stop ngrok or Polar API, try to access portal
+2. **Test session creation failure:** Stop Polar CLI or make Polar API unreachable, try to access portal
    - Expected: Error banner with message on return
 
 3. **Check server logs:** Look for `Customer portal session creation failed:` or `Checkout created without URL:`

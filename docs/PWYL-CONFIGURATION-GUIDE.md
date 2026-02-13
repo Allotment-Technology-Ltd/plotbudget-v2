@@ -679,10 +679,7 @@ NEXT_PUBLIC_SIGNUP_GATED=false
   - [ ] £5/month → Copy ID → `POLAR_PWYL_PRICE_5`
   - [ ] £10/month → Copy ID → `POLAR_PWYL_PRICE_10`
 
-- [ ] Configure Webhook:
-  - [ ] URL: `https://YOUR_NGROK.ngrok-free.dev/api/webhooks/polar`
-  - [ ] Secret: (generate) → `POLAR_WEBHOOK_SECRET`
-  - [ ] Events: subscription.created, subscription.updated, subscription.canceled
+- [ ] Configure Webhook (local): Use Polar CLI (`pnpm dev:polar`); copy secret from `polar listen` output → `POLAR_WEBHOOK_SECRET`. No URL registration needed for local testing.
 
 - [ ] Generate Access Token:
   - [ ] Scope: All (full access)

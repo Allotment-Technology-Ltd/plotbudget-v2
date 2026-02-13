@@ -66,6 +66,22 @@ All local env for the Next.js app lives in **`apps/web/.env.local`** only (no ro
 - `NEXT_PUBLIC_APP_URL=https://app.plotbudget.com`
 - Strong, unique `CRON_SECRET`.
 
+### Polar (production payments)
+
+For live Polar payments, set these in Vercel Production (see [POLAR-SETUP.md](./POLAR-SETUP.md)):
+
+| Variable | Required |
+|----------|----------|
+| `POLAR_ACCESS_TOKEN` | Yes (production token from polar.sh) |
+| `POLAR_WEBHOOK_SECRET` | Yes (from production webhook) |
+| `POLAR_SUCCESS_URL` | Yes (`https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}`) |
+| `POLAR_PWYL_GBP_PRODUCT_ID` | Yes |
+| `POLAR_PWYL_USD_PRODUCT_ID` | Yes (can reuse PWYL product ID) |
+| `POLAR_PWYL_EUR_PRODUCT_ID` | Yes (can reuse PWYL product ID) |
+| `POLAR_PREMIUM_PRODUCT_ID` | Yes |
+| `POLAR_PREMIUM_ANNUAL_PRODUCT_ID` | Optional |
+| `POLAR_SANDBOX` | **Omit or `false`** for production — never `true` |
+
 ### Partner invite email (Resend)
 
 Partner invite emails are sent from the Next.js app via [Resend](https://resend.com). Set these in **every environment** where you want invites to send (local, Preview, production):

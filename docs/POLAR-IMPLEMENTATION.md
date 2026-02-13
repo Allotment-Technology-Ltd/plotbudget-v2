@@ -53,18 +53,13 @@ NEXT_PUBLIC_PRICING_ENABLED=true
 **Current Status**: Webhook handler exists but needs verification.
 
 **Test Steps**:
-1. Start ngrok tunnel (if not running):
+1. Start Polar CLI for webhook delivery:
    ```bash
-   ngrok http 3000
+   pnpm dev:polar
    ```
+   Copy the webhook secret from the output into `.env.local` as `POLAR_WEBHOOK_SECRET`. No URL registration needed for local testing. See `docs/LOCAL-WEBHOOK-TESTING.md`.
 
-2. Update Polar sandbox webhook endpoint:
-   - Go to https://sandbox.polar.sh/settings/webhooks
-   - Set URL: `https://YOUR_NGROK_URL.ngrok-free.dev/api/webhooks/polar`
-   - Set Secret: (use value from POLAR_WEBHOOK_SECRET in .env.local)
-   - Enable events: `subscription.created`, `subscription.updated`, `subscription.canceled`
-
-3. Test subscription flow:
+2. Test subscription flow:
    ```bash
    # Navigate to pricing page
    http://localhost:3000/pricing
@@ -74,8 +69,9 @@ NEXT_PUBLIC_PRICING_ENABLED=true
    # Verify redirect to /dashboard?checkout_id=...
    ```
 
-4. Verify webhook received:
-   - Check dev server logs for `[webhook] Received subscription.created`
+3. Verify webhook received:
+   - Check dev server logs for `POST /api/webhooks/polar 200`
+   - Check Polar CLI output for forwarded events
    - Check Polar dashboard → Webhooks → Recent deliveries
    - Query database:
      ```sql
@@ -84,7 +80,7 @@ NEXT_PUBLIC_PRICING_ENABLED=true
      ORDER BY created_at DESC LIMIT 1;
      ```
 
-5. Verify Settings UI:
+4. Verify Settings UI:
    - Navigate to `/dashboard/settings?tab=subscription`
    - Should show "Premium" plan with "Active" or "Trialing" status
    - "Manage Subscription" link should open Polar customer portal
@@ -165,7 +161,7 @@ NEXT_PUBLIC_PRICING_ENABLED=true
 2. **Test Webhook Handler End-to-End**
    - Status: Code exists but not verified
    - Action: Complete checkout in sandbox, verify webhook inserts subscription row
-   - Verify: Check ngrok logs, Polar delivery logs, database row
+   - Verify: Check Polar CLI output, Polar delivery logs, database row
 
 3. **Subscription Tier Logic & Limits**
    - Create helper: `lib/utils/subscription-tier.ts`

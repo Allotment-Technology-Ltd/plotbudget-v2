@@ -66,92 +66,115 @@ const SUBSCRIPTION_EVENTS = new Set([
   'subscription.uncanceled',
 ]);
 
+// Event types we acknowledge but don't process (checkout.*, member.*, etc.)
+// Returning 200 prevents Polar from retrying and causing 502s.
+function isUnhandledEventType(error: unknown): boolean {
+  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    msg.includes('unknown event type') ||
+    msg.includes('unknown event') ||
+    msg.includes('unrecognized event') ||
+    msg.includes('checkout.') ||
+    msg.includes('member.')
+  );
+}
+
 export async function POST(req: NextRequest) {
-  if (!process.env.POLAR_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Missing POLAR_WEBHOOK_SECRET' }, { status: 500 });
-  }
-
-  const rawBody = await req.text();
-
-  let event: PolarSubscriptionEvent;
+  // Visible in dev terminal: search for "webhook/polar"
+  console.log('[webhook/polar] POST received');
   try {
-    const headersObj = Object.fromEntries(req.headers.entries());
-    event = validateEvent(rawBody, headersObj, process.env.POLAR_WEBHOOK_SECRET) as PolarSubscriptionEvent;
-  } catch (error) {
-    const errorStr = String(error);
-    // Polar SDK throws SDKValidationError for event types it doesn't recognise
-    // (e.g. member.created). Return 200 so Polar won't keep retrying.
-    if (errorStr.includes('Unknown event type')) {
+    if (!process.env.POLAR_WEBHOOK_SECRET) {
+      return NextResponse.json({ error: 'Missing POLAR_WEBHOOK_SECRET' }, { status: 500 });
+    }
+
+    const rawBody = await req.text();
+
+    let event: PolarSubscriptionEvent;
+    try {
+      const headersObj = Object.fromEntries(req.headers.entries());
+      event = validateEvent(rawBody, headersObj, process.env.POLAR_WEBHOOK_SECRET) as PolarSubscriptionEvent;
+    } catch (error) {
+      // Polar SDK throws for event types it doesn't recognise (e.g. checkout.expired).
+      // Return 200 so Polar won't retry; 502s occur when we fail to respond at all.
+      if (isUnhandledEventType(error)) {
+        return NextResponse.json({ received: true });
+      }
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    }
+
+    const { type, data } = event;
+
+    // Acknowledge non-subscription events (checkout.*, customer.*, etc.)
+    if (!SUBSCRIPTION_EVENTS.has(type)) {
       return NextResponse.json({ received: true });
     }
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-  }
 
-  const { type, data } = event;
+    const supabase = createAdminClient();
+    let householdId = data.metadata?.household_id ?? null;
+    const userId = data.metadata?.user_id ?? null;
+    // Resolve product_id / customer_id from flat or nested shapes
+    const productId = data.product_id ?? data.product?.id ?? undefined;
+    const customerId = data.customer_id ?? data.customer?.id ?? undefined;
+    const tier = mapTier(productId, data.price_id, data.metadata);
 
-  if (!SUBSCRIPTION_EVENTS.has(type)) {
+    // If metadata is empty (common for lifecycle events like subscription.canceled),
+    // try to look up the existing subscription record by polar_subscription_id.
+    if (!householdId) {
+      const { data: existing } = await (supabase as any)
+        .from('subscriptions')
+        .select('household_id')
+        .eq('polar_subscription_id', data.id)
+        .maybeSingle();
+      if (existing?.household_id) {
+        householdId = existing.household_id;
+      }
+    }
+
+    if (!householdId) {
+      // Return 200 to acknowledge — retrying won't help since metadata is absent
+      return NextResponse.json({ received: true, note: 'no household_id available' });
+    }
+
+    const payload: Database['public']['Tables']['subscriptions']['Insert'] = {
+      polar_subscription_id: data.id,
+      household_id: householdId,
+      status: normalizeStatus(data.status),
+      current_tier: tier ?? null,
+      trial_end_date: data.trial_ends_at ?? null,
+      polar_product_id: productId ?? data.price_id ?? null,
+    };
+
+    const { error } = await (supabase as any)
+      .from('subscriptions')
+      .upsert(payload, { onConflict: 'polar_subscription_id' });
+
+    if (error) {
+      console.error('Webhook upsert failed:', error, { householdId, polarSubId: data.id });
+      return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    }
+
+    console.log('[webhook/polar] Processed', type, { householdId, polarSubId: data.id });
+
+    // Update user subscription fields for quick reads
+    if (userId && tier === 'pro') {
+      const dbStatus = normalizeStatus(data.status);
+      const normalizedUserStatus: Database['public']['Tables']['users']['Update']['subscription_status'] =
+        dbStatus === 'trialing' ? 'active' : (['active', 'cancelled', 'past_due'].includes(dbStatus) ? dbStatus : null) as Database['public']['Tables']['users']['Update']['subscription_status'];
+
+      await (supabase as any)
+        .from('users')
+        .update({
+          subscription_tier: 'pro',
+          subscription_status: normalizedUserStatus,
+          polar_customer_id: customerId ?? null,
+        })
+        .eq('id', userId);
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error('[webhook/polar] Unhandled error:', err);
+    // Return 200 to stop Polar retries; 502s occur when we fail to respond at all.
     return NextResponse.json({ received: true });
   }
-
-  const supabase = createAdminClient();
-  let householdId = data.metadata?.household_id ?? null;
-  const userId = data.metadata?.user_id ?? null;
-  // Resolve product_id / customer_id from flat or nested shapes
-  const productId = data.product_id ?? data.product?.id ?? undefined;
-  const customerId = data.customer_id ?? data.customer?.id ?? undefined;
-  const tier = mapTier(productId, data.price_id, data.metadata);
-
-  // If metadata is empty (common for lifecycle events like subscription.canceled),
-  // try to look up the existing subscription record by polar_subscription_id.
-  if (!householdId) {
-    const { data: existing } = await (supabase as any)
-      .from('subscriptions')
-      .select('household_id')
-      .eq('polar_subscription_id', data.id)
-      .maybeSingle();
-    if (existing?.household_id) {
-      householdId = existing.household_id;
-    }
-  }
-
-  if (!householdId) {
-    // Return 200 to acknowledge — retrying won't help since metadata is absent
-    return NextResponse.json({ received: true, note: 'no household_id available' });
-  }
-
-  const payload: Database['public']['Tables']['subscriptions']['Insert'] = {
-    polar_subscription_id: data.id,
-    household_id: householdId,
-    status: normalizeStatus(data.status),
-    current_tier: tier ?? null,
-    trial_end_date: data.trial_ends_at ?? null,
-    polar_product_id: productId ?? data.price_id ?? null,
-  };
-
-  const { error } = await (supabase as any)
-    .from('subscriptions')
-    .upsert(payload, { onConflict: 'polar_subscription_id' });
-
-  if (error) {
-    console.error('Webhook upsert failed:', error, { householdId, polarSubId: data.id });
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
-  }
-
-  // Update user subscription fields for quick reads
-  if (userId && tier === 'pro') {
-    const dbStatus = normalizeStatus(data.status);
-    const normalizedUserStatus: Database['public']['Tables']['users']['Update']['subscription_status'] =
-      dbStatus === 'trialing' ? 'active' : (['active', 'cancelled', 'past_due'].includes(dbStatus) ? dbStatus : null) as Database['public']['Tables']['users']['Update']['subscription_status'];
-
-    await (supabase as any)
-      .from('users')
-      .update({
-        subscription_tier: 'pro',
-        subscription_status: normalizedUserStatus,
-        polar_customer_id: customerId ?? null,
-      })
-      .eq('id', userId);
-  }
-
-  return NextResponse.json({ received: true });
 }

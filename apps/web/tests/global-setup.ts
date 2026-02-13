@@ -72,6 +72,7 @@ const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
 };
 
 export default async function globalSetup(config: FullConfig) {
+  console.log('⏳ Global setup: starting…');
   const baseURL = String(config.projects?.[0]?.use?.baseURL || 'http://localhost:3000');
   const projectsWithAuth = (config.projects ?? []).filter(
     (p) => p.use?.storageState && PROJECT_AUTH[p.name]
@@ -87,6 +88,7 @@ export default async function globalSetup(config: FullConfig) {
   }
 
   await cleanupAllTestUsers();
+  console.log('⏳ Global setup: checking server…');
 
   // When SKIP_WEBSERVER=1, assume dev server is already running (fail fast if not).
   const skipWebServer = process.env.SKIP_WEBSERVER === '1';
@@ -94,6 +96,7 @@ export default async function globalSetup(config: FullConfig) {
   let serverStarted = false;
   const alreadyUp = await waitForServer(baseURL, probeMs);
   if (!alreadyUp) {
+    console.log('⏳ Global setup: server not ready, starting pnpm dev (may take 30–90s)…');
     if (skipWebServer) {
       throw new Error(
         `Server at ${baseURL} not reachable. Start the app (pnpm dev) in another terminal, or run without SKIP_WEBSERVER=1.`

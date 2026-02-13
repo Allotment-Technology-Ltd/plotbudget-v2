@@ -50,7 +50,7 @@ test.describe.serial('Blueprint - Payment tracking (current cycle)', () => {
     await closeCycleButton.click();
     await expect(
       page.getByText('Ritual Complete!', { exact: false })
-    ).toBeVisible({ timeout: 15_000 });
+    ).toBeVisible({ timeout: process.env.CI ? 25_000 : 15_000 });
   });
 
   test('celebration can be dismissed', async ({ page }) => {

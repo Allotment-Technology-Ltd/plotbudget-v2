@@ -33,7 +33,7 @@ Do this in [Polar](https://polar.sh) (or your Polar org).
 ### 1.3 Webhook endpoint
 
 1. In Polar: **Webhooks** (or **Developers → Webhooks**).
-2. **Add endpoint:** `https://app.plotbudget.com/api/webhooks/polar` (use your real app URL; for local testing you’ll need a tunnel, e.g. ngrok).
+2. **Add endpoint:** `https://app.plotbudget.com/api/webhooks/polar` (use your real app URL; for local testing use Polar CLI—see docs/LOCAL-WEBHOOK-TESTING.md).
 3. **Events to send:** at least:
    - `subscription.created`
    - `subscription.updated`
@@ -55,10 +55,15 @@ Set these where the **Next.js app** runs (e.g. Vercel → Project → Settings �
 | `POLAR_ACCESS_TOKEN` | Server-only (checkout route, webhook, API) | From Polar dashboard (1.2) |
 | `POLAR_WEBHOOK_SECRET` | Server-only (webhook handler) | From Polar webhook (1.3) |
 | `POLAR_SUCCESS_URL` | Checkout redirect | `https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}` |
-| `POLAR_PREMIUM_PRODUCT_ID` or `POLAR_PREMIUM_PRICE_ID` | Webhook: map event → Premium | Product or price ID from (1.1) |
-| (Optional) `POLAR_PREMIUM_ANNUAL_PRODUCT_ID` | Webhook: distinguish annual | If you want to store monthly vs annual |
+| `POLAR_PWYL_GBP_PRODUCT_ID` | Checkout: PWYL for GBP households | From create-polar-products script (prod) |
+| `POLAR_PWYL_USD_PRODUCT_ID` | Checkout: PWYL for USD households | Same PWYL product ID if single product |
+| `POLAR_PWYL_EUR_PRODUCT_ID` | Checkout: PWYL for EUR households | Same PWYL product ID if single product |
+| `POLAR_PREMIUM_PRODUCT_ID` or `POLAR_PREMIUM_PRICE_ID` | Webhook + checkout: monthly | Product or price ID from (1.1) |
+| (Optional) `POLAR_PREMIUM_ANNUAL_PRODUCT_ID` | Webhook + checkout: annual | If you want monthly vs annual |
+| `POLAR_SANDBOX` | Sandbox vs production API | `true` for sandbox; **omit or `false` for production** |
 
 - Do **not** expose the access token or webhook secret to the client (`NEXT_PUBLIC_*`).
+- **Production:** For Vercel Production scope, omit `POLAR_SANDBOX` or set `POLAR_SANDBOX=false`. Never set `POLAR_SANDBOX=true` for production.
 
 ---
 
@@ -71,10 +76,10 @@ These are the pieces that still need to be implemented so Polar actually works.
 In `apps/web`:
 
 ```bash
-pnpm add @polar-sh/nextjs
+pnpm add @polar-sh/sdk
 ```
 
-(Or `@polar-sh/sdk` if you need lower-level API calls; the Next.js adapter is enough for checkout + optional webhook helpers.)
+We use `@polar-sh/sdk` directly for checkout creation and webhook validation. The `@polar-sh/nextjs` adapter was removed — it adds unnecessary abstraction and our checkout route already handles the flow with the SDK.
 
 ### 3.2 Subscriptions table (Supabase)
 
@@ -94,19 +99,24 @@ When the webhook receives `subscription.created` / `subscription.updated`, you *
 ### 3.3 Checkout route (Next.js)
 
 - **Path:** e.g. `apps/web/app/api/checkout/route.ts` (or a dynamic route if you have multiple products).
-- **Handler:** Use Polar’s Next.js helper so that **GET** starts checkout, e.g.:
+- **Handler:** Use `@polar-sh/sdk` to create a checkout and redirect, e.g.:
 
   ```ts
-  import { Checkout } from '@polar-sh/nextjs';
+  import { Polar } from '@polar-sh/sdk';
 
-  export const GET = Checkout({
-    accessToken: process.env.POLAR_ACCESS_TOKEN,
-    successUrl: process.env.POLAR_SUCCESS_URL,
-    // Optional: productId or priceId so the link goes straight to Premium
-  });
+  const polar = new Polar({ accessToken: process.env.POLAR_ACCESS_TOKEN });
+
+  export async function GET(req: Request) {
+    const checkout = await polar.checkouts.create({
+      productId: process.env.POLAR_PREMIUM_PRODUCT_ID,
+      successUrl: process.env.POLAR_SUCCESS_URL,
+      // metadata: { household_id: "..." }
+    });
+    return Response.redirect(checkout.url);
+  }
   ```
 
-- **Upgrade CTA:** Point “Upgrade to Premium” (e.g. on the pricing page or settings) to this route. For “Premium Monthly” vs “Premium Annual”, you can use two links (e.g. `/api/checkout?product=monthly` and `?product=annual`) if the adapter supports it, or two routes.
+- **Upgrade CTA:** Point “Upgrade to Premium” (e.g. on the pricing page or settings) to this route. For “Premium Monthly” vs “Premium Annual”, you can use two links (e.g. `/api/checkout?product=monthly` and `?product=annual`) or handle it in the route handler.
 
 ### 3.4 Webhook route (Next.js)
 
@@ -129,7 +139,7 @@ When redirecting the user to the checkout (e.g. from “Upgrade to Premium”):
 - Either use Polar’s API to create a checkout session with **metadata** `{ household_id: "..." }` (and optionally `user_id`), then redirect the user to that session URL.
 - Or use the Next.js checkout route with query params that the route uses to call Polar’s API with that metadata; then the webhook receives it and can set `subscriptions.household_id`.
 
-(Exact API depends on `@polar-sh/nextjs` / `@polar-sh/sdk`; check their docs for “create checkout” with metadata.)
+(See `@polar-sh/sdk` docs for "create checkout" with metadata.)
 
 ### 3.6 (Optional) Limit enforcement
 
@@ -151,6 +161,19 @@ This can be done after checkout and webhook are working.
 
 ---
 
+## Production go-live checklist
+
+When moving from sandbox to live payments (polar.sh, not sandbox.polar.sh):
+
+1. **Polar production:** Create access token, create products (`pnpm exec tsx apps/web/scripts/create-polar-products.ts` with no `--sandbox`), create webhook at `https://app.plotbudget.com/api/webhooks/polar`.
+2. **Vercel Production env vars:** Set `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_SUCCESS_URL`, `POLAR_PWYL_GBP_PRODUCT_ID`, `POLAR_PWYL_USD_PRODUCT_ID`, `POLAR_PWYL_EUR_PRODUCT_ID`, `POLAR_PREMIUM_PRODUCT_ID`, `POLAR_PREMIUM_ANNUAL_PRODUCT_ID`.
+3. **Critical:** Omit `POLAR_SANDBOX` or set `POLAR_SANDBOX=false` for Production. Do not set `POLAR_SANDBOX=true` in production.
+4. **Verify:** Run a live purchase, confirm webhook delivery and DB updates, then enable `NEXT_PUBLIC_PRICING_ENABLED=true`.
+
+See [LIVE-PAYMENTS-SETUP.md](./LIVE-PAYMENTS-SETUP.md) for a fuller rollout checklist.
+
+---
+
 ## Quick reference
 
 | Goal | Where |
@@ -159,7 +182,7 @@ This can be done after checkout and webhook are working.
 | Webhook URL | Polar dashboard → Webhooks → `https://app.plotbudget.com/api/webhooks/polar` |
 | Env vars | Vercel (or your host) for the Next.js app |
 | Subscriptions storage | New migration: `public.subscriptions` (household_id, polar_subscription_id, status, current_tier, …) |
-| Start payment flow | `apps/web/app/api/checkout/route.ts` (GET) using `@polar-sh/nextjs` |
+| Start payment flow | `apps/web/app/api/checkout/route.ts` (GET) using `@polar-sh/sdk` |
 | Receive subscription events | `apps/web/app/api/webhooks/polar/route.ts` (POST), verify secret, upsert `subscriptions` |
 | Link subscription to household | Pass `household_id` in checkout metadata; webhook reads it and sets `subscriptions.household_id` |
 

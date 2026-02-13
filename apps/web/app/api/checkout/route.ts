@@ -6,9 +6,15 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 // Requires authenticated session — household_id and user_id are resolved server-side
 // to prevent IDOR (arbitrary household association).
 //
+// PWYL products are auto-routed by household currency:
+//   - GBP household → POLAR_PWYL_GBP_PRODUCT_ID
+//   - USD household → POLAR_PWYL_USD_PRODUCT_ID
+//   - EUR household → POLAR_PWYL_EUR_PRODUCT_ID
+//   - Fallback: GBP or legacy POLAR_PWYL_BASE_PRODUCT_ID
+//
 // Query params:
-//   - product=monthly|annual|pwyl
-// Env required: POLAR_ACCESS_TOKEN, product IDs
+//   - product=monthly|annual|pwyl (default: monthly)
+// Env required: POLAR_ACCESS_TOKEN, currency-specific product IDs
 // Env optional: POLAR_SUCCESS_URL (default: {requestOrigin}/dashboard?checkout_id={CHECKOUT_ID})
 //              POLAR_SANDBOX=true (use sandbox API; omit or false for production)
 
@@ -18,12 +24,44 @@ interface CheckoutConfig {
   amount?: number;
 }
 
-function resolveCheckoutConfig(productParam: string | null): CheckoutConfig {
+type Currency = 'GBP' | 'USD' | 'EUR';
+
+/**
+ * Resolve PWYL product ID by household currency.
+ * Falls back to GBP if currency is null/unknown or env var is missing.
+ * Maintains backward compatibility with legacy POLAR_PWYL_BASE_PRODUCT_ID.
+ */
+function resolvePWYLProductByCurrency(currency: Currency | null | undefined): string | undefined {
+  const currencyMap: Record<Currency, string | undefined> = {
+    GBP: process.env.POLAR_PWYL_GBP_PRODUCT_ID,
+    USD: process.env.POLAR_PWYL_USD_PRODUCT_ID,
+    EUR: process.env.POLAR_PWYL_EUR_PRODUCT_ID,
+  };
+
+  // If currency is valid and we have a currency-specific product, use it
+  if (currency && currency in currencyMap && currencyMap[currency]) {
+    return currencyMap[currency];
+  }
+
+  // Fallback 1: Try GBP product
+  if (currencyMap.GBP) {
+    return currencyMap.GBP;
+  }
+
+  // Fallback 2: Legacy POLAR_PWYL_BASE_PRODUCT_ID (for backward compatibility)
+  return process.env.POLAR_PWYL_BASE_PRODUCT_ID;
+}
+
+function resolveCheckoutConfig(
+  productParam: string | null,
+  householdCurrency: Currency | null | undefined
+): CheckoutConfig {
   // PWYL mode - Polar's native PWYL handles amount selection
+  // Product ID is now resolved by household currency
   if (productParam === 'pwyl') {
     return {
       mode: 'pwyl_custom',
-      productId: process.env.POLAR_PWYL_BASE_PRODUCT_ID,
+      productId: resolvePWYLProductByCurrency(householdCurrency),
     };
   }
 
@@ -49,27 +87,31 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.redirect(loginUrl.toString(), 302);
   }
 
-  // Resolve household_id from the authenticated user (owner or partner)
+  // Resolve household_id and currency from the authenticated user (owner or partner)
   const { data: ownedHousehold } = await supabase
     .from('households')
-    .select('id')
+    .select('id, currency')
     .eq('owner_id', user.id)
     .maybeSingle();
 
   const { data: partnerHousehold } = await supabase
     .from('households')
-    .select('id')
+    .select('id, currency')
     .eq('partner_user_id', user.id)
     .maybeSingle();
 
-  const householdId = (ownedHousehold as { id: string } | null)?.id ?? (partnerHousehold as { id: string } | null)?.id;
+  type HouseholdData = { id: string; currency: Currency | null } | null;
+  const household = (ownedHousehold as HouseholdData) ?? (partnerHousehold as HouseholdData);
 
-  if (!householdId) {
+  if (!household?.id) {
     return NextResponse.json(
       { error: 'No household found for this user. Complete onboarding first.' },
       { status: 400 },
     );
   }
+
+  const householdId = household.id;
+  const householdCurrency = household.currency;
 
   // Fetch user profile to get display name (pre-fill checkout form)
   const { data: profile } = await supabase
@@ -80,11 +122,11 @@ export const GET = async (req: NextRequest) => {
 
   // --- Checkout config ---
   const productParam = req.nextUrl.searchParams.get('product');
-  const config = resolveCheckoutConfig(productParam);
+  const config = resolveCheckoutConfig(productParam, householdCurrency);
 
   if (!config.productId) {
     return NextResponse.json({
-      error: 'Missing Polar product ID. Set POLAR_PREMIUM_PRODUCT_ID (fixed) or POLAR_PWYL_BASE_PRODUCT_ID (PWYL).',
+      error: 'Missing Polar product ID. Set currency-specific env vars (POLAR_PWYL_GBP_PRODUCT_ID, etc.) or legacy POLAR_PWYL_BASE_PRODUCT_ID.',
     }, { status: 400 });
   }
 

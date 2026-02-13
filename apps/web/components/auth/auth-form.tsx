@@ -144,12 +144,21 @@ function LoginForm({
     }
   };
 
+  const handleSubmitForm = () => form.handleSubmit(onSubmit)();
+  const onEnterSubmit = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmitForm();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <form
+        method="post"
         onSubmit={(e) => {
           e.preventDefault();
-          form.handleSubmit(onSubmit)(e);
+          handleSubmitForm();
         }}
         className="space-y-4"
         noValidate
@@ -165,6 +174,7 @@ function LoginForm({
             className="normal-case"
             data-testid="email-input"
             {...form.register('email')}
+            onKeyDown={onEnterSubmit}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
           />
@@ -196,6 +206,7 @@ function LoginForm({
             className="normal-case"
             data-testid="password-input"
             {...form.register('password')}
+            onKeyDown={onEnterSubmit}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
           />
@@ -220,14 +231,12 @@ function LoginForm({
           </div>
         )}
 
-        {/* Submit via button click only (type="button" avoids native form submit and page reload) */}
         <Button
-          type="button"
+          type="submit"
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
           data-testid="submit-login-form"
-          onClick={() => form.handleSubmit(onSubmit)()}
         >
           {isLoading ? 'Loading...' : 'Sign In'}
         </Button>
@@ -306,12 +315,21 @@ function SignupForm({
     }
   };
 
+  const handleSubmitForm = () => form.handleSubmit(onSubmit)();
+  const onEnterSubmit = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmitForm();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <form
+        method="post"
         onSubmit={(e) => {
           e.preventDefault();
-          form.handleSubmit(onSubmit)(e);
+          handleSubmitForm();
         }}
         className="space-y-4"
         noValidate
@@ -327,6 +345,7 @@ function SignupForm({
             placeholder="you@example.com"
             className="normal-case"
             {...form.register('email')}
+            onKeyDown={onEnterSubmit}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
           />
@@ -346,6 +365,7 @@ function SignupForm({
             placeholder="e.g. coffee-piano-sunset"
             className="normal-case"
             {...form.register('password')}
+            onKeyDown={onEnterSubmit}
             aria-invalid={!!form.formState.errors.password}
             aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
           />
@@ -365,6 +385,7 @@ function SignupForm({
             placeholder="••••••••"
             className="normal-case"
             {...form.register('confirmPassword')}
+            onKeyDown={onEnterSubmit}
             aria-invalid={!!form.formState.errors.confirmPassword}
             aria-describedby={
               form.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
@@ -390,14 +411,12 @@ function SignupForm({
           </div>
         )}
 
-        {/* Submit via button click only (type="button" avoids native form submit and page reload) */}
         <Button
-          type="button"
+          type="submit"
           className="w-full"
           disabled={isLoading}
           aria-busy={isLoading}
           data-testid="submit-signup-form"
-          onClick={() => form.handleSubmit(onSubmit)()}
         >
           {isLoading ? 'Loading...' : 'Create Account'}
         </Button>

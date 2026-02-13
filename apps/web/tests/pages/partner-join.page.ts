@@ -7,6 +7,7 @@ export class PartnerJoinPage {
   async goto(token: string) {
     await this.page.goto(`/partner/join?t=${encodeURIComponent(token)}`, {
       waitUntil: 'domcontentloaded',
+      timeout: process.env.CI ? 45_000 : 30_000,
     });
   }
 

@@ -19,6 +19,7 @@
     "send-email-examples": "tsx scripts/send-email-examples.ts",
     "run-seed-trial-users": "tsx scripts/run-seed-trial-test-users.ts",
     "copy-showcase-videos": "tsx scripts/copy-showcase-videos.ts",
+    "create-polar-products": "tsx scripts/create-polar-products.ts",
     "record-showcase-videos": "playwright test tests/specs/showcase-video.spec.ts --project=showcase-video --workers=1 && pnpm run copy-showcase-videos",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -35,7 +36,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@polar-sh/nextjs": "^0.9.3",
     "@polar-sh/sdk": "^0.43.0",
     "@radix-ui/react-alert-dialog": "^1.1.0",
     "@radix-ui/react-avatar": "^1.1.11",

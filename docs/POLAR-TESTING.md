@@ -29,9 +29,7 @@ Polar’s [Handle & monitor webhook deliveries](https://polar.sh/docs/integrate/
 
 **Manual checklist:**
 
-1. **Local receipt:** Use either:
-   - **Polar CLI:** `polar login` then `polar listen http://localhost:3000/` (select sandbox org; copy the secret into `.env` as `POLAR_WEBHOOK_SECRET`).  
-   - **Tunnel:** Expose `https://your-app.com/api/webhooks/polar` (e.g. ngrok to local `/api/webhooks/polar`) and register that URL in Polar (sandbox) as the webhook endpoint.
+1. **Local receipt:** Use Polar CLI: `polar login` then `polar listen http://localhost:3000/` (or `pnpm dev:polar` from plotbudget root). Select sandbox org; copy the secret into `.env` as `POLAR_WEBHOOK_SECRET`. See `docs/LOCAL-WEBHOOK-TESTING.md`.
 2. **Create a test subscription** in sandbox (checkout with `4242 4242 4242 4242`).
 3. **Confirm** in the delivery overview that the request was sent and (if applicable) redeliver until you get 2xx.
 4. **Verify** in your app/DB: `subscriptions` row upserted with correct `household_id`, `status`, `current_tier` (e.g. `pro`).
@@ -44,7 +42,7 @@ Use any three-digit CVC (four digits for American Express cards).
 Use any value you like for other form fields.
 **Troubleshooting (from Polar docs):**
 
-- **Not receiving webhooks:** Start ngrok/CLI; add logging in the handler; ensure no redirect (3xx) and webhook route is excluded from auth middleware; if using Cloudflare, consider Bot Fight Mode and WAF (see Polar’s “Not receiving webhooks”).
+- **Not receiving webhooks:** Start Polar CLI (`pnpm dev:polar`); add logging in the handler; ensure no redirect (3xx) and webhook route is excluded from auth middleware; if using Cloudflare, consider Bot Fight Mode and WAF (see Polar’s “Not receiving webhooks”).
 - **Invalid signature:** If you implement custom validation, the secret must be base64-encoded when generating the comparison signature; the Polar SDK handles this for you.
 - **Fast response:** Respond within **~2 seconds** (Polar timeout is 10s); queue heavy work in a background job and return 200/202 quickly.
 
@@ -121,7 +119,7 @@ Place these next to the module that implements tier/limits (e.g. `lib/subscripti
 |------|----------|
 | No real money, isolated data | Use **Polar Sandbox** (sandbox.polar.sh, sandbox-api.polar.sh, sandbox token) |
 | Test cards | Stripe test card: `4242 4242 4242 4242` |
-| Receive webhooks locally | Polar CLI `polar listen http://localhost:3000/` or ngrok to `/api/webhooks/polar` |
+| Receive webhooks locally | Polar CLI: `pnpm dev:polar` or `polar listen http://localhost:3000/` |
 | Inspect / redeliver webhooks | Polar dashboard → Webhooks → your endpoint → delivery overview |
 | Validate webhooks in code | Polar SDK `validateEvent()` or Standard Webhooks; respond quickly (e.g. 200 within 2s) |
 | Automate tier/limits | Unit tests with mocked DB for Trial / Free / Premium and over-limit |

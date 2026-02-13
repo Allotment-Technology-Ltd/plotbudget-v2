@@ -101,7 +101,10 @@ export class BlueprintPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/dashboard/blueprint');
+    await this.page.goto('/dashboard/blueprint', {
+      waitUntil: 'domcontentloaded',
+      timeout: process.env.CI ? 45_000 : 30_000,
+    });
     if (this.page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
@@ -157,18 +160,19 @@ export class BlueprintPage {
     await this.submitSeedButton.click();
 
     // Wait for dialog to close (onSuccess called = create succeeded)
-    await expect(this.seedNameInput).not.toBeVisible({ timeout: 15000 }).catch(async () => {
+    const dialogCloseTimeout = process.env.CI ? 30_000 : 15_000;
+    await expect(this.seedNameInput).not.toBeVisible({ timeout: dialogCloseTimeout }).catch(async () => {
       const errEl = this.page.getByTestId('seed-dialog-error');
       if (await errEl.isVisible()) {
         const msg = await errEl.textContent();
         throw new Error(`Seed create failed: ${msg ?? 'unknown'}`);
       }
-      throw new Error('Seed dialog did not close within 15s');
+      throw new Error(`Seed dialog did not close within ${dialogCloseTimeout / 1000}s`);
     });
     // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
     // Use reload() when already on blueprint — more stable than goto() which can ERR_ABORTED on parallel runs
     await this.page.reload({ waitUntil: 'domcontentloaded' });
-    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
+    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
     // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode).
     // Allow 20s for CI where the new seed can take a moment to appear after reload.
     await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: 20_000 });
@@ -191,7 +195,7 @@ export class BlueprintPage {
 
     // Wait for one fewer seed card (same name can appear in multiple categories/cycles)
     await expect(this.seedCard(seedName)).toHaveCount(countBefore - 1, {
-      timeout: 10_000,
+      timeout: process.env.CI ? 15_000 : 10_000,
     });
   }
 }

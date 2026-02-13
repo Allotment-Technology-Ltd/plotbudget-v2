@@ -1,157 +1,156 @@
 # Local Webhook Testing (Polar Sandbox)
 
-This guide explains how to test Polar webhooks locally during development.
+This guide explains how to test Polar webhooks locally using **Polar CLI**.
 
-## Quick Start
+---
 
-### Option 1: Automatic (Recommended)
+## Approach change (ngrok → Polar CLI)
 
+We previously used ngrok to expose localhost for webhook delivery. We switched to Polar CLI because:
+
+- **502 errors:** ngrok free tier could return 502s to Polar when the tunnel or upstream was inconsistent
+- **URL registration friction:** ngrok URLs change on restart; Polar’s webhook endpoint had to be updated each time
+- **Simpler setup:** Polar CLI handles the tunnel itself; no third‑party tool or dashboard config
+
+Polar CLI is now the only supported way to receive webhooks locally. For production and preview environments, the webhook URL is your deployed app (e.g. `https://app.plotbudget.com/api/webhooks/polar`).
+
+---
+
+## Setup
+
+### One-time setup
+
+1. **Install Polar CLI**
+   ```bash
+   curl -fsSL https://polar.sh/install.sh | bash
+   ```
+
+2. **Login and select sandbox org**
+   ```bash
+   polar login
+   ```
+   When prompted, select your **sandbox** organization.
+
+3. **Copy the webhook secret**  
+   When you run `polar listen` (below), the CLI displays a secret. Add it to `.env.local`:
+   ```bash
+   POLAR_WEBHOOK_SECRET=<secret from polar listen output>
+   ```
+
+### Run (two terminals)
+
+**Terminal 1** — from plotbudget root:
 ```bash
-cd plotbudget/apps/web
-pnpm dev:with-webhooks
+pnpm dev:polar
 ```
+Starts the dev server. Keep it running.
 
-This command:
-1. Starts **ngrok** tunnel on port 3001
-2. Displays the tunnel URL (e.g., `https://[RANDOM].ngrok-free.dev`)
-3. Starts the Next.js dev server
-4. Stops ngrok when you exit the dev server
-
-### Option 2: Manual
-
-If you prefer to manage ngrok separately:
-
-**Terminal 1: Start ngrok**
+**Terminal 2** — in a terminal where you can type (agent terminals are read-only):
 ```bash
-ngrok http 3001
+polar listen http://localhost:3000/
 ```
+Select your sandbox org with arrow keys, then **Cmd+Enter** to confirm. Copy the webhook secret into `.env.local` as `POLAR_WEBHOOK_SECRET`.
 
-**Terminal 2: Start dev server**
-```bash
-cd plotbudget/apps/web
-pnpm dev
-```
+**Why two terminals:** Polar CLI's org selection is interactive. Agent/background terminals are read-only—you must run `polar listen` in a terminal you control.
 
-## Setup Requirements
+### Verify
 
-### 1. Environment Variables
+1. Complete a checkout in sandbox (or redeliver a webhook from Polar dashboard)
+2. Check dev server logs for:
+   - `[webhook/polar] Processed subscription.created` (or `subscription.updated`)
+   - `POST /api/webhooks/polar 200`
+3. Polar CLI deliveries do not appear in the Polar dashboard Webhooks section—that only shows registered URL endpoints. The CLI uses a separate tunnel.
 
-Ensure `.env.local` has:
+**Checking dev server logs:** Search for `[webhook/polar]` in the terminal (we log on every POST and on successful processing). For cleaner logs, run in two terminals: Terminal 1: `pnpm --filter @repo/web dev`; Terminal 2: `polar listen http://localhost:3000/`. To capture logs to a file: `pnpm --filter @repo/web dev 2>&1 | tee dev.log` then `grep webhook dev.log`.
+
+---
+
+## Environment variables (`.env.local`)
 
 ```bash
 POLAR_SANDBOX=true
-POLAR_WEBHOOK_SECRET=polar_whs_...
+POLAR_WEBHOOK_SECRET=<from Polar CLI>
 POLAR_ACCESS_TOKEN=polar_oat_...
-POLAR_SUCCESS_URL=http://localhost:3001/dashboard
+POLAR_SUCCESS_URL=http://localhost:3000/dashboard
 ```
 
-Copy these from your Polar sandbox dashboard.
+### Ports
 
-### 2. ngrok Installation
+- **Web app (Next.js):** `localhost:3000` — contains `/api/webhooks/polar`
+- **Marketing (Vite):** `localhost:3001` — separate app
+- If 3000 is in use, Next.js may use 3001; set `WEB_PORT=3001` before `pnpm dev:polar` if needed
 
-```bash
-brew install ngrok
-```
-
-Or from https://ngrok.com/download
-
-### 3. Register Webhook URL in Polar
-
-1. Go to [Polar Sandbox Dashboard](https://sandbox.polar.sh)
-2. Navigate to **Webhooks** → **Endpoints**
-3. Add/update endpoint:
-   - **URL:** `https://[NGROK_URL]/api/webhooks/polar` (replace with actual ngrok URL from step 1)
-   - **Events:** `subscription.created`, `subscription.updated`
-   - **Secret:** Paste the value from `POLAR_WEBHOOK_SECRET` in `.env.local`
+---
 
 ## Testing Webhooks
 
-### Method 1: Via Polar Sandbox
+### Via sandbox checkout
 
-1. Create a test checkout using the Polar API:
-   ```bash
-   curl -X POST https://sandbox-api.polar.sh/v1/checkouts/ \
-     -H "Authorization: Bearer $POLAR_ACCESS_TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "products": ["YOUR_PRODUCT_ID"],
-       "success_url": "http://localhost:3001/dashboard"
-     }'
-   ```
+1. Go to your app's pricing page, click "Start Premium"
+2. Complete checkout in Polar sandbox with test card `4242 4242 4242 4242`
+3. You should see `subscription.created` (and related) webhooks in the Polar CLI output and `POST /api/webhooks/polar 200` in dev logs
 
-2. This triggers a `checkout.created` webhook
+### Via Polar dashboard redelivery
 
-3. Check the webhook delivery status:
-   - Look at dev server logs: `POST /api/webhooks/polar 200` = success
-   - Or visit Polar dashboard: **Webhooks** → **Deliveries** → see HTTP 2xx status
+1. Polar Sandbox → **Webhooks** → **Deliveries**
+2. Pick a failed delivery → **Redeliver**
+3. With Polar CLI running, the event will reach your local handler
 
-### Method 2: Manual Testing
+### Manual (no signature; expect 400)
 
 ```bash
-# Test locally (without signature verification)
-curl -X POST http://localhost:3001/api/webhooks/polar \
+curl -X POST http://localhost:3000/api/webhooks/polar \
   -H "Content-Type: application/json" \
   -d '{"type":"subscription.created","data":{"id":"test"}}'
-# Response: {"error":"Invalid signature"} (400) — expected without a valid Polar signature
+# Response: {"error":"Invalid signature"} (400) — expected
 ```
+
+---
 
 ## Troubleshooting
 
-### Webhooks not received?
+### Polar CLI: "polar: command not found"
 
-1. **Is ngrok running?**
-   ```bash
-   # Check ngrok status
-   curl http://127.0.0.1:4040/api/tunnels 2>/dev/null
-   ```
+Install: `curl -fsSL https://polar.sh/install.sh | bash`  
+Restart your terminal or run `source ~/.zshrc` (or your shell config).
 
-2. **Is the webhook URL registered in Polar?**
-   - Verify URL in Polar dashboard matches ngrok tunnel URL
+### No webhooks received
 
-3. **Is the webhook secret correct?**
-   - Double-check `POLAR_WEBHOOK_SECRET` matches the one in Polar
+1. **Polar CLI:** Ensure `polar listen` is running and shows "Waiting for events..." (not stuck on org selection—press **Cmd+Enter** to confirm).
+2. **Secret:** `POLAR_WEBHOOK_SECRET` in `.env.local` must match the secret shown by `polar listen`
+3. **Org:** Use the sandbox org when running `polar login`
+4. **Dev server:** Confirm Next.js is on port 3000 (or the port you passed to `polar listen`)
 
-4. **Is the dev server running?**
-   - Verify `pnpm dev` is running on the specified port (default 3001 if 3000 in use)
+### No POST logs in terminal
 
-### ngrok tunnel keeps changing?
+If checkout succeeds (subscription in DB, user set to pro) but you never see `[webhook/polar] POST received` or `POST /api/webhooks/polar`:
 
-- **Free tier:** ngrok assigns a new URL each time you restart. Update the webhook URL in Polar dashboard.
-- **Paid tier:** Paid accounts have stable, reserved domains. Once set, the URL stays the same.
+1. **Verify the endpoint logs:** With dev server running, run: `curl -X POST http://localhost:3000/api/webhooks/polar -H "Content-Type: application/json" -d '{"type":"test"}'` — you should see `[webhook/polar] POST received` in the terminal and get `{"error":"Invalid signature"}` (400). If not, logs may not be visible in your terminal.
+2. **Polar may use a registered URL:** In Polar Sandbox → Webhooks → Endpoints, remove any old ngrok or other URLs so Polar sends only via the CLI tunnel.
+3. **Capture logs to file:** `pnpm --filter @repo/web dev 2>&1 | tee dev.log` then `grep webhook dev.log` after a checkout.
 
-### Port 3000/3001 in use?
-
-- The dev server will auto-select an available port. Check the output:
-  ```
-  ▲ Next.js 16.1.6
-  - Local:         http://localhost:3001
-  ```
-- Update ngrok command to match: `ngrok http 3001`
+---
 
 ## Architecture
 
 ```
 Polar Sandbox
       ↓ webhook delivery
-  ngrok tunnel (https://[NGROK_URL])
-      ↓ HTTPS → HTTP
-  Local dev server (localhost:3001)
+  Polar CLI tunnel (managed by Polar)
+      ↓ forwards to
+  Local dev server (localhost:3000)
       ↓
-  /api/webhooks/polar handler
+  POST /api/webhooks/polar
       ↓
   Validates signature with POLAR_WEBHOOK_SECRET
       ↓
-  Processes event (updates subscriptions table)
-      ↓
-  Returns 200 OK to Polar
+  Upserts subscriptions, returns 200
 ```
 
-## Next Steps
+---
 
-After confirming webhooks work locally:
+## Readiness checklist (before dev deployment)
 
-1. **Phase 2:** Add metadata column to subscriptions table (store PWYL amount)
-2. **Phase 3:** Update tests for webhook metadata
-3. **Phase 4:** Polish error handling and docs
-
-See `docs/PRODUCTION-INFRASTRUCTURE.md` for production webhook setup.
+1. ✅ **Polar CLI test:** Run `pnpm dev:polar`, complete a sandbox checkout, confirm webhooks reach handler (200)
+2. ✅ **Unit tests:** `pnpm test:api` (or `pnpm --filter @repo/web test tests/api`) — webhook handler tests pass
+3. ⬜ **Preview deploy:** Deploy to Vercel preview, set webhook URL to `https://[preview-url]/api/webhooks/polar`, complete one sandbox checkout for end-to-end verification
