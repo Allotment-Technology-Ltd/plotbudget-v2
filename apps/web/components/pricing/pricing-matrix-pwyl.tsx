@@ -5,6 +5,7 @@ import { Check } from 'lucide-react';
 
 interface PWYLPricingMatrixProps {
   isLoggedIn: boolean;
+  // household_id and user_id are resolved server-side in /api/checkout (auth required)
   householdId?: string | null;
   userId?: string | null;
 }
@@ -37,15 +38,10 @@ const FREE_TIER = {
   cta: 'Always free',
 };
 
-export function PWYLPricingMatrix({ isLoggedIn, householdId, userId }: PWYLPricingMatrixProps) {
-  const buildCheckoutUrl = (): string => {
-    const params = new URLSearchParams({
-      product: 'pwyl',
-      ...(householdId ? { household_id: householdId } : {}),
-      ...(userId ? { user_id: userId } : {}),
-    });
-    return `/api/checkout?${params}`;
-  };
+export function PWYLPricingMatrix({ isLoggedIn }: PWYLPricingMatrixProps) {
+  // Checkout route is authenticated; it resolves household_id and user_id server-side.
+  // No need to pass them as query params (prevents IDOR).
+  const checkoutUrl = '/api/checkout?product=pwyl';
 
   return (
     <div className="grid gap-6 md:grid-cols-3 md:gap-8">
@@ -143,7 +139,7 @@ export function PWYLPricingMatrix({ isLoggedIn, householdId, userId }: PWYLPrici
 
         {isLoggedIn ? (
           <Link
-            href={buildCheckoutUrl()}
+            href={checkoutUrl}
             className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             Start Premium

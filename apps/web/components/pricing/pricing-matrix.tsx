@@ -72,10 +72,10 @@ function tierHasCtaLink(tier: PricingTier): tier is PricingTier & { ctaLink: str
   return typeof tier.ctaLink === 'string' && tier.ctaLink.length > 0;
 }
 
-export function PricingMatrix({ pricingEnabled, isLoggedIn, householdId, userId }: PricingMatrixProps) {
-  const premiumCtaHref = householdId
-    ? `/api/checkout?product=monthly&household_id=${encodeURIComponent(householdId)}${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`
-    : '/api/checkout?product=monthly';
+export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps) {
+  // Checkout route is authenticated; it resolves household_id and user_id server-side.
+  // No need to pass them as query params (prevents IDOR).
+  const premiumCtaHref = '/api/checkout?product=monthly';
 
   return (
     <div className="grid gap-6 md:grid-cols-3 md:gap-8">

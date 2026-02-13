@@ -1,6 +1,7 @@
 // PWYL (Pay-What-You-Like) checkout E2E.
 // Requires NEXT_PUBLIC_PRICING_ENABLED=true and NEXT_PUBLIC_PWYL_PRICING_ENABLED=true.
 // Sandbox flow (redirect to Polar, pay with 4242...) requires POLAR_ACCESS_TOKEN, POLAR_SUCCESS_URL, POLAR_PWYL_BASE_PRODUCT_ID in .env.test.local.
+// Note: checkout is authenticated — household_id and user_id are resolved server-side (not in URL).
 
 import { test, expect } from '@playwright/test';
 
@@ -29,7 +30,9 @@ test.describe('PWYL checkout', () => {
     await expect(startPremium).toHaveAttribute('href', /\/api\/checkout\?.*product=pwyl/);
   });
 
-  test('Start Premium link includes household_id when logged in', async ({ page }) => {
+  test('Start Premium link is a clean checkout URL (no client-side IDs)', async ({ page }) => {
+    // household_id and user_id are resolved server-side in the checkout route.
+    // The CTA should NOT leak these values in the URL (IDOR prevention).
     const url = page.url();
     if (!url.includes('/pricing')) {
       test.skip();
@@ -41,6 +44,8 @@ test.describe('PWYL checkout', () => {
       return;
     }
     const href = await startPremium.getAttribute('href');
-    expect(href).toMatch(/household_id=/);
+    expect(href).toMatch(/\/api\/checkout\?product=pwyl/);
+    expect(href).not.toContain('household_id=');
+    expect(href).not.toContain('user_id=');
   });
 });

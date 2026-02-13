@@ -77,7 +77,16 @@ Before you give me code, run this mental check:
 
 **Behavioral Note:** If I ask for something insecure (e.g., "just disable the linter"), REFUSE and explain the security risk.
 
-## 6. CI/CD & BRANCH SYNC (plotbudget)
+## 6. WEBHOOK TESTING (Polar Sandbox)
+**Local development with ngrok tunneling:**
+- **Requirement:** When running `pnpm dev` locally, ngrok MUST tunnel port 3001 to receive Polar sandbox webhooks.
+- **Setup:** Use the provided `pnpm run dev:with-webhooks` command (or `pnpm dev` if it auto-starts ngrok via the script below).
+- **URL Format:** Use `https://[NGROK_URL]/api/webhooks/polar` in Polar sandbox dashboard. The ngrok URL is typically stable for paid accounts.
+- **Verification:** Webhooks show as "200 OK" in Polar webhook delivery history; dev server logs show `POST /api/webhooks/polar 200`.
+- **Environment:** `.env.local` must have `POLAR_SANDBOX=true`, `POLAR_WEBHOOK_SECRET`, and `POLAR_ACCESS_TOKEN` set.
+- **Important:** ngrok must be running whenever webhooks are expected. If it stops, restart it: `ngrok http 3001` (then update webhook URL in Polar if the tunnel domain changed).
+
+## 7. CI/CD & BRANCH SYNC (plotbudget)
 - **Source of truth:** `main` should match `origin/main`. When the user asks to sync or wrap up, run `git fetch origin --prune`, then `git checkout main && git pull origin main` from the plotbudget repo root, then return to their branch and report branch status.
 - **Workflow:** Feature branch → commit → push branch → PR to main. Do not push to main unless explicitly asked.
 - See `.cursor/rules/ci-cd-and-branch-sync.mdc` and `branch-before-implement.mdc` for full steps.
