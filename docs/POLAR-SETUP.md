@@ -33,7 +33,7 @@ Do this in [Polar](https://polar.sh) (or your Polar org).
 ### 1.3 Webhook endpoint
 
 1. In Polar: **Webhooks** (or **Developers → Webhooks**).
-2. **Add endpoint:** `https://app.plotbudget.com/api/webhooks/polar` (use your real app URL; for local testing you’ll need a tunnel, e.g. ngrok).
+2. **Add endpoint:** `https://app.plotbudget.com/api/webhooks/polar` (use your real app URL; for local testing use Polar CLI—see docs/LOCAL-WEBHOOK-TESTING.md).
 3. **Events to send:** at least:
    - `subscription.created`
    - `subscription.updated`
@@ -71,10 +71,10 @@ These are the pieces that still need to be implemented so Polar actually works.
 In `apps/web`:
 
 ```bash
-pnpm add @polar-sh/nextjs
+pnpm add @polar-sh/sdk
 ```
 
-(Or `@polar-sh/sdk` if you need lower-level API calls; the Next.js adapter is enough for checkout + optional webhook helpers.)
+We use `@polar-sh/sdk` directly for checkout creation and webhook validation. The `@polar-sh/nextjs` adapter was removed — it adds unnecessary abstraction and our checkout route already handles the flow with the SDK.
 
 ### 3.2 Subscriptions table (Supabase)
 
@@ -94,19 +94,24 @@ When the webhook receives `subscription.created` / `subscription.updated`, you *
 ### 3.3 Checkout route (Next.js)
 
 - **Path:** e.g. `apps/web/app/api/checkout/route.ts` (or a dynamic route if you have multiple products).
-- **Handler:** Use Polar’s Next.js helper so that **GET** starts checkout, e.g.:
+- **Handler:** Use `@polar-sh/sdk` to create a checkout and redirect, e.g.:
 
   ```ts
-  import { Checkout } from '@polar-sh/nextjs';
+  import { Polar } from '@polar-sh/sdk';
 
-  export const GET = Checkout({
-    accessToken: process.env.POLAR_ACCESS_TOKEN,
-    successUrl: process.env.POLAR_SUCCESS_URL,
-    // Optional: productId or priceId so the link goes straight to Premium
-  });
+  const polar = new Polar({ accessToken: process.env.POLAR_ACCESS_TOKEN });
+
+  export async function GET(req: Request) {
+    const checkout = await polar.checkouts.create({
+      productId: process.env.POLAR_PREMIUM_PRODUCT_ID,
+      successUrl: process.env.POLAR_SUCCESS_URL,
+      // metadata: { household_id: "..." }
+    });
+    return Response.redirect(checkout.url);
+  }
   ```
 
-- **Upgrade CTA:** Point “Upgrade to Premium” (e.g. on the pricing page or settings) to this route. For “Premium Monthly” vs “Premium Annual”, you can use two links (e.g. `/api/checkout?product=monthly` and `?product=annual`) if the adapter supports it, or two routes.
+- **Upgrade CTA:** Point “Upgrade to Premium” (e.g. on the pricing page or settings) to this route. For “Premium Monthly” vs “Premium Annual”, you can use two links (e.g. `/api/checkout?product=monthly` and `?product=annual`) or handle it in the route handler.
 
 ### 3.4 Webhook route (Next.js)
 
@@ -129,7 +134,7 @@ When redirecting the user to the checkout (e.g. from “Upgrade to Premium”):
 - Either use Polar’s API to create a checkout session with **metadata** `{ household_id: "..." }` (and optionally `user_id`), then redirect the user to that session URL.
 - Or use the Next.js checkout route with query params that the route uses to call Polar’s API with that metadata; then the webhook receives it and can set `subscriptions.household_id`.
 
-(Exact API depends on `@polar-sh/nextjs` / `@polar-sh/sdk`; check their docs for “create checkout” with metadata.)
+(See `@polar-sh/sdk` docs for "create checkout" with metadata.)
 
 ### 3.6 (Optional) Limit enforcement
 
@@ -159,7 +164,7 @@ This can be done after checkout and webhook are working.
 | Webhook URL | Polar dashboard → Webhooks → `https://app.plotbudget.com/api/webhooks/polar` |
 | Env vars | Vercel (or your host) for the Next.js app |
 | Subscriptions storage | New migration: `public.subscriptions` (household_id, polar_subscription_id, status, current_tier, …) |
-| Start payment flow | `apps/web/app/api/checkout/route.ts` (GET) using `@polar-sh/nextjs` |
+| Start payment flow | `apps/web/app/api/checkout/route.ts` (GET) using `@polar-sh/sdk` |
 | Receive subscription events | `apps/web/app/api/webhooks/polar/route.ts` (POST), verify secret, upsert `subscriptions` |
 | Link subscription to household | Pass `household_id` in checkout metadata; webhook reads it and sets `subscriptions.household_id` |
 

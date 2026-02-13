@@ -5,13 +5,15 @@
   "packageManager": "pnpm@8.15.4",
   "scripts": {
     "dev": "turbo dev",
+    "dev:polar": "bash scripts/dev-with-polar-cli.sh",
     "build": "turbo build",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "clean": "turbo clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "prepare": "husky",
-    "audit": "node scripts/audit.mjs"
+    "audit": "node scripts/audit.mjs",
+    "create-polar-products": "pnpm --filter @repo/web run create-polar-products"
   },
   "lint-staged": {
     "*": "bash -c 'pnpm lint && pnpm type-check'"

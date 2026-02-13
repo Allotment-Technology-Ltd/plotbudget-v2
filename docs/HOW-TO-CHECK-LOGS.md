@@ -191,7 +191,7 @@ Portal Error: We couldn't open the subscription portal. Please try again.
 **Cause:** Network issue or Polar API unreachable
 **Solution:**
 - Check internet connection
-- Verify ngrok is running (if using webhooks)
+- Verify Polar CLI is running (if using webhooks locally)
 - Verify Polar API is up
 
 ### `Error: Unauthorized (401)`

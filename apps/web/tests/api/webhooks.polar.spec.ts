@@ -313,6 +313,20 @@ describe('POST /api/webhooks/polar', () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
+  it('Returns 200 for checkout.expired (SDK throws, prevents 502 retries)', async () => {
+    const webhooks = await import('@polar-sh/sdk/webhooks');
+    (webhooks.validateEvent as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      throw new Error('SDKValidationError: Unknown event type: checkout.expired');
+    });
+
+    const { POST } = await import('@/app/api/webhooks/polar/route');
+    const req = createPostRequest('/api/webhooks/polar', '{"type":"checkout.expired","data":{"id":"ch_123"}}');
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
   // ─── Signature validation failure ────────────────────────────────────
 
   it('Returns 400 for invalid signature', async () => {
