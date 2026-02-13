@@ -24,6 +24,8 @@ jobs:
             echo "::error::SUPABASE_PROD_DATABASE_URL is not set or not available. Add it in Settings → Secrets and variables → Actions, and ensure it is not restricted so workflows on main can use it."
             exit 1
           fi
+          # Repair orphaned migration versions that don't exist in local migrations (e.g. 20240206, 20250207)
+          supabase migration repair --db-url "$DATABASE_URL" --status reverted 20240206 20250207 || true
           supabase db push --db-url "$DATABASE_URL" --include-all
 
   release:
