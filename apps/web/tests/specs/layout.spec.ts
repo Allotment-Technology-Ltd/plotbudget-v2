@@ -4,10 +4,11 @@
 
 import { test, expect } from '@playwright/test';
 import { expectNoHorizontalOverflow, expectElementInViewport } from '../utils/layout-helpers';
+import { EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
 
 test.describe('Mobile layout — no overflow or content off-screen', () => {
   test.describe('unauthenticated', () => {
-    test.use({ storageState: { cookies: [], origins: [] } });
+    test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT });
     test('login page has no horizontal overflow', async ({ page }) => {
       await page.goto('/login', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/login/);

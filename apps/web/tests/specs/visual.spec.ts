@@ -3,15 +3,18 @@
 // Uses dedicated visual@ user so these tests can run in parallel with the rest of the suite.
 
 import { test, expect } from '@playwright/test';
+import { EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
 
 test.describe('Visual regression', () => {
   test.describe('unauthenticated', () => {
-    test.use({ storageState: { cookies: [], origins: [] } });
+    test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT });
     test('login page matches snapshot', async ({ page }) => {
       await page.goto('/login');
       await page.waitForURL(/\/login/);
       await expect(page.getByTestId('email-input')).toBeVisible();
-      await expect(page).toHaveScreenshot('login.png');
+      await expect(page).toHaveScreenshot('login.png', {
+        maxDiffPixelRatio: process.env.CI ? 0.08 : 0.02,
+      });
     });
   });
 

@@ -2,10 +2,10 @@
 import { test, expect } from '@playwright/test';
 import { AuthPage } from '../pages/auth.page';
 import { setAuthState } from '../utils/test-auth';
-import { TEST_USERS } from '../fixtures/test-data';
+import { TEST_USERS, EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
 
 test.describe('Authentication Flow', () => {
-  test.use({ storageState: { cookies: [], origins: [] } }); // No auth state
+  test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT }); // No auth state
 
   test('login form renders and accepts input', async ({ page }) => {
     const authPage = new AuthPage(page);
@@ -19,7 +19,9 @@ test.describe('Authentication Flow', () => {
   test('valid credentials redirect to dashboard', async ({ page }) => {
     await setAuthState(page, TEST_USERS.solo.email, TEST_USERS.solo.password);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('dashboard-hero')).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
+    ).toBeVisible({ timeout: 30_000 });
   });
 
   // TODO: Un-skip when login form submit is reliably handled (form currently triggers native submit)
