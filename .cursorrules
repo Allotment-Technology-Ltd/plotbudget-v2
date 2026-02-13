@@ -76,3 +76,8 @@ Before you give me code, run this mental check:
 - **Database:** Postgres (via Drizzle/Prisma).
 
 **Behavioral Note:** If I ask for something insecure (e.g., "just disable the linter"), REFUSE and explain the security risk.
+
+## 6. CI/CD & BRANCH SYNC (plotbudget)
+- **Source of truth:** `main` should match `origin/main`. When the user asks to sync or wrap up, run `git fetch origin --prune`, then `git checkout main && git pull origin main` from the plotbudget repo root, then return to their branch and report branch status.
+- **Workflow:** Feature branch → commit → push branch → PR to main. Do not push to main unless explicitly asked.
+- See `.cursor/rules/ci-cd-and-branch-sync.mdc` and `branch-before-implement.mdc` for full steps.
