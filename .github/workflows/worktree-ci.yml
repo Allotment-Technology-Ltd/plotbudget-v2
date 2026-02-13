@@ -1,0 +1,110 @@
+# Worktree CI: Parallel isolated testing using Git worktrees
+# Runs on every Pull Request to main
+# Demonstrates how to leverage worktrees for parallel test job isolation
+#
+# This workflow showcases:
+# - Creating temporary worktrees for branch testing
+# - Running jobs in isolation without checkout conflicts
+# - Parallel execution of tests across different apps
+#
+name: Worktree CI (Parallel Isolation)
+
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  setup-worktree:
+    name: Setup isolated worktree
+    runs-on: ubuntu-latest
+    outputs:
+      worktree-path: ${{ steps.create.outputs.path }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Create worktree for PR branch
+        id: create
+        run: |
+          WORKTREE_PATH="$RUNNER_TEMP/plotbudget-pr"
+          git worktree add "$WORKTREE_PATH" ${{ github.event.pull_request.head.sha }}
+          echo "path=$WORKTREE_PATH" >> $GITHUB_OUTPUT
+          echo "Worktree created at: $WORKTREE_PATH"
+
+      - name: Setup worktree (pnpm install + build)
+        run: |
+          cd "${{ steps.create.outputs.path }}"
+          ./scripts/setup-worktree.sh --profile=ci
+
+  test-parallel-e2e:
+    name: E2E Tests (Parallel - Worktree)
+    needs: setup-worktree
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, marketing]
+    steps:
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: "${{ needs.setup-worktree.outputs.worktree-path }}/pnpm-lock.yaml"
+
+      - name: Install Playwright Browsers
+        working-directory: "${{ needs.setup-worktree.outputs.worktree-path }}/apps/${{ matrix.app }}"
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests for ${{ matrix.app }}
+        working-directory: "${{ needs.setup-worktree.outputs.worktree-path }}/apps/${{ matrix.app }}"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
+        run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.app }}
+          path: "${{ needs.setup-worktree.outputs.worktree-path }}/apps/${{ matrix.app }}/playwright-report/"
+          retention-days: 7
+
+  cleanup-worktree:
+    name: Cleanup worktree
+    if: always()
+    needs: [setup-worktree, test-parallel-e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove worktree
+        run: |
+          WORKTREE_PATH="${{ needs.setup-worktree.outputs.worktree-path }}"
+          if [ -d "$WORKTREE_PATH" ]; then
+            git worktree remove --force "$WORKTREE_PATH" || echo "Worktree cleanup failed, continuing..."
+          fi
+          git worktree prune
