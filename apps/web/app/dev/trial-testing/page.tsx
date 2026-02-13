@@ -76,8 +76,8 @@ export default function TrialTestingPage() {
         const html = await res.text();
         const win = window.open('', '_blank');
         if (win) {
-          win.document.write(html);
-          win.document.close();
+          const blob = new Blob([html], { type: 'text/html' });
+          win.location.href = URL.createObjectURL(blob);
         } else {
           toast.error('Popup blocked. Allow popups to preview.');
         }

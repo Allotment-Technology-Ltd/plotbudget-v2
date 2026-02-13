@@ -10,7 +10,7 @@ export async function checkEmailAllowed(email: string): Promise<boolean> {
   return isEmailAllowed(email);
 }
 
-/** Returns whether signup is allowed based on request country (set by middleware from geo). */
+/** Returns whether signup is allowed based on request country (set by proxy from geo). */
 export async function getSignupRegionAllowed(): Promise<{
   allowed: boolean;
   country: string | null;

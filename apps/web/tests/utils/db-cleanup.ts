@@ -163,7 +163,7 @@ export async function ensureAuthUserExists(email: string, password: string) {
 /**
  * Ensure a row exists in public.users for the given auth user (by email).
  * Uses service role to look up auth.users and upsert into public.users.
- * Call after login so ensureBlueprintReady and middleware can find the user.
+ * Call after login so ensureBlueprintReady and proxy can find the user.
  */
 export async function ensureUserInPublicUsers(email: string) {
   const {

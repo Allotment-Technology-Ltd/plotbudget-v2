@@ -17,21 +17,21 @@ const DANGEROUS_PATTERNS = [
   { pattern: /new Function\s*\(/g, name: "new Function()" },
 ];
 
-function scanFile(filePath: string): { secrets: number; dangerous: string[] } {
+function scanFile(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
   let secrets = 0;
   for (const re of SECRET_PATTERNS) {
     const m = content.match(re);
     if (m) secrets += m.length;
   }
-  const dangerous: string[] = [];
+  const dangerous = [];
   for (const { pattern, name } of DANGEROUS_PATTERNS) {
     if (pattern.test(content)) dangerous.push(name);
   }
   return { secrets, dangerous };
 }
 
-function walkDir(dir: string, ext: string[], ignore: Set<string>, results: string[]): void {
+function walkDir(dir, ext, ignore, results) {
   if (!fs.existsSync(dir)) return;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
@@ -44,11 +44,11 @@ function walkDir(dir: string, ext: string[], ignore: Set<string>, results: strin
 
 const root = process.cwd();
 const ignore = new Set(["node_modules", ".next", ".git", "dist", "build"]);
-const files: string[] = [];
+const files = [];
 walkDir(root, [".ts", ".tsx", ".js", ".jsx"], ignore, files);
 
 let totalSecrets = 0;
-const allDangerous: { file: string; patterns: string[] }[] = [];
+const allDangerous = [];
 
 for (const file of files) {
   const rel = path.relative(root, file);

@@ -2,7 +2,7 @@
  * Auth-related feature flags and config.
  * Used when PostHog is not configured; PostHog flags override these when available.
  *
- * For server-side (middleware, server components), use getServerFeatureFlags() from
+ * For server-side (proxy, server components), use getServerFeatureFlags() from
  * lib/posthog-server-flags.ts to evaluate flags via PostHog API when configured.
  */
 
