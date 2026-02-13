@@ -1,0 +1,16 @@
+{
+  "setup-worktree": {
+    "full": [
+      "pnpm install",
+      "pnpm build",
+      "pnpm type-check"
+    ],
+    "ci": [
+      "pnpm install",
+      "pnpm build"
+    ],
+    "fast": [
+      "pnpm install"
+    ]
+  }
+}
