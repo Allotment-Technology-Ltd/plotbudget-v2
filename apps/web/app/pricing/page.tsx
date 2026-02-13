@@ -112,15 +112,11 @@ export default async function PricingPage() {
         {showPWYL ? (
           <PWYLPricingMatrix
             isLoggedIn={!!user}
-            householdId={user ? (owned?.id ?? partnerOf?.id ?? null) : null}
-            userId={user?.id ?? null}
           />
         ) : (
           <PricingMatrix
             pricingEnabled={fullPremiumVisible}
             isLoggedIn={!!user}
-            householdId={user ? (owned?.id ?? partnerOf?.id ?? null) : null}
-            userId={user?.id ?? null}
           />
         )}
       </div>

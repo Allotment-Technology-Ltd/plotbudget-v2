@@ -41,7 +41,7 @@ const householdSelect =
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; portal_error?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const params = await searchParams;
@@ -160,6 +160,7 @@ export default async function SettingsPage({
         incomeSources={incomeSources}
         isPartner={isPartner}
         initialTab={params.tab}
+        portalError={params.portal_error === 'true'}
       />
     </div>
   );

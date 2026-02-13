@@ -16,6 +16,9 @@ type PolarSubscriptionEvent = {
     customer_id?: string;
     metadata?: Record<string, string | null>;
     trial_ends_at?: string | null;
+    // Newer Polar events nest product as an object
+    product?: { id: string; name?: string } | null;
+    customer?: { id: string } | null;
   };
 };
 
@@ -53,6 +56,16 @@ function mapTier(productId?: string, priceId?: string, metadata?: Record<string,
   return null;
 }
 
+// All subscription lifecycle events we process
+const SUBSCRIPTION_EVENTS = new Set([
+  'subscription.created',
+  'subscription.updated',
+  'subscription.active',
+  'subscription.canceled',
+  'subscription.revoked',
+  'subscription.uncanceled',
+]);
+
 export async function POST(req: NextRequest) {
   if (!process.env.POLAR_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Missing POLAR_WEBHOOK_SECRET' }, { status: 500 });
@@ -65,21 +78,45 @@ export async function POST(req: NextRequest) {
     const headersObj = Object.fromEntries(req.headers.entries());
     event = validateEvent(rawBody, headersObj, process.env.POLAR_WEBHOOK_SECRET) as PolarSubscriptionEvent;
   } catch (error) {
+    const errorStr = String(error);
+    // Polar SDK throws SDKValidationError for event types it doesn't recognise
+    // (e.g. member.created). Return 200 so Polar won't keep retrying.
+    if (errorStr.includes('Unknown event type')) {
+      return NextResponse.json({ received: true });
+    }
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
   const { type, data } = event;
-  if (type !== 'subscription.created' && type !== 'subscription.updated') {
+
+  if (!SUBSCRIPTION_EVENTS.has(type)) {
     return NextResponse.json({ received: true });
   }
 
   const supabase = createAdminClient();
-  const householdId = data.metadata?.household_id ?? null;
+  let householdId = data.metadata?.household_id ?? null;
   const userId = data.metadata?.user_id ?? null;
-  const tier = mapTier(data.product_id, data.price_id, data.metadata);
+  // Resolve product_id / customer_id from flat or nested shapes
+  const productId = data.product_id ?? data.product?.id ?? undefined;
+  const customerId = data.customer_id ?? data.customer?.id ?? undefined;
+  const tier = mapTier(productId, data.price_id, data.metadata);
+
+  // If metadata is empty (common for lifecycle events like subscription.canceled),
+  // try to look up the existing subscription record by polar_subscription_id.
+  if (!householdId) {
+    const { data: existing } = await (supabase as any)
+      .from('subscriptions')
+      .select('household_id')
+      .eq('polar_subscription_id', data.id)
+      .maybeSingle();
+    if (existing?.household_id) {
+      householdId = existing.household_id;
+    }
+  }
 
   if (!householdId) {
-    return NextResponse.json({ error: 'Missing household_id metadata' }, { status: 400 });
+    // Return 200 to acknowledge — retrying won't help since metadata is absent
+    return NextResponse.json({ received: true, note: 'no household_id available' });
   }
 
   const payload: Database['public']['Tables']['subscriptions']['Insert'] = {
@@ -88,20 +125,19 @@ export async function POST(req: NextRequest) {
     status: normalizeStatus(data.status),
     current_tier: tier ?? null,
     trial_end_date: data.trial_ends_at ?? null,
-    polar_product_id: data.product_id ?? data.price_id ?? null,
+    polar_product_id: productId ?? data.price_id ?? null,
   };
-  // Note: subscriptions table has no metadata column; pwyl_amount/pricing_mode
-  // are used only for mapTier above. Add metadata column via migration if needed.
 
   const { error } = await (supabase as any)
     .from('subscriptions')
     .upsert(payload, { onConflict: 'polar_subscription_id' });
 
   if (error) {
+    console.error('Webhook upsert failed:', error, { householdId, polarSubId: data.id });
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 
-  // Optionally update user subscription fields for quick reads
+  // Update user subscription fields for quick reads
   if (userId && tier === 'pro') {
     const dbStatus = normalizeStatus(data.status);
     const normalizedUserStatus: Database['public']['Tables']['users']['Update']['subscription_status'] =
@@ -112,7 +148,7 @@ export async function POST(req: NextRequest) {
       .update({
         subscription_tier: 'pro',
         subscription_status: normalizedUserStatus,
-        polar_customer_id: data.customer_id ?? null,
+        polar_customer_id: customerId ?? null,
       })
       .eq('id', userId);
   }

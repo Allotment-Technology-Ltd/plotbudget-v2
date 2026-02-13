@@ -44,6 +44,8 @@ export interface SettingsViewProps {
   isPartner?: boolean;
   /** Open a specific tab from URL (e.g. ?tab=income) */
   initialTab?: string;
+  /** Show portal error when returning from failed Polar session */
+  portalError?: boolean;
 }
 
 export function SettingsView({
@@ -55,6 +57,7 @@ export function SettingsView({
   avatarEnabled = false,
   pricingEnabled = false,
   initialTab,
+  portalError = false,
 }: SettingsViewProps) {
   const validTabs = pricingEnabled
     ? ['profile', 'household', 'income', 'privacy', 'advanced', 'subscription']
@@ -72,6 +75,15 @@ export function SettingsView({
           Manage your account and household preferences.
         </p>
       </div>
+
+      {portalError && (
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive">
+            <strong>Portal Error:</strong> We couldn't open the subscription portal. Please try again.
+          </p>
+        </div>
+      )}
+
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="w-full sm:inline-flex h-auto flex-wrap gap-1 bg-muted p-1">
           <TabsTrigger value="profile">Profile</TabsTrigger>

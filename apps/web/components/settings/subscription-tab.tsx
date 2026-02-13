@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,43 @@ function getStatusBadgeVariant(status: string | null): 'default' | 'secondary' |
     default:
       return 'secondary';
   }
+}
+
+// Authenticated server-side route that creates a Polar customer portal session
+const PORTAL_URL = '/api/customer-portal';
+
+function PortalLink({ 
+  href, 
+  className, 
+  children 
+}: { 
+  href: string; 
+  className: string; 
+  children: React.ReactNode;
+}) {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = (_e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Clear any previous error
+    setError(null);
+    
+    // Navigate via Link component — the error handler in SettingsView will catch any issues
+    // This wrapper is mainly for future enhancements (e.g., loading states)
+  };
+
+  if (error) {
+    return (
+      <div className="text-sm text-destructive">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href} className={className} onClick={handleClick}>
+      {children}
+    </Link>
+  );
 }
 
 export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
@@ -123,36 +161,30 @@ export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
                         Thank you for contributing £{pwylAmount.toFixed(2)}/month!
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <a
-                          href="https://sandbox.polar.sh/subscriptions"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <PortalLink
+                          href={PORTAL_URL}
                           className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           Change Amount
                           <ExternalLink className="h-3 w-3" />
-                        </a>
-                        <a
-                          href="https://sandbox.polar.sh/subscriptions"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        </PortalLink>
+                        <PortalLink
+                          href={PORTAL_URL}
                           className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           Manage Subscription
                           <ExternalLink className="h-3 w-3" />
-                        </a>
+                        </PortalLink>
                       </div>
                     </div>
                   ) : (
-                    <a
-                      href="https://sandbox.polar.sh/subscriptions"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <PortalLink
+                      href={PORTAL_URL}
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-transparent px-6 py-3 font-heading text-cta uppercase tracking-widest transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       Manage Subscription
                       <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </PortalLink>
                   )}
                 </div>
               )}
@@ -175,15 +207,13 @@ export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
               <p className="text-sm text-destructive">
                 Your payment is past due. Please update your payment method to continue using Premium features.
               </p>
-              <a
-                href="https://sandbox.polar.sh/subscriptions"
-                target="_blank"
-                rel="noopener noreferrer"
+              <PortalLink
+                href={PORTAL_URL}
                 className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-destructive px-6 py-3 font-heading text-cta uppercase tracking-widest text-destructive-foreground transition-colors hover:bg-destructive/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 Update Payment Method
                 <ExternalLink className="h-3 w-3" />
-              </a>
+              </PortalLink>
             </div>
           )}
 
