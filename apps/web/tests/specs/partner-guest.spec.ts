@@ -71,16 +71,21 @@ test.describe('Partner invite (authenticated)', () => {
   test('partner with valid token is taken straight to dashboard', async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     // Sign in as partner programmatically (no login UI) so we don't depend on the login form in the browser
     const cookie = await getPartnerAuthCookie();
     await page.context().addCookies([cookie]);
 
     await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
       waitUntil: 'domcontentloaded',
+      timeout: 45_000,
     });
 
     // Invite is auto-accepted and user is redirected to dashboard (no Accept screen)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30_000 });
+    await page.waitForURL(/\/(dashboard|onboarding)/, {
+      timeout: 45_000,
+      waitUntil: 'domcontentloaded',
+    });
     const onDashboard =
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
     const onOnboarding = page.getByTestId('onboarding-step-1');

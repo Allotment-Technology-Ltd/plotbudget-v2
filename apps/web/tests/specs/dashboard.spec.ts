@@ -15,7 +15,7 @@ test.describe('Dashboard and app shell', () => {
   test.describe.configure({ retries: 1 });
 
   test('dashboard loads and shows hero or empty state', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
     await page.waitForURL(/\/dashboard/);
     const hero = page.getByTestId('dashboard-hero');
     const noCycle = page.getByTestId('dashboard-no-cycle');
@@ -59,8 +59,9 @@ test.describe('Dashboard and app shell', () => {
   });
 
   test('logout redirects to marketing site', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/dashboard/);
+    test.setTimeout(60_000);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000, waitUntil: 'domcontentloaded' });
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
@@ -71,7 +72,7 @@ test.describe('Dashboard and app shell', () => {
         if (/plotbudget\.com/.test(url.href)) return true;
         return url.pathname === '/' || url.pathname === '/login';
       },
-      { waitUntil: 'domcontentloaded' }
+      { timeout: 45_000, waitUntil: 'domcontentloaded' }
     );
   });
 });

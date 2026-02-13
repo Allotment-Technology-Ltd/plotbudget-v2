@@ -101,7 +101,10 @@ export class BlueprintPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/dashboard/blueprint', { waitUntil: 'domcontentloaded' });
+    await this.page.goto('/dashboard/blueprint', {
+      waitUntil: 'domcontentloaded',
+      timeout: process.env.CI ? 45_000 : 30_000,
+    });
     if (this.page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
@@ -157,7 +160,7 @@ export class BlueprintPage {
     await this.submitSeedButton.click();
 
     // Wait for dialog to close (onSuccess called = create succeeded)
-    const dialogCloseTimeout = process.env.CI ? 25_000 : 15_000;
+    const dialogCloseTimeout = process.env.CI ? 30_000 : 15_000;
     await expect(this.seedNameInput).not.toBeVisible({ timeout: dialogCloseTimeout }).catch(async () => {
       const errEl = this.page.getByTestId('seed-dialog-error');
       if (await errEl.isVisible()) {

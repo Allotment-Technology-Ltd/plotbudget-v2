@@ -50,7 +50,14 @@ test.describe.serial('Blueprint - Seed Management', () => {
     await blueprintPage.seedAmountInput.fill('350');
     await blueprintPage.submitSeedButton.click();
 
-    // Verify updated amount (allow time for UI to reflect in CI)
+    // Wait for edit dialog to close, then reload to get fresh server data (edit uses revalidatePath; reload avoids stale UI in CI)
+    await expect(blueprintPage.seedAmountInput).not.toBeVisible({
+      timeout: process.env.CI ? 20_000 : 10_000,
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/dashboard\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
+
+    // Verify updated amount
     await blueprintPage.expectSeedInList('Groceries', 350);
   });
 

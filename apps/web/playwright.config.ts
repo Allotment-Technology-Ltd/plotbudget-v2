@@ -60,6 +60,12 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL,
 
+    /* CI: longer timeouts — single dev server under parallel load is slow */
+    ...(process.env.CI && {
+      actionTimeout: 60_000,
+      navigationTimeout: 60_000,
+    }),
+
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
 
