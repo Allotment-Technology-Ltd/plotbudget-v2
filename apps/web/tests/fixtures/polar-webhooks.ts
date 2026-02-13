@@ -49,6 +49,21 @@ export const subscriptionCreatedNoHousehold = {
   },
 };
 
+/** Payload with Polar's US spelling "canceled" (DB expects "cancelled"). */
+export const subscriptionUpdatedCanceled = {
+  type: 'subscription.updated',
+  data: {
+    id: 'polar_sub_123',
+    status: 'canceled',
+    product_id: 'pwyl-product-id',
+    metadata: {
+      household_id: 'household-abc',
+      user_id: 'user-xyz',
+    },
+    trial_ends_at: null,
+  },
+};
+
 /** Payload with unknown product_id (mapTier returns null). */
 export const subscriptionCreatedUnknownProduct = {
   type: 'subscription.created',

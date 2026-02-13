@@ -3,6 +3,7 @@ import { createPostRequest } from './helpers/request';
 import {
   subscriptionCreatedPwyl,
   subscriptionUpdatedPwyl,
+  subscriptionUpdatedCanceled,
   subscriptionCreatedNoHousehold,
   subscriptionCreatedUnknownProduct,
 } from '../fixtures/polar-webhooks';
@@ -53,7 +54,7 @@ describe('POST /api/webhooks/polar', () => {
     process.env = originalEnv;
   });
 
-  it('Happy – subscription.created (PWYL): upserts with tier pro and metadata', async () => {
+  it('Happy – subscription.created (PWYL): upserts with tier pro', async () => {
     const { POST } = await import('@/app/api/webhooks/polar/route');
     const req = createPostRequest('/api/webhooks/polar', JSON.stringify(subscriptionCreatedPwyl));
     const res = await POST(req);
@@ -66,12 +67,7 @@ describe('POST /api/webhooks/polar', () => {
     expect(payload.polar_subscription_id).toBe('polar_sub_123');
     expect(payload.household_id).toBe('household-abc');
     expect(payload.current_tier).toBe('pro');
-    expect(payload.metadata).toEqual(
-      expect.objectContaining({
-        pwyl_amount: '5.00',
-        pricing_mode: 'pwyl',
-      })
-    );
+    // metadata column not in subscriptions table; pwyl_amount/pricing_mode used for mapTier only
   });
 
   it('Happy – subscription.updated (PWYL): upserts same table', async () => {
@@ -95,6 +91,19 @@ describe('POST /api/webhooks/polar', () => {
     expect(res.status).toBe(400);
     expect(json.error).toMatch(/household_id|metadata/);
     expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('Normalizes Polar "canceled" to DB "cancelled"', async () => {
+    const webhooks = await import('@polar-sh/sdk/webhooks');
+    (webhooks.validateEvent as ReturnType<typeof vi.fn>).mockReturnValue(subscriptionUpdatedCanceled);
+    const { POST } = await import('@/app/api/webhooks/polar/route');
+    const req = createPostRequest('/api/webhooks/polar', JSON.stringify(subscriptionUpdatedCanceled));
+    const res = await POST(req);
+
+    expect(res.status).toBe(200);
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+    const payload = mockUpsert.mock.calls[0][0];
+    expect(payload.status).toBe('cancelled');
   });
 
   it('Unknown product: returns 200 and upserts with current_tier null', async () => {
