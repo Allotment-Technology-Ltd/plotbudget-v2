@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
+import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
 
@@ -54,6 +55,7 @@ export default async function DashboardLayout({
 
   const flags = await getServerFeatureFlags(user.id);
   const avatarEnabled = flags.avatarEnabled;
+  const trialTestingDashboardVisible = isTrialTestingDashboardAllowed();
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,6 +77,7 @@ export default async function DashboardLayout({
               },
               isPartner,
               avatarEnabled,
+              trialTestingDashboardVisible,
             }}
           />
         </div>

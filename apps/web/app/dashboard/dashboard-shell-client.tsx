@@ -24,6 +24,7 @@ export type DashboardHeaderNavClientProps = {
     user: { id: string; email: string; display_name: string | null; avatar_url: string | null };
     isPartner: boolean;
     avatarEnabled: boolean;
+    trialTestingDashboardVisible?: boolean;
   };
 };
 
@@ -35,6 +36,7 @@ export function DashboardHeaderNavClient({ userMenuProps }: DashboardHeaderNavCl
         user={userMenuProps.user}
         isPartner={userMenuProps.isPartner}
         avatarEnabled={userMenuProps.avatarEnabled}
+        trialTestingDashboardVisible={userMenuProps.trialTestingDashboardVisible}
       />
     </nav>
   );

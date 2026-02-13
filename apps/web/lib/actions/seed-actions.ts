@@ -3,15 +3,12 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
-import { calculateNextCycleDates } from '@/lib/utils/pay-cycle-dates';
-import { projectIncomeForCycle } from '@/lib/utils/income-projection';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/database.types';
+import { rollDueDateToCycle } from '@/lib/utils/seed-utils';
 
-type Household = Database['public']['Tables']['households']['Row'];
 type SeedRow = Database['public']['Tables']['seeds']['Row'];
 type SeedInsert = Database['public']['Tables']['seeds']['Insert'];
-type PaycycleInsert = Database['public']['Tables']['paycycles']['Insert'];
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PaymentSource = 'me' | 'partner' | 'joint';
@@ -88,7 +85,7 @@ function calculateSeedSplit(
 }
 
 /** Recalculate and update all paycycle allocation and remaining columns from seeds */
-async function updatePaycycleAllocations(
+export async function updatePaycycleAllocations(
   paycycleId: string,
   client?: SupabaseClient<Database>
 ): Promise<void> {
@@ -414,7 +411,7 @@ export async function deleteSeed(seedId: string): Promise<{ error?: string }> {
   }
 }
 
-/** Mark need/want seeds with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
+/** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
 export async function markOverdueSeedsPaid(
   paycycleId: string
 ): Promise<void> {
@@ -423,16 +420,18 @@ export async function markOverdueSeedsPaid(
 
   const { data: overdue } = await supabase
     .from('seeds')
-    .select('id, payment_source')
+    .select('*')
     .eq('paycycle_id', paycycleId)
-    .in('type', ['need', 'want'])
+    .in('type', ['need', 'want', 'savings', 'repay'])
     .not('due_date', 'is', null)
     .lt('due_date', today)
     .eq('is_paid', false);
 
   if (!overdue || overdue.length === 0) return;
 
-  for (const row of overdue as { id: string; payment_source: string }[]) {
+  const { updateLinkedPotOrRepayment } = await import('@/lib/actions/ritual-actions');
+
+  for (const row of overdue as SeedRow[]) {
     const isJoint = row.payment_source === 'joint';
     const updates: Record<string, unknown> = {
       is_paid: true,
@@ -440,6 +439,7 @@ export async function markOverdueSeedsPaid(
       is_paid_partner: isJoint || row.payment_source === 'partner',
     };
     await (supabase.from('seeds') as any).update(updates).eq('id', row.id);
+    await updateLinkedPotOrRepayment(row, 'both', true, supabase);
   }
 
   await updatePaycycleAllocations(paycycleId);
@@ -447,123 +447,22 @@ export async function markOverdueSeedsPaid(
   revalidatePath('/dashboard');
 }
 
-/** Create next paycycle, clone recurring seeds, and return new cycle id */
+/** Create next paycycle (as draft), clone recurring seeds, and return new cycle id */
 export async function createNextPaycycle(
   currentPaycycleId: string
 ): Promise<{ cycleId?: string; error?: string }> {
   try {
     const supabase = await createServerSupabaseClient();
-
-    const { data: current } = (await supabase
-      .from('paycycles')
-      .select('*, households(*)')
-      .eq('id', currentPaycycleId)
-      .single()) as {
-      data: {
-        household_id: string;
-        end_date: string;
-        total_income: number;
-        snapshot_user_income: number;
-        snapshot_partner_income: number;
-        households: Household;
-      } | null;
-    };
-
-    if (!current) return { error: 'Paycycle not found' };
-
-    const household = current.households;
-    const { start: startStr, end: endStr } = calculateNextCycleDates(
-      current.end_date,
-      household.pay_cycle_type,
-      household.pay_day ?? undefined
+    const { createNextPaycycleCore } = await import(
+      '@/lib/paycycle/create-next-paycycle-core'
     );
-    const cycleName = `Paycycle ${startStr}`;
-
-    // Projection engine: use income_sources if any active, else fall back to current cycle totals
-    let total_income = current.total_income;
-    let snapshot_user_income = current.snapshot_user_income;
-    let snapshot_partner_income = current.snapshot_partner_income;
-
-    const { data: incomeSources } = await supabase
-      .from('income_sources')
-      .select('id, amount, frequency_rule, day_of_month, anchor_date, payment_source')
-      .eq('household_id', current.household_id)
-      .eq('is_active', true);
-
-    if (incomeSources && incomeSources.length > 0) {
-      const projected = projectIncomeForCycle(
-        startStr,
-        endStr,
-        incomeSources as {
-          id: string;
-          amount: number;
-          frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
-          day_of_month: number | null;
-          anchor_date: string | null;
-          payment_source: 'me' | 'partner' | 'joint';
-        }[],
-        household.joint_ratio ?? 0.5
-      );
-      total_income = projected.total;
-      snapshot_user_income = projected.snapshot_user_income;
-      snapshot_partner_income = projected.snapshot_partner_income;
-    }
-
-    const paycycleInsert: PaycycleInsert = {
-      household_id: current.household_id,
+    const result = await createNextPaycycleCore(supabase, currentPaycycleId, {
       status: 'draft',
-      name: cycleName,
-      start_date: startStr,
-      end_date: endStr,
-      total_income,
-      snapshot_user_income,
-      snapshot_partner_income,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: newCycle, error: insertErr } = await (supabase.from('paycycles') as any)
-      .insert(paycycleInsert)
-      .select()
-      .single();
-
-    if (insertErr || !newCycle) return { error: insertErr?.message ?? 'Failed to create paycycle' };
-
-    const { data: recurringSeedsData } = await supabase
-      .from('seeds')
-      .select('*')
-      .eq('paycycle_id', currentPaycycleId)
-      .eq('is_recurring', true);
-
-    const recurringSeeds = (recurringSeedsData ?? []) as SeedRow[];
-
-    if (recurringSeeds.length > 0) {
-      const inserts: SeedInsert[] = recurringSeeds.map((s) => ({
-        household_id: s.household_id,
-        paycycle_id: newCycle.id,
-        name: s.name,
-        amount: s.amount,
-        type: s.type,
-        category: s.category,
-        payment_source: s.payment_source,
-        is_recurring: true,
-        due_date: s.due_date ?? null,
-        is_paid: false,
-        is_paid_me: false,
-        is_paid_partner: false,
-        amount_me: s.amount_me,
-        amount_partner: s.amount_partner,
-        split_ratio: s.split_ratio,
-        linked_pot_id: s.linked_pot_id ?? null,
-        linked_repayment_id: s.linked_repayment_id ?? null,
-        uses_joint_account: s.uses_joint_account ?? false,
-      }));
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('seeds') as any).insert(inserts);
-      await updatePaycycleAllocations(newCycle.id);
+    });
+    if (result.cycleId) {
+      revalidatePath('/dashboard/blueprint');
     }
-
-    revalidatePath('/dashboard/blueprint');
-    return { cycleId: newCycle.id };
+    return result;
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create next paycycle' };
   }
@@ -582,13 +481,17 @@ export async function resyncDraftFromActive(
 
     const { data: draftCycle } = (await supabase
       .from('paycycles')
-      .select('id, status, household_id')
+      .select('id, status, household_id, start_date, end_date')
       .eq('id', draftPaycycleId)
-      .single()) as { data: { id: string; status: string; household_id: string } | null };
+      .single()) as {
+      data: { id: string; status: string; household_id: string; start_date: string; end_date: string } | null;
+    };
 
     if (!draftCycle || draftCycle.status !== 'draft') {
       return { error: 'Draft paycycle not found or not a draft' };
     }
+    const draftStart = draftCycle.start_date;
+    const draftEnd = draftCycle.end_date;
 
     const { data: activeRecurring } = await supabase
       .from('seeds')
@@ -636,7 +539,7 @@ export async function resyncDraftFromActive(
             linked_pot_id: seed.linked_pot_id ?? null,
             linked_repayment_id: seed.linked_repayment_id ?? null,
             uses_joint_account: seed.uses_joint_account ?? false,
-            due_date: seed.due_date ?? null,
+            due_date: rollDueDateToCycle(seed.due_date ?? null, draftStart, draftEnd),
           })
           .eq('id', existing.id);
       } else {
@@ -650,7 +553,7 @@ export async function resyncDraftFromActive(
           payment_source: seed.payment_source,
           split_ratio: seed.split_ratio,
           is_recurring: true,
-          due_date: seed.due_date ?? null,
+          due_date: rollDueDateToCycle(seed.due_date ?? null, draftStart, draftEnd),
           is_paid: false,
           is_paid_me: false,
           is_paid_partner: false,

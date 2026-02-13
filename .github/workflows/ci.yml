@@ -16,6 +16,24 @@ permissions:
   pull-requests: write
 
 jobs:
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
+      - name: Code and secret audit
+        run: pnpm run audit
+
   lint:
     name: lint
     runs-on: ubuntu-latest

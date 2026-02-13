@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Trash, Repeat, CheckCircle2 } from 'lucide-react';
+import { Trash, Repeat, CheckCircle2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -34,6 +34,14 @@ const paymentSourceBadge = {
   },
   joint: { label: 'JOINT', color: 'bg-accent/20 text-accent-foreground' },
 } as const;
+
+function formatDueDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  const now = new Date();
+  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString('en-GB', opts);
+}
 
 export function SeedCard({
   seed,
@@ -252,8 +260,14 @@ export function SeedCard({
         </div>
       </div>
 
-      {/* Meta row: Added by, Paid by, joint split, pot, repayment — full width below */}
+      {/* Meta row: Added by, Paid by, joint split, due date, pot, repayment — full width below */}
       <div className="mt-2 pl-0 sm:pl-0 space-y-0.5">
+        {seed.due_date && (
+          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5" aria-label={`Due date ${formatDueDate(seed.due_date)}`}>
+            <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            Due {formatDueDate(seed.due_date)}
+          </p>
+        )}
         {(household.is_couple && seed.created_by_owner != null) && (
           <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}`}>
             Added by {seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}

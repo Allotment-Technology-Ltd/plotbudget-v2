@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -33,9 +33,10 @@ interface UserMenuProps {
   };
   isPartner?: boolean;
   avatarEnabled?: boolean;
+  trialTestingDashboardVisible?: boolean;
 }
 
-export function UserMenu({ user, isPartner = false, avatarEnabled = false }: UserMenuProps) {
+export function UserMenu({ user, isPartner = false, avatarEnabled = false, trialTestingDashboardVisible = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { paymentUiVisible } = useAuthFeatureFlags();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
@@ -156,6 +157,21 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false }: Use
             >
               <CreditCard className="mr-2 h-4 w-4" aria-hidden />
               Pricing
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {trialTestingDashboardVisible && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer transition-colors duration-200"
+          >
+            <Link
+              href="/dev/trial-testing"
+              className="flex items-center focus:bg-primary/10 focus:text-primary"
+              data-testid="user-menu-trial-testing"
+            >
+              <FlaskConical className="mr-2 h-4 w-4" aria-hidden />
+              Dev: Trial Testing
             </Link>
           </DropdownMenuItem>
         )}

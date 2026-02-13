@@ -65,6 +65,10 @@ const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
     email: TEST_USERS.visual.email,
     password: TEST_USERS.visual.password,
   },
+  'showcase-video': {
+    email: TEST_USERS.visual.email,
+    password: TEST_USERS.visual.password,
+  },
 };
 
 export default async function globalSetup(config: FullConfig) {

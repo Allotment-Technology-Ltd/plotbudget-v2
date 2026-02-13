@@ -278,7 +278,7 @@ export function SeedDialog({
           category === 'savings' || category === 'repay' ? true : data.is_recurring,
       };
 
-      if (category === 'need' || category === 'want') {
+      if (category === 'need' || category === 'want' || category === 'savings' || category === 'repay') {
         payload.due_date = data.due_date?.trim() || null;
       }
 
@@ -418,7 +418,7 @@ export function SeedDialog({
               <Label htmlFor="seed-category">Category</Label>
               <select
                 id="seed-category"
-                value={category}
+                defaultValue={category}
                 tabIndex={-1}
                 aria-hidden
                 data-testid="seed-category-select"
@@ -453,7 +453,7 @@ export function SeedDialog({
             )}
           </div>
 
-          {(category === 'need' || category === 'want') && (
+          {(category === 'need' || category === 'want' || category === 'savings' || category === 'repay') && (
             <div className="space-y-2">
               <Label htmlFor="seed-due-date">Due date (optional)</Label>
               <Input
@@ -464,7 +464,7 @@ export function SeedDialog({
                 {...form.register('due_date')}
               />
               <p className="text-xs text-muted-foreground">
-                When the due date has passed, this bill is automatically marked as paid.
+                When the due date has passed, this item is automatically marked as paid.
               </p>
             </div>
           )}

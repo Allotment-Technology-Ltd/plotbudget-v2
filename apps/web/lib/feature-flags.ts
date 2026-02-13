@@ -52,6 +52,20 @@ export function isDevContext(): boolean {
 }
 
 /**
+ * Whether the trial testing dashboard is allowed (develop branch or local only).
+ * Use for gating /dev/trial-testing page and API routes.
+ */
+export function isTrialTestingDashboardAllowed(): boolean {
+  const env = getEnv();
+  if (env.ENABLE_TRIAL_TESTING_DASHBOARD === 'true') return true;
+  if (env.NODE_ENV === 'development') return true;
+  const appUrl = env.NEXT_PUBLIC_APP_URL ?? '';
+  if (appUrl.includes('localhost')) return true;
+  const ref = env.VERCEL_GIT_COMMIT_REF ?? '';
+  return ref === 'develop';
+}
+
+/**
  * Dev-only override for payment/pricing UI (local testing).
  * Set NEXT_PUBLIC_DEV_PAYMENTS=off|pwyl|full in .env.local. Only applied when isDevContext().
  */
