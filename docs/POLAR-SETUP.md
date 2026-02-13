@@ -55,10 +55,15 @@ Set these where the **Next.js app** runs (e.g. Vercel → Project → Settings �
 | `POLAR_ACCESS_TOKEN` | Server-only (checkout route, webhook, API) | From Polar dashboard (1.2) |
 | `POLAR_WEBHOOK_SECRET` | Server-only (webhook handler) | From Polar webhook (1.3) |
 | `POLAR_SUCCESS_URL` | Checkout redirect | `https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}` |
-| `POLAR_PREMIUM_PRODUCT_ID` or `POLAR_PREMIUM_PRICE_ID` | Webhook: map event → Premium | Product or price ID from (1.1) |
-| (Optional) `POLAR_PREMIUM_ANNUAL_PRODUCT_ID` | Webhook: distinguish annual | If you want to store monthly vs annual |
+| `POLAR_PWYL_GBP_PRODUCT_ID` | Checkout: PWYL for GBP households | From create-polar-products script (prod) |
+| `POLAR_PWYL_USD_PRODUCT_ID` | Checkout: PWYL for USD households | Same PWYL product ID if single product |
+| `POLAR_PWYL_EUR_PRODUCT_ID` | Checkout: PWYL for EUR households | Same PWYL product ID if single product |
+| `POLAR_PREMIUM_PRODUCT_ID` or `POLAR_PREMIUM_PRICE_ID` | Webhook + checkout: monthly | Product or price ID from (1.1) |
+| (Optional) `POLAR_PREMIUM_ANNUAL_PRODUCT_ID` | Webhook + checkout: annual | If you want monthly vs annual |
+| `POLAR_SANDBOX` | Sandbox vs production API | `true` for sandbox; **omit or `false` for production** |
 
 - Do **not** expose the access token or webhook secret to the client (`NEXT_PUBLIC_*`).
+- **Production:** For Vercel Production scope, omit `POLAR_SANDBOX` or set `POLAR_SANDBOX=false`. Never set `POLAR_SANDBOX=true` for production.
 
 ---
 
@@ -153,6 +158,19 @@ This can be done after checkout and webhook are working.
 3. **Code:** Install SDK → migration for `subscriptions` → webhook route (verify signature, handle events, upsert `subscriptions` and optionally `users`) → checkout route (and pass `household_id` into checkout) → wire “Upgrade” to checkout.
 4. **Test:** Use **Polar Sandbox** (sandbox.polar.sh) and test cards; trigger a subscription and confirm the webhook runs and `subscriptions` (and optionally `users`) are updated. See **[POLAR-TESTING.md](./POLAR-TESTING.md)** for manual and automated testing in line with Polar’s docs.
 5. **Optional:** Add limit logic and UI (useSubscription, createSeed check, upgrade CTA).
+
+---
+
+## Production go-live checklist
+
+When moving from sandbox to live payments (polar.sh, not sandbox.polar.sh):
+
+1. **Polar production:** Create access token, create products (`pnpm exec tsx apps/web/scripts/create-polar-products.ts` with no `--sandbox`), create webhook at `https://app.plotbudget.com/api/webhooks/polar`.
+2. **Vercel Production env vars:** Set `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_SUCCESS_URL`, `POLAR_PWYL_GBP_PRODUCT_ID`, `POLAR_PWYL_USD_PRODUCT_ID`, `POLAR_PWYL_EUR_PRODUCT_ID`, `POLAR_PREMIUM_PRODUCT_ID`, `POLAR_PREMIUM_ANNUAL_PRODUCT_ID`.
+3. **Critical:** Omit `POLAR_SANDBOX` or set `POLAR_SANDBOX=false` for Production. Do not set `POLAR_SANDBOX=true` in production.
+4. **Verify:** Run a live purchase, confirm webhook delivery and DB updates, then enable `NEXT_PUBLIC_PRICING_ENABLED=true`.
+
+See [LIVE-PAYMENTS-SETUP.md](./LIVE-PAYMENTS-SETUP.md) for a fuller rollout checklist.
 
 ---
 

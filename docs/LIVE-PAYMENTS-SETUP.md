@@ -24,11 +24,19 @@ NEXT_PUBLIC_FIXED_PRICING_ENABLED=false
 POLAR_ACCESS_TOKEN=polar_pat_prod_...
 POLAR_WEBHOOK_SECRET=polar_whs_prod_...
 POLAR_SUCCESS_URL=https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}
-POLAR_PWYL_BASE_PRODUCT_ID=<prod_pwyl_product_id>
 
-# Legacy fixed products (for existing subscribers, keep as-is)
+# PWYL products (currency-specific; use same ID if single product)
+POLAR_PWYL_GBP_PRODUCT_ID=<prod_pwyl_product_id>
+POLAR_PWYL_USD_PRODUCT_ID=<prod_pwyl_product_id>
+POLAR_PWYL_EUR_PRODUCT_ID=<prod_pwyl_product_id>
+# Legacy: POLAR_PWYL_BASE_PRODUCT_ID=<prod_pwyl_product_id>
+
+# Fixed products (monthly, annual)
 POLAR_PREMIUM_PRODUCT_ID=<existing_prod_id>
 POLAR_PREMIUM_ANNUAL_PRODUCT_ID=<existing_prod_annual_id>
+
+# Critical: omit or set false for production (never POLAR_SANDBOX=true)
+# POLAR_SANDBOX=false
 ```
 
 ## 3) Update Polar Email Sender (Production)
