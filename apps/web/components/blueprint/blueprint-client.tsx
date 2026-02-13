@@ -402,7 +402,8 @@ export function BlueprintClient({
                   const result = await closeRitual(paycycle.id);
                   if ('success' in result) {
                     setShowCelebration(true);
-                    router.refresh();
+                    // Refresh only when celebration is dismissed — avoids router.refresh() unmounting
+                    // the overlay before the test (or user) sees it
                   } else {
                     toast.error(result.error ?? 'Couldn’t close cycle');
                   }
@@ -617,7 +618,10 @@ export function BlueprintClient({
 
       <RitualCompletionCelebration
         open={showCelebration}
-        onClose={() => setShowCelebration(false)}
+        onClose={() => {
+          setShowCelebration(false);
+          router.refresh();
+        }}
         totalAllocated={paycycle.total_allocated}
         totalIncome={paycycle.total_income}
       />

@@ -51,7 +51,8 @@ export class OnboardingPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/onboarding');
+    // Use domcontentloaded — CI can hit ERR_ABORTED or hangs when waiting for 'load' on redirects.
+    await this.page.goto('/onboarding', { waitUntil: 'domcontentloaded' });
     await this.page.waitForURL(/\/onboarding/, { timeout: 15_000 });
     await expect(this.soloModeButton).toBeVisible({ timeout: 15_000 });
   }

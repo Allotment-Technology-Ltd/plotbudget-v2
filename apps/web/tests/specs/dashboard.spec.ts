@@ -64,10 +64,14 @@ test.describe('Dashboard and app shell', () => {
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
-    // In E2E, app may redirect to /login or / (marketing); accept any post-logout destination
-    await page.waitForURL((url) => {
-      if (/plotbudget\.com/.test(url.href)) return true;
-      return url.pathname === '/' || url.pathname === '/login';
-    });
+    // In E2E, app may redirect to /login or / (marketing); accept any post-logout destination.
+    // Use domcontentloaded — /login can hang on 'load' in CI (scripts/resources) and cause timeouts.
+    await page.waitForURL(
+      (url) => {
+        if (/plotbudget\.com/.test(url.href)) return true;
+        return url.pathname === '/' || url.pathname === '/login';
+      },
+      { waitUntil: 'domcontentloaded' }
+    );
   });
 });
