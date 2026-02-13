@@ -1,6 +1,6 @@
 /**
  * Server-side PostHog feature flag evaluation.
- * Uses the PostHog /flags API so flags work in middleware and server components.
+ * Uses the PostHog /flags API so flags work in proxy and server components.
  * Falls back to env vars when PostHog is not configured or the request fails.
  */
 

@@ -64,7 +64,7 @@ Quick check: add a temporary `console.log` in `createSeed` (e.g. log `(await sup
 
 **Symptom:** Click Settings → navigate to `/login?redirect=%2Fdashboard%2Fsettings` → `waitForURL(/\/dashboard\/settings/)` times out.
 
-**Possible causes:** Session not sent with the Settings navigation (e.g. link opens without cookies), or middleware treating the request as unauthenticated.
+**Possible causes:** Session not sent with the Settings navigation (e.g. link opens without cookies), or proxy treating the request as unauthenticated.
 
 ### Step 1: Run the test in headed mode
 
@@ -76,10 +76,10 @@ npx playwright test tests/specs/dashboard.spec.ts --project=chromium-blueprint -
 - After opening the user menu and clicking Settings, does the browser go to `/dashboard/settings` first and then redirect to login, or go straight to login?
 - In DevTools → Application → Cookies: before clicking Settings, are Supabase auth cookies present for the test origin?
 
-### Step 2: Check middleware and settings page auth
+### Step 2: Check proxy and settings page auth
 
-- **Middleware** (`middleware.ts`): Uses `getUser()`. If the request to `/dashboard/settings` has no cookies (or wrong origin), `user` is null → redirect to login.
-- **Settings page** (`app/dashboard/settings/page.tsx`): Loads household with `household_id` where `owner_id = user.id`. If that query returns no row, the page redirects to `/onboarding` (not login). So a redirect to **login** usually means middleware didn’t see a session.
+- **Proxy** (`proxy.ts`): Uses `getUser()`. If the request to `/dashboard/settings` has no cookies (or wrong origin), `user` is null → redirect to login.
+- **Settings page** (`app/dashboard/settings/page.tsx`): Loads household with `household_id` where `owner_id = user.id`. If that query returns no row, the page redirects to `/onboarding` (not login). So a redirect to **login** usually means proxy didn’t see a session.
 
 Confirm: in the failing run, is the **first** request to `/dashboard/settings` sent with cookies? (Use Playwright trace or “Record trace” and inspect the request headers for that navigation.)
 
@@ -116,7 +116,7 @@ That won’t fix the redirect but will make the failure message explicit.
 | Seed card not found | RLS allows insert for test user? | `docs/supabase-rls-policies.sql`, Supabase policies |
 | Settings → login | Cookies present before click? | DevTools → Application → Cookies |
 | Settings → login | Same base URL as auth state? | CI env vs. where `blueprint.json` was saved |
-| Both | User id in server action? | Temporary `console.log` in `createSeed` / middleware |
+| Both | User id in server action? | Temporary `console.log` in `createSeed` / proxy |
 
 ---
 

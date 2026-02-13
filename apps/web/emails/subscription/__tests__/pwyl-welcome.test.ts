@@ -30,6 +30,7 @@ describe('PWYLWelcomeEmail', () => {
     const html = render({ displayName: 'Jordan', amount: 0 });
     expect(html).toContain('Community Supporter');
     expect(html).toContain('at no cost');
+    expect(html).not.toContain('£0.00/month');
   });
 
   it('renders premium features list', () => {

@@ -7,7 +7,7 @@ const COUNTRY_COOKIE_NAME = 'x-plot-country';
 // Vercel Edge adds geo to the request; not in NextRequest types
 type RequestWithGeo = NextRequest & { geo?: { country?: string } };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
