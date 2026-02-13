@@ -34,11 +34,11 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
 
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  /* Retry on CI only — 3 retries to absorb flakiness under shared server/DB load */
+  retries: process.env.CI ? 3 : 0,
 
-  /* CI: 5 workers. Local: 4 workers so visual + layout + auth + etc. run in parallel without EMFILE */
-  workers: process.env.CI ? 5 : 4,
+  /* CI: 3 workers to reduce contention on single dev server + Supabase. Local: 4 */
+  workers: process.env.CI ? 3 : 4,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [

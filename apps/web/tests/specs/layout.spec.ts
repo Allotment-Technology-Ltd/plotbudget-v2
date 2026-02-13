@@ -9,7 +9,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
   test.describe('unauthenticated', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
     test('login page has no horizontal overflow', async ({ page }) => {
-      await page.goto('/login');
+      await page.goto('/login', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/login/);
       await expect(page.getByTestId('email-input')).toBeVisible();
       await expectNoHorizontalOverflow(page);
@@ -18,14 +18,14 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
 
   test.describe('authenticated', () => {
     test('dashboard has no horizontal overflow', async ({ page }) => {
-      await page.goto('/dashboard');
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/dashboard/);
       await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);
     });
 
     test('settings page has no horizontal overflow', async ({ page }) => {
-      await page.goto('/dashboard/settings');
+      await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost — run with authenticated storage state');
@@ -35,7 +35,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
     });
 
     test('blueprint page has no horizontal overflow', async ({ page }) => {
-      await page.goto('/dashboard/blueprint');
+      await page.goto('/dashboard/blueprint', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/(dashboard\/blueprint|login)/, { timeout: 15000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost');
@@ -47,7 +47,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
     });
 
     test('app header and content-wrapper do not overflow', async ({ page }) => {
-      await page.goto('/dashboard');
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/dashboard/);
       await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);

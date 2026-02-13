@@ -1,8 +1,8 @@
 // apps/web/tests/specs/onboarding.spec.ts
 import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../pages/onboarding.page';
-import { AuthPage } from '../pages/auth.page';
 import { resetOnboardingState } from '../utils/db-cleanup';
+import { setAuthState } from '../utils/test-auth';
 import { TEST_USERS } from '../fixtures/test-data';
 
 test.describe('Onboarding Flow - Solo Mode', () => {
@@ -21,7 +21,6 @@ test.describe('Onboarding Flow - Solo Mode', () => {
     await page.clock.setFixedTime(new Date('2024-01-15T12:00:00Z'));
 
     const onboardingPage = new OnboardingPage(page);
-    const authPage = new AuthPage(page);
     const { email, password } = TEST_USERS.onboarding;
 
     // —— Scenario 1: Specific date (e.g. 25th) ——
@@ -32,9 +31,7 @@ test.describe('Onboarding Flow - Solo Mode', () => {
 
     // —— Clear down, then Scenario 2: Last working day ——
     await resetOnboardingState(email);
-    await authPage.goto();
-    await authPage.login(email, password);
-    await page.waitForURL(/\/(dashboard|onboarding)/);
+    await setAuthState(page, email, password);
     await onboardingPage.goto();
     await onboardingPage.completeSoloOnboardingLastWorkingDay(2500);
     await onboardingPage.expectRedirectToBlueprint();
@@ -42,9 +39,7 @@ test.describe('Onboarding Flow - Solo Mode', () => {
 
     // —— Clear down, then Scenario 3: Every 4 weeks ——
     await resetOnboardingState(email);
-    await authPage.goto();
-    await authPage.login(email, password);
-    await page.waitForURL(/\/(dashboard|onboarding)/);
+    await setAuthState(page, email, password);
     await onboardingPage.goto();
     await onboardingPage.completeSoloOnboardingEvery4Weeks(2500, '2024-02-15');
     await onboardingPage.expectRedirectToBlueprint();

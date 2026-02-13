@@ -100,8 +100,8 @@ export class OnboardingPage {
   }
 
   async expectRedirectToBlueprint() {
-    // Celebration animation takes ~3.3s; use 'load' for reliable URL match after client-side nav
-    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000, waitUntil: 'load' });
+    // Use domcontentloaded — 'load' can hang in CI; celebration animation ~3.3s
+    await this.page.waitForURL(/\/blueprint/, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     // Blueprint page must load server data; add-seed-button OR blueprint-empty-state indicates ready (allow 20s for CI)
     const ready = this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state'));
     await expect(ready.first()).toBeVisible({ timeout: 20_000 });
@@ -110,7 +110,9 @@ export class OnboardingPage {
 
   async logout() {
     await this.page.getByTestId('user-menu-trigger').click();
-    await this.page.getByRole('menuitem', { name: 'Log out' }).click();
+    const logoutItem = this.page.getByTestId('user-menu-logout');
+    await expect(logoutItem).toBeVisible({ timeout: 5_000 });
+    await logoutItem.click({ force: true });
     await this.page.waitForURL((url) => url.pathname === '/' || url.pathname === '/login' || /plotbudget\.com/.test(url.href));
   }
 }

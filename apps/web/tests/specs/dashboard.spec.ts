@@ -15,7 +15,7 @@ test.describe('Dashboard and app shell', () => {
   test.describe.configure({ retries: 1 });
 
   test('dashboard loads and shows hero or empty state', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForURL(/\/dashboard/);
     const hero = page.getByTestId('dashboard-hero');
     const noCycle = page.getByTestId('dashboard-no-cycle');
@@ -32,7 +32,7 @@ test.describe('Dashboard and app shell', () => {
 
   test('settings page loads when authenticated', async ({ page }) => {
     // Navigate directly so cookies are sent (client-side Link nav can lose session in CI)
-    await page.goto('/dashboard/settings');
+    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
     await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15_000 });
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
@@ -49,7 +49,7 @@ test.describe('Dashboard and app shell', () => {
   });
 
   test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
-    await page.goto('/dashboard/settings');
+    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
     await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15_000 });
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login.');
@@ -59,7 +59,7 @@ test.describe('Dashboard and app shell', () => {
   });
 
   test('logout redirects to marketing site', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     await page.waitForURL(/\/dashboard/);
     await expectNoServerError(page);
     await page.getByTestId('user-menu-trigger').click();

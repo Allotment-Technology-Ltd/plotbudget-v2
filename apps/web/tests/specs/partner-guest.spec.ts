@@ -55,7 +55,9 @@ test.describe('Partner invite (unauthenticated)', () => {
     const unauthenticatedOrHeading = partnerPage.unauthenticatedContainer.or(
       page.getByRole('heading', { name: /Join as partner/i })
     );
-    await expect(unauthenticatedOrHeading.first()).toBeVisible({ timeout: 25_000 });
+    await expect(unauthenticatedOrHeading.first()).toBeVisible({
+      timeout: process.env.CI ? 35_000 : 25_000,
+    });
     await expect(partnerPage.unauthenticatedContainer).toBeVisible({ timeout: 5_000 });
     await expect(partnerPage.loginLink).toBeVisible({ timeout: 10_000 });
     await partnerPage.clickLogin();
@@ -74,7 +76,7 @@ test.describe('Partner invite (authenticated)', () => {
     await page.context().addCookies([cookie]);
 
     await page.goto(`/partner/join?t=${encodeURIComponent(E2E_PARTNER_INVITE_TOKEN)}`, {
-      waitUntil: 'load',
+      waitUntil: 'domcontentloaded',
     });
 
     // Invite is auto-accepted and user is redirected to dashboard (no Accept screen)

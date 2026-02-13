@@ -27,7 +27,7 @@ export class AuthPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/login');
+    await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
     await expect(this.emailInput).toBeVisible();
   }
 
