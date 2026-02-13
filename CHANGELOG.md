@@ -1,3 +1,15 @@
+# [0.4.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.3.0...v0.4.0) (2026-02-13)
+
+
+### Bug Fixes
+
+* **ci:** repair orphaned migration versions before prod db push ([d8742f0](https://github.com/adamboon1984-arch/plotbudget-v2/commit/d8742f08722a6818922af2b5112df6e38bdf3a0b))
+
+
+### Features
+
+* **flags:** payment three-state flagging and dev toggle ([#33](https://github.com/adamboon1984-arch/plotbudget-v2/issues/33)) ([ab51f82](https://github.com/adamboon1984-arch/plotbudget-v2/commit/ab51f82a04ab4f982a0a6cddf7cf237b8721dc35))
+
 # [0.3.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.2.0...v0.3.0) (2026-02-09)
 
 
