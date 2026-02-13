@@ -9,6 +9,7 @@ import { useTheme } from './hooks/useTheme';
 import SEO from './components/SEO';
 import Navbar from './components/Navbar';
 import MailerLiteForm from './components/MailerLiteForm';
+import AppShowcasePhone from './components/AppShowcasePhone';
 
 /* ============================================================
    ANIMATION VARIANTS (shared across sections)
@@ -453,39 +454,23 @@ function AppShowcase() {
           flex flex-col md:flex-row items-center justify-center
           gap-8 md:gap-12 mt-12 md:mt-16
         ">
-          {/* Dark mode phone */}
+          {/* Dark mode phone — video or static preview */}
           <motion.div
             style={{ y: yLeft }}
             className="phone-frame shadow-glow md:-rotate-3"
           >
             <div className="phone-screen phone-screen-dark">
-              {/*
-                Replace src with your actual screenshot path.
-                Place files in /public/screenshots/
-              */}
-              <img
-                src="/screenshots/dashboard-dark.png"
-                alt="PLOT dashboard in dark mode showing budget allocation with mint green accents on a dark background"
-                loading="lazy"
-                width="280"
-                height="560"
-              />
+              <AppShowcasePhone variant="dark" />
             </div>
           </motion.div>
 
-          {/* Light mode phone */}
+          {/* Light mode phone — video or static preview */}
           <motion.div
             style={{ y: yRight }}
             className="phone-frame shadow-glow md:rotate-3"
           >
             <div className="phone-screen phone-screen-light">
-              <img
-                src="/screenshots/dashboard-light.png"
-                alt="PLOT dashboard in light mode showing budget allocation with green accents on a warm cream background"
-                loading="lazy"
-                width="280"
-                height="560"
-              />
+              <AppShowcasePhone variant="light" />
             </div>
           </motion.div>
         </div>

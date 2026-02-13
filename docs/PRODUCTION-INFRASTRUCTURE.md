@@ -157,6 +157,7 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 - [ ] Production secrets only in Vercel (Production scope).
 - [ ] Supabase Auth: Site URL = `https://app.plotbudget.com`, Redirect URLs = `https://app.plotbudget.com/**`
 - [ ] RLS enabled on all public tables; cron routes protected with `CRON_SECRET`.
+- [ ] **Full security review and CI checks:** see [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) (assessment, findings, and pipeline).
 
 ---
 

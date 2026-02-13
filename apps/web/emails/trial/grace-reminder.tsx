@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { Heading, Text, Button } from '@react-email/components';
 import { EmailLayout } from '../components/email-layout';

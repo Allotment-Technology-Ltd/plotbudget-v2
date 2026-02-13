@@ -69,7 +69,13 @@ if (allDangerous.length > 0) {
     console.log(chalk.gray("  " + file + ": ") + patterns.join(", "));
   }
 }
-if (totalSecrets === 0 && allDangerous.length === 0) {
-  console.log(chalk.green("✓ No obvious secrets or dangerous patterns detected."));
+if (allDangerous.length > 0) {
+  console.log(chalk.red("✗ Failing CI: dangerous patterns must be removed or allowlisted."));
+  process.exit(1);
 }
-console.log("");
+if (totalSecrets === 0) {
+  console.log(chalk.green("✓ No dangerous patterns; no obvious secrets detected."));
+} else {
+  console.log(chalk.yellow("⚠ Review potential secrets above (CI allows merge; fix before production)."));
+}
+process.exit(0);

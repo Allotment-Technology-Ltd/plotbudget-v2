@@ -282,10 +282,17 @@
   background: #f5f0ea;
 }
 
-.phone-screen img {
+.phone-screen img,
+.phone-screen video {
   width: 100%;
   height: auto;
   display: block;
+  object-fit: cover;
+}
+
+.phone-screen-video {
+  min-height: 512px;
+  object-position: top center;
 }
 
 @media (min-width: 810px) {

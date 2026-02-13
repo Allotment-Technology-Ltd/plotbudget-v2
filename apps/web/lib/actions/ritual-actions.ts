@@ -18,6 +18,63 @@ function getRemTypeKey(type: SeedType): string {
   return type === 'need' ? 'needs' : type === 'want' ? 'wants' : type === 'savings' ? 'savings' : 'repay';
 }
 
+/** Amount being marked paid for the given payer (matches updatePaycycleRemaining logic). */
+function getPaidAmount(seed: SeedRow, payer: Payer): number {
+  if (payer === 'both' || seed.payment_source !== 'joint') {
+    if (seed.payment_source === 'me' || seed.payment_source === 'partner') {
+      return Number(seed.amount);
+    }
+    return Number(seed.amount_me ?? 0) + Number(seed.amount_partner ?? 0);
+  }
+  if (payer === 'me') return Number(seed.amount_me ?? 0);
+  return Number(seed.amount_partner ?? 0);
+}
+
+/**
+ * Update linked pot (savings) or repayment (debt) when a seed is marked or unmarked paid.
+ * Mark paid: savings += amount, repay -= amount.
+ * Unmark paid: savings -= amount, repay += amount.
+ * Exported for use by markOverdueSeedsPaid in seed-actions.
+ */
+export async function updateLinkedPotOrRepayment(
+  seed: SeedRow,
+  payer: Payer,
+  markingPaid: boolean,
+  client?: SupabaseClient<Database>
+): Promise<void> {
+  const supabase = client ?? (await createServerSupabaseClient());
+  const amount = getPaidAmount(seed, payer);
+  if (amount <= 0) return;
+
+  if (seed.type === 'savings' && seed.linked_pot_id) {
+    const { data: pot } = await supabase
+      .from('pots')
+      .select('current_amount')
+      .eq('id', seed.linked_pot_id)
+      .single();
+    if (!pot) return;
+    const current = Number((pot as { current_amount: number }).current_amount ?? 0);
+    const next = markingPaid ? current + amount : Math.max(0, current - amount);
+    await (supabase.from('pots') as any)
+      .update({ current_amount: next, updated_at: new Date().toISOString() })
+      .eq('id', seed.linked_pot_id);
+  }
+
+  if (seed.type === 'repay' && seed.linked_repayment_id) {
+    const { data: repayment } = await supabase
+      .from('repayments')
+      .select('current_balance')
+      .eq('id', seed.linked_repayment_id)
+      .single();
+    if (!repayment) return;
+    const current = Number((repayment as { current_balance: number }).current_balance ?? 0);
+    const next = markingPaid ? Math.max(0, current - amount) : current + amount;
+    await (supabase.from('repayments') as any)
+      .update({ current_balance: next, updated_at: new Date().toISOString() })
+      .eq('id', seed.linked_repayment_id);
+  }
+}
+
 /**
  * Decrement paycycle remaining amounts when a seed is marked paid.
  * Business rules: ME/PARTNER seeds decrement rem_{type}_me or rem_{type}_partner by amount.
@@ -195,7 +252,9 @@ export async function markSeedPaid(
   }
 
   await updatePaycycleRemaining(seed, payer);
+  await updateLinkedPotOrRepayment(seed, payer, true, supabase);
   revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
   return { success: true };
 }
 
@@ -251,7 +310,9 @@ export async function unmarkSeedPaid(
   }
 
   await incrementPaycycleRemaining(seed, payer);
+  await updateLinkedPotOrRepayment(seed, payer, false, supabase);
   revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
   return { success: true };
 }
 
