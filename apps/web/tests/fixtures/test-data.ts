@@ -23,3 +23,29 @@ export const TEST_USERS = {
 
 /** Token used in e2e for partner invite link; must match DB state from ensurePartnerInviteReady */
 export const E2E_PARTNER_INVITE_TOKEN = 'e2e-partner-invite-token';
+
+/**
+ * Pre-accepted cookie consent — inject into storageState to prevent the
+ * cookie-banner overlay from intercepting pointer events during tests.
+ * The banner renders when localStorage('plot_cookie_consent') is absent;
+ * seeding this value makes it invisible before any page loads.
+ */
+export const COOKIE_CONSENT_LOCALSTORAGE = {
+  name: 'plot_cookie_consent',
+  value: JSON.stringify({ essential: true, analytics: false, timestamp: 1700000000000 }),
+};
+
+/**
+ * Unauthenticated storage state with cookie consent pre-accepted.
+ * Use in place of `{ cookies: [], origins: [] }` so the cookie banner
+ * never appears during unauthenticated test flows.
+ */
+export const EMPTY_STORAGE_WITH_CONSENT = {
+  cookies: [],
+  origins: [
+    {
+      origin: 'http://localhost:3000',
+      localStorage: [COOKIE_CONSENT_LOCALSTORAGE],
+    },
+  ],
+};
