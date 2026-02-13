@@ -16,7 +16,7 @@ import {
   ensurePartnerInviteReady,
   resetOnboardingState,
 } from './utils/db-cleanup';
-import { TEST_USERS, E2E_PARTNER_INVITE_TOKEN } from './fixtures/test-data';
+import { TEST_USERS, E2E_PARTNER_INVITE_TOKEN, COOKIE_CONSENT_LOCALSTORAGE } from './fixtures/test-data';
 
 // Load env (same as playwright.config.ts)
 loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
@@ -194,7 +194,12 @@ export default async function globalSetup(config: FullConfig) {
           sameSite: 'Lax' as const,
         },
       ],
-      origins: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [COOKIE_CONSENT_LOCALSTORAGE],
+        },
+      ],
     };
 
     fs.writeFileSync(authStatePath, JSON.stringify(storageState, null, 2), 'utf-8');

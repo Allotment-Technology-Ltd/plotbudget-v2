@@ -193,6 +193,17 @@ export class BlueprintPage {
     // Confirm deletion in modal
     await this.page.getByTestId('confirm-delete-button').click();
 
+    // Wait for delete dialog to close (confirms server action completed)
+    await expect(this.page.getByTestId('confirm-delete-button')).not.toBeVisible({
+      timeout: process.env.CI ? 15_000 : 10_000,
+    });
+
+    // Reload to get fresh server data (consistent with addSeed/editSeed)
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await this.page.waitForURL(/\/dashboard\/blueprint/, {
+      timeout: process.env.CI ? 25_000 : 15_000,
+    });
+
     // Wait for one fewer seed card (same name can appear in multiple categories/cycles)
     await expect(this.seedCard(seedName)).toHaveCount(countBefore - 1, {
       timeout: process.env.CI ? 15_000 : 10_000,

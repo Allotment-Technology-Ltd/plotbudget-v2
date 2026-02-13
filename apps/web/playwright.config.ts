@@ -2,6 +2,7 @@
 import { config as loadEnv } from 'dotenv';
 import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
+import { EMPTY_STORAGE_WITH_CONSENT } from './tests/fixtures/test-data';
 
 // Load env so SUPABASE_SERVICE_ROLE_KEY etc. are available (.env.test.local overrides .env.local)
 loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
@@ -83,7 +84,7 @@ export default defineConfig({
       testMatch: [/smoke\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: { cookies: [], origins: [] },
+        storageState: EMPTY_STORAGE_WITH_CONSENT,
       },
     },
     {
@@ -131,7 +132,7 @@ export default defineConfig({
       testMatch: [/partner-guest\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: { cookies: [], origins: [] },
+        storageState: EMPTY_STORAGE_WITH_CONSENT,
       },
     },
     {
