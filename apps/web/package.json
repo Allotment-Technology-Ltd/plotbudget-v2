@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:with-webhooks": "bash scripts/dev-with-webhooks.sh",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
