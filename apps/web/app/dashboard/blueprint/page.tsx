@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
-import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
+import { getAvatarInitials } from '@/lib/utils/avatar-initials';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
@@ -20,7 +20,7 @@ type PaycycleOption = {
 
 type UserProfile = Pick<
   Database['public']['Tables']['users']['Row'],
-  'household_id' | 'current_paycycle_id' | 'has_completed_onboarding' | 'avatar_url'
+  'household_id' | 'current_paycycle_id' | 'has_completed_onboarding' | 'avatar_url' | 'display_name'
 >;
 
 export default async function BlueprintPage({
@@ -37,7 +37,7 @@ export default async function BlueprintPage({
 
   const { data: profile } = (await supabase
     .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding, avatar_url')
+    .select('household_id, current_paycycle_id, has_completed_onboarding, avatar_url, display_name')
     .eq('id', user.id)
     .single()) as { data: UserProfile | null };
 
@@ -129,10 +129,9 @@ export default async function BlueprintPage({
 
   const activePaycycle = allPaycycles.find((p) => p.status === 'active');
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
-  const flags = await getServerFeatureFlags(user.id);
-  const avatarEnabled = flags.avatarEnabled;
-
   const editSeedId = params.edit ?? null;
+  const userEmail = user.email ?? '';
+  const userInitials = getAvatarInitials(profile?.display_name ?? null, userEmail);
   const showNewCycleCelebration = params.newCycle != null;
 
   const { data: incomeSources } = await supabase
@@ -165,8 +164,8 @@ export default async function BlueprintPage({
       allPaycycles={allPaycycles}
       activePaycycleId={activePaycycle?.id ?? null}
       hasDraftCycle={hasDraftCycle}
-      userAvatarUrl={avatarEnabled ? profile?.avatar_url ?? null : null}
-      avatarEnabled={avatarEnabled}
+      userAvatarUrl={profile?.avatar_url ?? null}
+      userInitials={userInitials}
       initialEditSeedId={editSeedId}
       initialNewCycleCelebration={showNewCycleCelebration}
       incomeEvents={incomeEvents}

@@ -657,7 +657,6 @@ POLAR_SUCCESS_URL=https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}
 # ==========================================
 # OTHER FEATURES
 # ==========================================
-NEXT_PUBLIC_AVATAR_ENABLED=true
 NEXT_PUBLIC_SIGNUP_GATED=false
 ```
 

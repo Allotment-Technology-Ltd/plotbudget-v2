@@ -678,6 +678,8 @@ CREATE TRIGGER on_auth_user_created
 
 ## 6. Authentication
 
+Supported methods: **email/password**, **Google OAuth**, **Apple OAuth**, and **magic link** (passwordless email). Providers are gated by feature flags (PostHog or env). Callback: `/auth/callback`; redirect-after-auth cookie used when `?redirect=` is set. See [docs/AUTHENTICATION.md](AUTHENTICATION.md) for env vars, redirect URI setup, and testing.
+
 ### 6.1 Auth Flow (Supabase + PKCE)
 ```typescript
 // lib/supabase/client.ts

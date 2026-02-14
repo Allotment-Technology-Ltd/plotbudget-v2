@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut, leavePartnerSession } from '@/lib/actions/auth-actions';
 
+import { getAvatarInitials } from '@/lib/utils/avatar-initials';
+
 interface UserMenuProps {
   user: {
     id?: string;
@@ -32,18 +34,17 @@ interface UserMenuProps {
     avatar_url?: string | null;
   };
   isPartner?: boolean;
-  avatarEnabled?: boolean;
   trialTestingDashboardVisible?: boolean;
 }
 
-export function UserMenu({ user, isPartner = false, avatarEnabled = false, trialTestingDashboardVisible = false }: UserMenuProps) {
+export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { paymentUiVisible } = useAuthFeatureFlags();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    if (!avatarEnabled || !user.id) return;
+    if (!user.id) return;
     const channel = supabase
       .channel('user-avatar-changes')
       .on(
@@ -63,12 +64,10 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false, trial
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [avatarEnabled, user.id, supabase]);
+  }, [user.id, supabase]);
 
   const displayName = user.display_name?.trim() || user.email;
-  const initials = user.display_name?.trim()
-    ? user.display_name.charAt(0).toUpperCase()
-    : user.email.charAt(0).toUpperCase();
+  const initials = getAvatarInitials(user.display_name ?? null, user.email);
 
   const handleSignOut = async () => {
     try {
@@ -95,7 +94,7 @@ export function UserMenu({ user, isPartner = false, avatarEnabled = false, trial
           data-testid="user-menu-trigger"
         >
           <Avatar className="h-8 w-8 rounded-full border-0">
-            {avatarEnabled && avatarUrl ? (
+            {avatarUrl ? (
               <AvatarImage
                 src={avatarUrl}
                 alt=""

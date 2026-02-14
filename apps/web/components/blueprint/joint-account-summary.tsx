@@ -11,7 +11,8 @@ interface JointAccountSummaryProps {
   household: Household;
   seeds: Seed[];
   userAvatarUrl?: string | null;
-  avatarEnabled?: boolean;
+  /** Fallback initials when no OAuth avatar (e.g. "A" or "FL"). */
+  userInitials?: string;
   isPartner?: boolean;
   otherLabel?: string;
 }
@@ -20,7 +21,7 @@ export function JointAccountSummary({
   household,
   seeds,
   userAvatarUrl,
-  avatarEnabled = false,
+  userInitials = '?',
   isPartner = false,
   otherLabel = 'Partner',
 }: JointAccountSummaryProps) {
@@ -100,16 +101,14 @@ export function JointAccountSummary({
         )}
 
         <div className="flex items-start gap-3 p-4 rounded-md bg-background border border-border">
-          {avatarEnabled && userAvatarUrl ? (
-            <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+          <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+            {userAvatarUrl ? (
               <AvatarImage src={userAvatarUrl} alt="" className="avatar-pixelated object-cover" />
-              <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                <User className="w-5 h-5" aria-hidden />
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <User className="w-5 h-5 text-primary mt-0.5" aria-hidden />
-          )}
+            ) : null}
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-display">
+              {userInitials}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="font-heading text-sm uppercase tracking-wider text-muted-foreground">
               Your Set-Aside

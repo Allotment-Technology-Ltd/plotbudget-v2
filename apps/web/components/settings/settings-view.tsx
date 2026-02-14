@@ -15,8 +15,9 @@ export interface SettingsViewProps {
     email: string;
     displayName: string | null;
     avatarUrl?: string | null;
+    /** Human-readable sign-in method labels (e.g. "Google", "Email & password") for display in Profile. */
+    signInMethodLabels?: string[];
   };
-  avatarEnabled?: boolean;
   pricingEnabled?: boolean;
   subscription?: {
     status: 'active' | 'cancelled' | 'past_due' | 'trialing';
@@ -54,7 +55,6 @@ export function SettingsView({
   incomeSources = [],
   subscription,
   isPartner = false,
-  avatarEnabled = false,
   pricingEnabled = false,
   initialTab,
   portalError = false,
@@ -94,7 +94,11 @@ export function SettingsView({
           {!isPartner && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="space-y-6 mt-6">
-          <ProfileTab user={user} isPartner={isPartner} avatarEnabled={avatarEnabled} />
+          <ProfileTab
+            user={user}
+            isPartner={isPartner}
+            signInMethodLabels={user.signInMethodLabels}
+          />
         </TabsContent>
         <TabsContent value="household" className="space-y-6 mt-6">
           <HouseholdTab

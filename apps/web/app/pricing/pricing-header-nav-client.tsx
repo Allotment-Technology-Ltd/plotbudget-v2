@@ -18,7 +18,6 @@ export type PricingHeaderNavClientProps = {
   userMenuProps: {
     user: { id: string; email: string; display_name: string | null; avatar_url: string | null };
     isPartner: boolean;
-    avatarEnabled: boolean;
   } | null;
 };
 
@@ -47,7 +46,6 @@ export function PricingHeaderNavClient({ userMenuProps }: PricingHeaderNavClient
       <UserMenuClient
         user={userMenuProps.user}
         isPartner={userMenuProps.isPartner}
-        avatarEnabled={userMenuProps.avatarEnabled}
       />
     </>
   );

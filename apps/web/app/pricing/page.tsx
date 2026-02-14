@@ -30,8 +30,6 @@ export default async function PricingPage() {
   const fullPremiumVisible = getFullPremiumVisibleFromServerFlags(flags);
   const pwylEnabled = getPWYLPricingEnabledFromEnv();
   const fixedEnabled = getFixedPricingEnabledFromEnv();
-  const avatarEnabled = flags.avatarEnabled;
-  
   // When full premium is off, show PWYL only; otherwise PWYL vs fixed per env
   const showPWYL = !fullPremiumVisible || pwylEnabled || (!pwylEnabled && !fixedEnabled);
 
@@ -89,10 +87,9 @@ export default async function PricingPage() {
                   id: user.id,
                   email: user.email ?? '',
                   display_name: displayName,
-                  avatar_url: avatarEnabled ? avatarUrl : null,
+                  avatar_url: avatarUrl,
                 },
                 isPartner,
-                avatarEnabled,
               } : null}
             />
           </nav>
