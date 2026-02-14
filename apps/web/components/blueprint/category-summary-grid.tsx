@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
@@ -50,6 +51,7 @@ export function CategorySummaryGrid({
   onEditRatios,
 }: CategorySummaryGridProps) {
   const totalIncome = Number(paycycle.total_income);
+  const currency = household.currency || 'GBP';
 
   return (
     <div role="region" aria-label="Category budget summary">
@@ -107,7 +109,7 @@ export function CategorySummaryGrid({
               <div className="min-h-[4rem] shrink-0">
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-display text-foreground">
-                    £{allocated.toFixed(2)}
+                    {currencySymbol(currency)}{allocated.toFixed(2)}
                   </p>
                   {isOverAllocated && (
                     <AlertTriangle
@@ -119,7 +121,7 @@ export function CategorySummaryGrid({
                 <p
                   className={`text-sm ${isOverAllocated ? 'text-warning' : 'text-muted-foreground'}`}
                 >
-                  of £{target.toFixed(2)} ({percent}%)
+                  of {currencySymbol(currency)}{target.toFixed(2)} ({percent}%)
                   {isOverAllocated && ' — Over budget'}
                 </p>
               </div>
@@ -139,7 +141,7 @@ export function CategorySummaryGrid({
               </div>
 
               <p className="text-xs text-muted-foreground mt-2 shrink-0">
-                £{remaining.toFixed(2)} remaining
+                {currencySymbol(currency)}{remaining.toFixed(2)} remaining
               </p>
             </div>
           </div>

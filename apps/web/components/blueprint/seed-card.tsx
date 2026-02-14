@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Trash, Repeat, CheckCircle2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
@@ -60,6 +61,7 @@ export function SeedCard({
 }: SeedCardProps) {
   const badge = paymentSourceBadge[seed.payment_source];
   const otherName = otherLabel;
+  const currency = household.currency || 'GBP';
   const seedSlug = seed.name.toLowerCase().replace(/\s+/g, '-');
   const isJointCouple =
     seed.payment_source === 'joint' && household.is_couple;
@@ -230,7 +232,7 @@ export function SeedCard({
         <div className="flex items-center gap-2 sm:gap-4 shrink-0 sm:flex-nowrap min-w-0">
           <div className="text-right min-w-0">
             <p className="font-display text-lg text-foreground break-all">
-              £{Number(seed.amount).toFixed(2)}
+              {currencySymbol(currency)}{Number(seed.amount).toFixed(2)}
             </p>
             {household.is_couple && (
               <span
@@ -287,19 +289,19 @@ export function SeedCard({
         )}
         {seed.payment_source === 'joint' && (
           <p className="text-xs sm:text-sm text-muted-foreground">
-            You: £{(isPartner ? Number(seed.amount_partner) : Number(seed.amount_me)).toFixed(2)} · {otherName}: £
+            You: {currencySymbol(currency)}{(isPartner ? Number(seed.amount_partner) : Number(seed.amount_me)).toFixed(2)} · {otherName}: {currencySymbol(currency)}
             {(isPartner ? Number(seed.amount_me) : Number(seed.amount_partner)).toFixed(2)}
           </p>
         )}
         {linkedPot && (
           <p className="text-xs sm:text-sm text-muted-foreground">
-            £{Number(linkedPot.current_amount).toFixed(0)} / £
+            {currencySymbol(currency)}{Number(linkedPot.current_amount).toFixed(0)} / {currencySymbol(currency)}
             {Number(linkedPot.target_amount).toFixed(0)}
           </p>
         )}
         {linkedRepayment && !linkedPot && (
           <p className="text-xs sm:text-sm text-muted-foreground">
-            £{Number(linkedRepayment.current_balance).toFixed(0)} remaining
+            {currencySymbol(currency)}{Number(linkedRepayment.current_balance).toFixed(0)} remaining
           </p>
         )}
       </div>

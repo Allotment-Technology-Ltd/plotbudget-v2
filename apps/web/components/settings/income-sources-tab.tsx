@@ -3,6 +3,7 @@
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { currencySymbol } from '@/lib/utils/currency';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +68,7 @@ interface IncomeSourcesTabProps {
   householdId: string;
   incomeSources: IncomeSource[];
   isPartner?: boolean;
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
 type FormState = {
@@ -102,6 +104,7 @@ export function IncomeSourcesTab({
   householdId,
   incomeSources,
   isPartner = false,
+  currency = 'GBP',
 }: IncomeSourcesTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -250,7 +253,7 @@ export function IncomeSourcesTab({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="income-amount">Amount (£)</Label>
+                    <Label htmlFor="income-amount">Amount ({currencySymbol(currency)})</Label>
                     <Input
                       id="income-amount"
                       type="number"
@@ -383,7 +386,7 @@ export function IncomeSourcesTab({
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    £{Number(source.amount).toLocaleString('en-GB')} · {frequencySubline(source)} ·{' '}
+                    {currencySymbol(currency)}{Number(source.amount).toLocaleString('en-GB')} · {frequencySubline(source)} ·{' '}
                     {getPaymentSourceLabels(isPartner)[source.payment_source]}
                   </p>
                 </div>

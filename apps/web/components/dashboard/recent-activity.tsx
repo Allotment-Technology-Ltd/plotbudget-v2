@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Plus, Edit3, PiggyBank, CreditCard } from 'lucide-react';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Seed, Pot, Repayment } from '@/lib/supabase/database.types';
 
 interface RecentActivityProps {
   seeds: Seed[];
   pots: Pot[];
   repayments: Repayment[];
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
 const TYPE_LABELS: Record<Seed['type'], string> = {
@@ -46,7 +48,8 @@ type ActivityItem =
 function buildActivity(
   seeds: Seed[],
   pots: Pot[],
-  repayments: Repayment[]
+  repayments: Repayment[],
+  currency: string = 'GBP'
 ): ActivityItem[] {
   const items: ActivityItem[] = [];
 
@@ -55,7 +58,7 @@ function buildActivity(
       type: 'seed',
       id: s.id,
       label: s.name,
-      sublabel: `£${s.amount.toFixed(2)} (${TYPE_LABELS[s.type]})`,
+      sublabel: `${currencySymbol(currency as 'GBP' | 'USD' | 'EUR')}${s.amount.toFixed(2)} (${TYPE_LABELS[s.type]})`,
       at: s.created_at,
       icon: 'add',
     });
@@ -101,8 +104,9 @@ export function RecentActivity({
   seeds,
   pots,
   repayments,
+  currency = 'GBP',
 }: RecentActivityProps) {
-  const activity = buildActivity(seeds, pots, repayments);
+  const activity = buildActivity(seeds, pots, repayments, currency);
 
   if (activity.length === 0) {
     return (

@@ -10,7 +10,7 @@ interface CloseCycleRitualProps {
 }
 
 /**
- * Simple confirmation: "Close this cycle?" with Cancel / Close.
+ * Simple confirmation: "Close this cycle?" with Close button.
  * On Close, calls onComplete(); celebration overlay is shown by the parent on success.
  */
 export function CloseCycleRitual({
@@ -50,16 +50,6 @@ export function CloseCycleRitual({
           <Lock className="w-4 h-4" aria-hidden />
           {isCompleting ? 'Closing…' : 'Close cycle'}
         </button>
-        {!isCompleting && (
-          <button
-            type="button"
-            onClick={() => {}}
-            className="font-heading uppercase tracking-wider text-sm px-5 py-2.5 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            aria-label="Cancel"
-          >
-            Cancel
-          </button>
-        )}
       </div>
 
       {isCompleting && (

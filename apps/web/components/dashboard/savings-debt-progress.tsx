@@ -3,16 +3,19 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { CreditCard } from 'lucide-react';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Pot, Repayment } from '@/lib/supabase/database.types';
 
 interface SavingsDebtProgressProps {
   pots: Pot[];
   repayments: Repayment[];
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
 export function SavingsDebtProgress({
   pots,
   repayments,
+  currency = 'GBP',
 }: SavingsDebtProgressProps) {
   const hasPots = pots.length > 0;
   const hasRepayments = repayments.length > 0;
@@ -85,7 +88,7 @@ export function SavingsDebtProgress({
                 key={pot.id}
                 className="rounded-lg border border-border p-4 bg-background/50"
                 role="article"
-                aria-label={`${pot.name}: £${pot.current_amount} of £${pot.target_amount}, ${progress.toFixed(0)}%`}
+                aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg" aria-hidden>
@@ -96,7 +99,7 @@ export function SavingsDebtProgress({
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  £{pot.current_amount.toFixed(2)} / £
+                  {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}
                   {pot.target_amount.toFixed(2)}
                 </p>
                 <div
@@ -141,7 +144,7 @@ export function SavingsDebtProgress({
                 key={rep.id}
                 className="rounded-lg border border-border p-4 bg-background/50"
                 role="article"
-                aria-label={`${rep.name}: £${rep.current_balance} remaining of £${rep.starting_balance}`}
+                aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard
@@ -153,7 +156,7 @@ export function SavingsDebtProgress({
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  £{rep.current_balance.toFixed(2)} / £
+                  {currencySymbol(currency)}{rep.current_balance.toFixed(2)} / {currencySymbol(currency)}
                   {rep.starting_balance.toFixed(2)}
                 </p>
                 <div

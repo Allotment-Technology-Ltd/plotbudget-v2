@@ -32,6 +32,7 @@ export type Database = {
           trial_ending_email_sent: boolean;
           trial_ended_email_sent: boolean;
           grace_period_reminder_sent: boolean;
+          founding_member_ending_soon_email_sent: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -57,6 +58,7 @@ export type Database = {
           trial_ending_email_sent?: boolean;
           trial_ended_email_sent?: boolean;
           grace_period_reminder_sent?: boolean;
+          founding_member_ending_soon_email_sent?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -82,6 +84,7 @@ export type Database = {
           trial_ending_email_sent?: boolean;
           trial_ended_email_sent?: boolean;
           grace_period_reminder_sent?: boolean;
+          founding_member_ending_soon_email_sent?: boolean;
           created_at?: string;
           updated_at?: string;
         };

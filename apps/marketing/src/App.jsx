@@ -690,16 +690,16 @@ function PricingSection() {
           >
             Start with a free trial. Upgrade to Premium when you want unlimited pots and no limits.
           </motion.p>
-          {/* Founding member hook: first 50 get one year free */}
+          {/* Founding member hook: first 50 get 6 months free */}
           <motion.div
             variants={staggerItem}
             className="rounded-lg border border-plot-accent/30 bg-plot-accent/5 px-4 py-3 text-center max-w-xl mx-auto"
           >
             <p className="font-heading text-label-sm uppercase tracking-wider text-plot-accent">
-              Launch offer: first 50 users get one year of Premium free
+              Launch offer: first 50 users get 6 months of Premium free
             </p>
             <p className="mt-1 text-sm text-plot-muted">
-              Sign up now to lock in Founding Member status — unlimited pots for 12 months, on us.
+              Sign up now to lock in Founding Member status — unlimited pots for 6 months, on us.
             </p>
           </motion.div>
         </motion.div>
@@ -795,7 +795,7 @@ function PricingSection() {
 const faqs = [
   {
     q: 'How does PLOT pricing work?',
-    a: 'PLOT starts with a free trial for your first two pay cycles. Upgrade to Premium (£4.99/month or £49.99/year) for unlimited pots. The first 50 users get one year of Premium free as Founding Members — sign up early to lock it in.',
+    a: 'PLOT starts with a free trial for your first two pay cycles. The first 50 users get 6 months of Premium free as Founding Members — sign up early to lock it in.',
   },
   {
     q: 'Do I need to connect my bank account?',

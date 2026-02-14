@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Household, PayCycle } from '@/lib/supabase/database.types';
 
 /** Category colors (hex) for chart - matches PLOT design tokens */
@@ -27,9 +28,11 @@ interface CategoryDonutChartProps {
 
 export function CategoryDonutChart({
   paycycle,
+  household,
   onCategorySelect,
 }: CategoryDonutChartProps) {
   const totalAllocated = paycycle.total_allocated || 1;
+  const currency = household.currency || 'GBP';
 
   const categories = [
     {
@@ -128,7 +131,7 @@ export function CategoryDonutChart({
           </Pie>
           <Tooltip
             formatter={(value: number | undefined) =>
-              value != null ? `£${Number(value).toFixed(2)}` : '£0.00'
+              value != null ? `${currencySymbol(currency)}${Number(value).toFixed(2)}` : `${currencySymbol(currency)}0.00`
             }
           />
           <Legend
@@ -139,7 +142,7 @@ export function CategoryDonutChart({
               const val = payload?.value ?? 0;
               return (
                 <span className="text-sm text-foreground">
-                  {value}: £{val.toFixed(2)} (
+                  {value}: {currencySymbol(currency)}{val.toFixed(2)} (
                   {totalAllocated > 0
                     ? ((val / totalAllocated) * 100).toFixed(0)
                     : 0}
@@ -168,7 +171,7 @@ export function CategoryDonutChart({
           {categories.map((cat) => (
             <tr key={cat.key}>
               <td>{cat.name}</td>
-              <td>£{cat.value.toFixed(2)}</td>
+              <td>{currencySymbol(currency)}{cat.value.toFixed(2)}</td>
               <td>{((cat.value / totalAllocated) * 100).toFixed(0)}%</td>
             </tr>
           ))}

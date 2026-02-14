@@ -165,7 +165,7 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
               </p>
             </div>
             <p
-              className={`text-2xl sm:text-3xl font-display mb-1 break-all ${statusColors[metric.status]}`}
+              className={`text-2xl sm:text-3xl font-display mb-1 break-words ${statusColors[metric.status]}`}
             >
               {metric.value}
             </p>

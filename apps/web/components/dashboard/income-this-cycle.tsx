@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { Banknote, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { IncomeEvent } from '@/lib/utils/income-projection';
 
 interface IncomeThisCycleProps {
@@ -10,9 +11,11 @@ interface IncomeThisCycleProps {
   total: number;
   /** Individual income events in this cycle */
   events: IncomeEvent[];
+  /** Household currency code */
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
-export function IncomeThisCycle({ total, events }: IncomeThisCycleProps) {
+export function IncomeThisCycle({ total, events, currency = 'GBP' }: IncomeThisCycleProps) {
   return (
     <section
       className="bg-card rounded-lg border border-border p-6 min-w-0"
@@ -32,7 +35,7 @@ export function IncomeThisCycle({ total, events }: IncomeThisCycleProps) {
         </Link>
       </div>
       <p className="text-2xl font-display text-foreground mb-4">
-        £{total.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+        {currencySymbol(currency)}{total.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
       </p>
       {events.length > 0 ? (
         <ul className="space-y-2 min-w-0" role="list">
@@ -43,7 +46,7 @@ export function IncomeThisCycle({ total, events }: IncomeThisCycleProps) {
             >
               <span className="text-foreground min-w-0 truncate" title={evt.sourceName}>{evt.sourceName}</span>
               <span className="text-muted-foreground shrink-0 font-body">
-                £{evt.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}{' '}
+                {currencySymbol(currency)}{evt.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}{' '}
                 on {format(new Date(evt.date), 'd MMM')}
               </span>
             </li>

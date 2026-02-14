@@ -21,12 +21,15 @@ type UserRow = Pick<
   | 'trial_ended_email_sent'
   | 'grace_period_reminder_sent'
   | 'subscription_tier'
+  | 'founding_member_until'
+  | 'founding_member_ending_soon_email_sent'
 >;
 import {
   sendTrialMilestoneEmail,
   sendTrialEndingSoonEmail,
   sendTrialEndedEmail,
   sendGraceReminderEmail,
+  sendFoundingMemberEndingSoonEmail,
   isEmailConfigured,
 } from '@/lib/email/trial-transition';
 
@@ -70,7 +73,9 @@ export async function GET(req: Request) {
       trial_ending_email_sent,
       trial_ended_email_sent,
       grace_period_reminder_sent,
-      subscription_tier
+      subscription_tier,
+      founding_member_until,
+      founding_member_ending_soon_email_sent
     `
     )
     .not('household_id', 'is', null);
@@ -88,6 +93,43 @@ export async function GET(req: Request) {
   for (const user of (users ?? []) as UserRow[]) {
     // Skip pro users
     if (user.subscription_tier === 'pro') continue;
+
+    // Founding members: skip trial/grace emails; send ending-soon 1 month before period ends
+    const isFoundingMember =
+      user.founding_member_until && new Date(user.founding_member_until) > today;
+    if (isFoundingMember) {
+      if (
+        !user.founding_member_ending_soon_email_sent &&
+        user.founding_member_until
+      ) {
+        const until = new Date(user.founding_member_until);
+        const daysUntilEnd = Math.ceil(
+          (until.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysUntilEnd >= 28 && daysUntilEnd <= 31) {
+          const result = await sendFoundingMemberEndingSoonEmail({
+            email: user.email,
+            displayName: user.display_name || 'there',
+            foundingMemberEndsOn: formatDate(user.founding_member_until),
+          });
+          if (result.success) {
+            await supabase
+              .from('users')
+              .update({
+                founding_member_ending_soon_email_sent: true,
+                updated_at: today.toISOString(),
+              } as never)
+              .eq('id', user.id);
+            processed.push(`${user.email}: founding-member-ending-soon`);
+          } else {
+            errors.push(
+              `${user.email} founding-member-ending-soon: ${result.error}`
+            );
+          }
+        }
+      }
+      continue;
+    }
 
     const householdId = user.household_id!;
     const displayName = user.display_name || 'there';

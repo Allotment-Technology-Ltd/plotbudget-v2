@@ -235,3 +235,40 @@ export async function updatePartnerDetails(
   revalidatePath('/dashboard/settings');
   revalidatePath('/dashboard', 'layout');
 }
+
+const currencySchema = z.enum(['GBP', 'USD', 'EUR']);
+
+export async function updateHouseholdCurrency(householdId: string, currency: string) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const validatedCurrency = currencySchema.parse(currency);
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('id')
+    .eq('id', householdId)
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  if (!household) {
+    throw new Error('Household not found or unauthorized');
+  }
+
+  const currencyPayload: HouseholdsUpdate = { currency: validatedCurrency };
+  const { error } = await supabase.from('households').update(currencyPayload as never).eq('id', householdId);
+
+  if (error) {
+    throw new Error('Failed to update currency');
+  }
+
+  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard', 'layout');
+  revalidatePath('/dashboard/blueprint', 'layout');
+}
