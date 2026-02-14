@@ -7,7 +7,6 @@
 export type ServerFeatureFlags = {
   signupGated: boolean;
   googleLoginEnabled: boolean;
-  avatarEnabled: boolean;
   pricingEnabled: boolean;
 };
 
@@ -21,7 +20,6 @@ function getEnvFlags(): ServerFeatureFlags {
   return {
     signupGated: env.NEXT_PUBLIC_SIGNUP_GATED === 'true',
     googleLoginEnabled: env.NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED === 'true',
-    avatarEnabled: env.NEXT_PUBLIC_AVATAR_ENABLED === 'true',
     pricingEnabled: env.NEXT_PUBLIC_PRICING_ENABLED === 'true',
   };
 }
@@ -64,7 +62,6 @@ export async function getFeatureFlagsFromPostHog(
     return {
       signupGated: flags['signup-gated']?.enabled ?? false,
       googleLoginEnabled: flags['google-login-enabled']?.enabled ?? false,
-      avatarEnabled: flags['avatar-enabled']?.enabled ?? false,
       pricingEnabled: flags['pricing-enabled']?.enabled ?? false,
     };
   } catch {

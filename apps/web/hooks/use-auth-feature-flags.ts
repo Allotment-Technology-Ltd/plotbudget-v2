@@ -4,16 +4,19 @@ import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import {
   getSignupGatedFromEnv,
   getGoogleLoginEnabledFromEnv,
-  getAvatarEnabledFromEnv,
+  getAppleLoginEnabledFromEnv,
+  getMagicLinkEnabledFromEnv,
   getWaitlistUrlFromEnv,
   getPricingEnabledFromEnv,
   getDevPaymentsOverrideFromEnv,
+  isPreProdContext,
 } from '@/lib/feature-flags';
 
 /**
- * Auth feature flags: signup gating (beta waitlist), Google login visibility, avatar, pricing.
+ * Auth feature flags: signup gating (beta waitlist), Google/Apple/magic-link visibility, avatar, pricing.
  * Uses PostHog when configured; otherwise falls back to env vars.
- * PostHog flags: "signup-gated", "google-login-enabled", "avatar-enabled", "pricing-enabled".
+ * In pre-prod (local, Vercel preview, or APP_ENV=preview|staging) PostHog is bypassed and env vars are used.
+ * PostHog flags: "signup-gated", "google-login-enabled", "apple-login-enabled", "magic-link-enabled", "pricing-enabled".
  *
  * For payment/pricing UI use paymentUiVisible and fullPremiumVisible so dev override
  * (NEXT_PUBLIC_DEV_PAYMENTS) is applied in local development.
@@ -21,7 +24,8 @@ import {
 export function useAuthFeatureFlags(): {
   signupGated: boolean;
   googleLoginEnabled: boolean;
-  avatarEnabled: boolean;
+  appleLoginEnabled: boolean;
+  magicLinkEnabled: boolean;
   waitlistUrl: string;
   pricingEnabled: boolean;
   /** Show pricing page, pricing link, Subscription tab (state 2 or 3). Use for nav/settings. */
@@ -32,23 +36,44 @@ export function useAuthFeatureFlags(): {
   const posthog = usePostHog();
   const posthogSignupGated = useFeatureFlagEnabled('signup-gated');
   const posthogGoogleLogin = useFeatureFlagEnabled('google-login-enabled');
-  const posthogAvatar = useFeatureFlagEnabled('avatar-enabled');
+  const posthogAppleLogin = useFeatureFlagEnabled('apple-login-enabled');
+  const posthogMagicLink = useFeatureFlagEnabled('magic-link-enabled');
   const posthogPricingEnabled = useFeatureFlagEnabled('pricing-enabled');
 
   const envSignupGated = getSignupGatedFromEnv();
   const envGoogleLogin = getGoogleLoginEnabledFromEnv();
-  const envAvatar = getAvatarEnabledFromEnv();
+  const envAppleLogin = getAppleLoginEnabledFromEnv();
+  const envMagicLink = getMagicLinkEnabledFromEnv();
   const waitlistUrl = getWaitlistUrlFromEnv();
   const envPricingEnabled = getPricingEnabledFromEnv();
 
-  const signupGated =
-    posthog && posthogSignupGated !== undefined ? posthogSignupGated : envSignupGated;
-  const googleLoginEnabled =
-    posthog && posthogGoogleLogin !== undefined ? posthogGoogleLogin : envGoogleLogin;
-  const avatarEnabled =
-    posthog && posthogAvatar !== undefined ? posthogAvatar : envAvatar;
-  const pricingEnabled =
-    posthog && posthogPricingEnabled !== undefined ? posthogPricingEnabled : envPricingEnabled;
+  const useEnvForAuthFlags = isPreProdContext();
+
+  const signupGated = useEnvForAuthFlags
+    ? envSignupGated
+    : posthog && posthogSignupGated !== undefined
+      ? posthogSignupGated
+      : envSignupGated;
+  const googleLoginEnabled = useEnvForAuthFlags
+    ? envGoogleLogin
+    : posthog && posthogGoogleLogin !== undefined
+      ? posthogGoogleLogin
+      : envGoogleLogin;
+  const appleLoginEnabled = useEnvForAuthFlags
+    ? envAppleLogin
+    : posthog && posthogAppleLogin !== undefined
+      ? posthogAppleLogin
+      : envAppleLogin;
+  const magicLinkEnabled = useEnvForAuthFlags
+    ? envMagicLink
+    : posthog && posthogMagicLink !== undefined
+      ? posthogMagicLink
+      : envMagicLink;
+  const pricingEnabled = useEnvForAuthFlags
+    ? envPricingEnabled
+    : posthog && posthogPricingEnabled !== undefined
+      ? posthogPricingEnabled
+      : envPricingEnabled;
 
   const devOverride = getDevPaymentsOverrideFromEnv();
   const paymentUiVisible =
@@ -67,7 +92,8 @@ export function useAuthFeatureFlags(): {
   return {
     signupGated,
     googleLoginEnabled,
-    avatarEnabled,
+    appleLoginEnabled,
+    magicLinkEnabled,
     waitlistUrl,
     pricingEnabled,
     paymentUiVisible,

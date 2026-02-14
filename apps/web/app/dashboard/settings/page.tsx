@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPaymentUiVisibleFromServerFlags } from '@/lib/feature-flags';
 import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
+import { getSignInMethodLabels } from '@/lib/auth/sign-in-methods';
 import { SettingsView } from '@/components/settings/settings-view';
 
 export const metadata: Metadata = {
@@ -54,6 +55,21 @@ export default async function SettingsPage({
   const paymentUiVisible = getPaymentUiVisibleFromServerFlags(flags);
 
   const email = user.email ?? '';
+
+  // Linked sign-in methods (Google, Apple, email, etc.) for display in Profile
+  let signInMethodLabels: string[] = [];
+  try {
+    const auth = supabase.auth as { getUserIdentities?: () => Promise<{ data?: { identities?: { provider: string }[] } }> };
+    const result = auth.getUserIdentities ? await auth.getUserIdentities() : null;
+    const identities = result?.data?.identities ?? [];
+    const providers = identities.map((i) => i.provider).filter(Boolean);
+    signInMethodLabels = getSignInMethodLabels(providers);
+  } catch {
+    // Fallback: use single provider from app_metadata if getUserIdentities unavailable
+    const p = (user.app_metadata as { provider?: string } | undefined)?.provider;
+    if (p) signInMethodLabels = getSignInMethodLabels([p]);
+  }
+
   type ProfileRow = { display_name: string | null; avatar_url: string | null };
   const { data: profile } = await supabase
     .from('users')
@@ -116,8 +132,6 @@ export default async function SettingsPage({
     }
   }
 
-  const avatarEnabled = flags.avatarEnabled;
-
   // Fetch subscription when payment/pricing UI is visible (state 2 or 3)
   let subscription: SubscriptionRow | null = null;
   if (paymentUiVisible) {
@@ -137,8 +151,8 @@ export default async function SettingsPage({
           email,
           displayName,
           avatarUrl,
+          signInMethodLabels,
         }}
-        avatarEnabled={avatarEnabled}
         pricingEnabled={paymentUiVisible}
         subscription={subscription}
         household={{

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
@@ -53,8 +52,6 @@ export default async function DashboardLayout({
     displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
   }
 
-  const flags = await getServerFeatureFlags(user.id);
-  const avatarEnabled = flags.avatarEnabled;
   const trialTestingDashboardVisible = isTrialTestingDashboardAllowed();
 
   return (
@@ -73,10 +70,9 @@ export default async function DashboardLayout({
                 id: user.id,
                 email,
                 display_name: displayName,
-                avatar_url: avatarEnabled ? avatarUrl : null,
+                avatar_url: avatarUrl,
               },
               isPartner,
-              avatarEnabled,
               trialTestingDashboardVisible,
             }}
           />

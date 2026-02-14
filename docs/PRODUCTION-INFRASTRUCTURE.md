@@ -113,13 +113,13 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 2. **signup-gated OFF** — PWYL pricing page, Pricing link in user menu, Subscription tab in settings visible.
 3. **pricing-enabled ON** (and signup-gated OFF) — Full premium pricing configuration visible on the pricing page in addition to PWYL.
 
-**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, `avatar-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags. **Server-side evaluation:** Proxy, the pricing page, settings page, dashboard layout, and avatar actions all fetch flags from PostHog's `/flags` API when the key is set, so PostHog flags apply on both client and server. Env vars are used only when PostHog is not configured.
+**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags. **Server-side evaluation:** Proxy, the pricing page, and settings page fetch flags from PostHog's `/flags` API when the key is set, so PostHog flags apply on both client and server. Env vars are used only when PostHog is not configured.
 
 **Local development – payment toggle:** On develop (e.g. `NODE_ENV=development` or `NEXT_PUBLIC_APP_URL` contains `localhost`), you can set `NEXT_PUBLIC_DEV_PAYMENTS` in `.env.local` to quickly switch payment state without changing other flags: `off` (state 1), `pwyl` (state 2), or `full` (state 3). Only applied in development context.
 
 | `NEXT_PUBLIC_PRICING_ENABLED` | `true` / unset | When `true`, in-app pricing page and subscription/pricing functionality are shown. PostHog flag `pricing-enabled` overrides when set. **Marketing site:** set `VITE_PRICING_ENABLED=true` in the marketing app so the pricing section and Pricing nav/footer links appear there too; keep in sync with the app flag. |
 
-**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, `avatar-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags.
+**PostHog (optional):** If `NEXT_PUBLIC_POSTHOG_KEY` is set, feature flags `signup-gated`, `google-login-enabled`, and `pricing-enabled` from PostHog override the corresponding env vars. Create these flags in PostHog → Feature Flags.
 
 **Region restriction:** Signup is only allowed from the UK, EU, USA, and Canada. Country is set from Vercel geo (`request.geo.country`) in middleware; if the country is not in the allowed list, the signup page shows a region-restricted message and waitlist CTA. Partner-invite flows bypass this check.
 

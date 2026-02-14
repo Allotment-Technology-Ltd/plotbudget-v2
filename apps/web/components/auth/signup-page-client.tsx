@@ -8,14 +8,7 @@ import { SignupGatedView } from '@/components/auth/signup-gated-view';
 import { RegionRestrictedView } from '@/components/auth/region-restricted-view';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
 import { getSignupRegionAllowed } from '@/app/actions/auth';
-
-const REDIRECT_AFTER_AUTH_COOKIE = 'redirect_after_auth';
-const COOKIE_MAX_AGE = 60 * 10; // 10 minutes
-
-function setRedirectAfterAuthCookie(redirectPath: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${REDIRECT_AFTER_AUTH_COOKIE}=${encodeURIComponent(redirectPath)}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
-}
+import { setRedirectAfterAuthCookie } from '@/lib/auth/redirect-after-auth';
 
 /** True when redirect points to partner complete/join (invite flow). */
 function isPartnerInviteRedirect(redirect: string | null): boolean {
@@ -31,7 +24,8 @@ function isPartnerInviteRedirect(redirect: string | null): boolean {
 export function SignupPageClient() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect');
-  const { signupGated, waitlistUrl } = useAuthFeatureFlags();
+  const { signupGated, waitlistUrl, googleLoginEnabled, appleLoginEnabled } =
+    useAuthFeatureFlags();
   const [regionAllowed, setRegionAllowed] = useState<boolean | null>(null);
 
   const allowSignupForPartnerInvite = isPartnerInviteRedirect(redirectTo);
@@ -77,7 +71,12 @@ export function SignupPageClient() {
           Sign up to start plotting your budget together
         </p>
       </div>
-      <AuthForm mode="signup" redirectTo={redirectTo ?? undefined} />
+      <AuthForm
+        mode="signup"
+        showGoogleLogin={googleLoginEnabled}
+        showAppleLogin={appleLoginEnabled}
+        redirectTo={redirectTo ?? undefined}
+      />
     </div>
   );
 }

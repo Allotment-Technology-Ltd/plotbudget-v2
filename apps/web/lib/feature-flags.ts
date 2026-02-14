@@ -11,16 +11,25 @@ function getEnv(): Record<string, string | undefined> {
   return (process.env ?? {}) as Record<string, string | undefined>;
 }
 
+/** Direct process.env read so Next.js inlines at build time; avoids server/client mismatch (hydration). */
 export function getSignupGatedFromEnv(): boolean {
-  return getEnv().NEXT_PUBLIC_SIGNUP_GATED === 'true';
+  return process.env.NEXT_PUBLIC_SIGNUP_GATED === 'true';
 }
 
+/** Direct process.env read so Next.js inlines at build time; avoids server/client mismatch (hydration). */
 export function getGoogleLoginEnabledFromEnv(): boolean {
-  return getEnv().NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED === 'true';
+  return process.env.NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED === 'true';
 }
 
-export function getAvatarEnabledFromEnv(): boolean {
-  return getEnv().NEXT_PUBLIC_AVATAR_ENABLED === 'true';
+/** Direct process.env read so Next.js inlines at build time; avoids server/client mismatch (hydration). */
+export function getAppleLoginEnabledFromEnv(): boolean {
+  return process.env.NEXT_PUBLIC_APPLE_LOGIN_ENABLED === 'true';
+}
+
+/** When true, show "Email me a sign-in link" (magic link) on login. Can be always-on. Direct process.env for hydration. */
+export function getMagicLinkEnabledFromEnv(): boolean {
+  const v = process.env.NEXT_PUBLIC_MAGIC_LINK_ENABLED;
+  return v === undefined || v === '' || v === 'true';
 }
 
 /** URL for "Join waitlist" when signup is gated (e.g. MailerLite form or marketing page). */
@@ -28,9 +37,9 @@ export function getWaitlistUrlFromEnv(): string {
   return getEnv().NEXT_PUBLIC_WAITLIST_URL || 'https://plotbudget.com';
 }
 
-/** When true, pricing page and subscription/limit logic are enabled. Controlled by PostHog flag "pricing-enabled" when set. */
+/** Direct process.env read so Next.js inlines at build time; avoids server/client mismatch (hydration). */
 export function getPricingEnabledFromEnv(): boolean {
-  return getEnv().NEXT_PUBLIC_PRICING_ENABLED === 'true';
+  return process.env.NEXT_PUBLIC_PRICING_ENABLED === 'true';
 }
 
 /** When true, show pay-what-you-like pricing model (default for new users). */
@@ -43,12 +52,27 @@ export function getFixedPricingEnabledFromEnv(): boolean {
   return getEnv().NEXT_PUBLIC_FIXED_PRICING_ENABLED === 'true';
 }
 
-/** True when running in a development context (local). */
+/**
+ * True when running in a development context (local).
+ * Uses process.env directly so Next.js can inline at build time and server/client match (avoids hydration mismatch).
+ */
 export function isDevContext(): boolean {
-  const env = getEnv();
-  if (env.NODE_ENV === 'development') return true;
-  const appUrl = env.NEXT_PUBLIC_APP_URL ?? '';
+  if (process.env.NODE_ENV === 'development') return true;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
   return appUrl.includes('localhost');
+}
+
+/**
+ * True when running in a pre-production context (local, Vercel preview, or explicit APP_ENV).
+ * In pre-prod we bypass PostHog for auth-related feature flags and use env vars only.
+ * Uses process.env directly so Next.js can inline at build time and server/client match (avoids hydration mismatch).
+ */
+export function isPreProdContext(): boolean {
+  if (isDevContext()) return true;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+  if (appUrl.includes('vercel.app')) return true;
+  const appEnv = (process.env.NEXT_PUBLIC_APP_ENV ?? '').toLowerCase();
+  return appEnv === 'preview' || appEnv === 'staging';
 }
 
 /**
@@ -68,10 +92,11 @@ export function isTrialTestingDashboardAllowed(): boolean {
 /**
  * Dev-only override for payment/pricing UI (local testing).
  * Set NEXT_PUBLIC_DEV_PAYMENTS=off|pwyl|full in .env.local. Only applied when isDevContext().
+ * Direct process.env read for NEXT_PUBLIC_DEV_PAYMENTS so Next.js inlines; avoids hydration mismatch.
  */
 export function getDevPaymentsOverrideFromEnv(): 'off' | 'pwyl' | 'full' | null {
   if (!isDevContext()) return null;
-  const v = (getEnv().NEXT_PUBLIC_DEV_PAYMENTS ?? '').toLowerCase();
+  const v = (process.env.NEXT_PUBLIC_DEV_PAYMENTS ?? '').toLowerCase();
   if (v === 'off' || v === 'false' || v === '0') return 'off';
   if (v === 'pwyl') return 'pwyl';
   if (v === 'full' || v === 'true' || v === '1') return 'full';

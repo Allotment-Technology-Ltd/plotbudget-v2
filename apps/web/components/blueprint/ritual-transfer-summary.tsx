@@ -1,6 +1,5 @@
 'use client';
 
-import { User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -11,7 +10,8 @@ interface RitualTransferSummaryProps {
   seeds: Seed[];
   household: Household;
   userAvatarUrl?: string | null;
-  avatarEnabled?: boolean;
+  /** Fallback initials when no OAuth avatar (e.g. "A" or "FL"). */
+  userInitials?: string;
   isPartner?: boolean;
   otherLabel?: string;
 }
@@ -76,7 +76,7 @@ export function RitualTransferSummary({
   seeds,
   household: _household,
   userAvatarUrl,
-  avatarEnabled = false,
+  userInitials = '?',
   isPartner = false,
   otherLabel = 'Partner',
 }: RitualTransferSummaryProps) {
@@ -116,14 +116,14 @@ export function RitualTransferSummary({
 
         <div className="space-y-2 flex flex-col">
           <div className="flex items-center gap-2">
-            {avatarEnabled && userAvatarUrl ? (
-              <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+            <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+              {userAvatarUrl ? (
                 <AvatarImage src={userAvatarUrl} alt="" className="avatar-pixelated object-cover" />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                  <User className="w-5 h-5" aria-hidden />
-                </AvatarFallback>
-              </Avatar>
-            ) : null}
+              ) : null}
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-display">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
             <p className="text-sm text-muted-foreground uppercase tracking-wider">
               Your Set-Aside
             </p>

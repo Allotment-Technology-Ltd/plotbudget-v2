@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChangePasswordDialog } from './change-password-dialog';
-import { AvatarUpload } from './avatar-upload';
 import { updateUserProfile } from '@/lib/actions/settings-actions';
 
 interface ProfileTabProps {
@@ -18,10 +17,15 @@ interface ProfileTabProps {
     avatarUrl?: string | null;
   };
   isPartner?: boolean;
-  avatarEnabled?: boolean;
+  /** Human-readable sign-in method labels (e.g. "Google", "Email & password") from linked identities. */
+  signInMethodLabels?: string[];
 }
 
-export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: ProfileTabProps) {
+export function ProfileTab({
+  user,
+  isPartner = false,
+  signInMethodLabels = [],
+}: ProfileTabProps) {
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,6 +57,11 @@ export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: P
               <>Logged in as: <span className="normal-case font-normal text-muted-foreground">{user.email}</span></>
             )}
           </p>
+          {!isPartner && signInMethodLabels.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-2" data-testid="sign-in-methods">
+              You can sign in with: {signInMethodLabels.join(', ')}.
+            </p>
+          )}
         </div>
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Profile Information
@@ -113,15 +122,6 @@ export function ProfileTab({ user, isPartner = false, avatarEnabled = false }: P
           Update your password to keep your account secure.
         </p>
         <ChangePasswordDialog />
-      </section>
-      )}
-
-      {!isPartner && avatarEnabled && (
-      <section className="bg-card rounded-lg border border-border p-6">
-        <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-4">
-          Profile picture
-        </h2>
-        <AvatarUpload userId={user.id} currentAvatarUrl={user.avatarUrl} />
       </section>
       )}
     </div>

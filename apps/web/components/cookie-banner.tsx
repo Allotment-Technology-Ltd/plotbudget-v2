@@ -44,7 +44,7 @@ export function CookieBanner() {
       role="dialog"
       aria-label="Cookie preferences"
       aria-describedby="cookie-banner-description"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card p-4 shadow-lg md:p-6"
+      className="fixed bottom-0 left-0 right-0 z-[100] border-t border-border bg-card p-4 shadow-lg md:p-6"
     >
       <div className="mx-auto max-w-3xl">
         <p
@@ -58,13 +58,14 @@ export function CookieBanner() {
           improve the product; you can refuse them and still use PLOT.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={acceptAll} variant="primary">
+          <Button type="button" onClick={acceptAll} variant="primary" data-testid="cookie-accept-all">
             Accept all
           </Button>
-          <Button onClick={essentialOnly} variant="outline">
+          <Button type="button" onClick={essentialOnly} variant="outline" data-testid="cookie-essential-only">
             Essential only
           </Button>
           <Button
+            type="button"
             variant="ghost"
             onClick={() => setCustomiseOpen((v) => !v)}
             className="text-muted-foreground"
@@ -73,6 +74,7 @@ export function CookieBanner() {
           </Button>
           {showBanner && (
             <Button
+              type="button"
               variant="ghost"
               onClick={() => setShowBanner(false)}
               className="text-muted-foreground"
@@ -111,7 +113,7 @@ export function CookieBanner() {
                 aria-label="Allow analytics cookies"
               />
             </div>
-            <Button onClick={saveCustomise} variant="primary">
+            <Button type="button" onClick={saveCustomise} variant="primary">
               Save preferences
             </Button>
           </div>

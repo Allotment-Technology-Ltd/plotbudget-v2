@@ -49,7 +49,8 @@ interface BlueprintClientProps {
   activePaycycleId: string | null;
   hasDraftCycle: boolean;
   userAvatarUrl?: string | null;
-  avatarEnabled?: boolean;
+  /** Fallback initials when no OAuth avatar (e.g. first letter of email or "FL" for First Last). */
+  userInitials?: string;
   /** When set, open the edit dialog for this seed (e.g. from dashboard recent activity). */
   initialEditSeedId?: string | null;
   /** When true, show "New cycle started!" celebration once (e.g. after creating next cycle). */
@@ -74,7 +75,7 @@ export function BlueprintClient({
   activePaycycleId,
   hasDraftCycle,
   userAvatarUrl,
-  avatarEnabled = false,
+  userInitials = '?',
   initialEditSeedId = null,
   initialNewCycleCelebration = false,
   incomeEvents = [],
@@ -476,7 +477,7 @@ export function BlueprintClient({
               seeds={displaySeeds}
               household={household}
               userAvatarUrl={userAvatarUrl}
-              avatarEnabled={avatarEnabled}
+              userInitials={userInitials}
               isPartner={isPartner}
               otherLabel={otherLabel}
             />
@@ -500,7 +501,7 @@ export function BlueprintClient({
               household={household}
               seeds={seeds}
               userAvatarUrl={userAvatarUrl}
-              avatarEnabled={avatarEnabled}
+              userInitials={userInitials}
               isPartner={isPartner}
               otherLabel={otherLabel}
             />
