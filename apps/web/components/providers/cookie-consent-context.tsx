@@ -45,6 +45,7 @@ function saveConsent(consent: CookieConsent): void {
 type CookieConsentContextValue = {
   consent: CookieConsent | null;
   hasChosen: boolean;
+  ready: boolean;
   setConsent: (c: CookieConsent) => void;
   openSettings: () => void;
   showBanner: boolean;
@@ -61,10 +62,12 @@ export function CookieConsentProvider({
   children: React.ReactNode;
 }) {
   const [consent, setConsentState] = useState<CookieConsent | null>(null);
+  const [ready, setReady] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     setConsentState(getStoredConsent());
+    setReady(true);
   }, []);
 
   const setConsent = useCallback((c: CookieConsent) => {
@@ -83,12 +86,13 @@ export function CookieConsentProvider({
     () => ({
       consent,
       hasChosen,
+      ready,
       setConsent,
       openSettings,
       showBanner,
       setShowBanner,
     }),
-    [consent, hasChosen, setConsent, openSettings, showBanner]
+    [consent, hasChosen, ready, setConsent, openSettings, showBanner]
   );
 
   return (

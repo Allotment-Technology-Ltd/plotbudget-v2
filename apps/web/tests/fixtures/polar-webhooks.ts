@@ -134,6 +134,25 @@ export const subscriptionTrialing = {
   },
 };
 
+// --- Upgraded during PLOT trial: user pays before trial ends, first charge deferred ---
+export const subscriptionTrialingUpgradedDuringTrial = {
+  type: 'subscription.created',
+  data: {
+    id: 'polar_sub_trial_upgrade',
+    status: 'trialing',
+    product_id: 'pwyl-product-id',
+    customer_id: 'customer_123',
+    metadata: {
+      household_id: 'household-abc',
+      user_id: 'user-xyz',
+      pricing_mode: 'pwyl',
+      upgraded_during_trial: 'true',
+      plot_trial_end_date: '2026-03-15',
+    },
+    trial_ends_at: '2026-03-15T23:59:59Z',
+  },
+};
+
 // --- Status edge cases ---
 export const subscriptionIncomplete = {
   type: 'subscription.updated',

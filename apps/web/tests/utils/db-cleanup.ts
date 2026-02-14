@@ -11,6 +11,34 @@ if (!supabaseServiceKey) {
   );
 }
 
+/**
+ * Block E2E test user creation/cleanup when pointing at production.
+ * Set SUPABASE_PROD_PROJECT_REF to your prod Supabase project ref (subdomain of prod URL).
+ * Use a separate Supabase project for E2E in CI; never run E2E against production.
+ */
+function assertNotProduction(): void {
+  const prodRef = process.env.SUPABASE_PROD_PROJECT_REF?.trim();
+  if (!prodRef) return;
+
+  try {
+    const hostname = new URL(supabaseUrl).hostname;
+    const currentRef = hostname.split('.')[0];
+    if (currentRef === prodRef) {
+      throw new Error(
+        `E2E is configured to use the PRODUCTION Supabase project (ref: ${prodRef}). ` +
+          `Test users must never be created in production. ` +
+          `Create a separate Supabase project for E2E and set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to it in CI. ` +
+          `Remove SUPABASE_PROD_PROJECT_REF from CI if using a test project, or ensure your E2E secrets point to a non-prod project.`
+      );
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('PRODUCTION')) throw e;
+    // URL parse failed; skip guard
+  }
+}
+
+assertNotProduction();
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,

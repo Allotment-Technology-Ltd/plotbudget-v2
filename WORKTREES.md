@@ -301,7 +301,7 @@ When `.cursor/worktrees.json` is present, CI environments automatically detect a
 
 ### Example: Parallel E2E Testing
 
-See `.github/workflows/worktree-ci.yml` for an example of how to leverage worktrees in CI for parallel testing without checkout conflicts.
+Worktree-based parallel E2E jobs have been removed. Use the standard CI workflow (`.github/workflows/ci.yml`) for builds and tests.
 
 ## Best Practices
 

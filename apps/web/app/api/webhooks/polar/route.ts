@@ -135,6 +135,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, note: 'no household_id available' });
     }
 
+    const metadata: Record<string, string | null> | null = data.metadata
+      ? {
+          pwyl_amount: data.metadata.pwyl_amount ?? null,
+          pricing_mode: data.metadata.pricing_mode ?? null,
+          upgraded_during_trial: data.metadata.upgraded_during_trial ?? null,
+          plot_trial_end_date: data.metadata.plot_trial_end_date ?? null,
+        }
+      : null;
+
     const payload: Database['public']['Tables']['subscriptions']['Insert'] = {
       polar_subscription_id: data.id,
       household_id: householdId,
@@ -142,6 +151,7 @@ export async function POST(req: NextRequest) {
       current_tier: tier ?? null,
       trial_end_date: data.trial_ends_at ?? null,
       polar_product_id: productId ?? data.price_id ?? null,
+      metadata: metadata ?? undefined,
     };
 
     const { error } = await (supabase as any)
@@ -161,13 +171,25 @@ export async function POST(req: NextRequest) {
       const normalizedUserStatus: Database['public']['Tables']['users']['Update']['subscription_status'] =
         dbStatus === 'trialing' ? 'active' : (['active', 'cancelled', 'past_due'].includes(dbStatus) ? dbStatus : null) as Database['public']['Tables']['users']['Update']['subscription_status'];
 
+      const userUpdate: Database['public']['Tables']['users']['Update'] = {
+        subscription_tier: 'pro',
+        subscription_status: normalizedUserStatus,
+        polar_customer_id: customerId ?? null,
+      };
+
+      // User upgraded during PLOT trial: mark trial as ended so we don't send trial-ended emails,
+      // and so billing starts when Polar's trial ends (first cycle after PLOT trial).
+      const upgradedDuringTrial = data.metadata?.upgraded_during_trial === 'true';
+      const plotTrialEndDate = data.metadata?.plot_trial_end_date ?? null;
+      if (upgradedDuringTrial && plotTrialEndDate) {
+        userUpdate.trial_cycles_completed = 2;
+        userUpdate.trial_ended_at = plotTrialEndDate;
+        userUpdate.trial_ended_email_sent = true;
+      }
+
       await (supabase as any)
         .from('users')
-        .update({
-          subscription_tier: 'pro',
-          subscription_status: normalizedUserStatus,
-          polar_customer_id: customerId ?? null,
-        })
+        .update(userUpdate)
         .eq('id', userId);
     }
 

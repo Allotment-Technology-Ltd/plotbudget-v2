@@ -491,6 +491,7 @@ export type Database = {
           status: 'active' | 'cancelled' | 'past_due' | 'trialing';
           current_tier: 'free' | 'pro' | null;
           trial_end_date: string | null;
+          metadata: Record<string, string | null> | null;
           created_at: string;
           updated_at: string;
         };
@@ -502,6 +503,7 @@ export type Database = {
           status?: 'active' | 'cancelled' | 'past_due' | 'trialing';
           current_tier?: 'free' | 'pro' | null;
           trial_end_date?: string | null;
+          metadata?: Record<string, string | null> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -513,6 +515,7 @@ export type Database = {
           status?: 'active' | 'cancelled' | 'past_due' | 'trialing';
           current_tier?: 'free' | 'pro' | null;
           trial_end_date?: string | null;
+          metadata?: Record<string, string | null> | null;
           created_at?: string;
           updated_at?: string;
         };

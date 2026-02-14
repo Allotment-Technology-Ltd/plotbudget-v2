@@ -639,21 +639,6 @@ const pricingTiers = [
     ctaLink: null,
   },
   {
-    id: 'free',
-    name: 'Free',
-    tagline: 'After your trial',
-    description: 'Keep plotting with a simpler setup. Enough for the essentials—upgrade anytime you want more pots.',
-    limits: [
-      '5 bills & essentials (Needs)',
-      '5 discretionary items (Wants)',
-      '2 savings pots',
-      '2 repayments',
-    ],
-    cta: 'Always free',
-    price: null,
-    ctaLink: null,
-  },
-  {
     id: 'premium',
     name: 'Premium',
     tagline: 'Unlimited pots',
@@ -703,7 +688,7 @@ function PricingSection() {
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow mx-auto text-center"
           >
-            Start with a free trial. Keep what works for you. Upgrade when you want more pots and no limits.
+            Start with a free trial. Upgrade to Premium when you want unlimited pots and no limits.
           </motion.p>
           {/* Founding member hook: first 50 get one year free */}
           <motion.div
@@ -724,7 +709,7 @@ function PricingSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
-          className="grid gap-6 md:grid-cols-3 md:gap-8"
+          className="grid gap-6 md:grid-cols-2 md:gap-8 max-w-2xl mx-auto"
         >
           {pricingTiers.map((tier, i) => (
             <motion.div
@@ -809,8 +794,8 @@ function PricingSection() {
 
 const faqs = [
   {
-    q: 'Is PLOT free?',
-    a: 'PLOT has a free tier and an affordable Premium plan (£4.99/month or £49.99/year). The first 50 users get one year of Premium free as Founding Members — sign up early to lock it in.',
+    q: 'How does PLOT pricing work?',
+    a: 'PLOT starts with a free trial for your first two pay cycles. Upgrade to Premium (£4.99/month or £49.99/year) for unlimited pots. The first 50 users get one year of Premium free as Founding Members — sign up early to lock it in.',
   },
   {
     q: 'Do I need to connect my bank account?',

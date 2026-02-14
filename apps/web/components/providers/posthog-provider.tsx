@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCookieConsentOptional } from './cookie-consent-context';
 
 const key =
@@ -17,6 +17,16 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const initialised = useRef(false);
 
   const analyticsAccepted = consent?.consent?.analytics ?? false;
+
+  useEffect(() => {
+    if (key && typeof window === 'undefined') return;
+    if (!initialised.current) return;
+    if (analyticsAccepted) {
+      posthog.opt_in_capturing();
+    } else {
+      posthog.opt_out_capturing();
+    }
+  }, [analyticsAccepted]);
 
   if (key && typeof window !== 'undefined' && analyticsAccepted) {
     if (!initialised.current) {

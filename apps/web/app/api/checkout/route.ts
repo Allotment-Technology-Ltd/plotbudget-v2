@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Polar } from '@polar-sh/sdk';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getPlotTrialEndDate } from '@/lib/utils/trial-end-date';
+import { differenceInDays } from 'date-fns';
 
 // Polar SDK checkout: supports fixed pricing (monthly/annual) and PWYL (custom amounts).
 // Requires authenticated session — household_id and user_id are resolved server-side
@@ -90,17 +92,22 @@ export const GET = async (req: NextRequest) => {
   // Resolve household_id and currency from the authenticated user (owner or partner)
   const { data: ownedHousehold } = await supabase
     .from('households')
-    .select('id, currency')
+    .select('id, currency, pay_cycle_type, pay_day')
     .eq('owner_id', user.id)
     .maybeSingle();
 
   const { data: partnerHousehold } = await supabase
     .from('households')
-    .select('id, currency')
+    .select('id, currency, pay_cycle_type, pay_day')
     .eq('partner_user_id', user.id)
     .maybeSingle();
 
-  type HouseholdData = { id: string; currency: Currency | null } | null;
+  type HouseholdData = {
+    id: string;
+    currency: Currency | null;
+    pay_cycle_type: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+    pay_day: number | null;
+  } | null;
   const household = (ownedHousehold as HouseholdData) ?? (partnerHousehold as HouseholdData);
 
   if (!household?.id) {
@@ -113,10 +120,10 @@ export const GET = async (req: NextRequest) => {
   const householdId = household.id;
   const householdCurrency = household.currency;
 
-  // Fetch user profile to get display name (pre-fill checkout form)
+  // Fetch user profile (display name, trial state for deferring first payment)
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name')
+    .select('display_name, trial_cycles_completed, trial_ended_at')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -151,17 +158,65 @@ export const GET = async (req: NextRequest) => {
     // Only pass email if it's not a test/reserved domain (.test, .local, .localhost, .invalid)
     // Polar API rejects these as invalid email addresses
     const isValidEmail = user.email && !/(\.test|\.local|\.localhost|\.invalid)$/i.test(user.email);
-    const displayName = (profile as { display_name?: string | null } | null)?.display_name ?? undefined;
+    const profileRow = profile as {
+      display_name?: string | null;
+      trial_cycles_completed?: number;
+      trial_ended_at?: string | null;
+    } | null;
+    const displayName = profileRow?.display_name ?? undefined;
+    const trialCyclesCompleted = profileRow?.trial_cycles_completed ?? 0;
+    const trialEndedAt = profileRow?.trial_ended_at ?? null;
+
+    // If user upgrades during trial, defer first payment until PLOT trial would end
+    let trialParams: { trial_interval: 'day'; trial_interval_count: number } | undefined;
+    let upgradedDuringTrialMetadata: Record<string, string> = {};
+
+    const isInTrial = trialCyclesCompleted < 2 && !trialEndedAt;
+    if (isInTrial) {
+      const { data: activeCycle } = await supabase
+        .from('paycycles')
+        .select('end_date')
+        .eq('household_id', householdId)
+        .eq('status', 'active')
+        .limit(1)
+        .maybeSingle();
+
+      const cycleRow = activeCycle as { end_date: string } | null;
+      if (cycleRow) {
+        const trialEndDate = getPlotTrialEndDate(
+          trialCyclesCompleted,
+          cycleRow.end_date,
+          household?.pay_cycle_type ?? 'specific_date',
+          household?.pay_day ?? null
+        );
+        if (trialEndDate) {
+          const trialEnd = new Date(trialEndDate);
+          trialEnd.setHours(23, 59, 59, 999);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const daysUntilTrialEnd = differenceInDays(trialEnd, today);
+          if (daysUntilTrialEnd > 0) {
+            trialParams = { trial_interval: 'day', trial_interval_count: Math.min(daysUntilTrialEnd, 1000) };
+            upgradedDuringTrialMetadata = {
+              upgraded_during_trial: 'true',
+              plot_trial_end_date: trialEndDate,
+            };
+          }
+        }
+      }
+    }
 
     const checkout = await polar.checkouts.create({
       products: [config.productId!],
       successUrl,
       ...(isValidEmail ? { customer_email: user.email } : {}),
       ...(displayName ? { customer_name: displayName } : {}),
+      ...(trialParams ? trialParams : {}),
       metadata: {
         household_id: householdId,
         user_id: user.id,
         pricing_mode: config.mode === 'pwyl_custom' ? 'pwyl' : 'fixed',
+        ...upgradedDuringTrialMetadata,
       },
     });
 
