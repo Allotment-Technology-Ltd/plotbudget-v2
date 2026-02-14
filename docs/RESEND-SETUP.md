@@ -1,6 +1,11 @@
-# Resend email setup (partner invites)
+# Resend email setup
 
-Partner invite emails are sent via [Resend](https://resend.com). Follow these steps for each environment where you want emails to work (local, Vercel Preview, production).
+All transactional emails use [Resend](https://resend.com):
+
+- **App-originated:** Partner invite, trial emails, PWYL welcome, etc. — sent by the Next.js app (this doc).
+- **Auth/security:** Confirm sign up, magic link, reset password, invite, email change, reauth, and security notifications — sent by the **Supabase Send Email Hook** (Edge Function). See [SUPABASE-AUTH-EMAILS.md](SUPABASE-AUTH-EMAILS.md) for hook setup, secrets, and deploy.
+
+Follow these steps for each environment where you want **app** emails to work (local, Vercel Preview, production).
 
 ---
 
@@ -100,7 +105,7 @@ Requires `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in `apps/web/.env.local`. Subj
 | `RESEND_FROM_EMAIL`  | No       | `PLOT <hello@plotbudget.com>`; omit to use default  |
 | `RESEND_REPLY_TO`    | No       | `hello@plotbudget.com`; where replies go (e.g. your Google inbox) |
 
-No Supabase email or SMTP configuration is needed for partner invites; everything goes through Resend.
+No Supabase SMTP is needed for partner invites; the app sends via Resend. For **auth emails** (sign up, reset password, etc.), use the Send Email Hook so they also go through Resend with PLOT branding — see [SUPABASE-AUTH-EMAILS.md](SUPABASE-AUTH-EMAILS.md).
 
 ---
 
@@ -117,5 +122,5 @@ No Supabase email or SMTP configuration is needed for partner invites; everythin
 
 - **Resend** – Sends the email (API call from your app). You only need the API key and a verified domain to send as hello@plotbudget.com.
 - **Vercel** – Just runs the app and holds env vars (`RESEND_API_KEY`, etc.). It does not send or receive email.
-- **Supabase** – Not used for partner invites. Those are sent by the app via Resend. (Supabase Auth has its own email settings for password reset etc., which are separate.)
+- **Supabase** – Not used for partner invites (app sends via Resend). Auth emails (password reset, magic link, etc.) are sent via the **Send Email Hook** (Edge Function + Resend) when configured; see [SUPABASE-AUTH-EMAILS.md](SUPABASE-AUTH-EMAILS.md).
 - **Google** – Where you *receive* mail for hello@plotbudget.com. No special link to Resend or Vercel; replies go to Google because that’s where your domain’s mail is hosted (MX records).
