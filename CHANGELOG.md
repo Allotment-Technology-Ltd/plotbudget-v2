@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.5.0...v0.6.0) (2026-02-14)
+
+
+### Features
+
+* **ux:** UX quirks implementation, visual test tolerance, subscripti… ([#46](https://github.com/adamboon1984-arch/plotbudget-v2/issues/46)) ([bed8611](https://github.com/adamboon1984-arch/plotbudget-v2/commit/bed8611715b62ed84d256dfd9762fbfe6aa68a45))
+
 # [0.5.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.4.1...v0.5.0) (2026-02-14)
 
 
