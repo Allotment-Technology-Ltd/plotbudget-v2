@@ -1,7 +1,8 @@
 
 [functions.send-resend-email]
 enabled = true
-verify_jwt = true
+# Auth Hook is called by Supabase Auth (server-side) with webhook payload, not JWT. Deploy with --no-verify-jwt.
+verify_jwt = false
 import_map = "./functions/send-resend-email/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
