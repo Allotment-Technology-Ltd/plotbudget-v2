@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:with-webhooks": "bash scripts/dev-with-webhooks.sh",
-    "build": "next build --webpack",
+    "prebuild": "rm -f middleware.ts middleware.js",
+    "build": "pnpm run prebuild && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
