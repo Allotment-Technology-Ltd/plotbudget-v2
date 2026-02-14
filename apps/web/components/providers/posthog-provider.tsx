@@ -19,8 +19,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const analyticsAccepted = consent?.consent?.analytics ?? false;
 
   useEffect(() => {
-    if (key && typeof window === 'undefined') return;
-    if (!initialised.current) return;
+    if (!key || typeof window === 'undefined') return;
     if (analyticsAccepted) {
       posthog.opt_in_capturing();
     } else {
