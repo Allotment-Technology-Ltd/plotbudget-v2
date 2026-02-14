@@ -90,7 +90,7 @@ async function sendOne(
   const { error } = await resend!.emails.send({
     from: fromEmail,
     to: [to],
-    reply_to: replyTo,
+    replyTo,
     subject,
     html,
   });
