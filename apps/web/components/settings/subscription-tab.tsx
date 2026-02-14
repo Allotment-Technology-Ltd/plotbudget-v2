@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { currencySymbol } from '@/lib/utils/currency';
 
 export interface SubscriptionTabProps {
   subscription: {
@@ -88,8 +89,6 @@ function PortalLink({
     </Link>
   );
 }
-
-import { currencySymbol } from '@/lib/utils/currency';
 
 export function SubscriptionTab({
   subscription,

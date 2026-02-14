@@ -795,7 +795,7 @@ function PricingSection() {
 const faqs = [
   {
     q: 'How does PLOT pricing work?',
-    a: 'PLOT starts with a free trial for your first two pay cycles. Upgrade to Premium (£4.99/month or £49.99/year) for unlimited pots. The first 50 users get 6 months of Premium free as Founding Members — sign up early to lock it in.',
+    a: 'PLOT starts with a free trial for your first two pay cycles. The first 50 users get 6 months of Premium free as Founding Members — sign up early to lock it in.',
   },
   {
     q: 'Do I need to connect my bank account?',
