@@ -1,7 +1,7 @@
 /**
  * Supabase Send Email Auth Hook: all auth and security emails via Resend with PLOT branding.
  * Deploy: supabase functions deploy send-resend-email --no-verify-jwt
- * Secrets: RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET, RESEND_FROM_EMAIL (optional), SUPABASE_URL
+ * Secrets: RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET, RESEND_FROM_EMAIL (optional), RESEND_REPLY_TO (optional), SUPABASE_URL
  */
 
 import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0';
@@ -25,7 +25,8 @@ import {
 
 const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? '';
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? 'PLOT <hello@app.plotbudget.com>';
+const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? 'PLOT <hello@plotbudget.com>';
+const replyTo = Deno.env.get('RESEND_REPLY_TO') ?? 'hello@plotbudget.com';
 const supabaseAuthUrl = (Deno.env.get('SUPABASE_URL') ?? '').replace(/\/$/, '') + '/auth/v1';
 
 function getHookSecret(): string {
@@ -89,6 +90,7 @@ async function sendOne(
   const { error } = await resend!.emails.send({
     from: fromEmail,
     to: [to],
+    reply_to: replyTo,
     subject,
     html,
   });

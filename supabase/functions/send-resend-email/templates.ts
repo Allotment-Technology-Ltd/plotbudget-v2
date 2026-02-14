@@ -47,11 +47,10 @@ function escapeHtml(s: string): string {
 }
 
 /** Confirm sign up */
-export function signupHtml(confirmUrl: string, token: string): string {
+export function signupHtml(confirmUrl: string, _token: string): string {
   const inner = `
     <p style="color:${COLORS.body};font-size:16px;line-height:24px;margin:16px 0;">Confirm your email to start budgeting with PLOT.</p>
     ${linkButton(confirmUrl, 'Confirm email')}
-    <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">Or enter this code in the app: <strong>${escapeHtml(token)}</strong></p>
     <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">If you didn't sign up for PLOT, you can ignore this email.</p>`;
   return wrapBody(inner);
 }
@@ -66,31 +65,28 @@ export function inviteHtml(inviteUrl: string): string {
 }
 
 /** Magic link */
-export function magiclinkHtml(loginUrl: string, token: string): string {
+export function magiclinkHtml(loginUrl: string, _token: string): string {
   const inner = `
     <p style="color:${COLORS.body};font-size:16px;line-height:24px;margin:16px 0;">Use this link to sign in to PLOT.</p>
     ${linkButton(loginUrl, 'Sign in')}
-    <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">Or enter this code: <strong>${escapeHtml(token)}</strong></p>
     <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">If you didn't request this, you can ignore this email.</p>`;
   return wrapBody(inner);
 }
 
 /** Change email address (confirmation to new email) */
-export function emailChangeConfirmHtml(confirmUrl: string, token: string): string {
+export function emailChangeConfirmHtml(confirmUrl: string, _token: string): string {
   const inner = `
     <p style="color:${COLORS.body};font-size:16px;line-height:24px;margin:16px 0;">Confirm your new email address for PLOT.</p>
     ${linkButton(confirmUrl, 'Confirm new email')}
-    <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">Or enter this code: <strong>${escapeHtml(token)}</strong></p>
     <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">If you didn't request this change, you can ignore this email.</p>`;
   return wrapBody(inner);
 }
 
 /** Reset password */
-export function recoveryHtml(resetUrl: string, token: string): string {
+export function recoveryHtml(resetUrl: string, _token: string): string {
   const inner = `
     <p style="color:${COLORS.body};font-size:16px;line-height:24px;margin:16px 0;">Reset your PLOT password using the link below.</p>
     ${linkButton(resetUrl, 'Reset password')}
-    <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">Or enter this code: <strong>${escapeHtml(token)}</strong></p>
     <p style="color:${COLORS.body};font-size:14px;line-height:20px;margin:8px 0;">If you didn't request a reset, you can ignore this email.</p>`;
   return wrapBody(inner);
 }

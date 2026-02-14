@@ -19,6 +19,7 @@ Set these in the Supabase project that hosts Auth (Dashboard → Project Setting
 | `RESEND_API_KEY` | Yes | Resend API key (same as app; e.g. `re_xxx`). |
 | `SEND_EMAIL_HOOK_SECRET` | Yes | Webhook secret from the Auth Hooks UI (see below). Format may be `v1,whsec_xxx`; the function strips the prefix. |
 | `RESEND_FROM_EMAIL` | No | From address, e.g. `PLOT <hello@plotbudget.com>`. Defaults to `PLOT <hello@plotbudget.com>`. |
+| `RESEND_REPLY_TO` | No | Reply-To address; defaults to `hello@plotbudget.com`. Replies go to this inbox. |
 | `SUPABASE_URL` | Yes | Project URL, e.g. `https://your-project.supabase.co`. Used to build verify links in emails. |
 
 CLI example (from repo root):

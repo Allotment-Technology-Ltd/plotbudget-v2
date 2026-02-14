@@ -43,9 +43,12 @@ const DEFAULT_EMAIL =
     ? process.env.NEXT_PUBLIC_TRIAL_TEST_EMAIL
     : 'hello@plotbudget.com';
 
+type EmailConfig = { emailConfigured: boolean; hint?: string } | null;
+
 export default function TrialTestingPage() {
   const router = useRouter();
   const [to, setTo] = useState(DEFAULT_EMAIL);
+  const [emailConfig, setEmailConfig] = useState<EmailConfig>(null);
   const [loading, setLoading] = useState<TrialEmailTemplate | null>(null);
   const [trialUsers, setTrialUsers] = useState<TrialUserSummary[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -53,6 +56,7 @@ export default function TrialTestingPage() {
   const [sendForUserLoading, setSendForUserLoading] = useState<SendForUserTemplate | null>(null);
   const [cronLoading, setCronLoading] = useState<'dry' | 'real' | null>(null);
   const [asOfDate, setAsOfDate] = useState<string>('');
+  const [lastSendError, setLastSendError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/dev/trial-users')
@@ -61,6 +65,18 @@ export default function TrialTestingPage() {
         if (data.users) setTrialUsers(data.users);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/dev/send-trial-email')
+      .then((r) => r.json())
+      .then((data) => {
+        setEmailConfig({
+          emailConfigured: data.emailConfigured === true,
+          hint: data.hint,
+        });
+      })
+      .catch(() => setEmailConfig({ emailConfigured: false, hint: 'Could not check config' }));
   }, []);
 
   async function handleSend(template: TrialEmailTemplate, preview: boolean) {
@@ -87,10 +103,13 @@ export default function TrialTestingPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        toast.error(data.error ?? `Failed: ${res.status}`);
+        const msg = data.hint ? `${data.error} ${data.hint}` : (data.error ?? `Failed: ${res.status}`);
+        setLastSendError(msg);
+        toast.error(msg);
         return;
       }
 
+      setLastSendError(null);
       toast.success(`Sent to ${to}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Request failed');
@@ -192,8 +211,35 @@ export default function TrialTestingPage() {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Send or preview trial/grace period emails. Requires RESEND_API_KEY in
-          .env.local.
+          .env.local. Emails are sent from hello@plotbudget.com (or
+          RESEND_FROM_EMAIL).
         </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          If Resend shows &quot;app.plotbudget.com not verified&quot;, use{' '}
+          <code className="rounded bg-muted px-1">RESEND_FROM_EMAIL=PLOT &lt;hello@plotbudget.com&gt;</code>{' '}
+          and verify the domain <strong>plotbudget.com</strong> at{' '}
+          <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline">
+            resend.com/domains
+          </a>.
+        </p>
+        {emailConfig && (
+          <div
+            className={`mt-2 rounded-md border px-3 py-2 text-sm ${
+              emailConfig.emailConfigured
+                ? 'border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400'
+                : 'border-amber-500/50 bg-amber-500/10 text-amber-800 dark:text-amber-200'
+            }`}
+          >
+            <strong>App email config:</strong>{' '}
+            {emailConfig.emailConfigured ? (
+              'RESEND_API_KEY is set. Send and Preview will use hello@plotbudget.com.'
+            ) : (
+              <>
+                RESEND_API_KEY is not set in this app. {emailConfig.hint ?? ''}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -216,6 +262,12 @@ export default function TrialTestingPage() {
           running cron. Trial test user inboxes don&apos;t exist; all emails go here.
         </p>
       </div>
+
+      {lastSendError && (
+        <div className="rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+          <strong>Last send error:</strong> {lastSendError}
+        </div>
+      )}
 
       <div className="space-y-4">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground">
