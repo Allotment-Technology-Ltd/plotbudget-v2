@@ -1,3 +1,16 @@
+# [0.5.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.4.1...v0.5.0) (2026-02-14)
+
+
+### Bug Fixes
+
+* **e2e:** stabilize CI — cookie consent in storageState, delete reload, auth/visual tolerance ([af5f7d2](https://github.com/adamboon1984-arch/plotbudget-v2/commit/af5f7d26ae465e385c254f4382e71fc135419301))
+* **web:** run prebuild to remove middleware.ts before build (Next.js 16 proxy only) ([eb2521b](https://github.com/adamboon1984-arch/plotbudget-v2/commit/eb2521bb952e10e3952bf42661aa9900fcb5407d))
+
+
+### Features
+
+* **auth:** OAuth profile sync, avatar from OAuth only, initials fallback ([28607cc](https://github.com/adamboon1984-arch/plotbudget-v2/commit/28607ccfd8049f399f613d3094df7feaeb194568))
+
 ## [0.4.1](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.4.0...v0.4.1) (2026-02-13)
 
 
