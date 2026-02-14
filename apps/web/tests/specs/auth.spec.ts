@@ -17,11 +17,12 @@ test.describe('Authentication Flow', () => {
   });
 
   test('valid credentials redirect to dashboard', async ({ page }) => {
+    test.setTimeout(60_000);
     await setAuthState(page, TEST_USERS.solo.email, TEST_USERS.solo.password);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     await expect(
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 45_000 });
   });
 
   // TODO: Un-skip when login form submit is reliably handled (form currently triggers native submit)

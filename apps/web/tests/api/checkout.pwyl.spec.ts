@@ -9,8 +9,8 @@ const { mockCheckoutsCreate } = vi.hoisted(() => ({
 const MOCK_USER = { id: 'user-456', email: 'test@example.com' };
 // Mock household data
 const MOCK_OWNED_HOUSEHOLD = { id: 'household-123' };
-// Mock user profile
-const MOCK_USER_PROFILE = { display_name: 'Test User' };
+// Mock user profile (not in trial so route does not query paycycles)
+const MOCK_USER_PROFILE = { display_name: 'Test User', trial_cycles_completed: 2 };
 
 vi.mock('@polar-sh/sdk', () => ({
   Polar: class MockPolar {
