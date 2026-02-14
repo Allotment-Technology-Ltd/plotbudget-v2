@@ -39,6 +39,31 @@ export type GraceReminderParams = {
   graceDay?: number;
 };
 
+export type FoundingMemberEndingSoonParams = {
+  email: string;
+  displayName: string;
+  foundingMemberEndsOn: string;
+};
+
+export async function sendFoundingMemberEndingSoonEmail(
+  params: FoundingMemberEndingSoonParams
+) {
+  const { default: FoundingMemberEndingSoonEmail } = await import(
+    '@/emails/founding-member/ending-soon'
+  );
+  const html = await render(
+    React.createElement(FoundingMemberEndingSoonEmail, {
+      displayName: params.displayName,
+      foundingMemberEndsOn: params.foundingMemberEndsOn,
+    })
+  );
+  return sendEmail({
+    to: params.email,
+    subject: 'Your Founding Member period ends in about a month',
+    html,
+  });
+}
+
 export async function sendTrialMilestoneEmail(params: TrialMilestoneParams) {
   const { default: TrialMilestoneEmail } = await import('@/emails/trial/milestone');
   const html = await render(

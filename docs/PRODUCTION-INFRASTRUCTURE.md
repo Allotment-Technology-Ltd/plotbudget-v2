@@ -123,7 +123,7 @@ Use these to keep production live but gate public signup until ICO/privacy/terms
 
 **Region restriction:** Signup is only allowed from the UK, EU, USA, and Canada. Country is set from Vercel geo (`request.geo.country`) in middleware; if the country is not in the allowed list, the signup page shows a region-restricted message and waitlist CTA. Partner-invite flows bypass this check.
 
-**Founding Members (first 50):** Marketing and FAQ state that the first 50 users get one year of Premium free. This is enforced in the database: trigger `on_user_created_set_founding_member` runs after each insert into `public.users`; if total user count is ≤ 50, it sets `founding_member_until = NOW() + 1 year` for that user. No manual script required.
+**Founding Members (first 50):** Marketing and FAQ state that the first 50 users get 6 months of Premium free. This is enforced in the database: trigger `on_user_created_set_founding_member` runs after each insert into `public.users`; if total user count is ≤ 50, it sets `founding_member_until = NOW() + 6 months` for that user. No manual script required.
 
 ---
 

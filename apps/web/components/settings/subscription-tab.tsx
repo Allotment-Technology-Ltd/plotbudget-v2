@@ -100,6 +100,8 @@ export function SubscriptionTab({
   const status = subscription?.status ?? null;
   const isActive = status === 'active' || status === 'trialing';
   const isPremium = tier === 'pro';
+  const isFoundingMember = foundingMemberUntil && new Date(foundingMemberUntil) > new Date();
+  const effectivePremium = isPremium || isFoundingMember;
   
   // Determine pricing mode
   const pricingMode = subscription?.metadata?.pricing_mode ||
@@ -120,17 +122,20 @@ export function SubscriptionTab({
           Subscription
         </h2>
         <div className="rounded-lg border border-border bg-card p-6 space-y-4">
-          {foundingMemberUntil && new Date(foundingMemberUntil) > new Date() && (
+          {isFoundingMember && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 mb-4">
               <p className="font-heading text-sm uppercase tracking-wider text-primary">Founding Member</p>
               <p className="text-sm text-muted-foreground mt-1">
-                You have one year of Premium access free until {formatDate(foundingMemberUntil)}.
+                You have 6 months of Premium access free until {formatDate(foundingMemberUntil)}.
+              </p>
+              <p className="text-sm font-medium text-foreground mt-2">
+                Your household has unlimited pots and no limits on bills or wants.
               </p>
             </div>
           )}
 
-          {/* Trial: cycles remaining */}
-          {trialCyclesCompleted < 2 && !trialEndedAt && (
+          {/* Trial: cycles remaining (hide for founding members – they already have Premium) */}
+          {!isFoundingMember && trialCyclesCompleted < 2 && !trialEndedAt && (
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
               <p className="font-heading text-sm uppercase tracking-wider text-foreground">Trial</p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -140,7 +145,7 @@ export function SubscriptionTab({
           )}
 
           {/* Grace period: Day X of 7 */}
-          {gracePeriodStart && !isPremium && (() => {
+          {gracePeriodStart && !effectivePremium && (() => {
             const graceStart = new Date(gracePeriodStart);
             const graceEnd = new Date(graceStart);
             graceEnd.setDate(graceEnd.getDate() + 7);
@@ -167,7 +172,7 @@ export function SubscriptionTab({
           })()}
 
           {/* Post-grace on Free */}
-          {gracePeriodStart && !isPremium && (() => {
+          {gracePeriodStart && !effectivePremium && (() => {
             const graceStart = new Date(gracePeriodStart);
             const graceEnd = new Date(graceStart);
             graceEnd.setDate(graceEnd.getDate() + 7);
@@ -193,13 +198,15 @@ export function SubscriptionTab({
             <div>
               <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
               <p className="font-heading text-lg uppercase tracking-wide text-foreground">
-                {tier === 'pro'
-                  ? isPWYL && isFree
-                    ? 'Premium (Free)'
-                    : 'Premium'
+                {effectivePremium
+                  ? isFoundingMember
+                    ? 'Premium'
+                    : isPWYL && isFree
+                      ? 'Premium (Free)'
+                      : 'Premium'
                   : 'Free'}
               </p>
-              {isPWYL && pwylAmount !== null && (
+              {!isFoundingMember && isPWYL && pwylAmount !== null && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {isFree
                     ? 'Community Supporter'
@@ -207,23 +214,27 @@ export function SubscriptionTab({
                 </p>
               )}
             </div>
-            {status && (
+            {isFoundingMember ? (
+              <Badge variant="default" className="uppercase bg-primary/90 text-primary-foreground">
+                Founding Member
+              </Badge>
+            ) : status ? (
               <Badge variant={getStatusBadgeVariant(status)} className="uppercase">
                 {status}
               </Badge>
-            )}
+            ) : null}
           </div>
 
-          {subscription && isActive && (
+          {(subscription && isActive) || isFoundingMember ? (
             <>
-              {status === 'trialing' && subscription.trial_end_date && (
+              {status === 'trialing' && subscription?.trial_end_date && !isFoundingMember && (
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground mb-1">Trial Ends</p>
                   <p className="text-sm text-foreground">{formatDate(subscription.trial_end_date)}</p>
                 </div>
               )}
 
-              {isPremium && (
+              {effectivePremium && !isFoundingMember && (
                 <div className="pt-4 border-t border-border space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Your household has unlimited pots and no limits on bills or wants.
@@ -272,9 +283,9 @@ export function SubscriptionTab({
                 </div>
               )}
             </>
-          )}
+          ) : null}
 
-          {!isPremium && (
+          {!effectivePremium && (
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground mb-3">
                 Upgrade to Premium for unlimited pots, bills, and wants.
@@ -285,7 +296,7 @@ export function SubscriptionTab({
             </div>
           )}
 
-          {status === 'past_due' && (
+          {status === 'past_due' && !isFoundingMember && (
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-destructive">
                 Your payment is past due. Please update your payment method to continue using Premium features.
@@ -300,7 +311,7 @@ export function SubscriptionTab({
             </div>
           )}
 
-          {status === 'cancelled' && (
+          {status === 'cancelled' && !isFoundingMember && (
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground mb-3">
                 Your subscription has been cancelled. You can resubscribe anytime.
