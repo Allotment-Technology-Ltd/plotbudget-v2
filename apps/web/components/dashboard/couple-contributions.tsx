@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
 
 interface CoupleContributionsProps {
@@ -66,6 +67,7 @@ export function CoupleContributions({
   const otherDisplayTotal = isPartner ? youTotal : partnerTotal;
   const youJoint = isPartner ? jointPartner : jointMe;
   const otherJoint = isPartner ? jointMe : jointPartner;
+  const currency = household.currency || 'GBP';
 
   return (
     <motion.section
@@ -83,7 +85,7 @@ export function CoupleContributions({
         <div className="flex justify-between items-baseline">
           <span className="text-sm text-muted-foreground">You</span>
           <span className="font-display text-lg min-w-0 break-all">
-            £{youDisplayTotal.toFixed(2)}
+            {currencySymbol(currency)}{youDisplayTotal.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between items-baseline">
@@ -91,7 +93,7 @@ export function CoupleContributions({
             {otherLabel}
           </span>
           <span className="font-display text-lg min-w-0 break-all">
-            £{otherDisplayTotal.toFixed(2)}
+            {currencySymbol(currency)}{otherDisplayTotal.toFixed(2)}
           </span>
         </div>
 
@@ -101,11 +103,11 @@ export function CoupleContributions({
               Joint transfer total
             </p>
             <p className="text-sm text-foreground mb-2">
-              £{totals.joint.toFixed(2)} total
+              {currencySymbol(currency)}{totals.joint.toFixed(2)} total
             </p>
             <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-              <span>You: £{youJoint.toFixed(2)}</span>
-              <span>{otherLabel}: £{otherJoint.toFixed(2)}</span>
+              <span>You: {currencySymbol(currency)}{youJoint.toFixed(2)}</span>
+              <span>{otherLabel}: {currencySymbol(currency)}{otherJoint.toFixed(2)}</span>
             </div>
           </div>
         )}

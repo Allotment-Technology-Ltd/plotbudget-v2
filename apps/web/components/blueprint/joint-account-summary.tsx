@@ -2,6 +2,7 @@
 
 import { Wallet, User, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Household = Database['public']['Tables']['households']['Row'];
@@ -28,6 +29,7 @@ export function JointAccountSummary({
   if (!household.is_couple) return null;
 
   const otherName = otherLabel;
+  const currency = household.currency || 'GBP';
 
   const jointSeeds = seeds.filter((s) => s.payment_source === 'joint');
   const jointTransferSeeds = jointSeeds.filter((s) => s.uses_joint_account);
@@ -90,10 +92,10 @@ export function JointAccountSummary({
                 Transfer to Joint
               </p>
               <p className="text-xl font-display text-foreground">
-                £{jointTotal.toFixed(2)}
+                {currencySymbol(currency)}{jointTotal.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                You: £{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)} • {otherName}: £
+                You: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)} • {otherName}: {currencySymbol(currency)}
                 {(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}
               </p>
             </div>
@@ -114,12 +116,12 @@ export function JointAccountSummary({
               Your Set-Aside
             </p>
             <p className="text-xl font-display text-foreground">
-              £{(isPartner ? partnerTotalSetAside : userTotalSetAside).toFixed(2)}
+              {currencySymbol(currency)}{(isPartner ? partnerTotalSetAside : userTotalSetAside).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {isPartner
-                ? `Your bills (£${partnerTotal.toFixed(2)}) + your share of joint paid from own account (£${partnerJointOwnAccount.toFixed(2)})`
-                : `Your bills (£${userMeTotal.toFixed(2)}) + your share of joint paid from own account (£${userJointOwnAccount.toFixed(2)})`}
+                ? `Your bills (${currencySymbol(currency)}${partnerTotal.toFixed(2)}) + your share of joint paid from own account (${currencySymbol(currency)}${partnerJointOwnAccount.toFixed(2)})`
+                : `Your bills (${currencySymbol(currency)}${userMeTotal.toFixed(2)}) + your share of joint paid from own account (${currencySymbol(currency)}${userJointOwnAccount.toFixed(2)})`}
             </p>
           </div>
         </div>
@@ -131,11 +133,11 @@ export function JointAccountSummary({
               {otherName}&apos;s Set-Aside
             </p>
             <p className="text-xl font-display text-foreground">
-              £{(isPartner ? userTotalSetAside : partnerTotalSetAside).toFixed(2)}
+              {currencySymbol(currency)}{(isPartner ? userTotalSetAside : partnerTotalSetAside).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Their bills (£{partnerTotal.toFixed(2)}) + their share of joint
-              paid from own account (£{partnerJointOwnAccount.toFixed(2)})
+              Their bills ({currencySymbol(currency)}{partnerTotal.toFixed(2)}) + their share of joint
+              paid from own account ({currencySymbol(currency)}{partnerJointOwnAccount.toFixed(2)})
             </p>
           </div>
         </div>

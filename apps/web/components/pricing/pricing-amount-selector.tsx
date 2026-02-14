@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
+import { currencySymbol } from '@/lib/utils/currency';
 
 export interface PricingAmountSelectorProps {
   value: number;
@@ -10,6 +11,7 @@ export interface PricingAmountSelectorProps {
   min?: number;
   max?: number;
   step?: number;
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
 export function PricingAmountSelector({
@@ -18,6 +20,7 @@ export function PricingAmountSelector({
   min = 0,
   max = 10,
   step = 0.5,
+  currency = 'GBP',
 }: PricingAmountSelectorProps) {
   const [inputValue, setInputValue] = useState(value.toFixed(2));
 
@@ -70,14 +73,14 @@ export function PricingAmountSelector({
             className="mb-2"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>£{min}</span>
-            <span>£{max}</span>
+            <span>{currencySymbol(currency)}{min}</span>
+            <span>{currencySymbol(currency)}{max}</span>
           </div>
         </div>
 
         {/* Custom Input */}
         <div className="flex items-center gap-2 bg-muted/30 rounded-lg border border-border p-3">
-          <span className="text-sm font-medium text-muted-foreground">£</span>
+          <span className="text-sm font-medium text-muted-foreground">{currencySymbol(currency)}</span>
           <Input
             type="number"
             value={inputValue}

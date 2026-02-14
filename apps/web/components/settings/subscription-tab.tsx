@@ -89,6 +89,8 @@ function PortalLink({
   );
 }
 
+import { currencySymbol } from '@/lib/utils/currency';
+
 export function SubscriptionTab({
   subscription,
   foundingMemberUntil,
@@ -114,6 +116,7 @@ export function SubscriptionTab({
   
   const isPWYL = pricingMode === 'pwyl';
   const isFree = pwylAmount === 0;
+  const currency = 'GBP'; // Default to GBP as we don't have household context here; formatCurrency will use this as fallback
 
   return (
     <div className="space-y-6">
@@ -210,7 +213,7 @@ export function SubscriptionTab({
                 <p className="text-sm text-muted-foreground mt-1">
                   {isFree
                     ? 'Community Supporter'
-                    : `£${pwylAmount.toFixed(2)}/month`}
+                    : `${currencySymbol(currency)}${pwylAmount.toFixed(2)}/month`}
                 </p>
               )}
             </div>
@@ -252,7 +255,7 @@ export function SubscriptionTab({
                   ) : isPWYL && pwylAmount ? (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground italic">
-                        Thank you for contributing £{pwylAmount.toFixed(2)}/month!
+                        Thank you for contributing {currencySymbol(currency)}{pwylAmount.toFixed(2)}/month!
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <PortalLink

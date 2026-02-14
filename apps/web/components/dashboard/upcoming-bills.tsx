@@ -2,10 +2,12 @@
 
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle } from 'lucide-react';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Seed } from '@/lib/supabase/database.types';
 
 interface UpcomingBillsProps {
   seeds: Seed[];
+  currency?: 'GBP' | 'USD' | 'EUR';
 }
 
 const TYPE_LABELS: Record<Seed['type'], string> = {
@@ -15,7 +17,7 @@ const TYPE_LABELS: Record<Seed['type'], string> = {
   repay: 'Repay',
 };
 
-export function UpcomingBills({ seeds }: UpcomingBillsProps) {
+export function UpcomingBills({ seeds, currency = 'GBP' }: UpcomingBillsProps) {
   const unpaid = seeds.filter((s) => !s.is_paid);
   const displayList = unpaid.slice(0, 7);
 
@@ -73,7 +75,7 @@ export function UpcomingBills({ seeds }: UpcomingBillsProps) {
                 {TYPE_LABELS[seed.type]}
               </span>
               <span className="font-display text-sm">
-                £{seed.amount.toFixed(2)}
+                {currencySymbol(currency)}{seed.amount.toFixed(2)}
               </span>
             </div>
           </li>

@@ -13,6 +13,7 @@ import { CoupleContributions } from './couple-contributions';
 import { UpcomingBills } from './upcoming-bills';
 import { RecentActivity } from './recent-activity';
 import { SpendingTrends } from './spending-trends';
+import { FoundingMemberCelebration } from './founding-member-celebration';
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@/lib/supabase/database.types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,8 @@ export interface DashboardClientProps {
   incomeEvents?: IncomeEventDisplay[];
   isPartner?: boolean;
   ownerDisplayName?: string | null;
+  userId?: string;
+  foundingMemberUntil?: string | null;
 }
 
 export function DashboardClient({
@@ -70,15 +73,28 @@ export function DashboardClient({
   incomeEvents = [],
   isPartner = false,
   ownerDisplayName = null,
+  userId,
+  foundingMemberUntil,
 }: DashboardClientProps) {
   const otherLabel = isPartner
     ? (ownerDisplayName?.trim() || 'Account owner')
     : (household.partner_name?.trim() || 'Partner');
   const [, setSelectedCategory] = useState<string | null>(null);
 
+  const isFoundingMember =
+    foundingMemberUntil &&
+    userId &&
+    new Date(foundingMemberUntil) > new Date();
+
   if (!currentPaycycle) {
     return (
       <div className="min-h-screen bg-background">
+        {isFoundingMember && (
+          <FoundingMemberCelebration
+            userId={userId}
+            foundingMemberUntil={foundingMemberUntil}
+          />
+        )}
         <header className="border-b border-border bg-card">
           <div className="content-wrapper py-6">
             <h1 className="font-heading text-headline-sm md:text-headline uppercase">
@@ -116,6 +132,12 @@ export function DashboardClient({
 
   return (
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
+      {isFoundingMember && (
+        <FoundingMemberCelebration
+          userId={userId}
+          foundingMemberUntil={foundingMemberUntil}
+        />
+      )}
       <header className="border-b border-border bg-card">
         <div className="content-wrapper py-6">
           <h1 className="font-heading text-headline-sm md:text-headline uppercase">
@@ -144,6 +166,7 @@ export function DashboardClient({
         <IncomeThisCycle
           total={currentPaycycle.total_income}
           events={incomeEvents}
+          currency={household.currency}
         />
 
         <QuickActions
@@ -160,7 +183,7 @@ export function DashboardClient({
               seeds={seeds}
             />
 
-            <SavingsDebtProgress pots={pots} repayments={repayments} />
+            <SavingsDebtProgress pots={pots} repayments={repayments} currency={household.currency} />
 
             {household.is_couple && (
               <CoupleContributions
@@ -180,12 +203,13 @@ export function DashboardClient({
               onCategorySelect={setSelectedCategory}
             />
 
-            <UpcomingBills seeds={seeds} />
+            <UpcomingBills seeds={seeds} currency={household.currency} />
 
             <RecentActivity
               seeds={seeds}
               pots={pots}
               repayments={repayments}
+              currency={household.currency}
             />
           </div>
         </div>

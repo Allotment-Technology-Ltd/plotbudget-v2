@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   updateHouseholdName,
   updatePartnerName,
   updateMyPartnerName,
+  updateHouseholdCurrency,
 } from '@/lib/actions/settings-actions';
 import {
   Dialog,
@@ -35,6 +36,7 @@ interface HouseholdTabProps {
     partner_invite_sent_at?: string | null;
     partner_accepted_at?: string | null;
     partner_last_login_at?: string | null;
+    currency?: 'GBP' | 'USD' | 'EUR';
   };
   isPartner?: boolean;
 }
@@ -47,6 +49,8 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
   const [isPartnerSaving, setIsPartnerSaving] = useState(false);
   const [myName, setMyName] = useState(household.partner_name || '');
   const [isMyNameSaving, setIsMyNameSaving] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<'GBP' | 'USD' | 'EUR'>(household.currency || 'GBP');
+  const [isCurrencySaving, setIsCurrencySaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +98,23 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
     }
   };
 
+  const handleCurrencyChange = async (currency: string) => {
+    const typedCurrency = currency as 'GBP' | 'USD' | 'EUR';
+    setSelectedCurrency(typedCurrency);
+    setIsCurrencySaving(true);
+    try {
+      await updateHouseholdCurrency(household.id, currency);
+      toast.success(`Currency updated to ${currency}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update currency';
+      toast.error(message);
+      setSelectedCurrency(household.currency || 'GBP');
+    } finally {
+      setIsCurrencySaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <section className="bg-card rounded-lg border border-border p-6">
@@ -133,23 +154,42 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
 
       <section className="bg-card rounded-lg border border-border p-6">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
-          Household Mode
+          Currency
         </h2>
-        <div className="space-y-2">
-          <p className="text-sm text-foreground">
-            Current mode:{' '}
-            <Badge
-              variant={household.is_couple ? 'default' : 'secondary'}
-              className="ml-2"
-            >
-              {household.is_couple ? 'Couple' : 'Solo'}
-            </Badge>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            To change your household mode, contact support or create a new
-            household.
-          </p>
-        </div>
+        {isPartner ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Current Currency</p>
+            <p className="text-sm text-muted-foreground">
+              {household.currency || 'GBP'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-4">
+              Only the account owner can change the currency.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency">Select Currency</Label>
+              <Select
+                value={selectedCurrency}
+                onValueChange={handleCurrencyChange}
+                disabled={isCurrencySaving}
+              >
+                <SelectTrigger id="currency" aria-busy={isCurrencySaving}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GBP">British Pound (GBP) £</SelectItem>
+                  <SelectItem value="USD">United States Dollar (USD) $</SelectItem>
+                  <SelectItem value="EUR">Euro (EUR) €</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                All amounts throughout PLOT will display in your selected currency.
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       {household.is_couple && (

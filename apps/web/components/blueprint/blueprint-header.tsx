@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Calendar, Plus, RefreshCw } from 'lucide-react';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
@@ -53,6 +54,7 @@ export function BlueprintHeader({
   const endDate = format(new Date(paycycle.end_date), 'MMM d, yyyy');
   const isActiveCycle = paycycle.status === 'active';
   const showProgress = isActiveCycle && paidProgress != null;
+  const currency = household.currency || 'GBP';
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-10">
@@ -66,8 +68,8 @@ export function BlueprintHeader({
             <div className="mt-1 min-h-[1.5rem] flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span>
                 {household.is_couple
-                  ? `Managing £${Number(paycycle.total_income).toFixed(2)} together`
-                  : `Managing £${Number(paycycle.total_income).toFixed(2)} monthly`}
+                  ? `Managing ${currencySymbol(currency)}${Number(paycycle.total_income).toFixed(2)} together`
+                  : `Managing ${currencySymbol(currency)}${Number(paycycle.total_income).toFixed(2)} monthly`}
               </span>
               <span
                 className="flex items-center gap-1"

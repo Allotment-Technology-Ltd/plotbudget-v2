@@ -483,11 +483,12 @@ export function BlueprintClient({
             />
           )}
 
-          <TotalAllocatedSummary paycycle={paycycle} />
+          <TotalAllocatedSummary paycycle={paycycle} household={household} />
 
           <IncomeThisCycle
             total={paycycle.total_income}
             events={incomeEvents}
+            currency={household.currency}
           />
 
           <CategorySummaryGrid

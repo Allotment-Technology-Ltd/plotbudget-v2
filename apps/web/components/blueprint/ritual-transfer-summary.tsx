@@ -1,6 +1,7 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
@@ -74,7 +75,7 @@ function getPartnerSetAside(seeds: Seed[]) {
 
 export function RitualTransferSummary({
   seeds,
-  household: _household,
+  household,
   userAvatarUrl,
   userInitials = '?',
   isPartner = false,
@@ -85,6 +86,7 @@ export function RitualTransferSummary({
   const userSetAside = getUserSetAside(seeds);
   const partnerSetAside = getPartnerSetAside(seeds);
   const otherName = otherLabel;
+  const currency = household.currency || 'GBP';
 
   return (
     <div
@@ -105,11 +107,11 @@ export function RitualTransferSummary({
               Transfer to Joint Account
             </p>
             <p className="text-3xl font-display text-primary">
-              £{totalJointTransfer.toFixed(2)}
+              {currencySymbol(currency)}{totalJointTransfer.toFixed(2)}
             </p>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>You: £{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)}</p>
-              <p>{otherName}: £{(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}</p>
+              <p>You: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)}</p>
+              <p>{otherName}: {currencySymbol(currency)}{(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}</p>
             </div>
           </div>
         )}
@@ -129,7 +131,7 @@ export function RitualTransferSummary({
             </p>
           </div>
           <p className="text-3xl font-display text-foreground">
-            £{(isPartner ? partnerSetAside : userSetAside).toFixed(2)}
+            {currencySymbol(currency)}{(isPartner ? partnerSetAside : userSetAside).toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground">
             Keep this in your account for your bills
@@ -141,7 +143,7 @@ export function RitualTransferSummary({
             {otherName}&apos;s Set-Aside
           </p>
           <p className="text-3xl font-display text-foreground">
-            £{(isPartner ? userSetAside : partnerSetAside).toFixed(2)}
+            {currencySymbol(currency)}{(isPartner ? userSetAside : partnerSetAside).toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground">
             They keep this for their bills
