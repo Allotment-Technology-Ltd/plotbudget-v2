@@ -28,6 +28,7 @@ import {
   suggestedSavingsAmount,
   suggestedRepaymentAmount,
 } from '@/lib/utils/suggested-amount';
+import { currencySymbol, formatCurrency, parseIncome } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
@@ -63,37 +64,44 @@ interface SeedDialogProps {
   otherLabel?: string;
 }
 
-function parseAmount(value: unknown): number {
-  if (value === '' || value === null || value === undefined) return NaN;
-  const s = String(value).replace(/[£,\s]/g, '');
-  const n = Number(s);
-  return Number.isFinite(n) ? n : NaN;
+function createSeedFormSchema(paycycle: { start_date: string; end_date: string }) {
+  return z
+    .object({
+      name: z.string().min(1, 'Name is required').max(50, 'Name must be 50 characters or less'),
+      amountStr: z
+        .string()
+        .refine((v) => parseIncome(v) >= 0.01, 'Amount must be greater than 0'),
+      payment_source: z.enum(['me', 'partner', 'joint']),
+      split_ratio: z.number().min(0).max(100).optional(),
+      uses_joint_account: z.boolean().default(false),
+      is_recurring: z.boolean().default(false),
+      due_date: z.string().optional(),
+      // Savings: link or create
+      link_pot_id: z.string().optional(),
+      pot_current_str: z.string().optional(),
+      pot_target_str: z.string().optional(),
+      pot_target_date: z.string().optional(),
+      pot_status: z.enum(['active', 'complete', 'paused']).optional(),
+      // Repay: link or create
+      link_repayment_id: z.string().optional(),
+      repayment_current_str: z.string().optional(),
+      repayment_target_date: z.string().optional(),
+      repayment_status: z.enum(['active', 'paid', 'paused']).optional(),
+    })
+    .refine(
+      (data) => {
+        if (!data.due_date || !data.due_date.trim()) return true;
+        const d = data.due_date;
+        return d >= paycycle.start_date && d <= paycycle.end_date;
+      },
+      {
+        message: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
+        path: ['due_date'],
+      }
+    );
 }
 
-const seedFormSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(50, 'Name must be 50 characters or less'),
-  amountStr: z
-    .string()
-    .refine((v) => parseAmount(v) >= 0.01, 'Amount must be greater than 0'),
-  payment_source: z.enum(['me', 'partner', 'joint']),
-  split_ratio: z.number().min(0).max(100).optional(),
-  uses_joint_account: z.boolean().default(false),
-  is_recurring: z.boolean().default(false),
-  due_date: z.string().optional(),
-  // Savings: link or create
-  link_pot_id: z.string().optional(),
-  pot_current_str: z.string().optional(),
-  pot_target_str: z.string().optional(),
-  pot_target_date: z.string().optional(),
-  pot_status: z.enum(['active', 'complete', 'paused']).optional(),
-  // Repay: link or create
-  link_repayment_id: z.string().optional(),
-  repayment_current_str: z.string().optional(),
-  repayment_target_date: z.string().optional(),
-  repayment_status: z.enum(['active', 'paid', 'paused']).optional(),
-});
-
-type SeedFormInput = z.infer<typeof seedFormSchema>;
+type SeedFormInput = z.infer<ReturnType<typeof createSeedFormSchema>>;
 
 export function SeedDialog({
   open,
@@ -111,6 +119,8 @@ export function SeedDialog({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formScrollRef = useRef<HTMLFormElement>(null);
+  const currency = household?.currency ?? 'GBP';
+  const symbol = currencySymbol(currency);
 
   const editMode = !!seed;
   const linkedPot = seed?.linked_pot_id
@@ -120,6 +130,10 @@ export function SeedDialog({
     ? repayments.find((r) => r.id === seed.linked_repayment_id)
     : null;
 
+  const seedFormSchema = useMemo(
+    () => createSeedFormSchema({ start_date: paycycle.start_date, end_date: paycycle.end_date }),
+    [paycycle.start_date, paycycle.end_date]
+  );
   const form = useForm<SeedFormInput>({
     resolver: zodResolver(seedFormSchema) as Resolver<SeedFormInput>,
     defaultValues: {
@@ -203,13 +217,13 @@ export function SeedDialog({
 
   const paymentSource = form.watch('payment_source');
   const splitRatio = form.watch('split_ratio') ?? 50;
-  const amount = parseAmount(form.watch('amountStr')) || 0;
+  const amount = parseIncome(form.watch('amountStr')) || 0;
   const isCouple = household.is_couple;
 
-  const potCurrent = parseAmount(form.watch('pot_current_str')) || 0;
-  const potTarget = parseAmount(form.watch('pot_target_str')) || 0;
+  const potCurrent = parseIncome(form.watch('pot_current_str')) || 0;
+  const potTarget = parseIncome(form.watch('pot_target_str')) || 0;
   const potTargetDate = form.watch('pot_target_date') || null;
-  const repaymentCurrent = parseAmount(form.watch('repayment_current_str')) || 0;
+  const repaymentCurrent = parseIncome(form.watch('repayment_current_str')) || 0;
   const repaymentTargetDate = form.watch('repayment_target_date') || null;
 
   const suggestedAmount = useMemo(() => {
@@ -263,7 +277,7 @@ export function SeedDialog({
     setError(null);
 
     try {
-      const amountNum = parseAmount(data.amountStr);
+      const amountNum = parseIncome(data.amountStr);
       const payload: Record<string, unknown> = {
         name: data.name,
         amount: amountNum,
@@ -287,16 +301,16 @@ export function SeedDialog({
           payload.linked_pot_id = data.link_pot_id;
           if (editMode && seed?.linked_pot_id) {
             payload.pot = {
-              current_amount: parseAmount(data.pot_current_str) || 0,
-              target_amount: parseAmount(data.pot_target_str) || 0,
+              current_amount: parseIncome(data.pot_current_str) || 0,
+              target_amount: parseIncome(data.pot_target_str) || 0,
               target_date: data.pot_target_date || null,
               status: (data.pot_status ?? 'active') as 'active' | 'complete' | 'paused',
             };
           }
-        } else if (data.pot_target_str && parseAmount(data.pot_target_str) > 0) {
+        } else if (data.pot_target_str && parseIncome(data.pot_target_str) > 0) {
           payload.pot = {
-            current_amount: parseAmount(data.pot_current_str) || 0,
-            target_amount: parseAmount(data.pot_target_str) || 0,
+            current_amount: parseIncome(data.pot_current_str) || 0,
+            target_amount: parseIncome(data.pot_target_str) || 0,
             target_date: data.pot_target_date || null,
             status: (data.pot_status ?? 'active') as 'active' | 'complete' | 'paused',
           };
@@ -308,15 +322,15 @@ export function SeedDialog({
           payload.linked_repayment_id = data.link_repayment_id;
           if (editMode && seed?.linked_repayment_id) {
             payload.repayment = {
-              current_balance: parseAmount(data.repayment_current_str) || 0,
+              current_balance: parseIncome(data.repayment_current_str) || 0,
               target_date: data.repayment_target_date || null,
               status: (data.repayment_status ?? 'active') as 'active' | 'paid' | 'paused',
             };
           }
-        } else if (data.repayment_current_str && parseAmount(data.repayment_current_str) > 0) {
+        } else if (data.repayment_current_str && parseIncome(data.repayment_current_str) > 0) {
           payload.repayment = {
-            starting_balance: parseAmount(data.repayment_current_str) || 0,
-            current_balance: parseAmount(data.repayment_current_str) || 0,
+            starting_balance: parseIncome(data.repayment_current_str) || 0,
+            current_balance: parseIncome(data.repayment_current_str) || 0,
             target_date: data.repayment_target_date || null,
             status: (data.repayment_status ?? 'active') as 'active' | 'paid' | 'paused',
           };
@@ -459,6 +473,8 @@ export function SeedDialog({
               <Input
                 id="seed-due-date"
                 type="date"
+                min={paycycle.start_date}
+                max={paycycle.end_date}
                 aria-label="Due date"
                 data-testid="seed-due-date-input"
                 {...form.register('due_date')}
@@ -494,8 +510,7 @@ export function SeedDialog({
                           <SelectItem value="none">None – create new</SelectItem>
                           {pots.map((p) => (
                             <SelectItem key={p.id} value={p.id}>
-                              {p.name} (£{Number(p.current_amount).toFixed(0)} / £
-                              {Number(p.target_amount).toFixed(0)})
+                              {p.name} ({formatCurrency(Number(p.current_amount), currency)} / {formatCurrency(Number(p.target_amount), currency)})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -508,7 +523,7 @@ export function SeedDialog({
                 <>
                   <div className="grid grid-cols-2 gap-4 max-[400px]:grid-cols-1">
                     <div className="space-y-2 min-w-0">
-                      <Label htmlFor="pot-current">Current (£)</Label>
+                      <Label htmlFor="pot-current">Current ({symbol})</Label>
                       <Controller
                         name="pot_current_str"
                         control={form.control}
@@ -528,7 +543,7 @@ export function SeedDialog({
                       />
                     </div>
                     <div className="space-y-2 min-w-0">
-                      <Label htmlFor="pot-target">Target (£)</Label>
+                      <Label htmlFor="pot-target">Target ({symbol})</Label>
                       <Controller
                         name="pot_target_str"
                         control={form.control}
@@ -621,7 +636,7 @@ export function SeedDialog({
                           <SelectItem value="none">None – create new</SelectItem>
                           {repayments.map((r) => (
                             <SelectItem key={r.id} value={r.id}>
-                              {r.name} (£{Number(r.current_balance).toFixed(0)} left)
+                              {r.name} ({formatCurrency(Number(r.current_balance), currency)} left)
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -633,7 +648,7 @@ export function SeedDialog({
               {((!form.watch('link_repayment_id') || form.watch('link_repayment_id') === 'none') || (editMode && !!linkedRepayment)) && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="repayment-current">Current balance (£)</Label>
+                    <Label htmlFor="repayment-current">Current balance ({symbol})</Label>
                     <Controller
                       name="repayment_current_str"
                       control={form.control}
@@ -702,7 +717,7 @@ export function SeedDialog({
 
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Label htmlFor="seed-amount" className="min-w-0 shrink-0">Amount (£)</Label>
+              <Label htmlFor="seed-amount" className="min-w-0 shrink-0">Amount ({symbol})</Label>
               {suggestedAmount != null && (
                 <Button
                   type="button"
@@ -713,14 +728,14 @@ export function SeedDialog({
                   }
                 >
                   {category === 'repay'
-                    ? `Use suggested minimum (£${suggestedAmount.toFixed(2)})`
-                    : `Use suggested (£${suggestedAmount.toFixed(2)})`}
+                    ? `Use suggested minimum (${formatCurrency(suggestedAmount, currency)})`
+                    : `Use suggested (${formatCurrency(suggestedAmount, currency)})`}
                 </Button>
               )}
             </div>
             <div className="relative flex">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 font-body text-muted-foreground pointer-events-none">
-                £
+                {symbol}
               </span>
               <Controller
                 name="amountStr"
@@ -804,8 +819,7 @@ export function SeedDialog({
                 />
                 {previewSplit && amount > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    You: £{previewSplit.me.toFixed(2)} • {otherLabel}: £
-                    {previewSplit.partner.toFixed(2)}
+                    You: {formatCurrency(previewSplit.me, currency)} • {otherLabel}: {formatCurrency(previewSplit.partner, currency)}
                   </p>
                 )}
               </div>

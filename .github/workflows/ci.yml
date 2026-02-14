@@ -1,6 +1,8 @@
 # Guardrails: block merge if lint, type-check, unit tests, or E2E fail.
 # Runs on every Pull Request to main. All jobs must pass to merge.
 # Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+# For E2E: use a SEPARATE Supabase project (dev/staging), NOT production. See docs/E2E-TEST-APPROACH.md.
+# Optional: SUPABASE_PROD_PROJECT_REF = prod project ref (e.g. subdomain of prod URL). When set, E2E aborts if pointing at prod.
 # Uses pull_request_target so secrets (Supabase for E2E) are available to same-repo PRs.
 # IMPORTANT: Every checkout MUST use ref: head.sha so CI tests the PR code, not main.
 name: CI
@@ -149,6 +151,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROD_PROJECT_REF }}
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
         run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
@@ -191,6 +194,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROD_PROJECT_REF }}
           NEXT_PUBLIC_PRICING_ENABLED: 'true'
           NEXT_PUBLIC_PWYL_PRICING_ENABLED: 'true'
           POLAR_PWYL_BASE_PRODUCT_ID: ${{ secrets.POLAR_PWYL_BASE_PRODUCT_ID_SANDBOX }}

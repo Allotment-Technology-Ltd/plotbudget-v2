@@ -35,6 +35,7 @@ export default async function PricingPage() {
 
   let displayName: string | null = null;
   let avatarUrl: string | null = null;
+  let foundingMemberUntil: string | null = null;
   let isPartner = false;
   let owned: { id: string } | null = null;
   let partnerOf: { id: string; partner_name: string | null } | null = null;
@@ -42,13 +43,14 @@ export default async function PricingPage() {
   if (user) {
     const { data: profile } = await supabase
       .from('users')
-      .select('display_name, avatar_url')
+      .select('display_name, avatar_url, founding_member_until')
       .eq('id', user.id)
       .maybeSingle();
-    type ProfileRow = { display_name: string | null; avatar_url: string | null };
+    type ProfileRow = { display_name: string | null; avatar_url: string | null; founding_member_until: string | null };
     const profileRow = profile as ProfileRow | null;
     displayName = profileRow?.display_name ?? null;
     avatarUrl = profileRow?.avatar_url ?? null;
+    foundingMemberUntil = profileRow?.founding_member_until ?? null;
 
     const { data: ownedData } = await supabase
       .from('households')
@@ -105,6 +107,32 @@ export default async function PricingPage() {
             Start with a free trial. Keep what works for you. Upgrade when you want more pots and no limits.
           </p>
         </div>
+
+        {user && foundingMemberUntil && (() => {
+          const end = new Date(foundingMemberUntil);
+          if (end > new Date()) {
+            const oneMonthFromNow = new Date();
+            oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+            if (end > oneMonthFromNow) {
+              const founderDate = end.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
+              return (
+                <div className="mb-12 rounded-lg border border-primary/30 bg-primary/5 px-6 py-4 text-center">
+                  <p className="font-heading text-sm uppercase tracking-wider text-primary mb-2">
+                    Founding Member
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    You have one year of Premium access free until {founderDate}. Thanks for being here from the start — your support for PLOT means everything.
+                  </p>
+                </div>
+              );
+            }
+          }
+          return null;
+        })()}
 
         {showPWYL ? (
           <PWYLPricingMatrix

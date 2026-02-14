@@ -195,9 +195,32 @@ export async function updatePaycycleAllocations(
   await (supabase.from('paycycles') as any).update(updatePayload).eq('id', paycycleId);
 }
 
+function isDueDateInPaycycleRange(
+  dueDate: string | null | undefined,
+  startDate: string,
+  endDate: string
+): boolean {
+  if (!dueDate || !dueDate.trim()) return true;
+  return dueDate >= startDate && dueDate <= endDate;
+}
+
 export async function createSeed(data: CreateSeedInput): Promise<{ error?: string }> {
   try {
     const supabase = await createServerSupabaseClient();
+
+    if (data.due_date) {
+      const { data: paycycle } = (await supabase
+        .from('paycycles')
+        .select('start_date, end_date')
+        .eq('id', data.paycycle_id)
+        .single()) as { data: { start_date: string; end_date: string } | null };
+      if (paycycle && !isDueDateInPaycycleRange(data.due_date, paycycle.start_date, paycycle.end_date)) {
+        return {
+          error: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
+        };
+      }
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -316,6 +339,19 @@ export async function updateSeed(
     };
 
     if (!seed) return { error: 'Seed not found' };
+
+    if (data.due_date !== undefined) {
+      const { data: paycycle } = (await supabase
+        .from('paycycles')
+        .select('start_date, end_date')
+        .eq('id', seed.paycycle_id)
+        .single()) as { data: { start_date: string; end_date: string } | null };
+      if (paycycle && !isDueDateInPaycycleRange(data.due_date, paycycle.start_date, paycycle.end_date)) {
+        return {
+          error: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
+        };
+      }
+    }
 
     if (data.pot && seed.linked_pot_id) {
       const potUpdate: Record<string, unknown> = {};

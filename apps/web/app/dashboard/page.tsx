@@ -69,10 +69,28 @@ export default async function DashboardPage() {
 
   let currentPaycycle: PayCycle | null = null;
   let seeds: Seed[] = [];
-  let historicalCycles: Pick<
+  type HistoricalCycleRow = Pick<
     PayCycle,
-    'id' | 'name' | 'start_date' | 'end_date' | 'total_income' | 'total_allocated'
-  >[] = [];
+    | 'id'
+    | 'name'
+    | 'start_date'
+    | 'end_date'
+    | 'total_income'
+    | 'total_allocated'
+    | 'alloc_needs_me'
+    | 'alloc_needs_partner'
+    | 'alloc_needs_joint'
+    | 'alloc_wants_me'
+    | 'alloc_wants_partner'
+    | 'alloc_wants_joint'
+    | 'alloc_savings_me'
+    | 'alloc_savings_partner'
+    | 'alloc_savings_joint'
+    | 'alloc_repay_me'
+    | 'alloc_repay_partner'
+    | 'alloc_repay_joint'
+  >;
+  let historicalCycles: HistoricalCycleRow[] = [];
 
   if (currentPaycycleId) {
     const { data: paycycle } = await supabase
@@ -108,7 +126,9 @@ export default async function DashboardPage() {
 
   const { data: historical } = await supabase
     .from('paycycles')
-    .select('id, name, start_date, end_date, total_income, total_allocated')
+    .select(
+      'id, name, start_date, end_date, total_income, total_allocated, alloc_needs_me, alloc_needs_partner, alloc_needs_joint, alloc_wants_me, alloc_wants_partner, alloc_wants_joint, alloc_savings_me, alloc_savings_partner, alloc_savings_joint, alloc_repay_me, alloc_repay_partner, alloc_repay_joint'
+    )
     .eq('household_id', householdId)
     .eq('status', 'completed')
     .order('start_date', { ascending: false })

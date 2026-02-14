@@ -2,6 +2,7 @@
 
 import { differenceInDays } from 'date-fns';
 import { motion } from 'framer-motion';
+import { formatCurrency } from '@/lib/utils/currency';
 import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
 
 interface HeroMetricsProps {
@@ -74,7 +75,8 @@ function getTotalRemainingFromPaycycle(paycycle: PayCycle): number {
 
 type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
 
-export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
+export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
+  const currency = household?.currency ?? 'GBP';
   const totalRemaining =
     seeds.length > 0
       ? getTotalRemainingFromSeeds(seeds)
@@ -98,13 +100,15 @@ export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
   const daysElapsed = Math.max(0, differenceInDays(today, startDate));
   const totalDays = Math.max(1, differenceInDays(endDate, startDate));
   const daysRemaining = Math.max(0, differenceInDays(endDate, today));
+  const cycleNotStarted = today < startDate;
+  const daysUntilStart = cycleNotStarted ? Math.max(0, differenceInDays(startDate, today)) : 0;
   const cycleProgress = (daysElapsed / totalDays) * 100;
 
   const metrics = [
     {
       label: 'Allocated',
-      value: `£${paycycle.total_allocated.toFixed(2)}`,
-      subtext: `of £${paycycle.total_income.toFixed(2)}`,
+      value: formatCurrency(paycycle.total_allocated, currency),
+      subtext: `of ${formatCurrency(paycycle.total_income, currency)}`,
       percentage: allocatedPercent,
       status: (allocatedPercent > 100
         ? 'danger'
@@ -114,15 +118,19 @@ export function HeroMetrics({ paycycle, seeds }: HeroMetricsProps) {
     },
     {
       label: 'Left to spend',
-      value: `£${totalRemaining.toFixed(2)}`,
+      value: formatCurrency(totalRemaining, currency),
       subtext: `${remainingPercent.toFixed(0)}% of income left this cycle`,
       percentage: remainingPercent,
       status: (remainingPercent < 10 ? 'warning' : 'good') as StatusKey,
     },
     {
       label: 'Days Left',
-      value: `${daysRemaining} days`,
-      subtext: `${cycleProgress.toFixed(0)}% through`,
+      value: cycleNotStarted
+        ? `Starts in ${daysUntilStart} days`
+        : `${daysRemaining} days`,
+      subtext: cycleNotStarted
+        ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+        : `${cycleProgress.toFixed(0)}% through`,
       percentage: cycleProgress,
       status: 'neutral' as StatusKey,
     },

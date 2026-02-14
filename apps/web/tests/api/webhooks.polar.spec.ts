@@ -9,6 +9,7 @@ import {
   subscriptionRevoked,
   subscriptionUncanceled,
   subscriptionTrialing,
+  subscriptionTrialingUpgradedDuringTrial,
   subscriptionIncomplete,
   subscriptionUnpaid,
   subscriptionUpdatedCanceled,
@@ -244,6 +245,25 @@ describe('POST /api/webhooks/polar', () => {
     // The user update is called via update().eq()
     // The update mock captures the eq call; the update() call receives the payload
     // We verify the update was called (trialing maps to active for user table)
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('Processes subscription when user upgraded during PLOT trial', async () => {
+    const { POST } = await import('@/app/api/webhooks/polar/route');
+    const req = createPostRequest(
+      '/api/webhooks/polar',
+      JSON.stringify(subscriptionTrialingUpgradedDuringTrial)
+    );
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.received).toBe(true);
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+    expect(mockUpsert.mock.calls[0][0].metadata).toMatchObject({
+      upgraded_during_trial: 'true',
+      plot_trial_end_date: '2026-03-15',
+    });
     expect(mockUpdate).toHaveBeenCalledTimes(1);
   });
 

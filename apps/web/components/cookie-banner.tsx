@@ -9,6 +9,7 @@ export function CookieBanner() {
   const {
     consent,
     hasChosen,
+    ready,
     setConsent,
     showBanner,
     setShowBanner,
@@ -16,7 +17,7 @@ export function CookieBanner() {
   const [customiseOpen, setCustomiseOpen] = useState(false);
   const [analyticsOn, setAnalyticsOn] = useState(false);
 
-  const shouldShow = !hasChosen || showBanner;
+  const shouldShow = ready && (!hasChosen || showBanner);
 
   useEffect(() => {
     if (consent) setAnalyticsOn(consent.analytics);

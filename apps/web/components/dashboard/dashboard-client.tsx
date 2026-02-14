@@ -19,7 +19,24 @@ import { Button } from '@/components/ui/button';
 
 type HistoricalCycle = Pick<
   PayCycle,
-  'id' | 'name' | 'start_date' | 'end_date' | 'total_income' | 'total_allocated'
+  | 'id'
+  | 'name'
+  | 'start_date'
+  | 'end_date'
+  | 'total_income'
+  | 'total_allocated'
+  | 'alloc_needs_me'
+  | 'alloc_needs_partner'
+  | 'alloc_needs_joint'
+  | 'alloc_wants_me'
+  | 'alloc_wants_partner'
+  | 'alloc_wants_joint'
+  | 'alloc_savings_me'
+  | 'alloc_savings_partner'
+  | 'alloc_savings_joint'
+  | 'alloc_repay_me'
+  | 'alloc_repay_partner'
+  | 'alloc_repay_joint'
 >;
 
 export type IncomeEventDisplay = {
@@ -176,6 +193,7 @@ export function DashboardClient({
         <SpendingTrends
           currentCycle={currentPaycycle}
           historicalCycles={historicalCycles}
+          household={household}
         />
       </main>
     </div>

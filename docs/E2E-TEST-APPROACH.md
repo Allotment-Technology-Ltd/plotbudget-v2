@@ -4,6 +4,18 @@ This doc describes how we run E2E tests reliably: users, auth state, and pattern
 
 ---
 
+## 0. Production guard (critical)
+
+**E2E tests create and clean up test users** (solo@plotbudget.test, blueprint@plotbudget.test, etc.) and their households/paycycles. **Never run E2E against the production database.**
+
+- **Use a separate Supabase project for E2E.** Create a "Development" or "Staging" project in Supabase and use its URL and service_role key for CI.
+- **Set `SUPABASE_PROD_PROJECT_REF`** in CI to your production project ref (the subdomain of your prod Supabase URL, e.g. `abcdefghij` for `https://abcdefghij.supabase.co`). This blocks accidental prod usage: if E2E points at prod, tests fail immediately with a clear error.
+- **CI secrets for E2E:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` must point to the **test** Supabase project, not production. Vercel production uses different env vars (or a different Supabase project) for the live app.
+
+**Cleaning up accidental prod pollution:** If test users (solo@plotbudget.test, blueprint@plotbudget.test, etc.) were created in production, remove them via Supabase Dashboard (Auth → Users, delete by email) and delete associated `public.users`, `public.households`, and `public.paycycles` rows. Run migrations and ensure `SUPABASE_PROD_PROJECT_REF` is set before the next E2E run.
+
+---
+
 ## 1. Test users and projects
 
 | User | Email | Used by | Purpose |

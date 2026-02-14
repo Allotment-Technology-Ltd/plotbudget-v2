@@ -24,14 +24,7 @@ import {
   calculateCycleStartDate,
   calculateCycleEndDate,
 } from '@/lib/utils/pay-cycle-dates';
-
-/** Strip £, commas, whitespace so "£3,100" or "3100" parse as numbers */
-function parseIncome(value: unknown): number {
-  if (value === '' || value === null || value === undefined) return NaN;
-  const s = String(value).replace(/[£,\s]/g, '');
-  const n = Number(s);
-  return Number.isFinite(n) ? n : NaN;
-}
+import { currencySymbol, parseIncome } from '@/lib/utils/currency';
 
 const onboardingSchema = z
   .object({
@@ -123,19 +116,21 @@ const onboardingSchema = z
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
-/** Input wrapper with optional £ prefix. Uses forwardRef so react-hook-form's ref attaches to the real input. */
+/** Input wrapper with currency prefix. Uses forwardRef so react-hook-form's ref attaches to the real input. */
 const IncomeInput = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<typeof Input> & {
     id: string;
     placeholder?: string;
     error?: boolean;
+    currency?: 'GBP' | 'USD' | 'EUR';
   }
->(function IncomeInput({ id, placeholder, error, ...props }, ref) {
+>(function IncomeInput({ id, placeholder, error, currency = 'GBP', ...props }, ref) {
+  const symbol = currencySymbol(currency);
   return (
     <div className="relative flex">
       <span className="absolute left-4 top-1/2 -translate-y-1/2 font-body text-muted-foreground pointer-events-none">
-        £
+        {symbol}
       </span>
       <Input
         ref={ref}
@@ -172,6 +167,7 @@ export default function OnboardingPage() {
 
   const mode = form.watch('mode');
   const payCycleType = form.watch('payCycleType');
+  const currency = form.watch('currency');
   const myIncome = form.watch('myIncome');
   const partnerIncome = form.watch('partnerIncome');
 
@@ -382,13 +378,17 @@ export default function OnboardingPage() {
               </div>
 
               {/* Section 2: Income */}
-              <div className="space-y-4">
+                <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="myIncome">Your Monthly Income</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Rough estimate for now. You can add specific income sources (with pay dates and amounts) in Settings after setup.
+                  </p>
                   <IncomeInput
                     id="myIncome"
-                    placeholder="e.g. 2500"
+                    placeholder={`e.g. ${currency === 'USD' ? '3000' : currency === 'EUR' ? '2800' : '2500'}`}
                     error={!!form.formState.errors.myIncome}
+                    currency={currency}
                     {...form.register('myIncome')}
                   />
                   {form.formState.errors.myIncome && (
@@ -411,8 +411,9 @@ export default function OnboardingPage() {
                       </Label>
                       <IncomeInput
                         id="partnerIncome"
-                        placeholder="e.g. 2800"
+                        placeholder={`e.g. ${currency === 'USD' ? '3200' : currency === 'EUR' ? '3000' : '2800'}`}
                         error={!!form.formState.errors.partnerIncome}
+                        currency={currency}
                         {...form.register('partnerIncome')}
                       />
                       {form.formState.errors.partnerIncome && (

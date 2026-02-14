@@ -34,6 +34,7 @@ type SubscriptionRow = {
   current_tier: 'free' | 'pro' | null;
   trial_end_date: string | null;
   polar_product_id: string | null;
+  metadata?: { pwyl_amount?: string; pricing_mode?: string } | null;
 };
 
 const householdSelect =
@@ -70,15 +71,26 @@ export default async function SettingsPage({
     if (p) signInMethodLabels = getSignInMethodLabels([p]);
   }
 
-  type ProfileRow = { display_name: string | null; avatar_url: string | null };
+  type ProfileRow = {
+    display_name: string | null;
+    avatar_url: string | null;
+    founding_member_until: string | null;
+    trial_cycles_completed: number;
+    trial_ended_at: string | null;
+    grace_period_start: string | null;
+  };
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name, avatar_url')
+    .select('display_name, avatar_url, founding_member_until, trial_cycles_completed, trial_ended_at, grace_period_start')
     .eq('id', user.id)
     .maybeSingle();
   const profileRow = profile as ProfileRow | null;
   const displayName = profileRow?.display_name ?? null;
   const avatarUrl = profileRow?.avatar_url ?? null;
+  const foundingMemberUntil = profileRow?.founding_member_until ?? null;
+  const trialCyclesCompleted = profileRow?.trial_cycles_completed ?? 0;
+  const trialEndedAt = profileRow?.trial_ended_at ?? null;
+  const gracePeriodStart = profileRow?.grace_period_start ?? null;
 
   const { data: owned } = await supabase
     .from('households')
@@ -137,7 +149,7 @@ export default async function SettingsPage({
   if (paymentUiVisible) {
     const { data: subData } = await supabase
       .from('subscriptions')
-      .select('status, current_tier, trial_end_date, polar_product_id')
+      .select('status, current_tier, trial_end_date, polar_product_id, metadata')
       .eq('household_id', household.id)
       .maybeSingle();
     subscription = subData as SubscriptionRow | null;
@@ -152,6 +164,10 @@ export default async function SettingsPage({
           displayName,
           avatarUrl,
           signInMethodLabels,
+          foundingMemberUntil,
+          trialCyclesCompleted,
+          trialEndedAt,
+          gracePeriodStart,
         }}
         pricingEnabled={paymentUiVisible}
         subscription={subscription}

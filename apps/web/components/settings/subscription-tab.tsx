@@ -19,6 +19,14 @@ export interface SubscriptionTabProps {
   } | null;
   householdId: string;
   userId: string;
+  /** Founding Member: Premium free until this date. First 50 users. */
+  foundingMemberUntil?: string | null;
+  /** Trial cycles completed (trial = first 2). */
+  trialCyclesCompleted?: number;
+  /** Trial ended timestamp. */
+  trialEndedAt?: string | null;
+  /** Grace period start timestamp (7 days after trial). */
+  gracePeriodStart?: string | null;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -81,7 +89,13 @@ function PortalLink({
   );
 }
 
-export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
+export function SubscriptionTab({
+  subscription,
+  foundingMemberUntil,
+  trialCyclesCompleted = 0,
+  trialEndedAt,
+  gracePeriodStart,
+}: SubscriptionTabProps) {
   const tier = subscription?.current_tier ?? 'free';
   const status = subscription?.status ?? null;
   const isActive = status === 'active' || status === 'trialing';
@@ -106,6 +120,75 @@ export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
           Subscription
         </h2>
         <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+          {foundingMemberUntil && new Date(foundingMemberUntil) > new Date() && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 mb-4">
+              <p className="font-heading text-sm uppercase tracking-wider text-primary">Founding Member</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                You have one year of Premium access free until {formatDate(foundingMemberUntil)}.
+              </p>
+            </div>
+          )}
+
+          {/* Trial: cycles remaining */}
+          {trialCyclesCompleted < 2 && !trialEndedAt && (
+            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
+              <p className="font-heading text-sm uppercase tracking-wider text-foreground">Trial</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {2 - trialCyclesCompleted} of 2 trial cycles remaining.
+              </p>
+            </div>
+          )}
+
+          {/* Grace period: Day X of 7 */}
+          {gracePeriodStart && !isPremium && (() => {
+            const graceStart = new Date(gracePeriodStart);
+            const graceEnd = new Date(graceStart);
+            graceEnd.setDate(graceEnd.getDate() + 7);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            graceEnd.setHours(0, 0, 0, 0);
+            graceStart.setHours(0, 0, 0, 0);
+            const daysSinceGrace = Math.floor((today.getTime() - graceStart.getTime()) / (1000 * 60 * 60 * 24));
+            const inGrace = today < graceEnd;
+            if (!inGrace) return null;
+            return (
+              <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 mb-4" key="grace">
+                <p className="font-heading text-sm uppercase tracking-wider text-amber-700 dark:text-amber-400">Grace period</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Day {daysSinceGrace + 1} of 7. Grace ends {formatDate(graceEnd.toISOString())}.
+                </p>
+                <Link href="/pricing">
+                  <Button variant="outline" className="mt-2 px-4 py-2 text-sm">
+                    Upgrade to Premium to keep full access
+                  </Button>
+                </Link>
+              </div>
+            );
+          })()}
+
+          {/* Post-grace on Free */}
+          {gracePeriodStart && !isPremium && (() => {
+            const graceStart = new Date(gracePeriodStart);
+            const graceEnd = new Date(graceStart);
+            graceEnd.setDate(graceEnd.getDate() + 7);
+            const today = new Date();
+            if (today >= graceEnd) {
+              return (
+                <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4" key="post-grace">
+                  <p className="font-heading text-sm uppercase tracking-wider text-foreground">Free tier</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You&apos;re now on Free tier with limited pots and bills. Upgrade to Premium for full functionality.
+                  </p>
+                  <Link href="/pricing">
+                    <Button className="mt-2 px-4 py-2 text-sm">
+                      Upgrade to Premium
+                    </Button>
+                  </Link>
+                </div>
+              );
+            }
+            return null;
+          })()}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
@@ -172,7 +255,7 @@ export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
                           href={PORTAL_URL}
                           className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
-                          Manage Subscription
+                          Manage subscription (cancel, change amount, update payment)
                           <ExternalLink className="h-3 w-3" />
                         </PortalLink>
                       </div>
@@ -182,7 +265,7 @@ export function SubscriptionTab({ subscription }: SubscriptionTabProps) {
                       href={PORTAL_URL}
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-transparent px-6 py-3 font-heading text-cta uppercase tracking-widest transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                      Manage Subscription
+                      Manage subscription (cancel, change amount, update payment)
                       <ExternalLink className="h-3 w-3" />
                     </PortalLink>
                   )}

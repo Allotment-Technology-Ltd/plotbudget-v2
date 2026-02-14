@@ -17,6 +17,14 @@ export interface SettingsViewProps {
     avatarUrl?: string | null;
     /** Human-readable sign-in method labels (e.g. "Google", "Email & password") for display in Profile. */
     signInMethodLabels?: string[];
+    /** Founding Member: Premium free until this date. First 50 users. */
+    foundingMemberUntil?: string | null;
+    /** Trial cycles completed (trial = first 2). */
+    trialCyclesCompleted?: number;
+    /** Trial ended timestamp. */
+    trialEndedAt?: string | null;
+    /** Grace period start timestamp (7 days after trial). */
+    gracePeriodStart?: string | null;
   };
   pricingEnabled?: boolean;
   subscription?: {
@@ -24,6 +32,7 @@ export interface SettingsViewProps {
     current_tier: 'free' | 'pro' | null;
     trial_end_date: string | null;
     polar_product_id: string | null;
+    metadata?: { pwyl_amount?: string; pricing_mode?: string } | null;
   } | null;
   household: {
     id: string;
@@ -130,6 +139,10 @@ export function SettingsView({
               subscription={subscription ?? null}
               householdId={household.id}
               userId={user.id}
+              foundingMemberUntil={user.foundingMemberUntil ?? null}
+              trialCyclesCompleted={user.trialCyclesCompleted ?? 0}
+              trialEndedAt={user.trialEndedAt ?? null}
+              gracePeriodStart={user.gracePeriodStart ?? null}
             />
           </TabsContent>
         )}
