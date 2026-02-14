@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function ResetPasswordPage() {
+type PageProps = {
+  params?: Promise<Record<string, string>>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default function ResetPasswordPage(_props: PageProps) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +74,7 @@ export default function ResetPasswordPage() {
       </div>
 
       <form
+        method="post"
         onSubmit={handleSubmit}
         className="space-y-4"
         noValidate

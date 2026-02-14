@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
+import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
   if (!household) redirect('/onboarding');
 
   let ownerDisplayName: string | null = null;
-  if (isPartner && household.owner_id) {
+  if (household.owner_id) {
     const { data: ownerRow } = await supabase
       .from('users')
       .select('display_name')
@@ -67,6 +68,8 @@ export default async function DashboardPage() {
       .single();
     ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
   }
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
 
   let currentPaycycle: PayCycle | null = null;
   let seeds: Seed[] = [];
@@ -183,7 +186,8 @@ export default async function DashboardPage() {
         hasDraftCycle={hasDraftCycle}
         incomeEvents={incomeEvents}
         isPartner={isPartner}
-        ownerDisplayName={ownerDisplayName}
+        ownerLabel={ownerLabel}
+        partnerLabel={partnerLabel}
         userId={user.id}
         foundingMemberUntil={profile?.founding_member_until ?? null}
       />

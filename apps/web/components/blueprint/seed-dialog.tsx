@@ -62,6 +62,8 @@ interface SeedDialogProps {
   onSuccess: () => void;
   isPartner?: boolean;
   otherLabel?: string;
+  ownerLabel?: string;
+  partnerLabel?: string;
 }
 
 function createSeedFormSchema(paycycle: { start_date: string; end_date: string }) {
@@ -113,8 +115,10 @@ export function SeedDialog({
   pots,
   repayments,
   onSuccess,
-  isPartner: _isPartner = false,
-  otherLabel = 'Partner',
+  isPartner = false,
+  otherLabel: _otherLabel = 'Partner',
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
 }: SeedDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,10 +197,11 @@ export function SeedDialog({
           form.reset({ ...base });
         }
       } else {
+        const defaultPaymentSource = isPartner ? ('partner' as const) : ('me' as const);
         form.reset({
           name: '',
           amountStr: '',
-          payment_source: 'me',
+          payment_source: defaultPaymentSource,
           split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
           is_recurring: false,
           due_date: '',
@@ -213,7 +218,7 @@ export function SeedDialog({
         });
       }
     }
-  }, [open, seed, household.joint_ratio, form, linkedPot, linkedRepayment]);
+  }, [open, seed, household.joint_ratio, form, linkedPot, linkedRepayment, isPartner]);
 
   const paymentSource = form.watch('payment_source');
   const splitRatio = form.watch('split_ratio') ?? 50;
@@ -787,9 +792,21 @@ export function SeedDialog({
                         aria-label="Who pays for this expense"
                         data-testid="seed-source-select"
                       >
-                    <RadioGroupItem value="me" label="Me" />
-                    <RadioGroupItem value="partner" label={otherLabel} />
-                    <RadioGroupItem value="joint" label="Joint" />
+                    <RadioGroupItem
+                      value="me"
+                      label={ownerLabel}
+                      data-testid="seed-source-me"
+                    />
+                    <RadioGroupItem
+                      value="partner"
+                      label={partnerLabel}
+                      data-testid="seed-source-partner"
+                    />
+                    <RadioGroupItem
+                      value="joint"
+                      label="JOINT"
+                      data-testid="seed-source-joint"
+                    />
                   </RadioGroup>
                 )}
               />
@@ -801,7 +818,7 @@ export function SeedDialog({
               <div className="space-y-3">
                 <Label>Split Ratio</Label>
                 <p className="text-sm text-muted-foreground">
-                  Your share: {splitRatio}% / {otherLabel}: {100 - splitRatio}%
+                  {ownerLabel}: {splitRatio}% / {partnerLabel}: {100 - splitRatio}%
                 </p>
                 <Controller
                   name="split_ratio"
@@ -819,7 +836,7 @@ export function SeedDialog({
                 />
                 {previewSplit && amount > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    You: {formatCurrency(previewSplit.me, currency)} • {otherLabel}: {formatCurrency(previewSplit.partner, currency)}
+                    {ownerLabel}: {formatCurrency(previewSplit.me, currency)} • {partnerLabel}: {formatCurrency(previewSplit.partner, currency)}
                   </p>
                 )}
               </div>

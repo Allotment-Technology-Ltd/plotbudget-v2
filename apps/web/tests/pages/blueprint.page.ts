@@ -142,13 +142,13 @@ export class BlueprintPage {
     await this.seedAmountInput.fill(params.amount.toString());
     // Category is set by which section opened the dialog (add-seed-button = Needs); no need to select
     // Payment source is only shown for couple households; skip when not visible
-    const sourceLabel =
+    const sourceTestId =
       params.source === 'me'
-        ? 'Me'
+        ? 'seed-source-me'
         : params.source === 'partner'
-          ? 'Partner'
-          : 'Joint';
-    const sourceRadio = this.page.getByRole('radio', { name: sourceLabel });
+          ? 'seed-source-partner'
+          : 'seed-source-joint';
+    const sourceRadio = this.page.getByTestId(sourceTestId);
     if (await sourceRadio.isVisible()) {
       await sourceRadio.click();
     }

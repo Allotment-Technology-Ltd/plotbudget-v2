@@ -71,6 +71,20 @@ const SAMPLE_PROPS: Record<
   },
 };
 
+/** GET: return app email config status for the trial-testing UI. */
+export async function GET() {
+  if (!isTrialTestingDashboardAllowed()) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  const configured = isEmailConfigured();
+  return NextResponse.json({
+    emailConfigured: configured,
+    hint: configured
+      ? undefined
+      : 'Add RESEND_API_KEY to apps/web/.env.local (same key as in Supabase Edge Function secrets). Restart dev server after changing .env.local.',
+  });
+}
+
 export async function POST(req: Request) {
   if (!isTrialTestingDashboardAllowed()) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -111,14 +125,28 @@ export async function POST(req: Request) {
 
   if (!isEmailConfigured()) {
     return NextResponse.json(
-      { error: 'RESEND_API_KEY not set' },
+      {
+        error:
+          'RESEND_API_KEY not set. Add it to apps/web/.env.local (use the same key as in Supabase secrets). Restart dev server after changing .env.local.',
+      },
       { status: 500 }
     );
   }
 
   const result = await sendEmail({ to, subject, html });
   if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 500 });
+    // Log so user can see exact Resend error in terminal (pnpm dev)
+    console.error('[send-trial-email] Resend failed:', result.error);
+    return NextResponse.json(
+      {
+        error: result.error,
+        hint:
+          result.error?.toLowerCase().includes('domain') || result.error?.toLowerCase().includes('verif')
+            ? 'Send from hello@plotbudget.com and verify plotbudget.com at resend.com/domains.'
+            : undefined,
+      },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ success: true, id: result.id });

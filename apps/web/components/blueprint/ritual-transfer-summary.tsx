@@ -138,10 +138,17 @@ export function RitualTransferSummary({
           </p>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground uppercase tracking-wider">
-            {otherName}&apos;s Set-Aside
-          </p>
+        <div className="space-y-2 flex flex-col">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+              <AvatarFallback className="bg-secondary/10 text-secondary-foreground text-sm font-display">
+                {(otherName || '?').charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider">
+              {otherName}&apos;s Set-Aside
+            </p>
+          </div>
           <p className="text-3xl font-display text-foreground">
             {currencySymbol(currency)}{(isPartner ? userSetAside : partnerSetAside).toFixed(2)}
           </p>

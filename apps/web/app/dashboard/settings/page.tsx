@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { getPaymentUiVisibleFromServerFlags } from '@/lib/feature-flags';
 import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
 import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 type HouseholdRow = {
   id: string;
+  owner_id?: string;
   name: string | null;
   is_couple: boolean;
   partner_name: string | null;
@@ -39,7 +41,7 @@ type SubscriptionRow = {
 };
 
 const householdSelect =
-  'id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency';
+  'id, owner_id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency';
 
 export default async function SettingsPage({
   searchParams,
@@ -110,6 +112,18 @@ export default async function SettingsPage({
 
   if (!household) redirect('/onboarding');
 
+  let ownerDisplayName: string | null = null;
+  if (household.owner_id) {
+    const { data: ownerRow } = await supabase
+      .from('users')
+      .select('display_name')
+      .eq('id', household.owner_id)
+      .single();
+    ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
+  }
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
+
   let incomeSourcesData = await supabase
     .from('income_sources')
     .select('*')
@@ -162,7 +176,7 @@ export default async function SettingsPage({
         user={{
           id: user.id,
           email,
-          displayName,
+          displayName: displayName ?? (isPartner ? household.partner_name : null),
           avatarUrl,
           signInMethodLabels,
           foundingMemberUntil,
@@ -191,6 +205,8 @@ export default async function SettingsPage({
         }}
         incomeSources={incomeSources}
         isPartner={isPartner}
+        ownerLabel={ownerLabel}
+        partnerLabel={partnerLabel}
         initialTab={params.tab}
         portalError={params.portal_error === 'true'}
       />

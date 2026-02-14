@@ -1,6 +1,6 @@
 'use client';
 
-import { Wallet, User, Users } from 'lucide-react';
+import { Wallet, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { currencySymbol } from '@/lib/utils/currency';
 import type { Database } from '@/lib/supabase/database.types';
@@ -127,7 +127,11 @@ export function JointAccountSummary({
         </div>
 
         <div className="flex items-start gap-3 p-4 rounded-md bg-background border border-border">
-          <User className="w-5 h-5 text-primary mt-0.5" aria-hidden />
+          <Avatar className="h-10 w-10 shrink-0 rounded-full border border-border">
+            <AvatarFallback className="bg-secondary/10 text-secondary-foreground text-sm font-display">
+              {(otherName || '?').charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="font-heading text-sm uppercase tracking-wider text-muted-foreground">
               {otherName}&apos;s Set-Aside

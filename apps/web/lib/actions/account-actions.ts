@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { logAuditEvent } from '@/lib/audit';
 
 const passwordSchema = z
@@ -70,12 +71,19 @@ export async function exportUserData(): Promise<string> {
     throw new Error('Not authenticated');
   }
 
-  const { data: household } = await supabase
+  const { data: owned } = await supabase
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
     .maybeSingle();
 
+  const { data: partnerOf } = await supabase
+    .from('households')
+    .select('*')
+    .eq('partner_user_id', user.id)
+    .maybeSingle();
+
+  const household = owned ?? partnerOf;
   if (!household) {
     throw new Error('No household found');
   }
@@ -86,10 +94,22 @@ export async function exportUserData(): Promise<string> {
     resource: 'privacy',
   });
 
-  type HouseholdRow = { id: string; [k: string]: unknown };
+  type HouseholdRow = { id: string; owner_id?: string; partner_name?: string | null; [k: string]: unknown };
   const h = household as HouseholdRow;
   const householdId = h.id;
   const mode = h.is_couple ? 'couple' : 'solo';
+
+  let ownerDisplayName: string | null = null;
+  if (h.owner_id) {
+    const { data: ownerRow } = await supabase
+      .from('users')
+      .select('display_name')
+      .eq('id', h.owner_id)
+      .single();
+    ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
+  }
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(h.partner_name, 'Partner');
 
   const { data: paycycles } = await supabase
     .from('paycycles')
@@ -137,11 +157,14 @@ export async function exportUserData(): Promise<string> {
   csv += `\n`;
 
   csv += `=== SEEDS ===\n`;
-  csv += `Name,Category,Amount,Payment Source,Recurring,Paid,Paycycle Start\n`;
+  csv += `Name,Category,Amount,Payment Source,Recurring,Paid,Paycycle Start,Created By\n`;
   (seeds ?? []).forEach((s: Record<string, unknown>) => {
     const paycycleStart = paycycleStartMap[s.paycycle_id as string] ?? '';
-    const paymentSource = String(s.payment_source ?? '').toUpperCase();
-    csv += `${escapeCsv(String(s.name ?? ''))},${s.type ?? ''},${s.amount ?? 0},${paymentSource},${s.is_recurring ?? false},${s.is_paid ?? false},${paycycleStart}\n`;
+    const ps = s.payment_source as string | undefined;
+    const paymentSourceLabel =
+      ps === 'joint' ? 'JOINT' : ps === 'me' ? ownerLabel : ps === 'partner' ? partnerLabel : (ps ?? '').toUpperCase();
+    const createdBy = s.created_by_owner ? ownerLabel : partnerLabel;
+    csv += `${escapeCsv(String(s.name ?? ''))},${s.type ?? ''},${s.amount ?? 0},${escapeCsv(paymentSourceLabel)},${s.is_recurring ?? false},${s.is_paid ?? false},${paycycleStart},${escapeCsv(createdBy)}\n`;
   });
   csv += `\n`;
 

@@ -90,6 +90,7 @@ export function getIncomeEventsForCycle(
   sources: (IncomeSourceForProjection & { name: string })[]
 ): IncomeEvent[] {
   const events: IncomeEvent[] = [];
+  const seen = new Set<string>();
   for (const src of sources) {
     const dates = getPaymentDatesInRange(
       cycleStart,
@@ -100,6 +101,9 @@ export function getIncomeEventsForCycle(
     );
     const name = src.name ?? 'Income';
     for (const date of dates) {
+      const key = `${src.id}:${date}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       events.push({
         sourceName: name,
         amount: Number(src.amount),
