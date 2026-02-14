@@ -63,6 +63,12 @@ test.describe('Dashboard and app shell', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
     await page.waitForURL(/\/dashboard/, { timeout: 30_000, waitUntil: 'domcontentloaded' });
     await expectNoServerError(page);
+    // Dismiss Founding Member celebration modal if present (blocks user menu click)
+    const gotIt = page.getByRole('button', { name: 'Got it' });
+    if (await gotIt.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await gotIt.click();
+      await page.waitForTimeout(300);
+    }
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
     // In E2E, app may redirect to /login or / (marketing); accept any post-logout destination.
