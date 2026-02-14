@@ -3,6 +3,7 @@
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatIncomeSourceDisplayName } from '@/lib/utils/display-name';
 import { currencySymbol } from '@/lib/utils/currency';
 import {
   AlertDialog,
@@ -48,19 +49,15 @@ const FREQUENCY_LABELS: Record<FrequencyRule, string> = {
   every_4_weeks: 'Every 4 weeks',
 };
 
-const PAYMENT_SOURCE_LABELS: Record<PaymentSource, string> = {
-  me: 'Me',
-  partner: 'Partner',
-  joint: 'Joint',
-};
-
-/** When viewer is partner, "Me" means the partner (you). */
-function getPaymentSourceLabels(isPartner: boolean): Record<PaymentSource, string> {
-  if (!isPartner) return PAYMENT_SOURCE_LABELS;
+/** Labels for payment source (couple households use owner/partner names). */
+function getPaymentSourceLabels(
+  ownerLabel: string,
+  partnerLabel: string
+): Record<PaymentSource, string> {
   return {
-    me: 'You',
-    partner: 'Account owner',
-    joint: 'Joint',
+    me: ownerLabel,
+    partner: partnerLabel,
+    joint: 'JOINT',
   };
 }
 
@@ -68,6 +65,8 @@ interface IncomeSourcesTabProps {
   householdId: string;
   incomeSources: IncomeSource[];
   isPartner?: boolean;
+  ownerLabel?: string;
+  partnerLabel?: string;
   currency?: 'GBP' | 'USD' | 'EUR';
 }
 
@@ -104,6 +103,8 @@ export function IncomeSourcesTab({
   householdId,
   incomeSources,
   isPartner = false,
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
   currency = 'GBP',
 }: IncomeSourcesTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -335,9 +336,9 @@ export function IncomeSourcesTab({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {(Object.keys(getPaymentSourceLabels(isPartner)) as PaymentSource[]).map((k) => (
+                          {(Object.keys(getPaymentSourceLabels(ownerLabel, partnerLabel)) as PaymentSource[]).map((k) => (
                             <SelectItem key={k} value={k}>
-                              {getPaymentSourceLabels(isPartner)[k]}
+                              {getPaymentSourceLabels(ownerLabel, partnerLabel)[k]}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -380,14 +381,21 @@ export function IncomeSourcesTab({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-foreground">{source.name}</span>
+                    <span className="font-medium text-foreground">
+                      {formatIncomeSourceDisplayName(
+                        source.name,
+                        source.payment_source,
+                        ownerLabel,
+                        partnerLabel
+                      )}
+                    </span>
                     {!source.is_active && (
                       <Badge variant="secondary">Paused</Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     {currencySymbol(currency)}{Number(source.amount).toLocaleString('en-GB')} · {frequencySubline(source)} ·{' '}
-                    {getPaymentSourceLabels(isPartner)[source.payment_source]}
+                    {getPaymentSourceLabels(ownerLabel, partnerLabel)[source.payment_source]}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">

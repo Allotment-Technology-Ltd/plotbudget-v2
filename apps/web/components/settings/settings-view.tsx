@@ -52,6 +52,8 @@ export interface SettingsViewProps {
   };
   incomeSources?: IncomeSource[];
   isPartner?: boolean;
+  ownerLabel?: string;
+  partnerLabel?: string;
   /** Open a specific tab from URL (e.g. ?tab=income) */
   initialTab?: string;
   /** Show portal error when returning from failed Polar session */
@@ -64,6 +66,8 @@ export function SettingsView({
   incomeSources = [],
   subscription,
   isPartner = false,
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
   pricingEnabled = false,
   initialTab,
   portalError = false,
@@ -131,6 +135,8 @@ export function SettingsView({
             householdId={household.id}
             incomeSources={incomeSources}
             isPartner={isPartner}
+            ownerLabel={ownerLabel}
+            partnerLabel={partnerLabel}
             currency={household.currency}
           />
         </TabsContent>

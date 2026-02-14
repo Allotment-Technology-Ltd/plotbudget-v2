@@ -29,6 +29,7 @@ import { currencySymbol, parseIncome } from '@/lib/utils/currency';
 const onboardingSchema = z
   .object({
     mode: z.enum(['solo', 'couple']),
+    myName: z.string().optional(),
     currency: z.enum(['GBP', 'USD', 'EUR']),
     myIncome: z
       .union([z.string(), z.number(), z.undefined()])
@@ -76,14 +77,16 @@ const onboardingSchema = z
           data.partnerIncome != null &&
           data.partnerIncome > 0 &&
           data.partnerName != null &&
-          data.partnerName.trim().length > 0
+          data.partnerName.trim().length > 0 &&
+          data.myName != null &&
+          data.myName.trim().length > 0
         );
       }
       return true;
     },
     {
-      message: 'Partner income and name required for couple mode',
-      path: ['partnerIncome'],
+      message: 'Your name, partner income and partner name required for couple mode',
+      path: ['myName'],
     }
   )
   .refine(
@@ -154,6 +157,7 @@ export default function OnboardingPage() {
     resolver: zodResolver(onboardingSchema) as Resolver<OnboardingFormData>,
     defaultValues: {
       mode: 'solo',
+      myName: '',
       currency: 'GBP',
       myIncome: undefined,
       partnerIncome: undefined,
@@ -286,6 +290,7 @@ export default function OnboardingPage() {
         monthly_income: data.myIncome,
         has_completed_onboarding: true,
         onboarding_step: 6,
+        ...(data.myName?.trim() && { display_name: data.myName.trim() }),
       };
       await supabase
         .from('users')
@@ -347,6 +352,36 @@ export default function OnboardingPage() {
                   )}
                 />
               </div>
+
+              {/* Your name (couple: required for labels) */}
+              {isCouple && (
+                <div className="space-y-2">
+                  <Label htmlFor="myName">Your Name</Label>
+                  <Input
+                    id="myName"
+                    type="text"
+                    placeholder="e.g. Adam"
+                    aria-invalid={!!form.formState.errors.myName}
+                    aria-describedby={
+                      form.formState.errors.myName ? 'myName-error' : undefined
+                    }
+                    data-testid="my-name-input"
+                    {...form.register('myName')}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    How you&apos;d like to be called in the app (e.g. first name).
+                  </p>
+                  {form.formState.errors.myName && (
+                    <p
+                      id="myName-error"
+                      className="text-sm text-destructive"
+                      role="alert"
+                    >
+                      {form.formState.errors.myName.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Currency */}
               <div className="space-y-2">

@@ -25,16 +25,9 @@ interface SeedCardProps {
   onUnmarkPaid?: (seedId: string, payer: Payer) => void;
   isPartner?: boolean;
   otherLabel?: string;
+  ownerLabel?: string;
+  partnerLabel?: string;
 }
-
-const paymentSourceBadge = {
-  me: { label: 'ME', color: 'bg-primary/20 text-primary' },
-  partner: {
-    label: 'PARTNER',
-    color: 'bg-secondary/20 text-secondary-foreground',
-  },
-  joint: { label: 'JOINT', color: 'bg-accent/20 text-accent-foreground' },
-} as const;
 
 function formatDueDate(isoDate: string): string {
   const d = new Date(isoDate);
@@ -58,8 +51,21 @@ export function SeedCard({
   onUnmarkPaid,
   isPartner = false,
   otherLabel = 'Partner',
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
 }: SeedCardProps) {
-  const badge = paymentSourceBadge[seed.payment_source];
+  const badgeLabel =
+    seed.payment_source === 'joint'
+      ? 'JOINT'
+      : seed.payment_source === 'me'
+        ? ownerLabel
+        : partnerLabel;
+  const badgeColor =
+    seed.payment_source === 'joint'
+      ? 'bg-accent/20 text-accent-foreground'
+      : seed.payment_source === 'me'
+        ? 'bg-primary/20 text-primary'
+        : 'bg-secondary/20 text-secondary-foreground';
   const otherName = otherLabel;
   const currency = household.currency || 'GBP';
   const seedSlug = seed.name.toLowerCase().replace(/\s+/g, '-');
@@ -236,11 +242,11 @@ export function SeedCard({
             </p>
             {household.is_couple && (
               <span
-                className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
+                className={`text-xs px-2 py-1 rounded-full ${badgeColor}`}
                 aria-label={seed.payment_source === 'joint' ? 'From joint account' : `From personal account`}
                 title={seed.payment_source === 'joint' ? 'From joint account' : 'From personal account'}
               >
-                {badge.label}
+                {badgeLabel}
               </span>
             )}
           </div>
@@ -271,8 +277,8 @@ export function SeedCard({
           </p>
         )}
         {(household.is_couple && seed.created_by_owner != null) && (
-          <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}`}>
-            Added by {seed.created_by_owner ? (isPartner ? otherName : 'you') : (isPartner ? 'you' : otherName)}
+          <p className="text-xs text-muted-foreground" aria-label={`Added by ${seed.created_by_owner ? ownerLabel : partnerLabel}`}>
+            Added by {seed.created_by_owner ? ownerLabel : partnerLabel}
           </p>
         )}
         {seed.is_paid && isRitualMode && household.is_couple && (

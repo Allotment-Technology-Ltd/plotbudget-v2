@@ -57,7 +57,8 @@ export interface DashboardClientProps {
   hasDraftCycle: boolean;
   incomeEvents?: IncomeEventDisplay[];
   isPartner?: boolean;
-  ownerDisplayName?: string | null;
+  ownerLabel?: string;
+  partnerLabel?: string;
   userId?: string;
   foundingMemberUntil?: string | null;
 }
@@ -72,13 +73,12 @@ export function DashboardClient({
   hasDraftCycle,
   incomeEvents = [],
   isPartner = false,
-  ownerDisplayName = null,
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
   userId,
   foundingMemberUntil,
 }: DashboardClientProps) {
-  const otherLabel = isPartner
-    ? (ownerDisplayName?.trim() || 'Account owner')
-    : (household.partner_name?.trim() || 'Partner');
+  const otherLabel = isPartner ? ownerLabel : partnerLabel;
   const [, setSelectedCategory] = useState<string | null>(null);
 
   const isFoundingMember =
@@ -167,6 +167,8 @@ export function DashboardClient({
           total={currentPaycycle.total_income}
           events={incomeEvents}
           currency={household.currency}
+          ownerLabel={ownerLabel}
+          partnerLabel={partnerLabel}
         />
 
         <QuickActions

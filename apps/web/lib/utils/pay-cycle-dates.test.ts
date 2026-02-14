@@ -91,10 +91,10 @@ describe('calculateCycleEndDate', () => {
     expect(end).toBe('2024-02-11'); // 15 + 27 = Feb 11
   });
 
-  it('specific_date: end is last working day before next month pay day', () => {
+  it('specific_date: end is day before next month pay day (so next pay funds next cycle)', () => {
     const end = calculateCycleEndDate('specific_date', '2024-01-25', 25);
-    // Next pay = Feb 25 (Sunday) → working day Feb 23 (Friday)
-    expect(end).toBe('2024-02-23');
+    // Next pay = Feb 25 → end = Feb 24 (day before)
+    expect(end).toBe('2024-02-24');
   });
 
   it('last_working_day: end is last working day of start month', () => {

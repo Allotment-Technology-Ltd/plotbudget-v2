@@ -10,6 +10,31 @@ All Supabase Auth and security notification emails (confirm sign up, magic link,
 
 See [Supabase: Send Email Hook](https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook) and [Custom Auth Emails with Resend](https://supabase.com/docs/guides/functions/examples/auth-send-email-hook-react-email-resend).
 
+## Production (first-time setup)
+
+Use your **production** Supabase project (the one your production app uses for Auth). Resend must have **plotbudget.com** verified; use the same `RESEND_API_KEY` as in Vercel production env.
+
+1. **Link CLI to production** (if not already): `supabase link --project-ref <your-prod-project-ref>` from repo root. Project ref is in the project URL: `https://app.supabase.com/project/<project-ref>`.
+2. **Set initial secrets** (you will add `SEND_EMAIL_HOOK_SECRET` in step 5):
+   ```bash
+   supabase secrets set RESEND_API_KEY=re_xxx RESEND_FROM_EMAIL="PLOT <hello@plotbudget.com>" RESEND_REPLY_TO=hello@plotbudget.com SUPABASE_URL=https://<project-ref>.supabase.co
+   ```
+   Use your real production Resend key and production Supabase URL.
+3. **Deploy the function:**
+   ```bash
+   supabase functions deploy send-resend-email --no-verify-jwt
+   ```
+   Note the function URL: `https://<project-ref>.supabase.co/functions/v1/send-resend-email`.
+4. **Create the Send Email Hook** in [Supabase Dashboard](https://app.supabase.com) → your **production** project → **Authentication** → **Hooks**. Under **Send Email**, click **Create**. Set **URL** to the function URL from step 3. Click **Generate secret** and **copy the value** (e.g. `v1,whsec_...`).
+5. **Set the hook secret** so the function can verify requests:
+   ```bash
+   supabase secrets set SEND_EMAIL_HOOK_SECRET="v1,whsec_xxx"
+   ```
+   Paste the value you copied. No need to redeploy the function.
+6. **Test**: trigger a password reset (or sign up) from the production app and confirm the email is received from hello@plotbudget.com with PLOT branding.
+
+---
+
 ## 1. Supabase project secrets
 
 Set these in the Supabase project that hosts Auth (Dashboard → Project Settings → Edge Functions → Secrets, or via CLI):
