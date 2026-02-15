@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { ThemeProvider } from '@repo/native-ui';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,12 +55,14 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider>
-      <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </NavigationThemeProvider>
+      <AppErrorBoundary>
+        <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          </Stack>
+        </NavigationThemeProvider>
+      </AppErrorBoundary>
     </ThemeProvider>
   );
 }

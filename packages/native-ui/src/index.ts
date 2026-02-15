@@ -30,3 +30,6 @@ export type { ContainerProps } from './components/Container';
 
 export { Section } from './components/Section';
 export type { SectionProps } from './components/Section';
+
+export { Skeleton } from './components/Skeleton';
+export type { SkeletonProps } from './components/Skeleton';

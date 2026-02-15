@@ -13,6 +13,12 @@ export interface DashboardData {
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
+  if (process.env.EXPO_PUBLIC_SIMULATE_NETWORK_FAILURE === 'true') {
+    await new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Simulated network failure')), 500)
+    );
+  }
+
   const supabase = createSupabaseClient();
 
   const {

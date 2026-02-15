@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, ActivityIndicator } from 'react-native';
+import { ScrollView, View, RefreshControl } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Container,
@@ -9,6 +9,8 @@ import {
   LabelText,
   useTheme,
 } from '@repo/native-ui';
+import { BlueprintSkeleton } from '@/components/BlueprintSkeleton';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { formatCurrency } from '@repo/logic';
 import type { Pot } from '@repo/supabase';
 import { fetchBlueprintData } from '@/lib/blueprint-data';
@@ -78,36 +80,48 @@ export default function BlueprintScreen() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const loadData = useCallback(async () => {
-    const result = await fetchBlueprintData();
-    setData({
-      household: result.household,
-      pots: result.pots,
-    });
+    setError(null);
+    try {
+      const result = await fetchBlueprintData();
+      setData({
+        household: result.household,
+        pots: result.pots,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error('Failed to load Blueprint'));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
-    loadData().finally(() => setLoading(false));
+    loadData();
   }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadData();
-    setRefreshing(false);
   }, [loadData]);
 
-  if (loading) {
+  if (loading && !data) {
+    return <BlueprintSkeleton />;
+  }
+
+  if (error) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.bgPrimary,
-        }}>
-        <ActivityIndicator size="large" color={colors.accentPrimary} />
-      </View>
+      <ErrorScreen
+        title="Couldn't load Blueprint"
+        message={error.message}
+        onRetry={() => {
+          setLoading(true);
+          setError(null);
+          loadData();
+        }}
+      />
     );
   }
 

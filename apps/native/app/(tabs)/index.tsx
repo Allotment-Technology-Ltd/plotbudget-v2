@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, ActivityIndicator } from 'react-native';
+import { ScrollView, View, RefreshControl } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -10,6 +10,8 @@ import {
   LabelText,
   useTheme,
 } from '@repo/native-ui';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import {
   formatCurrency,
   getDashboardCycleMetrics,
@@ -94,31 +96,49 @@ export default function DashboardScreen() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const loadData = useCallback(async () => {
-    const result = await fetchDashboardData();
-    setData({
-      household: result.household,
-      currentPaycycle: result.currentPaycycle,
-      seeds: result.seeds,
-    });
+    setError(null);
+    try {
+      const result = await fetchDashboardData();
+      setData({
+        household: result.household,
+        currentPaycycle: result.currentPaycycle,
+        seeds: result.seeds,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error('Failed to load dashboard'));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
-    loadData().finally(() => setLoading(false));
+    loadData();
   }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadData();
-    setRefreshing(false);
   }, [loadData]);
 
-  if (loading) {
+  if (loading && !data) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bgPrimary }}>
-        <ActivityIndicator size="large" color={colors.accentPrimary} />
-      </View>
+      <ErrorScreen
+        title="Couldn't load dashboard"
+        message={error.message}
+        onRetry={() => {
+          setLoading(true);
+          setError(null);
+          loadData();
+        }}
+      />
     );
   }
 
