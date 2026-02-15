@@ -40,6 +40,22 @@ jobs:
       - name: Code and secret audit
         run: pnpm run audit
 
+  aikido-security:
+    name: Aikido Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Aikido Security Scan
+        uses: aikido-sec/aikido-github-action@v3
+        with:
+          secret-key: ${{ secrets.AIKIDO_CI_TOKEN }}
+          fail-on-dependency-scan: true
+          fail-on-sast-scan: true
+          fail-on-iac-scan: true
+          minimum-severity: CRITICAL
+
   code-review:
     name: code-review
     runs-on: ubuntu-latest
