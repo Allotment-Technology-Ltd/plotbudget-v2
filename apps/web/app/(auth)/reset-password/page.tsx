@@ -41,13 +41,18 @@ export default function ResetPasswordPage(_props: PageProps) {
   if (sent) {
     return (
       <div className="bg-card rounded-lg p-8 space-y-6">
-        <div className="space-y-2 text-center">
+        <div className="space-y-3 text-center">
           <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
             Check your email
           </h1>
-          <p className="text-muted-foreground font-body">
-            We&apos;ve sent you a link to reset your password. Check your
-            inbox and follow the link.
+          <p className="text-muted-foreground font-body text-sm">
+            If we have an account with that email, we&apos;ve sent a link to
+            reset your password. Check your inbox and spam folder.
+          </p>
+          <p className="text-muted-foreground font-body text-sm">
+            If you usually sign in with Google, Apple, or an email link, use
+            that option on the login page instead—you don&apos;t have a
+            password to reset.
           </p>
         </div>
 
@@ -67,9 +72,10 @@ export default function ResetPasswordPage(_props: PageProps) {
         <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
           Reset Password
         </h1>
-        <p className="text-muted-foreground font-body">
-          Enter your email and we&apos;ll send you a link to reset your
-          password.
+        <p className="text-muted-foreground font-body text-sm">
+          Enter your email and we&apos;ll send a link to reset your password.
+          If you sign in with Google, Apple, or an email link, use the login
+          page instead.
         </p>
       </div>
 
