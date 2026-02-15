@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl } from 'react-native';
+import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Container,
@@ -14,6 +14,9 @@ import { ErrorScreen } from '@/components/ErrorScreen';
 import { formatCurrency } from '@repo/logic';
 import type { Pot } from '@repo/supabase';
 import { fetchBlueprintData } from '@/lib/blueprint-data';
+import { markPotComplete } from '@/lib/mark-pot-complete';
+
+type PotStatus = 'active' | 'complete' | 'paused';
 
 function PotCard({
   pot,
@@ -21,26 +24,37 @@ function PotCard({
   colors,
   spacing,
   borderRadius,
+  effectiveStatus,
+  onMarkComplete,
 }: {
   pot: Pot;
   currency: 'GBP' | 'USD' | 'EUR';
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
+  effectiveStatus: PotStatus;
+  onMarkComplete: (potId: string, status: 'complete' | 'active') => void;
 }) {
   const progress =
     pot.target_amount > 0
       ? Math.min(100, (pot.current_amount / pot.target_amount) * 100)
       : 0;
   const status =
-    pot.status === 'complete'
+    effectiveStatus === 'complete'
       ? 'Accomplished'
-      : pot.status === 'paused'
+      : effectiveStatus === 'paused'
         ? 'Paused'
         : 'Saving';
 
+  const canToggle =
+    effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
+  const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
+
   return (
-    <Card variant="default" padding="md">
+    <Pressable
+      onPress={canToggle ? () => onMarkComplete(pot.id, nextStatus) : undefined}
+      disabled={!canToggle}>
+      <Card variant="default" padding="md">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
         <BodyText style={{ fontSize: 20 }}>{pot.icon || '🏖️'}</BodyText>
         <LabelText>{pot.name}</LabelText>
@@ -69,6 +83,7 @@ function PotCard({
         {progress.toFixed(0)}% — {status}
       </BodyText>
     </Card>
+    </Pressable>
   );
 }
 
@@ -106,6 +121,32 @@ export default function BlueprintScreen() {
     setRefreshing(true);
     await loadData();
   }, [loadData]);
+
+  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
+
+  const handleMarkComplete = useCallback(
+    async (potId: string, status: 'complete' | 'active') => {
+      const pot = data?.pots.find((p) => p.id === potId);
+      const prevStatus = (pot?.status ?? 'active') as PotStatus;
+      setOptimisticStatus((s) => ({ ...s, [potId]: status }));
+      const result = await markPotComplete(potId, status);
+      if ('success' in result) {
+        await loadData();
+        setOptimisticStatus((s) => {
+          const next = { ...s };
+          delete next[potId];
+          return next;
+        });
+      } else {
+        setOptimisticStatus((s) => {
+          const next = { ...s };
+          next[potId] = prevStatus;
+          return next;
+        });
+      }
+    },
+    [data?.pots, loadData]
+  );
 
   if (loading && !data) {
     return <BlueprintSkeleton />;
@@ -193,6 +234,8 @@ export default function BlueprintScreen() {
                 colors={colors}
                 spacing={spacing}
                 borderRadius={borderRadius}
+                effectiveStatus={(optimisticStatus[pot.id] ?? pot.status) as PotStatus}
+                onMarkComplete={handleMarkComplete}
               />
             ))}
           </View>

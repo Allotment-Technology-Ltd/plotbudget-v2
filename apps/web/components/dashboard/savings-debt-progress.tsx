@@ -1,10 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, CheckCircle2 } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
+import { markPotComplete } from '@/lib/actions/pot-actions';
+import { Button } from '@/components/ui/button';
 import type { Pot, Repayment } from '@repo/supabase';
+
+type PotStatus = 'active' | 'complete' | 'paused';
 
 interface SavingsDebtProgressProps {
   pots: Pot[];
@@ -17,6 +23,29 @@ export function SavingsDebtProgress({
   repayments,
   currency = 'GBP',
 }: SavingsDebtProgressProps) {
+  const router = useRouter();
+  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
+
+  const handleMarkPotComplete = async (potId: string, status: 'complete' | 'active') => {
+    const pot = pots.find((p) => p.id === potId);
+    const prevStatus = (pot?.status ?? 'active') as PotStatus;
+    setOptimisticStatus((s) => ({ ...s, [potId]: status }));
+    const result = await markPotComplete(potId, status);
+    if ('success' in result) {
+      router.refresh();
+      setOptimisticStatus((s) => {
+        const next = { ...s };
+        delete next[potId];
+        return next;
+      });
+    } else {
+      setOptimisticStatus((s) => {
+        const next = { ...s };
+        next[potId] = prevStatus;
+        return next;
+      });
+    }
+  };
   const hasPots = pots.length > 0;
   const hasRepayments = repayments.length > 0;
 
@@ -70,6 +99,7 @@ export function SavingsDebtProgress({
       <div className="space-y-6">
         {hasPots &&
           pots.map((pot, index) => {
+            const effectiveStatus = (optimisticStatus[pot.id] ?? pot.status) as PotStatus;
             const progress =
               pot.target_amount > 0
                 ? Math.min(
@@ -78,11 +108,13 @@ export function SavingsDebtProgress({
                   )
                 : 0;
             const status =
-              pot.status === 'complete'
+              effectiveStatus === 'complete'
                 ? 'Accomplished'
-                : pot.status === 'paused'
+                : effectiveStatus === 'paused'
                   ? 'Paused'
                   : 'Saving';
+            const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
+            const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
             return (
               <div
                 key={pot.id}
@@ -90,13 +122,26 @@ export function SavingsDebtProgress({
                 role="article"
                 aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg" aria-hidden>
-                    {pot.icon || '🏖️'}
-                  </span>
-                  <span className="font-heading text-sm uppercase tracking-wider">
-                    {pot.name}
-                  </span>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg shrink-0" aria-hidden>
+                      {pot.icon || '🏖️'}
+                    </span>
+                    <span className="font-heading text-sm uppercase tracking-wider truncate">
+                      {pot.name}
+                    </span>
+                  </div>
+                  {canToggle && (
+                    <Button
+                      variant="ghost"
+                      className="shrink-0 text-xs h-7 px-2"
+                      onClick={() => handleMarkPotComplete(pot.id, nextStatus)}
+                      aria-label={effectiveStatus === 'complete' ? 'Mark as active' : 'Mark as accomplished'}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                      {effectiveStatus === 'complete' ? 'Active' : 'Accomplished'}
+                    </Button>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
                   {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}
