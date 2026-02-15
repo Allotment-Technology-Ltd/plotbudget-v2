@@ -136,7 +136,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
             onSubmit={handleSubmit}
             noValidate
             className={formLayout}
-            aria-label="Join the PLOT waitlist"
+            aria-label="Get PLOT product updates by email"
           >
             {/* Email input */}
             <div className="flex-1 relative">
@@ -185,7 +185,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
                 relative overflow-hidden
                 disabled:opacity-70 disabled:cursor-not-allowed
               "
-              aria-label={status === STATES.LOADING ? 'Submitting...' : 'Get early access to PLOT'}
+              aria-label={status === STATES.LOADING ? 'Submitting...' : 'Get product updates by email'}
             >
               <AnimatePresence mode="wait">
                 {status === STATES.LOADING ? (
@@ -221,7 +221,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    GET EARLY ACCESS
+                    Get updates
                   </motion.span>
                 )}
               </AnimatePresence>

@@ -41,6 +41,8 @@ const staggerItem = {
   },
 };
 
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com';
+
 /* ============================================================
    APP ROOT
    ============================================================ */
@@ -121,14 +123,31 @@ function Hero() {
           conversation — without sharing bank access.
         </motion.p>
 
-        {/* Email form */}
+        {/* First 50 free + primary CTA */}
+        <motion.p
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0.9}
+          className="font-heading text-label-sm md:text-label uppercase tracking-wider text-plot-accent"
+        >
+          Free for the first 50 users — sign up to claim your spot.
+        </motion.p>
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="visible"
           custom={1.0}
-          className="w-full flex justify-center mt-2"
+          className="w-full flex flex-col items-center gap-4 mt-2"
         >
+          <a
+            href={`${APP_URL}/signup`}
+            className="btn-primary text-cta-sm px-8 py-3 font-heading uppercase tracking-widest"
+            aria-label="Get started free"
+          >
+            Get started free
+          </a>
+          <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
           <MailerLiteForm variant="hero" id="hero-form" />
         </motion.div>
 
@@ -619,7 +638,6 @@ function FeaturesSection() {
    Gate with VITE_PRICING_ENABLED so marketing stays in sync with app pricing flag.
    ============================================================ */
 
-const APP_URL = import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com';
 const PRICING_ENABLED = import.meta.env.VITE_PRICING_ENABLED === 'true';
 
 const pricingTiers = [
@@ -815,7 +833,7 @@ const faqs = [
   },
   {
     q: 'When does it launch?',
-    a: 'We\'re in private alpha testing now. Join the waitlist and you\'ll be among the first to get access.',
+    a: 'The app is live now. The first 50 users get free access — sign up to claim your spot.',
   },
 ];
 
@@ -945,10 +963,18 @@ function FinalCTA() {
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow"
           >
-            Join the waitlist. Alpha testing now happening. Sign-up to get involved.
+            Free for the first 50 users. Sign up now to start plotting your budget.
           </motion.p>
 
-          <motion.div variants={staggerItem} className="w-full flex justify-center mt-2">
+          <motion.div variants={staggerItem} className="w-full flex flex-col items-center gap-4 mt-2">
+            <a
+              href={`${APP_URL}/signup`}
+              className="btn-primary text-cta-sm px-8 py-3 font-heading uppercase tracking-widest"
+              aria-label="Get started free"
+            >
+              Get started free
+            </a>
+            <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
             <MailerLiteForm variant="footer" id="footer-form" />
           </motion.div>
         </motion.div>
@@ -991,7 +1017,8 @@ function Footer() {
           <nav aria-label="Footer navigation" className="flex gap-6 flex-wrap">
             {[
               ...(PRICING_ENABLED ? [{ label: 'Pricing', href: '#pricing' }] : []),
-              { label: 'Log in', href: `${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login` },
+              { label: 'Get started', href: `${APP_URL}/signup` },
+              { label: 'Log in', href: `${APP_URL}/login` },
               { label: 'Privacy', href: '/privacy' },
               { label: 'Cookie settings', href: '#', onClick: (e) => { e.preventDefault(); window.dispatchEvent(new Event('plot_show_cookie_settings')); } },
               { label: 'Terms', href: '/terms' },

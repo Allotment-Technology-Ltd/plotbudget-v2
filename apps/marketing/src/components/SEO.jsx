@@ -12,7 +12,7 @@ import { Helmet } from 'react-helmet-async';
  */
 export default function SEO({
   title = 'PLOT — Budgeting for Households | Privacy-First Payday Ritual',
-  description = 'The 20-minute payday ritual that replaces every awkward money conversation. For UK households — no bank access, no data scraping. Join the waitlist.',
+  description = 'The 20-minute payday ritual that replaces every awkward money conversation. For UK households — no bank access, no data scraping. Free for the first 50 users.',
   url = 'https://plotbudget.com',
   ogImage = 'https://plotbudget.com/og-image.png',
   siteName = 'PLOT Budget',
@@ -28,7 +28,7 @@ export default function SEO({
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'GBP',
-      availability: 'https://schema.org/PreOrder',
+      availability: 'https://schema.org/InStock',
     },
     url,
     author: {
