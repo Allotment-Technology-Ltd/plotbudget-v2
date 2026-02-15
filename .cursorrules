@@ -86,3 +86,7 @@ Before you give me code, run this mental check:
 - **Source of truth:** `main` should match `origin/main`. When the user asks to sync or wrap up, run `git fetch origin --prune`, then `git checkout main && git pull origin main` from the plotbudget repo root, then return to their branch and report branch status.
 - **Workflow:** Feature branch → commit → push branch → PR to main. Do not push to main unless explicitly asked.
 - See `.cursor/rules/ci-cd-and-branch-sync.mdc` and `branch-before-implement.mdc` for full steps.
+
+## 8. CHAT WRAP-UP (plotbudget)
+- When the user says **wrap up** (or "chat complete", "we're done", etc.), follow the full wrap-up procedure in **`.cursor/rules/chat-wrap-up.mdc`**.
+- That procedure includes: (1) sync main and report branch status, (2) **close related Linear tickets** — add a comment to each (PR link, updates made, issues found/resolved) and set state to Done — using issue IDs from the current branch name or from work done in the chat, (3) brief chat summary, (4) sign-off. If the branch has no Linear IDs, skip Linear and note that the user can close tickets manually.

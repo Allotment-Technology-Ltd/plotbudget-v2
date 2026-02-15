@@ -16,6 +16,10 @@ When the user signals that development for this chat is **complete**, treat it a
 2. **Offer (or run if the user already asked) these actions:**
    - **Sync main (plotbudget):** From the plotbudget repo root, run `git fetch origin --prune`, then `git checkout main && git pull origin main`, then switch back to the user's branch. Report if any local branches are ahead/behind their remotes.
    - If there are uncommitted changes, ask whether to commit and push them (on the current branch), or note them for the user.
+   - **Linear — close related tickets with wrap-up comments:** Identify related Linear issues from the **current branch name** (e.g. `feature/PLOT-88-89-90-ui-defaults` → PLOT-88, PLOT-89, PLOT-90) and/or from work explicitly done in the chat. For each such issue that was completed in this chat:
+     - **Add a comment** to the issue with: PR link (if a PR exists for the branch), brief summary of updates made, and any issues found and resolved (e.g. CI fix, follow-up removals). Use Markdown; keep the comment concise.
+     - **Set the issue state to Done** (or the team's completed status) so the ticket is closed.
+     If the branch name has no Linear IDs or you're unsure which tickets to close, skip Linear updates and mention in the reply that the user can close tickets manually.
 3. **Give a one- or two-sentence summary** of what was done in this chat (e.g. "This chat: added X, fixed Y, pushed branch Z.").
 4. **End with a short sign-off** (e.g. "You’re all set. Say 'wrap up' anytime to run this again.").
 
