@@ -16,6 +16,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/native": "^7.1.8",
     "@repo/design-tokens": "workspace:^",
+    "@repo/native-ui": "workspace:^",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
