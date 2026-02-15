@@ -14,16 +14,16 @@ ALTER TABLE public.households
 COMMENT ON COLUMN public.households.founding_member_until IS 'When set, household has Premium (Founding Member) until this timestamp. Limited to first 50 households.';
 
 -- 2. Backfill: If any user in a household is a founder, the household becomes a founder.
-UPDATE public.households h
+UPDATE public.households household
 SET founding_member_until = (
   SELECT MAX(u.founding_member_until)
   FROM public.users u
-  WHERE u.household_id = h.id
+  WHERE u.household_id = household.id
 )
 WHERE EXISTS (
   SELECT 1
   FROM public.users u
-  WHERE u.household_id = h.id
+  WHERE u.household_id = household.id
     AND u.founding_member_until IS NOT NULL
     AND u.founding_member_until > NOW()
 );
@@ -33,6 +33,7 @@ DROP TRIGGER IF EXISTS on_user_created_set_founding_member ON public.users;
 DROP FUNCTION IF EXISTS public.set_founding_member_if_first_50();
 
 -- 4. Create new trigger on households
+-- Note: COUNT(*) per insert is O(n); acceptable for "first 50" use. For high-throughput production, use a counter table.
 CREATE OR REPLACE FUNCTION public.set_founding_household_if_first_50()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -43,13 +44,13 @@ DECLARE
   household_count bigint;
 BEGIN
   SELECT COUNT(*) INTO household_count FROM public.households;
-
-  IF household_count <= 50 THEN
-    UPDATE public.households
-    SET founding_member_until = NOW() + INTERVAL '6 months'
-    WHERE id = NEW.id;
+  IF household_count > 50 THEN
+    RETURN NEW;
   END IF;
 
+  UPDATE public.households
+  SET founding_member_until = NOW() + INTERVAL '6 months'
+  WHERE id = NEW.id;
   RETURN NEW;
 END;
 $$;

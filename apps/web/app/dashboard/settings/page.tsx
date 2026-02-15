@@ -164,8 +164,9 @@ export default async function SettingsPage({
           .order('created_at', { ascending: true });
         incomeSources = (refetch.data ?? []) as typeof incomeSources;
       }
-    } catch {
+    } catch (err) {
       // Backfill can throw in some bundling/edge cases; keep incomeSources empty so page still renders
+      console.error('Settings backfill income sources failed:', err instanceof Error ? err.message : 'unknown');
     }
   }
 
