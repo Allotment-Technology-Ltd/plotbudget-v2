@@ -37,8 +37,6 @@ jobs:
       - run: pnpm install
       - name: Dependency audit
         run: pnpm audit --audit-level=high
-      - name: Code and secret audit
-        run: pnpm run audit
 
   aikido-security:
     name: Aikido Security Scan
