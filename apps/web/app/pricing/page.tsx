@@ -37,8 +37,8 @@ export default async function PricingPage() {
   let avatarUrl: string | null = null;
   let foundingMemberUntil: string | null = null;
   let isPartner = false;
-  let owned: { id: string; founding_member_until: string | null } | null = null;
-  let partnerOf: { id: string; partner_name: string | null; founding_member_until: string | null } | null = null;
+  let owned: { id: string } | null = null;
+  let partnerOf: { id: string; partner_name: string | null } | null = null;
 
   if (user) {
     const { data: profile } = await supabase
@@ -56,14 +56,14 @@ export default async function PricingPage() {
       .select('id')
       .eq('owner_id', user.id)
       .maybeSingle();
-    owned = ownedData as { id: string; founding_member_until: string | null } | null;
+    owned = ownedData as { id: string } | null;
 
     const { data: partnerOfData } = await supabase
       .from('households')
       .select('id, partner_name')
       .eq('partner_user_id', user.id)
       .maybeSingle();
-    type PartnerHousehold = { id: string; partner_name: string | null; founding_member_until: string | null };
+    type PartnerHousehold = { id: string; partner_name: string | null };
     partnerOf = partnerOfData as unknown as PartnerHousehold | null;
     
     isPartner = !owned && !!partnerOf;
