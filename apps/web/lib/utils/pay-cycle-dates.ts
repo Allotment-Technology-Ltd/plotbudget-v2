@@ -102,9 +102,11 @@ export function calculateCycleEndDate(
 
   if (type === 'specific_date' && payDay != null) {
     const nextPay = new Date(start.getFullYear(), start.getMonth() + 1, payDay);
-    const dayBeforeNextPay = new Date(nextPay);
+    const nextPayWorking = toWorkingDay(nextPay);
+    const dayBeforeNextPay = new Date(nextPayWorking);
     dayBeforeNextPay.setDate(dayBeforeNextPay.getDate() - 1);
-    return dayBeforeNextPay.toISOString().split('T')[0];
+    const end = toWorkingDay(dayBeforeNextPay);
+    return end.toISOString().split('T')[0];
   }
 
   const nextMonth = new Date(start.getFullYear(), start.getMonth() + 1, payDay ?? 1);
@@ -133,10 +135,12 @@ export function calculateNextCycleDates(
     // End = last working day of the month that contains cycle start
     end = getLastWorkingDay(start.getFullYear(), start.getMonth());
   } else {
-    // specific_date: end = day before next month's pay day (so next pay funds next cycle)
+    // specific_date: end = last working day before next month's pay day (so next pay funds next cycle)
     const nextPay = new Date(start.getFullYear(), start.getMonth() + 1, payDay ?? 1);
-    end = new Date(nextPay);
+    const nextPayWorking = toWorkingDay(nextPay);
+    end = new Date(nextPayWorking);
     end.setDate(end.getDate() - 1);
+    end = toWorkingDay(end);
   }
 
   return {
