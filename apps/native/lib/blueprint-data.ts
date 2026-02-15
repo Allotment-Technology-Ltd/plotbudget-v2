@@ -13,6 +13,8 @@ export interface BlueprintData {
   seeds: Seed[];
   pots: Pot[];
   repayments: Repayment[];
+  /** True when current user is the partner (household.partner_user_id === user.id) */
+  isPartner: boolean;
 }
 
 export async function fetchBlueprintData(): Promise<BlueprintData> {
@@ -28,7 +30,7 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [] };
+    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], isPartner: false };
   }
 
   const { data: profile } = (await supabase
@@ -39,12 +41,22 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     data: { household_id: string | null; current_paycycle_id: string | null } | null;
   };
 
-  if (!profile?.household_id) {
-    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [] };
+  let householdId: string;
+  if (profile && profile.household_id) {
+    householdId = profile.household_id;
+  } else {
+    const { data: partnerHousehold } = (await supabase
+      .from('households')
+      .select('id')
+      .eq('partner_user_id', user.id)
+      .maybeSingle()) as { data: { id: string } | null };
+    if (partnerHousehold?.id) {
+      householdId = partnerHousehold.id;
+    } else {
+      return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], isPartner: false };
+    }
   }
-
-  const householdId = profile.household_id;
-  let paycycleId = profile.current_paycycle_id;
+  let paycycleId = profile?.current_paycycle_id ?? null;
 
   if (!paycycleId) {
     const { data: activeCycle } = (await supabase
@@ -64,8 +76,10 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     .single()) as { data: Household | null };
 
   if (!household) {
-    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [] };
+    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], isPartner: false };
   }
+
+  const isPartner = (household as { partner_user_id?: string | null }).partner_user_id === user.id;
 
   let paycycle: PayCycle | null = null;
   let seeds: Seed[] = [];
@@ -106,5 +120,6 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     seeds,
     pots,
     repayments,
+    isPartner,
   };
 }

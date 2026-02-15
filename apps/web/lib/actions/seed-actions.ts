@@ -460,9 +460,10 @@ export async function deleteSeed(
 
 /** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
 export async function markOverdueSeedsPaid(
-  paycycleId: string
+  paycycleId: string,
+  client?: SupabaseClient<Database>
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: overdue } = await supabase

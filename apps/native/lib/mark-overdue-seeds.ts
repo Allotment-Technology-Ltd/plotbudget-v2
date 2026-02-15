@@ -1,17 +1,11 @@
 /**
- * Mark/unmark seed as paid API client.
- * Calls web app API with Bearer token for revalidation and data parity.
- * Supports payer: 'me' | 'partner' | 'both' for joint seeds.
+ * Mark overdue seeds as paid. Call when loading Blueprint for active cycle.
  */
 
 import { createSupabaseClient } from './supabase';
 
-export type Payer = 'me' | 'partner' | 'both';
-
-async function seedPaidRequest(
-  seedId: string,
-  payer: Payer,
-  endpoint: 'mark-paid' | 'unmark-paid'
+export async function markOverdueSeedsPaid(
+  paycycleId: string
 ): Promise<{ success: true } | { error: string }> {
   const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
   if (!baseUrl) {
@@ -27,13 +21,12 @@ async function seedPaidRequest(
     return { error: 'Not authenticated' };
   }
 
-  const res = await fetch(`${baseUrl}/api/seeds/${seedId}/${endpoint}`, {
+  const res = await fetch(`${baseUrl}/api/paycycles/${paycycleId}/mark-overdue`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ payer }),
   });
 
   const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
@@ -43,18 +36,4 @@ async function seedPaidRequest(
   }
 
   return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
-}
-
-export async function markSeedPaid(
-  seedId: string,
-  payer: Payer = 'both'
-): Promise<{ success: true } | { error: string }> {
-  return seedPaidRequest(seedId, payer, 'mark-paid');
-}
-
-export async function unmarkSeedPaid(
-  seedId: string,
-  payer: Payer = 'both'
-): Promise<{ success: true } | { error: string }> {
-  return seedPaidRequest(seedId, payer, 'unmark-paid');
 }

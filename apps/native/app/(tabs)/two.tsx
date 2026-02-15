@@ -1,5 +1,5 @@
 import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Container,
   Section,
@@ -17,7 +17,8 @@ import { formatCurrency, currencySymbol, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
 import { fetchBlueprintData } from '@/lib/blueprint-data';
 import { markPotComplete } from '@/lib/mark-pot-complete';
-import { markSeedPaid } from '@/lib/mark-seed-paid';
+import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
+import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
 import { deleteSeedApi } from '@/lib/seed-api';
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
@@ -42,23 +43,55 @@ function SeedCard({
   currency,
   colors,
   spacing,
+  isRitualMode,
+  isCycleLocked,
+  isJoint,
+  otherLabel,
   onEdit,
   onDelete,
   onMarkPaid,
+  onUnmarkPaid,
 }: {
-  seed: Seed;
+  seed: Seed & { is_paid_me?: boolean; is_paid_partner?: boolean };
   currency: CurrencyCode;
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
+  isRitualMode: boolean;
+  isCycleLocked: boolean;
+  isJoint: boolean;
+  otherLabel: string;
   onEdit: () => void;
   onDelete: () => void;
-  onMarkPaid?: () => void;
+  onMarkPaid?: (payer: Payer) => void;
+  onUnmarkPaid?: (payer: Payer) => void;
 }) {
   const isPaid = !!seed.is_paid;
+  const isPaidMe = !!seed.is_paid_me;
+  const isPaidPartner = !!seed.is_paid_partner;
+  const canMarkUnmark = !isCycleLocked && isRitualMode && (onMarkPaid || onUnmarkPaid);
+  const canEditOrDelete = !isCycleLocked && (!isRitualMode || !isPaid);
+
+  const handleEdit = () => {
+    if (!canEditOrDelete) return;
+    onEdit();
+  };
+
+  const handleDelete = () => {
+    if (!canEditOrDelete) return;
+    onDelete();
+  };
 
   return (
-    <Pressable onPress={onEdit}>
-      <Card variant="default" padding="md" style={{ marginBottom: spacing.sm }}>
+    <Pressable onPress={handleEdit} disabled={!canEditOrDelete}>
+      <Card
+        variant="default"
+        padding="md"
+        style={{
+          marginBottom: spacing.sm,
+          borderWidth: isPaid && isRitualMode ? 2 : 1,
+          borderColor: isPaid && isRitualMode ? colors.accentPrimary + '80' : colors.borderSubtle,
+          backgroundColor: isPaid && isRitualMode ? colors.accentPrimary + '0D' : undefined,
+        }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <BodyText style={{ marginBottom: spacing.xs }}>{seed.name}</BodyText>
@@ -68,37 +101,92 @@ function SeedCard({
               {isPaid ? ' • Paid' : ''}
             </LabelText>
           </View>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {!isPaid && onMarkPaid && (
+          <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+            {canMarkUnmark &&
+              (isJoint ? (
+                <>
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      (isPaidMe ? onUnmarkPaid : onMarkPaid)?.('me');
+                    }}
+                    style={{
+                      paddingHorizontal: spacing.sm,
+                      paddingVertical: spacing.xs,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: isPaidMe ? colors.accentPrimary : colors.borderSubtle,
+                      backgroundColor: isPaidMe ? colors.accentPrimary + '20' : undefined,
+                    }}>
+                    <LabelText
+                      style={{
+                        color: isPaidMe ? colors.accentPrimary : colors.textSecondary,
+                        fontSize: 12,
+                      }}>
+                      You {isPaidMe ? '✓' : ''}
+                    </LabelText>
+                  </Pressable>
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      (isPaidPartner ? onUnmarkPaid : onMarkPaid)?.('partner');
+                    }}
+                    style={{
+                      paddingHorizontal: spacing.sm,
+                      paddingVertical: spacing.xs,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: isPaidPartner ? colors.accentPrimary : colors.borderSubtle,
+                      backgroundColor: isPaidPartner ? colors.accentPrimary + '20' : undefined,
+                    }}>
+                    <LabelText
+                      style={{
+                        color: isPaidPartner ? colors.accentPrimary : colors.textSecondary,
+                        fontSize: 12,
+                      }}>
+                      {otherLabel} {isPaidPartner ? '✓' : ''}
+                    </LabelText>
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    (isPaid ? onUnmarkPaid : onMarkPaid)?.('both');
+                  }}
+                  style={{
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xs,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: isPaid ? colors.accentPrimary : colors.borderSubtle,
+                    backgroundColor: isPaid ? colors.accentPrimary + '20' : undefined,
+                  }}>
+                  <LabelText
+                    style={{
+                      color: isPaid ? colors.accentPrimary : colors.textSecondary,
+                      fontSize: 12,
+                    }}>
+                    {isPaid ? 'Unmark paid' : 'Mark paid'}
+                  </LabelText>
+                </Pressable>
+              ))}
+            {canEditOrDelete && (
               <Pressable
                 onPress={(e) => {
                   e.stopPropagation();
-                  onMarkPaid();
+                  handleDelete();
                 }}
                 style={{
                   paddingHorizontal: spacing.sm,
                   paddingVertical: spacing.xs,
                   borderRadius: 6,
                   borderWidth: 1,
-                  borderColor: colors.accentPrimary,
+                  borderColor: colors.error,
                 }}>
-                <LabelText style={{ color: colors.accentPrimary, fontSize: 12 }}>Mark paid</LabelText>
+                <LabelText style={{ color: colors.error, fontSize: 12 }}>Delete</LabelText>
               </Pressable>
             )}
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              style={{
-                paddingHorizontal: spacing.sm,
-                paddingVertical: spacing.xs,
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: colors.error,
-              }}>
-              <LabelText style={{ color: colors.error, fontSize: 12 }}>Delete</LabelText>
-            </Pressable>
           </View>
         </View>
       </Card>
@@ -182,11 +270,17 @@ export default function BlueprintScreen() {
     seeds: Seed[];
     pots: Pot[];
     repayments: Repayment[];
+    isPartner: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
+  const [optimisticUnpaidIds, setOptimisticUnpaidIds] = useState<Set<string>>(new Set());
+  const [optimisticPaidMeIds, setOptimisticPaidMeIds] = useState<Set<string>>(new Set());
+  const [optimisticPaidPartnerIds, setOptimisticPaidPartnerIds] = useState<Set<string>>(new Set());
+  const [optimisticUnpaidMeIds, setOptimisticUnpaidMeIds] = useState<Set<string>>(new Set());
+  const [optimisticUnpaidPartnerIds, setOptimisticUnpaidPartnerIds] = useState<Set<string>>(new Set());
   const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
   const [formCategory, setFormCategory] = useState<SeedType | null>(null);
   const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
@@ -197,13 +291,39 @@ export default function BlueprintScreen() {
     setError(null);
     try {
       const result = await fetchBlueprintData();
-      setData({
-        household: result.household,
-        paycycle: result.paycycle,
-        seeds: result.seeds,
-        pots: result.pots,
-        repayments: result.repayments,
-      });
+      const paycycle = result.paycycle;
+      if (paycycle?.status === 'active') {
+        const overdueResult = await markOverdueSeedsPaid(paycycle.id);
+        if ('success' in overdueResult) {
+          const refetch = await fetchBlueprintData();
+          setData({
+            household: refetch.household,
+            paycycle: refetch.paycycle,
+            seeds: refetch.seeds,
+            pots: refetch.pots,
+            repayments: refetch.repayments,
+            isPartner: refetch.isPartner,
+          });
+        } else {
+          setData({
+            household: result.household,
+            paycycle: result.paycycle,
+            seeds: result.seeds,
+            pots: result.pots,
+            repayments: result.repayments,
+            isPartner: result.isPartner,
+          });
+        }
+      } else {
+        setData({
+          household: result.household,
+          paycycle: result.paycycle,
+          seeds: result.seeds,
+          pots: result.pots,
+          repayments: result.repayments,
+          isPartner: result.isPartner,
+        });
+      }
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to load Blueprint'));
     } finally {
@@ -215,6 +335,95 @@ export default function BlueprintScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const seeds = data?.seeds ?? [];
+    setOptimisticPaidIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.is_paid) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticUnpaidIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (!s.is_paid) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticPaidMeIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.payment_source === 'joint' && s.is_paid_me) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticPaidPartnerIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.payment_source === 'joint' && s.is_paid_partner) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticUnpaidMeIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.payment_source === 'joint' && !s.is_paid_me) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+    setOptimisticUnpaidPartnerIds((prev) => {
+      const next = new Set(prev);
+      seeds.forEach((s) => {
+        if (s.payment_source === 'joint' && !s.is_paid_partner) next.delete(s.id);
+      });
+      return next.size === prev.size ? prev : next;
+    });
+  }, [data?.seeds]);
+
+  const displaySeeds = useMemo(() => {
+    const seeds = data?.seeds ?? [];
+    const household = data?.household as { is_couple?: boolean } | null;
+    return seeds.map((s) => {
+      const isJoint = s.payment_source === 'joint' && household?.is_couple;
+      if (isJoint) {
+        const isPaidMe = (s.is_paid_me || optimisticPaidMeIds.has(s.id)) && !optimisticUnpaidMeIds.has(s.id);
+        const isPaidPartner = (s.is_paid_partner || optimisticPaidPartnerIds.has(s.id)) && !optimisticUnpaidPartnerIds.has(s.id);
+        return { ...s, is_paid_me: isPaidMe, is_paid_partner: isPaidPartner, is_paid: isPaidMe && isPaidPartner };
+      }
+      if (optimisticUnpaidIds.has(s.id)) {
+        return { ...s, is_paid: false, is_paid_me: false, is_paid_partner: false };
+      }
+      if (optimisticPaidIds.has(s.id)) {
+        return { ...s, is_paid: true, is_paid_me: true, is_paid_partner: s.is_paid_partner };
+      }
+      return s;
+    });
+  }, [
+    data?.seeds,
+    data?.household,
+    optimisticPaidIds,
+    optimisticUnpaidIds,
+    optimisticPaidMeIds,
+    optimisticPaidPartnerIds,
+    optimisticUnpaidMeIds,
+    optimisticUnpaidPartnerIds,
+  ]);
+
+  const seedsByCategory = useMemo(
+    () =>
+      (displaySeeds ?? []).reduce(
+        (acc, s) => {
+          const t = s.type as SeedType;
+          if (!acc[t]) acc[t] = [];
+          acc[t].push(s);
+          return acc;
+        },
+        {} as Record<SeedType, Seed[]>
+      ),
+    [displaySeeds]
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -246,20 +455,149 @@ export default function BlueprintScreen() {
   );
 
   const handleMarkSeedPaid = useCallback(
-    async (seedId: string) => {
-      setOptimisticPaidIds((prev) => new Set(prev).add(seedId));
-      const result = await markSeedPaid(seedId, 'both');
-      if ('success' in result) {
-        await loadData();
+    async (seedId: string, payer: Payer) => {
+      const seed = data?.seeds.find((s) => s.id === seedId);
+      const isJoint = seed?.payment_source === 'joint' && (data?.household as { is_couple?: boolean })?.is_couple;
+      if (isJoint && (payer === 'me' || payer === 'partner')) {
+        if (payer === 'me') {
+          setOptimisticPaidMeIds((p) => new Set(p).add(seedId));
+          setOptimisticUnpaidMeIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        } else {
+          setOptimisticPaidPartnerIds((p) => new Set(p).add(seedId));
+          setOptimisticUnpaidPartnerIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        }
       } else {
-        setOptimisticPaidIds((prev) => {
-          const next = new Set(prev);
-          next.delete(seedId);
-          return next;
+        setOptimisticPaidIds((p) => new Set(p).add(seedId));
+        setOptimisticUnpaidIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
         });
       }
+      const result = await markSeedPaid(seedId, payer);
+      if ('success' in result) {
+        await loadData();
+        setOptimisticPaidIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+        setOptimisticPaidMeIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+        setOptimisticPaidPartnerIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+      } else {
+        if (isJoint && (payer === 'me' || payer === 'partner')) {
+          if (payer === 'me') {
+            setOptimisticPaidMeIds((p) => {
+              const n = new Set(p);
+              n.delete(seedId);
+              return n;
+            });
+          } else {
+            setOptimisticPaidPartnerIds((p) => {
+              const n = new Set(p);
+              n.delete(seedId);
+              return n;
+            });
+          }
+        } else {
+          setOptimisticPaidIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        }
+      }
     },
-    [loadData]
+    [data?.seeds, data?.household, loadData]
+  );
+
+  const handleUnmarkSeedPaid = useCallback(
+    async (seedId: string, payer: Payer) => {
+      const seed = data?.seeds.find((s) => s.id === seedId);
+      const isJoint = seed?.payment_source === 'joint' && (data?.household as { is_couple?: boolean })?.is_couple;
+      if (isJoint && (payer === 'me' || payer === 'partner')) {
+        if (payer === 'me') {
+          setOptimisticUnpaidMeIds((p) => new Set(p).add(seedId));
+          setOptimisticPaidMeIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        } else {
+          setOptimisticUnpaidPartnerIds((p) => new Set(p).add(seedId));
+          setOptimisticPaidPartnerIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        }
+      } else {
+        setOptimisticUnpaidIds((p) => new Set(p).add(seedId));
+        setOptimisticPaidIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+      }
+      const result = await unmarkSeedPaid(seedId, payer);
+      if ('success' in result) {
+        await loadData();
+        setOptimisticUnpaidIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+        setOptimisticUnpaidMeIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+        setOptimisticUnpaidPartnerIds((p) => {
+          const n = new Set(p);
+          n.delete(seedId);
+          return n;
+        });
+      } else {
+        if (isJoint && (payer === 'me' || payer === 'partner')) {
+          if (payer === 'me') {
+            setOptimisticUnpaidMeIds((p) => {
+              const n = new Set(p);
+              n.delete(seedId);
+              return n;
+            });
+          } else {
+            setOptimisticUnpaidPartnerIds((p) => {
+              const n = new Set(p);
+              n.delete(seedId);
+              return n;
+            });
+          }
+        } else {
+          setOptimisticUnpaidIds((p) => {
+            const n = new Set(p);
+            n.delete(seedId);
+            return n;
+          });
+        }
+      }
+    },
+    [data?.seeds, data?.household, loadData]
   );
 
   const handleDeleteSeed = useCallback(async () => {
@@ -323,16 +661,10 @@ export default function BlueprintScreen() {
 
   const currency: CurrencyCode = (data.household.currency ?? 'GBP') as CurrencyCode;
   const hasPaycycle = !!data.paycycle;
-
-  const seedsByCategory = (data.seeds ?? []).reduce(
-    (acc, s) => {
-      const t = s.type as SeedType;
-      if (!acc[t]) acc[t] = [];
-      acc[t].push(s);
-      return acc;
-    },
-    {} as Record<SeedType, Seed[]>
-  );
+  const isRitualMode = data.paycycle?.status === 'active';
+  const ritualClosedAt = (data.paycycle as { ritual_closed_at?: string | null })?.ritual_closed_at ?? null;
+  const isCycleLocked = !!ritualClosedAt;
+  const otherLabel = data.isPartner ? 'Account owner' : 'Partner';
 
   const categories: SeedType[] = ['need', 'want', 'savings', 'repay'];
 
@@ -379,16 +711,18 @@ export default function BlueprintScreen() {
                         <HeadlineText style={{ fontSize: 18 }}>
                           {CATEGORY_LABELS[cat]} ({seeds.length})
                         </HeadlineText>
-                        <Pressable
-                          onPress={() => openAddForm(cat)}
-                          style={{
-                            paddingHorizontal: spacing.md,
-                            paddingVertical: spacing.sm,
-                            borderRadius: 8,
-                            backgroundColor: colors.accentPrimary,
-                          }}>
-                          <BodyText style={{ color: '#fff', fontSize: 14 }}>+ Add {CATEGORY_SINGULAR[cat]}</BodyText>
-                        </Pressable>
+                        {!isCycleLocked && (
+                          <Pressable
+                            onPress={() => openAddForm(cat)}
+                            style={{
+                              paddingHorizontal: spacing.md,
+                              paddingVertical: spacing.sm,
+                              borderRadius: 8,
+                              backgroundColor: colors.accentPrimary,
+                            }}>
+                            <BodyText style={{ color: '#fff', fontSize: 14 }}>+ Add {CATEGORY_SINGULAR[cat]}</BodyText>
+                          </Pressable>
+                        )}
                       </View>
 
                       {seeds.length === 0 ? (
@@ -396,32 +730,36 @@ export default function BlueprintScreen() {
                           <BodyText color="secondary" style={{ textAlign: 'center', marginBottom: spacing.sm }}>
                             No {CATEGORY_LABELS[cat].toLowerCase()} yet
                           </BodyText>
-                          <Pressable
-                            onPress={() => openAddForm(cat)}
-                            style={{ alignSelf: 'center' }}>
-                            <BodyText style={{ color: colors.accentPrimary }}>Add your first</BodyText>
-                          </Pressable>
+                          {!isCycleLocked && (
+                            <Pressable
+                              onPress={() => openAddForm(cat)}
+                              style={{ alignSelf: 'center' }}>
+                              <BodyText style={{ color: colors.accentPrimary }}>Add your first</BodyText>
+                            </Pressable>
+                          )}
                         </Card>
                       ) : (
-                        seeds.map((seed) => (
-                          <SeedCard
-                            key={seed.id}
-                            seed={{
-                              ...seed,
-                              is_paid: seed.is_paid || optimisticPaidIds.has(seed.id),
-                            }}
-                            currency={currency}
-                            colors={colors}
-                            spacing={spacing}
-                            onEdit={() => openEditForm(seed)}
-                            onDelete={() => setSeedToDelete(seed)}
-                            onMarkPaid={
-                              !seed.is_paid && !optimisticPaidIds.has(seed.id)
-                                ? () => handleMarkSeedPaid(seed.id)
-                                : undefined
-                            }
-                          />
-                        ))
+                        seeds.map((seed) => {
+                          const isJoint = !!(seed.payment_source === 'joint' && (data.household as { is_couple?: boolean })?.is_couple);
+                          const canMarkUnmark = !isCycleLocked && isRitualMode;
+                          return (
+                            <SeedCard
+                              key={seed.id}
+                              seed={seed}
+                              currency={currency}
+                              colors={colors}
+                              spacing={spacing}
+                              isRitualMode={isRitualMode}
+                              isCycleLocked={isCycleLocked}
+                              isJoint={isJoint}
+                              otherLabel={otherLabel}
+                              onEdit={() => openEditForm(seed)}
+                              onDelete={() => setSeedToDelete(seed)}
+                              onMarkPaid={canMarkUnmark ? (payer) => handleMarkSeedPaid(seed.id, payer) : undefined}
+                              onUnmarkPaid={canMarkUnmark ? (payer) => handleUnmarkSeedPaid(seed.id, payer) : undefined}
+                            />
+                          );
+                        })
                       )}
                     </View>
                   );
