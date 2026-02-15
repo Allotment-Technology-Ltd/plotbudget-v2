@@ -174,18 +174,6 @@ export default defineConfig({
       },
     },
 
-    /* Record dashboard videos for marketing showcase (light + dark); run then copy-showcase-videos */
-    {
-      name: 'showcase-video',
-      testMatch: [/showcase-video\.spec\.ts/],
-      use: {
-        ...devices['Pixel 5'],
-        storageState: visualStatePath,
-        viewport: { width: 393, height: 780 },
-        video: 'on',
-      },
-    },
-
     // Uncomment when you need cross-browser testing
     // {
     //   name: 'firefox',

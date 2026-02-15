@@ -196,7 +196,6 @@ Usage: `md:text-headline` applies from 810px upward.
 - [ ] Google Fonts preconnected in `<head>`
 - [ ] Images use `loading="lazy"` (below fold)
 - [ ] Framer Motion tree-shaken via Vite's manual chunks
-- [ ] No videos on initial load
 - [ ] Vercel CDN provides global edge caching
 - [ ] Scanline CSS effect uses zero JavaScript
 
