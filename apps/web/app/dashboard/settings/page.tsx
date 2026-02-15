@@ -42,7 +42,7 @@ type SubscriptionRow = {
 };
 
 const householdSelect =
-  'id, owner_id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency, founding_member_until';
+  'id, owner_id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency';
 
 export default async function SettingsPage({
   searchParams,
@@ -98,13 +98,13 @@ export default async function SettingsPage({
 
   const { data: owned } = await supabase
     .from('households')
-    .select(householdSelect)
+    .select(`${householdSelect}, founding_member_until`)
     .eq('owner_id', user.id)
     .maybeSingle();
 
   const { data: partnerOf } = await supabase
     .from('households')
-    .select(householdSelect)
+    .select(`${householdSelect}, founding_member_until`)
     .eq('partner_user_id', user.id)
     .maybeSingle();
 

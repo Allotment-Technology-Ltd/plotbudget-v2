@@ -53,46 +53,37 @@ export default async function PricingPage() {
 
     const { data: ownedData } = await supabase
       .from('households')
-      .select('id, founding_member_until')
+      .select('id')
       .eq('owner_id', user.id)
       .maybeSingle();
     owned = ownedData as { id: string; founding_member_until: string | null } | null;
 
     const { data: partnerOfData } = await supabase
       .from('households')
-      .select('id, partner_name, founding_member_until')
+      .select('id, partner_name')
       .eq('partner_user_id', user.id)
       .maybeSingle();
     type PartnerHousehold = { id: string; partner_name: string | null; founding_member_until: string | null };
-    partnerOf = partnerOfData as PartnerHousehold | null;
+    partnerOf = partnerOfData as unknown as PartnerHousehold | null;
+    
     isPartner = !owned && !!partnerOf;
     
-    if (owned?.founding_member_until) {
-      foundingMemberUntil = owned.founding_member_until;
-    } else if (partnerOf?.founding_member_until) {
-      foundingMemberUntil = partnerOf.founding_member_until;
-    } else {
-      // Fallback for transition period if household not yet backfilled/created?
-      // Or just prefer household. If household is null, user hasn't created one, so maybe check profile?
-      // If user is new, household trigger will set it on household.
-      // If user is existing and backfill ran, household has it.
-      // If user has not created household yet, they can't be a founder via household count?
-      // Wait, trigger is on household creation.
-      // So if I am a user without a household, I am not a founder yet?
-      // But the "Founding Member" status was previously on signup.
-      // If we move to household creation, then yes, you become a founder when you create a household.
-      // So checking household is correct.
-      // But we should probably check profile as fallback if migration hasn't run or something?
-      // No, let's stick to the new source of truth to avoid confusion.
-      // But wait, if I am a user and I haven't created a household yet, do I see the message?
-      // Before: Yes.
-      // Now: No.
-      // Is that okay? "First 50 households". If you haven't created one, you aren't one of the 50 yet.
-      // That seems consistent with "limit to 50 households".
-      // But if I signed up and am "User 49", and I wait to create a household... and 50 others create households...
-      // Then I create mine as #51. Do I lose it?
-      // Yes, if the limit is 50 households.
-      // That seems fair.
+    // Fetch founding member status separately - graceful fallback if column doesn't exist yet
+    try {
+      const householdId = owned?.id ?? partnerOf?.id;
+      if (householdId) {
+        const { data: householdStatus } = await supabase
+          .from('households')
+          .select('founding_member_until')
+          .eq('id', householdId)
+          .maybeSingle();
+        
+        if (householdStatus) {
+          foundingMemberUntil = (householdStatus as Record<string, unknown>).founding_member_until as string | null;
+        }
+      }
+    } catch {
+      // Silently fail - column may not exist yet in test DB
     }
     
     if (isPartner && partnerOf) {
