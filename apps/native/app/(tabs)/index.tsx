@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl } from 'react-native';
+import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -15,11 +15,13 @@ import { ErrorScreen } from '@/components/ErrorScreen';
 import {
   formatCurrency,
   getDashboardCycleMetrics,
+  currencySymbol,
   type SeedForMetrics,
   type PayCycleForMetrics,
 } from '@repo/logic';
 import type { Household, PayCycle, Seed } from '@repo/supabase';
 import { fetchDashboardData } from '@/lib/dashboard-data';
+import { markSeedPaid } from '@/lib/mark-seed-paid';
 
 type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
 
@@ -87,6 +89,13 @@ function MetricCard({
   );
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  need: 'Needs',
+  want: 'Wants',
+  savings: 'Savings',
+  repay: 'Repay',
+};
+
 export default function DashboardScreen() {
   const { colors, spacing, borderRadius } = useTheme();
   const [data, setData] = useState<{
@@ -97,6 +106,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -123,6 +133,23 @@ export default function DashboardScreen() {
     setRefreshing(true);
     await loadData();
   }, [loadData]);
+
+  const handleMarkPaid = useCallback(
+    async (seedId: string) => {
+      setOptimisticPaidIds((prev) => new Set(prev).add(seedId));
+      const result = await markSeedPaid(seedId, 'both');
+      if ('success' in result) {
+        await loadData();
+      } else {
+        setOptimisticPaidIds((prev) => {
+          const next = new Set(prev);
+          next.delete(seedId);
+          return next;
+        });
+      }
+    },
+    [loadData]
+  );
 
   if (loading && !data) {
     return <DashboardSkeleton />;
@@ -255,6 +282,62 @@ export default function DashboardScreen() {
               />
             ))}
           </View>
+
+          {(() => {
+            const unpaidSeeds = data.seeds.filter(
+              (s) => !s.is_paid && !optimisticPaidIds.has(s.id)
+            );
+            if (unpaidSeeds.length === 0) return null;
+            return (
+              <Card variant="default" padding="md">
+                <LabelText color="secondary" style={{ marginBottom: spacing.md }}>
+                  Bills to pay
+                </LabelText>
+                <View style={{ gap: spacing.sm }}>
+                  {unpaidSeeds.slice(0, 10).map((seed) => (
+                    <Pressable
+                      key={seed.id}
+                      onPress={() => handleMarkPaid(seed.id)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: spacing.sm,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.borderSubtle,
+                      }}>
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: borderRadius.sm,
+                          borderWidth: 2,
+                          borderColor: colors.accentPrimary,
+                          marginRight: spacing.md,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      />
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <BodyText numberOfLines={1}>{seed.name}</BodyText>
+                        <LabelText color="secondary">
+                          {TYPE_LABELS[seed.type] ?? seed.type} •{' '}
+                          {currencySymbol(currency)}
+                          {Number(seed.amount).toFixed(2)}
+                        </LabelText>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+                {unpaidSeeds.length > 10 && (
+                  <LabelText
+                    color="secondary"
+                    style={{ marginTop: spacing.sm, fontSize: 12 }}>
+                    +{unpaidSeeds.length - 10} more
+                  </LabelText>
+                )}
+              </Card>
+            );
+          })()}
         </Section>
       </Container>
     </ScrollView>

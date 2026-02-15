@@ -198,12 +198,14 @@ async function incrementPaycycleRemaining(
 /**
  * Mark a seed (or portion) as paid. Updates is_paid / is_paid_me / is_paid_partner
  * and decrements paycycle remaining amounts.
+ * @param client Optional Supabase client (e.g. from API route with Bearer token). When omitted, uses server cookies.
  */
 export async function markSeedPaid(
   seedId: string,
-  payer: Payer
+  payer: Payer,
+  client?: SupabaseClient<Database>
 ): Promise<{ success: true } | { error: string }> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -260,12 +262,14 @@ export async function markSeedPaid(
 
 /**
  * Unmark a seed (or portion) as paid. Reverses is_paid flags and increments paycycle remaining.
+ * @param client Optional Supabase client (e.g. from API route with Bearer token). When omitted, uses server cookies.
  */
 export async function unmarkSeedPaid(
   seedId: string,
-  payer: Payer
+  payer: Payer,
+  client?: SupabaseClient<Database>
 ): Promise<{ success: true } | { error: string }> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
   const {
     data: { user },
   } = await supabase.auth.getUser();
