@@ -43,7 +43,10 @@ function main() {
 
   const dirs = fs.readdirSync(TEST_RESULTS, { withFileTypes: true })
     .filter((d) => d.isDirectory())
-    .map((d) => path.join(TEST_RESULTS, d.name))
+    .map((d) => {
+      if (d.name.includes('..')) throw new Error('Invalid directory name');
+      return path.join(TEST_RESULTS, d.name);
+    })
     .filter((d) => fs.existsSync(path.join(d, 'video.webm')));
 
   const byMtime = dirs
