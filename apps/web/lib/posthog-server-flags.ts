@@ -15,7 +15,8 @@ function getEnv(): Record<string, string | undefined> {
   return (process.env ?? {}) as Record<string, string | undefined>;
 }
 
-function getEnvFlags(): ServerFeatureFlags {
+/** Env-based flags fallback when PostHog is unavailable or throws (e.g. in tests or edge runtime). */
+export function getEnvFlags(): ServerFeatureFlags {
   const env = getEnv();
   return {
     signupGated: env.NEXT_PUBLIC_SIGNUP_GATED === 'true',

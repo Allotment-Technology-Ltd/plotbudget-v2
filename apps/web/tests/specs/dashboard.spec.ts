@@ -1,5 +1,9 @@
 // apps/web/tests/specs/dashboard.spec.ts
+// Dashboard load + logout tests; settings tests live in settings.spec.ts
+// with a dedicated user so logout doesn't invalidate the settings session.
 import { test, expect } from '@playwright/test';
+import { ensureBlueprintReady } from '../utils/db-cleanup';
+import { TEST_USERS } from '../fixtures/test-data';
 
 /** Fail fast with a clear message if the app threw a Server Error (e.g. useContext null). */
 async function expectNoServerError(page: import('@playwright/test').Page) {
@@ -13,6 +17,11 @@ async function expectNoServerError(page: import('@playwright/test').Page) {
 test.describe('Dashboard and app shell', () => {
   // Retry once when Next dev server hits intermittent useContext/webpack errors under parallel load
   test.describe.configure({ retries: 1 });
+
+  // Ensure dashboard user has a household so /dashboard/settings doesn't redirect to onboarding → blueprint
+  test.beforeEach(async () => {
+    await ensureBlueprintReady(TEST_USERS.dashboard.email);
+  });
 
   test('dashboard loads and shows hero or empty state', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
@@ -28,34 +37,6 @@ test.describe('Dashboard and app shell', () => {
         throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
       }),
     ]);
-  });
-
-  test('settings page loads when authenticated', async ({ page }) => {
-    // Navigate directly so cookies are sent (client-side Link nav can lose session in CI)
-    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15_000 });
-    if (page.url().includes('/login')) {
-      throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
-    }
-    const settingsPage = page.getByTestId('settings-page');
-    const serverError = page.getByRole('dialog', { name: 'Server Error' });
-    await Promise.race([
-      expect(settingsPage).toBeVisible({ timeout: 15_000 }),
-      serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
-        const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
-        throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
-      }),
-    ]);
-  });
-
-  test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
-    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15_000 });
-    if (page.url().includes('/login')) {
-      throw new Error('Session lost: redirected to login.');
-    }
-    await expect(page.getByText('Who is signed in', { exact: false })).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Logged in as:', { exact: false })).toBeVisible();
   });
 
   test('logout redirects to marketing site', async ({ page }) => {

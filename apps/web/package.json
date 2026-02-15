@@ -19,9 +19,7 @@
     "email": "email dev --dir emails",
     "send-email-examples": "tsx scripts/send-email-examples.ts",
     "run-seed-trial-users": "tsx scripts/run-seed-trial-test-users.ts",
-    "copy-showcase-videos": "tsx scripts/copy-showcase-videos.ts",
     "create-polar-products": "tsx scripts/create-polar-products.ts",
-    "record-showcase-videos": "playwright test tests/specs/showcase-video.spec.ts --project=showcase-video --workers=1 && pnpm run copy-showcase-videos",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
@@ -34,7 +32,8 @@
     "test:e2e:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
     "test:e2e:pwyl": "playwright test --project=chromium-pwyl",
     "test:local": "vitest run",
-    "audit:test-ids": "tsx scripts/audit-test-ids.ts"
+    "audit:test-ids": "tsx scripts/audit-test-ids.ts",
+    "db:apply-founding-member-household": "tsx scripts/run-founding-member-household-migration.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -90,6 +89,8 @@
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.21.0",
     "typescript": "^5.3.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "pg": "^8.13.0",
+    "@types/pg": "^8.11.0"
   }
 }

@@ -9,6 +9,7 @@ loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
 loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
 
 // When Playwright starts the web server, always hit it at localhost. When SKIP_WEBSERVER=1, use PLAYWRIGHT_TEST_BASE_URL.
+// With SKIP_WEBSERVER=1, start the app with the same env as tests (e.g. .env.local + .env.test.local) so app and E2E use one Supabase project.
 const baseURL =
   process.env.SKIP_WEBSERVER === '1'
     ? process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000'
@@ -19,6 +20,7 @@ const soloStatePath = path.join(authDir, 'solo.json');
 const blueprintStatePath = path.join(authDir, 'blueprint.json');
 const ritualStatePath = path.join(authDir, 'ritual.json');
 const dashboardStatePath = path.join(authDir, 'dashboard.json');
+const settingsStatePath = path.join(authDir, 'settings.json');
 const onboardingStatePath = path.join(authDir, 'onboarding.json');
 const visualStatePath = path.join(authDir, 'visual.json');
 
@@ -120,6 +122,14 @@ export default defineConfig({
       },
     },
     {
+      name: 'chromium-settings',
+      testMatch: [/settings\.spec\.ts/],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: settingsStatePath,
+      },
+    },
+    {
       name: 'chromium-ritual',
       testMatch: [/ritual\.spec\.ts/],
       use: {
@@ -174,18 +184,6 @@ export default defineConfig({
       },
     },
 
-    /* Record dashboard videos for marketing showcase (light + dark); run then copy-showcase-videos */
-    {
-      name: 'showcase-video',
-      testMatch: [/showcase-video\.spec\.ts/],
-      use: {
-        ...devices['Pixel 5'],
-        storageState: visualStatePath,
-        viewport: { width: 393, height: 780 },
-        video: 'on',
-      },
-    },
-
     // Uncomment when you need cross-browser testing
     // {
     //   name: 'firefox',
@@ -225,6 +223,8 @@ export default defineConfig({
       stdout: 'ignore',
       stderr: 'pipe',
       timeout: 120 * 1000, // 2 minutes for Next.js to start
+      // Use same env as test runner so app and E2E share one Supabase project (settings page, household state)
+      env: process.env as Record<string, string>,
     },
   }),
 });

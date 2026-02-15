@@ -15,6 +15,7 @@ import {
   ensureBlueprintReady,
   ensurePartnerInviteReady,
   resetOnboardingState,
+  userHasHousehold,
 } from './utils/db-cleanup';
 import { TEST_USERS, E2E_PARTNER_INVITE_TOKEN, COOKIE_CONSENT_LOCALSTORAGE } from './fixtures/test-data';
 
@@ -53,6 +54,10 @@ const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
     email: TEST_USERS.dashboard.email,
     password: TEST_USERS.dashboard.password,
   },
+  'chromium-settings': {
+    email: TEST_USERS.settings.email,
+    password: TEST_USERS.settings.password,
+  },
   'chromium-onboarding': {
     email: TEST_USERS.onboarding.email,
     password: TEST_USERS.onboarding.password,
@@ -62,10 +67,6 @@ const PROJECT_AUTH: Record<string, { email: string; password: string }> = {
     password: TEST_USERS.visual.password,
   },
   'visual-mobile': {
-    email: TEST_USERS.visual.email,
-    password: TEST_USERS.visual.password,
-  },
-  'showcase-video': {
     email: TEST_USERS.visual.email,
     password: TEST_USERS.visual.password,
   },
@@ -114,11 +115,27 @@ export default async function globalSetup(config: FullConfig) {
     }
   }
 
+  // Warm up heavy routes so webpack compiles them before parallel tests hit them simultaneously.
+  // Without this, multiple workers requesting an uncompiled route can trigger a webpack memory-cache
+  // race ("Cannot read properties of undefined (reading 'call')") that crashes the page.
+  console.log('⏳ Global setup: warming up routes…');
+  const warmupRoutes = ['/dashboard', '/dashboard/settings', '/dashboard/blueprint'];
+  for (const route of warmupRoutes) {
+    try {
+      await fetch(`${baseURL}${route}`, { method: 'GET', redirect: 'follow' }).catch(() => {});
+      // Give webpack a moment between compilations to avoid cache contention
+      await new Promise((r) => setTimeout(r, 500));
+    } catch {
+      // Warmup is best-effort; test suite will still run
+    }
+  }
+
   // Create auth users if missing
   await ensureAuthUserExists(TEST_USERS.solo.email, TEST_USERS.solo.password);
   await ensureAuthUserExists(TEST_USERS.blueprint.email, TEST_USERS.blueprint.password);
   await ensureAuthUserExists(TEST_USERS.ritual.email, TEST_USERS.ritual.password);
   await ensureAuthUserExists(TEST_USERS.dashboard.email, TEST_USERS.dashboard.password);
+  await ensureAuthUserExists(TEST_USERS.settings.email, TEST_USERS.settings.password);
   await ensureAuthUserExists(TEST_USERS.partner.email, TEST_USERS.partner.password);
   await ensureAuthUserExists(TEST_USERS.onboarding.email, TEST_USERS.onboarding.password);
   await ensureAuthUserExists(TEST_USERS.visual.email, TEST_USERS.visual.password);
@@ -128,6 +145,7 @@ export default async function globalSetup(config: FullConfig) {
   await ensureUserInPublicUsers(TEST_USERS.blueprint.email);
   await ensureUserInPublicUsers(TEST_USERS.ritual.email);
   await ensureUserInPublicUsers(TEST_USERS.dashboard.email);
+  await ensureUserInPublicUsers(TEST_USERS.settings.email);
   await ensureUserInPublicUsers(TEST_USERS.partner.email);
   await ensureUserInPublicUsers(TEST_USERS.onboarding.email);
   await ensureUserInPublicUsers(TEST_USERS.visual.email);
@@ -135,7 +153,23 @@ export default async function globalSetup(config: FullConfig) {
   await ensureBlueprintReady(TEST_USERS.blueprint.email);
   await ensureBlueprintReady(TEST_USERS.ritual.email);
   await ensureBlueprintReady(TEST_USERS.dashboard.email);
+  await ensureBlueprintReady(TEST_USERS.settings.email);
   await ensureBlueprintReady(TEST_USERS.visual.email);
+
+  // Ensure dashboard, settings, and visual have a household so /dashboard/settings doesn't redirect to onboarding → blueprint
+  for (const email of [TEST_USERS.dashboard.email, TEST_USERS.settings.email, TEST_USERS.visual.email]) {
+    const hasHousehold = await userHasHousehold(email);
+    if (!hasHousehold) {
+      console.warn(`⚠️  ${email} has no household after ensureBlueprintReady; retrying…`);
+      await ensureBlueprintReady(email);
+      const retryOk = await userHasHousehold(email);
+      if (!retryOk) {
+        throw new Error(
+          `E2E setup: ${email} must have a household so settings page loads. ensureBlueprintReady failed.`
+        );
+      }
+    }
+  }
 
   // Partner invite e2e: dashboard has pending invite; dashboard household already has paycycle (ensureBlueprintReady above)
   await ensurePartnerInviteReady(
