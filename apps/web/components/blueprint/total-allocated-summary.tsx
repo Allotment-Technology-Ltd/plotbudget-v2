@@ -2,7 +2,7 @@
 
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

@@ -11,8 +11,10 @@ export const TEST_USERS = {
   blueprint: { email: 'blueprint@plotbudget.test', password: 'test-password-123' },
   /** Used only by ritual (Payday Ritual) specs; isolated for parallel runs */
   ritual: { email: 'ritual@plotbudget.test', password: 'test-password-123' },
-  /** Used only by dashboard/settings specs; isolated so blueprint cleanup doesn't affect it */
+  /** Used only by dashboard specs (load, logout); isolated so blueprint cleanup doesn't affect it */
   dashboard: { email: 'dashboard@plotbudget.test', password: 'test-password-123' },
+  /** Used only by settings specs; own session so logout test doesn't invalidate it */
+  settings: { email: 'settings@plotbudget.test', password: 'test-password-123' },
   /** Used by partner invite e2e: accepts invite and can use Leave */
   partner: { email: 'partner@plotbudget.test', password: 'test-password-123' },
   /** Used only by onboarding spec (full flow) so no other test resets or shares this user */

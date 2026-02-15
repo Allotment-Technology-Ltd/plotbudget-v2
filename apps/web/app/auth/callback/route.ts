@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';

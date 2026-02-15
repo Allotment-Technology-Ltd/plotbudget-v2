@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@repo/ui', '@repo/logic'],
+  transpilePackages: ['@repo/ui', '@repo/logic', '@repo/supabase'],
   // Avoid sharp install on Vercel (build was hanging at sharp install step).
   images: { unoptimized: true },
   // So preview (and client code) use current deployment URL; Production should set NEXT_PUBLIC_APP_URL in Vercel.

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Calendar, Plus, RefreshCw } from 'lucide-react';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

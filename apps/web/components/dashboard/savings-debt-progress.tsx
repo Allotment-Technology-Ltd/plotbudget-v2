@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { CreditCard } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Pot, Repayment } from '@/lib/supabase/database.types';
+import type { Pot, Repayment } from '@repo/supabase';
 
 interface SavingsDebtProgressProps {
   pots: Pot[];

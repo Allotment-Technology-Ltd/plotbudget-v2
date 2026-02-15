@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { SeedCard } from './seed-card';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createNextPaycycle } from '@/lib/actions/seed-actions';
 import { toast } from 'sonner';
-import type { Household, PayCycle } from '@/lib/supabase/database.types';
+import type { Household, PayCycle } from '@repo/supabase';
 
 interface QuickActionsProps {
   household: Household;

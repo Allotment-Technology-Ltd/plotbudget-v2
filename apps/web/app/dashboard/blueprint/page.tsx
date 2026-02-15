@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Pot = Database['public']['Tables']['pots']['Row'];
 type Repayment = Database['public']['Tables']['repayments']['Row'];

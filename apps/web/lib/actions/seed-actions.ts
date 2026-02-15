@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 import { rollDueDateToCycle } from '@/lib/utils/seed-utils';
 
 type SeedRow = Database['public']['Tables']['seeds']['Row'];

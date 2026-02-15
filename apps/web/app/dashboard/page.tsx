@@ -7,7 +7,7 @@ import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
-import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
+import type { Household, PayCycle, Seed } from '@repo/supabase';
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();

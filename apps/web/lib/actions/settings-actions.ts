@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 type UsersUpdate = Database['public']['Tables']['users']['Update'];

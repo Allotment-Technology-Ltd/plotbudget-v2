@@ -55,8 +55,10 @@ export function getFixedPricingEnabledFromEnv(): boolean {
 /**
  * True when running in a development context (local).
  * Uses process.env directly so Next.js can inline at build time and server/client match (avoids hydration mismatch).
+ * Guard for undefined process (e.g. some edge/worker contexts).
  */
 export function isDevContext(): boolean {
+  if (typeof process === 'undefined' || !process.env) return false;
   if (process.env.NODE_ENV === 'development') return true;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
   return appUrl.includes('localhost');

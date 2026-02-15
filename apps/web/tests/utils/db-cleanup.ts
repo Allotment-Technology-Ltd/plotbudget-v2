@@ -345,6 +345,26 @@ export async function ensureBlueprintReady(email: string) {
 }
 
 /**
+ * Return whether the user has a household (for settings page and dashboard routes).
+ * Used to verify global setup so settings E2E tests don't redirect to onboarding → blueprint.
+ */
+export async function userHasHousehold(email: string): Promise<boolean> {
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, household_id')
+    .eq('email', email)
+    .single();
+  if (!user) return false;
+  if (user.household_id) return true;
+  const { data: household } = await supabase
+    .from('households')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+  return !!household?.id;
+}
+
+/**
  * Ensure a household has a pending partner invite with the given token, and the partner user exists.
  * Used by partner invite e2e: ownerEmail = dashboard (or solo), partnerEmail = partner@plotbudget.test.
  */
@@ -450,6 +470,7 @@ export async function cleanupAllTestUsers() {
   await cleanupTestUser('blueprint@plotbudget.test');
   await cleanupTestUser('ritual@plotbudget.test');
   await cleanupTestUser('dashboard@plotbudget.test');
+  await cleanupTestUser('settings@plotbudget.test');
   await cleanupTestUser('partner@plotbudget.test');
   await cleanupTestUser('onboarding@plotbudget.test');
   await cleanupTestUser('visual@plotbudget.test');

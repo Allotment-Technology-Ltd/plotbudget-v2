@@ -3,7 +3,7 @@
 import { AlertTriangle, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Plus, Edit3, PiggyBank, CreditCard } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Seed, Pot, Repayment } from '@/lib/supabase/database.types';
+import type { Seed, Pot, Repayment } from '@repo/supabase';
 
 interface RecentActivityProps {
   seeds: Seed[];

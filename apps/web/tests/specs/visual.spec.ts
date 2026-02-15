@@ -6,7 +6,8 @@
 // then commit the updated files under tests/specs/visual.spec.ts-snapshots/.
 
 import { test, expect } from '@playwright/test';
-import { EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
+import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
+import { ensureBlueprintReady } from '../utils/db-cleanup';
 
 test.describe('Visual regression', () => {
   test.describe('unauthenticated', () => {
@@ -23,6 +24,11 @@ test.describe('Visual regression', () => {
   });
 
   test.describe('authenticated', () => {
+    // Ensure visual user has a household so /dashboard/settings doesn't redirect to onboarding → blueprint
+    test.beforeEach(async () => {
+      await ensureBlueprintReady(TEST_USERS.visual.email);
+    });
+
     test('dashboard matches snapshot', async ({ page }) => {
       await page.goto('/dashboard');
       await page.waitForURL(/\/dashboard/);

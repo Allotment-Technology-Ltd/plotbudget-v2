@@ -4,7 +4,8 @@
 
 import { test, expect } from '@playwright/test';
 import { expectNoHorizontalOverflow, expectElementInViewport } from '../utils/layout-helpers';
-import { EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
+import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
+import { ensureBlueprintReady } from '../utils/db-cleanup';
 
 test.describe('Mobile layout — no overflow or content off-screen', () => {
   test.describe('unauthenticated', () => {
@@ -18,6 +19,11 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
   });
 
   test.describe('authenticated', () => {
+    // Ensure visual user has a household so /dashboard/settings doesn't redirect to onboarding → blueprint
+    test.beforeEach(async () => {
+      await ensureBlueprintReady(TEST_USERS.visual.email);
+    });
+
     test('dashboard has no horizontal overflow', async ({ page }) => {
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/dashboard/);

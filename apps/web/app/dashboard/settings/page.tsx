@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { getPaymentUiVisibleFromServerFlags } from '@/lib/feature-flags';
-import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
-import { backfillIncomeSourcesFromOnboarding } from '@/lib/actions/income-source-actions';
+import { getServerFeatureFlags, getEnvFlags } from '@/lib/posthog-server-flags';
 import { getSignInMethodLabels } from '@/lib/auth/sign-in-methods';
 import { SettingsView } from '@/components/settings/settings-view';
 
@@ -56,7 +55,12 @@ export default async function SettingsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const flags = await getServerFeatureFlags(user.id);
+  let flags;
+  try {
+    flags = await getServerFeatureFlags(user.id);
+  } catch {
+    flags = getEnvFlags();
+  }
   const paymentUiVisible = getPaymentUiVisibleFromServerFlags(flags);
 
   const email = user.email ?? '';
@@ -145,7 +149,7 @@ export default async function SettingsPage({
   const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
   const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
 
-  let incomeSourcesData = await supabase
+  const incomeSourcesData = await supabase
     .from('income_sources')
     .select('*')
     .eq('household_id', household.id)
@@ -168,15 +172,23 @@ export default async function SettingsPage({
   }[];
 
   if (incomeSources.length === 0) {
-    const backfill = await backfillIncomeSourcesFromOnboarding(household.id);
-    if (backfill.created > 0) {
-      const refetch = await supabase
-        .from('income_sources')
-        .select('*')
-        .eq('household_id', household.id)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true });
-      incomeSources = (refetch.data ?? []) as typeof incomeSources;
+    try {
+      const { backfillIncomeSourcesFromOnboarding } = await import(
+        '@/lib/actions/income-source-actions'
+      );
+      const backfill = await backfillIncomeSourcesFromOnboarding(household.id);
+      if (backfill.created > 0) {
+        const refetch = await supabase
+          .from('income_sources')
+          .select('*')
+          .eq('household_id', household.id)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true });
+        incomeSources = (refetch.data ?? []) as typeof incomeSources;
+      }
+    } catch (err) {
+      // Backfill can throw in some bundling/edge cases; keep incomeSources empty so page still renders
+      console.error('Settings backfill income sources failed:', err instanceof Error ? err.message : 'unknown');
     }
   }
 

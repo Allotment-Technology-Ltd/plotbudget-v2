@@ -3,7 +3,7 @@
  * Used by both the blueprint "Create Next Cycle" flow and the dev cycle switchover simulation.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 import { calculateNextCycleDates } from '@/lib/utils/pay-cycle-dates';
 import { projectIncomeForCycle } from '@/lib/utils/income-projection';
 import { rollDueDateToCycle } from '@/lib/utils/seed-utils';

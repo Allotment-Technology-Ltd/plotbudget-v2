@@ -23,7 +23,7 @@ import {
 } from '@/lib/actions/seed-actions';
 import { markSeedPaid, unmarkSeedPaid, closeRitual, unlockRitual } from '@/lib/actions/ritual-actions';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Household = Database['public']['Tables']['households']['Row'];
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
