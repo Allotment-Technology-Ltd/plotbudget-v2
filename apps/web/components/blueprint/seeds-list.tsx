@@ -64,6 +64,8 @@ interface SeedsListProps {
   onUnmarkPaid?: (seedId: string, payer: Payer) => void;
   isPartner?: boolean;
   otherLabel?: string;
+  ownerLabel?: string;
+  partnerLabel?: string;
 }
 
 export function SeedsList({
@@ -81,6 +83,8 @@ export function SeedsList({
   onUnmarkPaid,
   isPartner = false,
   otherLabel = 'Partner',
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
 }: SeedsListProps) {
   const categoryLabel = categoryLabels[category];
   const singularLabel = singularLabels[category];
@@ -179,6 +183,8 @@ export function SeedsList({
                   onUnmarkPaid={onUnmarkPaid}
                   isPartner={isPartner}
                   otherLabel={otherLabel}
+                  ownerLabel={ownerLabel}
+                  partnerLabel={partnerLabel}
                 />
               </li>
             );

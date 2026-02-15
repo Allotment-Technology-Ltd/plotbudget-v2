@@ -67,21 +67,23 @@ export function ProfileTab({
           Profile Information
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
-            <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your name"
-              maxLength={50}
-              disabled={isLoading}
-              aria-describedby="displayName-help"
-            />
-            <p id="displayName-help" className="text-sm text-muted-foreground">
-              This is how your name will appear in the app.
-            </p>
-          </div>
+          {!isPartner && (
+            <div className="space-y-2">
+              <Label htmlFor="displayName">What should we call you?</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Adam"
+                maxLength={50}
+                disabled={isLoading}
+                aria-describedby="displayName-help"
+              />
+              <p id="displayName-help" className="text-sm text-muted-foreground">
+                Used for labels in the app. For couple households, both you and your partner&apos;s names appear on bills.
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -99,12 +101,14 @@ export function ProfileTab({
                 : 'Managed by your account authentication.'}
             </p>
           </div>
-          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            )}
-            Save Changes
-          </Button>
+          {!isPartner && (
+            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+              {isLoading && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+              )}
+              Save Changes
+            </Button>
+          )}
         </form>
         {isPartner && (
           <p className="text-sm text-muted-foreground mt-4">

@@ -279,7 +279,8 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
       jointRatio
     );
 
-    const createdByOwner = !!user;
+    /** true when the creator is the household owner; false when the partner created the seed */
+    const createdByOwner = !isPartner;
 
     const insertData: SeedInsert = {
       household_id: data.household_id,

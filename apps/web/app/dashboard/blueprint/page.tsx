@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { getAvatarInitials } from '@/lib/utils/avatar-initials';
+import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { redirect } from 'next/navigation';
 import { BlueprintClient } from '@/components/blueprint/blueprint-client';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
@@ -73,7 +74,7 @@ export default async function BlueprintPage({
   if (!household) redirect('/onboarding');
 
   let ownerDisplayName: string | null = null;
-  if (isPartner && household.owner_id) {
+  if (household.owner_id) {
     const { data: ownerRow } = await supabase
       .from('users')
       .select('display_name')
@@ -81,6 +82,8 @@ export default async function BlueprintPage({
       .single();
     ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
   }
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
 
   const targetCycleId = params.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
@@ -170,7 +173,8 @@ export default async function BlueprintPage({
       initialNewCycleCelebration={showNewCycleCelebration}
       incomeEvents={incomeEvents}
       isPartner={isPartner}
-      ownerDisplayName={ownerDisplayName}
+      ownerLabel={ownerLabel}
+      partnerLabel={partnerLabel}
     />
   );
 }

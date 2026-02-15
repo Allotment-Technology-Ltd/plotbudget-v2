@@ -59,8 +59,10 @@ interface BlueprintClientProps {
   incomeEvents?: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[];
   /** When true, viewer is the partner — labels show "You" for partner and owner name for the other. */
   isPartner?: boolean;
-  /** Owner's display name (when isPartner), for "other" label. */
-  ownerDisplayName?: string | null;
+  /** Owner's label (uppercase, e.g. ADAM). For couple households. */
+  ownerLabel?: string;
+  /** Partner's label (uppercase, e.g. CARLY). For couple households. */
+  partnerLabel?: string;
 }
 
 type Payer = 'me' | 'partner' | 'both';
@@ -80,12 +82,11 @@ export function BlueprintClient({
   initialNewCycleCelebration = false,
   incomeEvents = [],
   isPartner = false,
-  ownerDisplayName = null,
+  ownerLabel = 'Account owner',
+  partnerLabel = 'Partner',
 }: BlueprintClientProps) {
   const router = useRouter();
-  const otherLabel = isPartner
-    ? (ownerDisplayName?.trim() || 'Account owner')
-    : (household.partner_name?.trim() || 'Partner');
+  const otherLabel = isPartner ? ownerLabel : partnerLabel;
   const [isAddSeedOpen, setIsAddSeedOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
     'need' | 'want' | 'savings' | 'repay' | null
@@ -489,6 +490,8 @@ export function BlueprintClient({
             total={paycycle.total_income}
             events={incomeEvents}
             currency={household.currency}
+            ownerLabel={ownerLabel}
+            partnerLabel={partnerLabel}
           />
 
           <CategorySummaryGrid
@@ -525,6 +528,8 @@ export function BlueprintClient({
               onUnmarkPaid={handleUnmarkPaid}
               isPartner={isPartner}
               otherLabel={otherLabel}
+              ownerLabel={ownerLabel}
+              partnerLabel={partnerLabel}
             />
 
             <SeedsList
@@ -543,6 +548,8 @@ export function BlueprintClient({
               onUnmarkPaid={handleUnmarkPaid}
               isPartner={isPartner}
               otherLabel={otherLabel}
+              ownerLabel={ownerLabel}
+              partnerLabel={partnerLabel}
             />
 
             <SeedsList
@@ -561,6 +568,8 @@ export function BlueprintClient({
               onUnmarkPaid={handleUnmarkPaid}
               isPartner={isPartner}
               otherLabel={otherLabel}
+              ownerLabel={ownerLabel}
+              partnerLabel={partnerLabel}
             />
 
             <SeedsList
@@ -579,6 +588,8 @@ export function BlueprintClient({
               onUnmarkPaid={handleUnmarkPaid}
               isPartner={isPartner}
               otherLabel={otherLabel}
+              ownerLabel={ownerLabel}
+              partnerLabel={partnerLabel}
             />
           </div>
         </div>
@@ -608,6 +619,8 @@ export function BlueprintClient({
         }}
         isPartner={isPartner}
         otherLabel={otherLabel}
+        ownerLabel={ownerLabel}
+        partnerLabel={partnerLabel}
       />
 
       <DeleteSeedConfirmDialog
