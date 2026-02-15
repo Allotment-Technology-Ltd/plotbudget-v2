@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.0.1...v1.1.0) (2026-02-15)
+
+
+### Features
+
+* **founder:** move founding member status to household to enforce co… ([#51](https://github.com/adamboon1984-arch/plotbudget-v2/issues/51)) ([bf64f85](https://github.com/adamboon1984-arch/plotbudget-v2/commit/bf64f85449d7631a4df89fced141035b2f34eb5a))
+
 ## [1.0.1](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.0.0...v1.0.1) (2026-02-15)
 
 
