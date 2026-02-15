@@ -25,3 +25,16 @@ export function formatCurrency(
   const symbol = currencySymbol(currency);
   return `${symbol}${amount.toFixed(2)}`;
 }
+
+/** Regex to strip £, $, €, commas, and whitespace from input. */
+const CURRENCY_STRIP_REGEX = /[£$€,\s]/g;
+
+/**
+ * Strip currency symbols (£, $, €), commas, and whitespace so "£3,100" or "$3100" parse as numbers.
+ */
+export function parseIncome(value: unknown): number {
+  if (value === '' || value === null || value === undefined) return NaN;
+  const s = String(value).replace(CURRENCY_STRIP_REGEX, '');
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
