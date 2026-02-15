@@ -178,6 +178,9 @@ export default async function globalSetup(config: FullConfig) {
     E2E_PARTNER_INVITE_TOKEN
   );
   await ensureBlueprintReady(TEST_USERS.solo.email);
+  // Re-run for dashboard and visual so settings-page tests always see a household (idempotent)
+  await ensureBlueprintReady(TEST_USERS.dashboard.email);
+  await ensureBlueprintReady(TEST_USERS.visual.email);
   // Do not link partner to solo here: partner invite test accepts the *dashboard* invite; linking to solo would make partner_user_id match two households and getPartnerContext().maybeSingle() can fail or return wrong one, sending partner to onboarding
 
   // Create auth state programmatically (no login UI) so we don't depend on the login page rendering

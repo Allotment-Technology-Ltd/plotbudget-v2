@@ -85,10 +85,11 @@ export default async function SettingsPage({
     trial_cycles_completed: number;
     trial_ended_at: string | null;
     grace_period_start: string | null;
+    has_completed_onboarding: boolean;
   };
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name, avatar_url, trial_cycles_completed, trial_ended_at, grace_period_start')
+    .select('display_name, avatar_url, trial_cycles_completed, trial_ended_at, grace_period_start, has_completed_onboarding')
     .eq('id', user.id)
     .maybeSingle();
   const profileRow = profile as ProfileRow | null;
@@ -97,6 +98,7 @@ export default async function SettingsPage({
   const trialCyclesCompleted = profileRow?.trial_cycles_completed ?? 0;
   const trialEndedAt = profileRow?.trial_ended_at ?? null;
   const gracePeriodStart = profileRow?.grace_period_start ?? null;
+  const hasCompletedOnboarding = profileRow?.has_completed_onboarding ?? false;
 
   const { data: owned } = await supabase
     .from('households')
@@ -113,7 +115,27 @@ export default async function SettingsPage({
   const isPartner = !owned && !!partnerOf;
   const household = (owned ?? partnerOf) as HouseholdRow | null;
 
-  if (!household) redirect('/onboarding');
+  // No household: redirect to onboarding unless user has already completed it (e.g. E2E test user or data edge case)
+  if (!household) {
+    if (!hasCompletedOnboarding) redirect('/onboarding');
+    // Minimal settings view so tests and users with completed onboarding but missing household still see "Who is signed in"
+    return (
+      <div className="content-wrapper section-padding" data-testid="settings-page">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h1 className="text-2xl font-heading font-semibold">Settings</h1>
+          <section className="rounded-lg border bg-card p-6">
+            <h2 className="font-semibold">Who is signed in</h2>
+            <p className="mt-2 text-muted-foreground">
+              Logged in as: <span className="normal-case font-normal">{email}</span>
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              No household linked. Complete onboarding or contact support if you expected to see household settings.
+            </p>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   let ownerDisplayName: string | null = null;
   if (household.owner_id) {

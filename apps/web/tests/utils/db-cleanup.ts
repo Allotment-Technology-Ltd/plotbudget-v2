@@ -245,6 +245,20 @@ export async function ensureBlueprintReady(email: string) {
   }
 
   if (householdId) {
+    // Verify household row still exists (e.g. not deleted elsewhere); if missing, fall through to create
+    const { data: existingHousehold } = await supabase
+      .from('households')
+      .select('id')
+      .eq('id', householdId)
+      .eq('owner_id', user.id)
+      .maybeSingle();
+    if (!existingHousehold) {
+      await supabase.from('users').update({ household_id: null, current_paycycle_id: null }).eq('id', user.id);
+      householdId = null;
+    }
+  }
+
+  if (householdId) {
     // User already has a household; ensure onboarding flag so /dashboard/settings isn't redirected to /onboarding → blueprint
     await cleanupTestUser(email);
     const { data: cycle } = await supabase
