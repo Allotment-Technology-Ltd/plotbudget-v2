@@ -101,14 +101,12 @@ export function ProfileTab({
                 : 'Managed by your account authentication.'}
             </p>
           </div>
-          {!isPartner && (
-            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-              {isLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-              )}
-              Save Changes
-            </Button>
-          )}
+          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+            {isLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            )}
+            Save Changes
+          </Button>
         </form>
         {isPartner && (
           <p className="text-sm text-muted-foreground mt-4">
