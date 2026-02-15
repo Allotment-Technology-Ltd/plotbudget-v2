@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Features:
  *  - Hide-on-scroll-down / show-on-scroll-up (reduces distraction per Hick's Law)
  *  - Theme toggle (sun/moon)
- *  - "JOIN WAITLIST" CTA scrolls to hero form
+ *  - "Get started free" CTA links to app signup (first 50 users free)
  *  - Responsive: CTA text shortens on mobile
  */
 export default function Navbar({ theme, onToggleTheme, pricingEnabled = false }) {
@@ -32,11 +32,6 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
-
-  const scrollToForm = () => {
-    const el = document.getElementById('hero-form');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
 
   const scrollToPricing = () => {
     const el = document.getElementById('pricing');
@@ -74,7 +69,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
         PLOT
       </a>
 
-      {/* Right side: Pricing + Log in + Join link + theme toggle */}
+      {/* Right side: Pricing + Get started free + Log in + theme toggle */}
       <div className="flex items-center gap-4">
         {/* Pricing — scrolls to pricing section when pricing is enabled */}
         {pricingEnabled && (
@@ -86,23 +81,23 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
             Pricing
           </button>
         )}
-        {/* Log in — primary CTA; use VITE_APP_URL locally so login stays on local app */}
+        {/* Get started free — primary CTA (first 50 users free) */}
+        <a
+          href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/signup`}
+          className="btn-primary text-cta-sm"
+          aria-label="Get started free — first 50 users"
+        >
+          <span className="hidden xs:inline">Get started free</span>
+          <span className="xs:hidden">Get started</span>
+        </a>
+        {/* Log in — secondary */}
         <a
           href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login`}
-          className="btn-primary text-cta-sm"
+          className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors"
           aria-label="Log in to PLOT"
         >
           Log in
         </a>
-        {/* Join waitlist — secondary, scrolls to form */}
-        <button
-          onClick={scrollToForm}
-          className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors hidden sm:inline"
-          aria-label="Join the PLOT waitlist"
-        >
-          <span className="hidden xs:inline">Join waitlist</span>
-          <span className="xs:hidden">Join</span>
-        </button>
         {/* Theme Toggle */}
         <button
           onClick={onToggleTheme}

@@ -4,6 +4,20 @@ This doc describes how we run E2E tests reliably: users, auth state, and pattern
 
 ---
 
+## Running tests locally
+
+From the repo root:
+
+1. **Lint and type-check:** `pnpm lint` and `pnpm type-check`
+2. **Unit and API tests (Vitest):** `cd apps/web && pnpm test` (or `pnpm test:unit`; includes `tests/api` and emails). No browser required.
+3. **E2E (Playwright):** Install Chromium once, then run E2E:
+   - `cd apps/web && pnpm exec playwright install chromium`
+   - `cd apps/web && pnpm test:e2e`
+
+Ensure `.env.local` and `apps/web/.env.test.local` are set so the app and global setup can reach your dev Supabase project. See [E2E-DEBUGGING-GUIDE.md](./E2E-DEBUGGING-GUIDE.md) if tests fail.
+
+---
+
 ## 0. Production guard (critical)
 
 **E2E tests create and clean up test users** (solo@plotbudget.test, blueprint@plotbudget.test, etc.) and their households/paycycles. **Never run E2E against the production database.**
