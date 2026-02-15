@@ -67,7 +67,8 @@ test.describe('Dashboard and app shell', () => {
     const gotIt = page.getByRole('button', { name: 'Got it' });
     if (await gotIt.isVisible({ timeout: 2000 }).catch(() => false)) {
       await gotIt.click();
-      await page.waitForTimeout(300);
+      // Wait for modal content to be gone so overlay does not block user menu in CI
+      await page.getByText('Founding Member', { exact: false }).waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     }
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
