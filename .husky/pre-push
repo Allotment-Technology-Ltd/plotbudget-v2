@@ -1,0 +1,2 @@
+# Automated code review + lint + type-check + security audit before push
+pnpm run code-review && pnpm run lint && pnpm run type-check && pnpm run audit
