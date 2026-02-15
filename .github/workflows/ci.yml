@@ -46,7 +46,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Aikido Security Scan
-        uses: aikido-sec/aikido-github-action@v3
+        uses: AikidoSec/github-actions-workflow@v1
         with:
           secret-key: ${{ secrets.AIKIDO_CI_TOKEN }}
           fail-on-dependency-scan: true

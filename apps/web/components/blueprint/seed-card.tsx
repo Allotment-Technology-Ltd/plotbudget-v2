@@ -287,9 +287,9 @@ export function SeedCard({
             {seed.is_paid_me && seed.is_paid_partner
               ? 'both'
               : seed.is_paid_me && !seed.is_paid_partner
-                ? (isPartner ? otherName : 'you')
+                ? (isPartner ? otherName : 'You')
                 : !seed.is_paid_me && seed.is_paid_partner
-                  ? (isPartner ? 'you' : otherName)
+                  ? (isPartner ? 'You' : otherName)
                   : '—'}
           </p>
         )}
