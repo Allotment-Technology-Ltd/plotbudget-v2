@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChangePasswordDialog } from './change-password-dialog';
-import { updateUserProfile } from '@/lib/actions/settings-actions';
+import { updateUserProfile, updateMyPartnerName } from '@/lib/actions/settings-actions';
 
 interface ProfileTabProps {
   user: {
@@ -17,6 +17,8 @@ interface ProfileTabProps {
     avatarUrl?: string | null;
   };
   isPartner?: boolean;
+  /** Required when isPartner so saving updates household.partner_name instead of user display_name. */
+  householdId?: string;
   /** Human-readable sign-in method labels (e.g. "Google", "Email & password") from linked identities. */
   signInMethodLabels?: string[];
 }
@@ -24,6 +26,7 @@ interface ProfileTabProps {
 export function ProfileTab({
   user,
   isPartner = false,
+  householdId,
   signInMethodLabels = [],
 }: ProfileTabProps) {
   const [displayName, setDisplayName] = useState(user.displayName || '');
@@ -33,7 +36,11 @@ export function ProfileTab({
     e.preventDefault();
     setIsLoading(true);
     try {
-      await updateUserProfile(displayName.trim());
+      if (isPartner && householdId) {
+        await updateMyPartnerName(householdId, displayName.trim());
+      } else {
+        await updateUserProfile(displayName.trim());
+      }
       toast.success('Profile updated');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update profile';
@@ -67,23 +74,21 @@ export function ProfileTab({
           Profile Information
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {!isPartner && (
-            <div className="space-y-2">
-              <Label htmlFor="displayName">What should we call you?</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="e.g. Adam"
-                maxLength={50}
-                disabled={isLoading}
-                aria-describedby="displayName-help"
-              />
-              <p id="displayName-help" className="text-sm text-muted-foreground">
-                Used for labels in the app. For couple households, both you and your partner&apos;s names appear on bills.
-              </p>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="displayName">What should we call you?</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="e.g. Adam"
+              maxLength={50}
+              disabled={isLoading}
+              aria-describedby="displayName-help"
+            />
+            <p id="displayName-help" className="text-sm text-muted-foreground">
+              Used for labels in the app. For couple households, both you and your partner&apos;s names appear on bills.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

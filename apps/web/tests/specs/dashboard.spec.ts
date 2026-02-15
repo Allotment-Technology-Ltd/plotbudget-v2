@@ -63,12 +63,18 @@ test.describe('Dashboard and app shell', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
     await page.waitForURL(/\/dashboard/, { timeout: 30_000, waitUntil: 'domcontentloaded' });
     await expectNoServerError(page);
-    // Dismiss Founding Member celebration modal if present (blocks user menu click)
+    // Give client-side modals (e.g. Founding Member) time to open after hydration
+    await page.waitForTimeout(1500);
+    // Dismiss any modal that might block the user menu
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
     const gotIt = page.getByRole('button', { name: 'Got it' });
     if (await gotIt.isVisible({ timeout: 2000 }).catch(() => false)) {
       await gotIt.click();
-      await page.waitForTimeout(300);
     }
+    // Wait for any Radix Dialog/AlertDialog overlay to be gone so it doesn't intercept the click
+    const overlay = page.locator('div[data-state="open"][class*="fixed"][class*="inset-0"][class*="z-50"]');
+    await expect(overlay).toHaveCount(0, { timeout: 15_000 });
     await page.getByTestId('user-menu-trigger').click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
     // In E2E, app may redirect to /login or / (marketing); accept any post-logout destination.

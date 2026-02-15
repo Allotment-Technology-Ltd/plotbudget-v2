@@ -109,6 +109,7 @@ export function SettingsView({
           <ProfileTab
             user={user}
             isPartner={isPartner}
+            householdId={household.id}
             signInMethodLabels={user.signInMethodLabels}
           />
         </TabsContent>
