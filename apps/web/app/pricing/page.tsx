@@ -43,14 +43,13 @@ export default async function PricingPage() {
   if (user) {
     const { data: profile } = await supabase
       .from('users')
-      .select('display_name, avatar_url, founding_member_until')
+      .select('display_name, avatar_url')
       .eq('id', user.id)
       .maybeSingle();
-    type ProfileRow = { display_name: string | null; avatar_url: string | null; founding_member_until: string | null };
+    type ProfileRow = { display_name: string | null; avatar_url: string | null };
     const profileRow = profile as ProfileRow | null;
     displayName = profileRow?.display_name ?? null;
     avatarUrl = profileRow?.avatar_url ?? null;
-    foundingMemberUntil = profileRow?.founding_member_until ?? null;
 
     const { data: ownedData } = await supabase
       .from('households')
@@ -65,8 +64,28 @@ export default async function PricingPage() {
       .eq('partner_user_id', user.id)
       .maybeSingle();
     type PartnerHousehold = { id: string; partner_name: string | null };
-    partnerOf = partnerOfData as PartnerHousehold | null;
+    partnerOf = partnerOfData as unknown as PartnerHousehold | null;
+    
     isPartner = !owned && !!partnerOf;
+    
+    // Fetch founding member status separately - graceful fallback if column doesn't exist yet
+    try {
+      const householdId = owned?.id ?? partnerOf?.id;
+      if (householdId) {
+        const { data: householdStatus } = await supabase
+          .from('households')
+          .select('founding_member_until')
+          .eq('id', householdId)
+          .maybeSingle();
+        
+        if (householdStatus) {
+          foundingMemberUntil = (householdStatus as Record<string, unknown>).founding_member_until as string | null;
+        }
+      }
+    } catch {
+      // Silently fail - column may not exist yet in test DB
+    }
+    
     if (isPartner && partnerOf) {
       displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
     }

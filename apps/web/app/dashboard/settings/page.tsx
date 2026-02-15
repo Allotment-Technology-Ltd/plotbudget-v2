@@ -30,6 +30,7 @@ type HouseholdRow = {
   partner_accepted_at: string | null;
   partner_last_login_at: string | null;
   currency: 'GBP' | 'USD' | 'EUR';
+  founding_member_until: string | null;
 };
 
 type SubscriptionRow = {
@@ -77,33 +78,31 @@ export default async function SettingsPage({
   type ProfileRow = {
     display_name: string | null;
     avatar_url: string | null;
-    founding_member_until: string | null;
     trial_cycles_completed: number;
     trial_ended_at: string | null;
     grace_period_start: string | null;
   };
   const { data: profile } = await supabase
     .from('users')
-    .select('display_name, avatar_url, founding_member_until, trial_cycles_completed, trial_ended_at, grace_period_start')
+    .select('display_name, avatar_url, trial_cycles_completed, trial_ended_at, grace_period_start')
     .eq('id', user.id)
     .maybeSingle();
   const profileRow = profile as ProfileRow | null;
   const displayName = profileRow?.display_name ?? null;
   const avatarUrl = profileRow?.avatar_url ?? null;
-  const foundingMemberUntil = profileRow?.founding_member_until ?? null;
   const trialCyclesCompleted = profileRow?.trial_cycles_completed ?? 0;
   const trialEndedAt = profileRow?.trial_ended_at ?? null;
   const gracePeriodStart = profileRow?.grace_period_start ?? null;
 
   const { data: owned } = await supabase
     .from('households')
-    .select(householdSelect)
+    .select(`${householdSelect}, founding_member_until`)
     .eq('owner_id', user.id)
     .maybeSingle();
 
   const { data: partnerOf } = await supabase
     .from('households')
-    .select(householdSelect)
+    .select(`${householdSelect}, founding_member_until`)
     .eq('partner_user_id', user.id)
     .maybeSingle();
 
@@ -179,7 +178,6 @@ export default async function SettingsPage({
           displayName: displayName ?? (isPartner ? household.partner_name : null),
           avatarUrl,
           signInMethodLabels,
-          foundingMemberUntil,
           trialCyclesCompleted,
           trialEndedAt,
           gracePeriodStart,
@@ -202,6 +200,7 @@ export default async function SettingsPage({
           partner_accepted_at: household.partner_accepted_at,
           partner_last_login_at: household.partner_last_login_at,
           currency: household.currency,
+          foundingMemberUntil: household.founding_member_until,
         }}
         incomeSources={incomeSources}
         isPartner={isPartner}

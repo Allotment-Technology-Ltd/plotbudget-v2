@@ -24,6 +24,11 @@ type UserRow = Pick<
   | 'founding_member_until'
   | 'founding_member_ending_soon_email_sent'
 >;
+
+type UserWithHousehold = UserRow & {
+  households: { founding_member_until: string | null } | null;
+};
+
 import {
   sendTrialMilestoneEmail,
   sendTrialEndingSoonEmail,
@@ -65,6 +70,9 @@ export async function GET(req: Request) {
       email,
       display_name,
       household_id,
+      households (
+        founding_member_until
+      ),
       created_at,
       trial_cycles_completed,
       trial_ended_at,
@@ -90,19 +98,24 @@ export async function GET(req: Request) {
   const processed: string[] = [];
   const errors: string[] = [];
 
-  for (const user of (users ?? []) as UserRow[]) {
+  for (const user of (users ?? []) as unknown as UserWithHousehold[]) {
     // Skip pro users
     if (user.subscription_tier === 'pro') continue;
 
     // Founding members: skip trial/grace emails; send ending-soon 1 month before period ends
+    // Use household status if available (couple = 1 household), fall back to user status for legacy
+    const householdFounding = (user.households as unknown as { founding_member_until: string | null } | null)?.founding_member_until;
+    const userFounding = user.founding_member_until;
+    const foundingUntil = householdFounding ?? userFounding;
+
     const isFoundingMember =
-      user.founding_member_until && new Date(user.founding_member_until) > today;
+      foundingUntil && new Date(foundingUntil) > today;
     if (isFoundingMember) {
       if (
         !user.founding_member_ending_soon_email_sent &&
-        user.founding_member_until
+        foundingUntil
       ) {
-        const until = new Date(user.founding_member_until);
+        const until = new Date(foundingUntil);
         const daysUntilEnd = Math.ceil(
           (until.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -110,7 +123,7 @@ export async function GET(req: Request) {
           const result = await sendFoundingMemberEndingSoonEmail({
             email: user.email,
             displayName: user.display_name || 'there',
-            foundingMemberEndsOn: formatDate(user.founding_member_until),
+            foundingMemberEndsOn: formatDate(foundingUntil),
           });
           if (result.success) {
             await supabase

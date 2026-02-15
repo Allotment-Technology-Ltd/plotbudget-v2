@@ -116,6 +116,7 @@ export type Database = {
           partner_last_login_at: string | null;
           partner_accepted_at: string | null;
           partner_user_id: string | null;
+          founding_member_until: string | null;
         };
         Insert: {
           id?: string;
@@ -143,6 +144,7 @@ export type Database = {
           partner_last_login_at?: string | null;
           partner_accepted_at?: string | null;
           partner_user_id?: string | null;
+          founding_member_until?: string | null;
         };
         Update: {
           id?: string;
@@ -170,6 +172,7 @@ export type Database = {
           partner_last_login_at?: string | null;
           partner_accepted_at?: string | null;
           partner_user_id?: string | null;
+          founding_member_until?: string | null;
         };
       };
       income_sources: {

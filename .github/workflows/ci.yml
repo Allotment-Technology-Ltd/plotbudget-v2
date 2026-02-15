@@ -40,6 +40,24 @@ jobs:
       - name: Code and secret audit
         run: pnpm run audit
 
+  code-review:
+    name: code-review
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Automated code review
+        run: pnpm run code-review
+
   lint:
     name: lint
     runs-on: ubuntu-latest
