@@ -6,7 +6,20 @@
   "exports": {
     ".": "./src/tokens.css",
     "./tokens.css": "./src/tokens.css",
-    "./native": "./src/native.ts"
+    "./native": "./src/native.ts",
+    "./config": "./src/tokens.config.ts"
   },
-  "files": ["src"]
+  "scripts": {
+    "generate-tokens": "tsx scripts/generate-tokens.ts",
+    "validate-tokens": "tsx scripts/validate-tokens.ts",
+    "prebuild": "pnpm generate-tokens",
+    "build": "echo 'Design tokens generated'",
+    "lint": "pnpm validate-tokens",
+    "type-check": "tsc --noEmit src/tokens.config.ts"
+  },
+  "files": ["src"],
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
 }
