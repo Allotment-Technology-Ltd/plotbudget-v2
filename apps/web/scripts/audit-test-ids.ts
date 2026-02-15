@@ -50,6 +50,9 @@ async function scanDirectory(dir: string): Promise<string[]> {
   const violations: string[] = [];
 
   for (const entry of entries) {
+    if (entry.name.includes('..')) {
+      continue;
+    }
     const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {

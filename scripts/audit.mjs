@@ -35,6 +35,7 @@ function walkDir(dir, ext, ignore, results) {
   if (!fs.existsSync(dir)) return;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
+    if (e.name.includes('..')) continue;
     const full = path.join(dir, e.name);
     if (ignore.has(e.name) || ignore.has(path.basename(full))) continue;
     if (e.isDirectory()) walkDir(full, ext, ignore, results);
