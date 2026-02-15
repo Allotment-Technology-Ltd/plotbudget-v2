@@ -1,3 +1,12 @@
+## [1.1.1](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.1.0...v1.1.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* **security:** autofix 3rd party Github Actions should be pinned ([#53](https://github.com/adamboon1984-arch/plotbudget-v2/issues/53)) ([a568de3](https://github.com/adamboon1984-arch/plotbudget-v2/commit/a568de3f6ad3c783437717bed4f804cf823ef06a))
+* **security:** autofix Potential file inclusion attack via reading file ([#54](https://github.com/adamboon1984-arch/plotbudget-v2/issues/54)) ([d2df396](https://github.com/adamboon1984-arch/plotbudget-v2/commit/d2df396a41d2db7bf09547e315be0602bcffd189))
+* **security:** update resend from 6.9.1 to 6.9.2 ([#52](https://github.com/adamboon1984-arch/plotbudget-v2/issues/52)) ([ee0edaa](https://github.com/adamboon1984-arch/plotbudget-v2/commit/ee0edaa016761175b05fa0bea4a092a68d25ed42))
+
 # [1.1.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.0.1...v1.1.0) (2026-02-15)
 
 
