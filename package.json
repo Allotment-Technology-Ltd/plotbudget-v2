@@ -12,7 +12,6 @@
     "clean": "turbo clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "prepare": "husky",
-    "audit": "node scripts/audit.mjs",
     "code-review": "node scripts/code-review.mjs",
     "create-polar-products": "pnpm --filter @repo/web run create-polar-products"
   },

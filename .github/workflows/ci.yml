@@ -37,8 +37,40 @@ jobs:
       - run: pnpm install
       - name: Dependency audit
         run: pnpm audit --audit-level=high
-      - name: Code and secret audit
-        run: pnpm run audit
+
+  aikido-security:
+    name: Aikido Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Aikido Security Scan
+        uses: aikido-sec/aikido-github-action@v3
+        with:
+          secret-key: ${{ secrets.AIKIDO_CI_TOKEN }}
+          fail-on-dependency-scan: true
+          fail-on-sast-scan: true
+          fail-on-iac-scan: true
+          minimum-severity: CRITICAL
+
+  code-review:
+    name: code-review
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Automated code review
+        run: pnpm run code-review
 
   code-review:
     name: code-review
