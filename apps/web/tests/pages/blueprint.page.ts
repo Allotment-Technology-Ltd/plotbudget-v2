@@ -86,7 +86,8 @@ export class BlueprintPage {
   async markSeedPaid(seedName: string) {
     // Use click() not check(): checkbox is controlled by server state; after
     // server action + router.refresh() the checkbox is replaced by PAID badge.
-    await this.seedPaidCheckbox(seedName).click({ noWaitAfter: true });
+    const timeout = process.env.CI ? 25_000 : undefined;
+    await this.seedPaidCheckbox(seedName).click({ noWaitAfter: true, timeout });
   }
 
   async unmarkSeedPaid(seedName: string) {
@@ -174,8 +175,9 @@ export class BlueprintPage {
     await this.page.reload({ waitUntil: 'domcontentloaded' });
     await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
     // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode).
-    // Allow 20s for CI where the new seed can take a moment to appear after reload.
-    await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: 20_000 });
+    // Allow 30s in CI where the new seed can take a moment to appear after reload.
+    const seedCardTimeout = process.env.CI ? 30_000 : 20_000;
+    await expect(this.seedCard(params.name).first()).toBeVisible({ timeout: seedCardTimeout });
   }
 
   async expectSeedInList(seedName: string, amount: number) {

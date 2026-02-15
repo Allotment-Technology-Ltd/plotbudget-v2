@@ -74,8 +74,9 @@ export class OnboardingPage {
     await this.page.getByRole('radio', { name: 'Specific date (e.g., 25th)' }).click();
     await this.payCycleDateInput.click();
     const dayOption = this.page.getByRole('option', { name: payCycleDate.toString() });
-    await expect(dayOption).toBeVisible({ timeout: 5000 });
-    await dayOption.click();
+    await expect(dayOption).toBeVisible({ timeout: 8000 });
+    // Radix Select can detach the option during animation; force click avoids stability retries
+    await dayOption.click({ force: true });
     await expect(this.createBlueprintButton).toBeVisible();
     await this.createBlueprintButton.click();
   }

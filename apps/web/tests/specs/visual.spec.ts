@@ -37,9 +37,14 @@ test.describe('Visual regression', () => {
 
     test('settings page matches snapshot', async ({ page }) => {
       await page.goto('/dashboard/settings');
-      await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15000 });
+      await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost — run with visual user auth state');
+      }
+      if (page.url().includes('/dashboard/blueprint')) {
+        throw new Error(
+          'Redirected to /dashboard/blueprint instead of settings. Restart dev server and ensure visual user has household (global-setup).'
+        );
       }
       await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
       // Higher tolerance: 0.08 local until snapshots updated after settings UI changes (sign-in methods, no avatar upload)
