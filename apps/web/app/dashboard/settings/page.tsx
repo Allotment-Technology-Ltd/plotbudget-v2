@@ -30,6 +30,7 @@ type HouseholdRow = {
   partner_accepted_at: string | null;
   partner_last_login_at: string | null;
   currency: 'GBP' | 'USD' | 'EUR';
+  founding_member_until: string | null;
 };
 
 type SubscriptionRow = {
@@ -41,7 +42,7 @@ type SubscriptionRow = {
 };
 
 const householdSelect =
-  'id, owner_id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency';
+  'id, owner_id, name, is_couple, partner_name, partner_income, needs_percent, wants_percent, savings_percent, repay_percent, partner_email, partner_invite_status, partner_invite_sent_at, partner_accepted_at, partner_last_login_at, currency, founding_member_until';
 
 export default async function SettingsPage({
   searchParams,
@@ -202,6 +203,7 @@ export default async function SettingsPage({
           partner_accepted_at: household.partner_accepted_at,
           partner_last_login_at: household.partner_last_login_at,
           currency: household.currency,
+          foundingMemberUntil: household.founding_member_until,
         }}
         incomeSources={incomeSources}
         isPartner={isPartner}

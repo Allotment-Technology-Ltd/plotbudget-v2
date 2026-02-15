@@ -49,6 +49,7 @@ export interface SettingsViewProps {
     partner_invite_sent_at?: string | null;
     partner_accepted_at?: string | null;
     partner_last_login_at?: string | null;
+    foundingMemberUntil?: string | null;
   };
   incomeSources?: IncomeSource[];
   isPartner?: boolean;
@@ -147,7 +148,7 @@ export function SettingsView({
               subscription={subscription ?? null}
               householdId={household.id}
               userId={user.id}
-              foundingMemberUntil={user.foundingMemberUntil ?? null}
+              foundingMemberUntil={household.foundingMemberUntil ?? null}
               trialCyclesCompleted={user.trialCyclesCompleted ?? 0}
               trialEndedAt={user.trialEndedAt ?? null}
               gracePeriodStart={user.gracePeriodStart ?? null}

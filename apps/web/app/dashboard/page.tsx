@@ -18,14 +18,13 @@ export default async function DashboardPage() {
 
   const { data: profile } = (await supabase
     .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding, founding_member_until')
+    .select('household_id, current_paycycle_id, has_completed_onboarding')
     .eq('id', user.id)
     .single()) as {
     data: {
       household_id: string | null;
       current_paycycle_id: string | null;
       has_completed_onboarding: boolean;
-      founding_member_until: string | null;
     } | null;
   };
 
@@ -189,7 +188,7 @@ export default async function DashboardPage() {
         ownerLabel={ownerLabel}
         partnerLabel={partnerLabel}
         userId={user.id}
-        foundingMemberUntil={profile?.founding_member_until ?? null}
+        foundingMemberUntil={household?.founding_member_until ?? null}
       />
     </>
   );

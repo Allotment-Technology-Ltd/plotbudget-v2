@@ -24,6 +24,11 @@ type CronUserRow = Pick<
   | 'founding_member_until'
   | 'founding_member_ending_soon_email_sent'
 >;
+
+type CronUserWithHousehold = CronUserRow & {
+  households: { founding_member_until: string | null } | null;
+};
+
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import {
   sendTrialMilestoneEmail,
@@ -83,6 +88,9 @@ export async function POST(req: Request) {
       email,
       display_name,
       household_id,
+      households (
+        founding_member_until
+      ),
       trial_cycles_completed,
       trial_ended_at,
       grace_period_start,
@@ -105,7 +113,7 @@ export async function POST(req: Request) {
   }
 
   const { data: users, error } = await query;
-  const filtered = (users ?? []) as CronUserRow[];
+  const filtered = (users ?? []) as unknown as CronUserWithHousehold[];
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -123,14 +131,19 @@ export async function POST(req: Request) {
     if (user.subscription_tier === 'pro') continue;
 
     // Founding members: skip trial/grace; send ending-soon 1 month before
+    // Use household status if available (couple = 1 household), fall back to user status for legacy
+    const householdFounding = (user.households as unknown as { founding_member_until: string | null } | null)?.founding_member_until;
+    const userFounding = user.founding_member_until;
+    const foundingUntil = householdFounding ?? userFounding;
+
     const isFoundingMember =
-      user.founding_member_until && new Date(user.founding_member_until) > today;
+      foundingUntil && new Date(foundingUntil) > today;
     if (isFoundingMember) {
       if (
         !user.founding_member_ending_soon_email_sent &&
-        user.founding_member_until
+        foundingUntil
       ) {
-        const until = new Date(user.founding_member_until);
+        const until = new Date(foundingUntil);
         const daysUntilEnd = Math.ceil(
           (until.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -145,7 +158,7 @@ export async function POST(req: Request) {
             const result = await sendFoundingMemberEndingSoonEmail({
               email: forwardTo ?? user.email,
               displayName: user.display_name || 'there',
-              foundingMemberEndsOn: formatDate(user.founding_member_until),
+              foundingMemberEndsOn: formatDate(foundingUntil),
             });
             if (result.success) {
               await supabase
