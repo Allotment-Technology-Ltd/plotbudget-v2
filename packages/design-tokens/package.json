@@ -5,7 +5,8 @@
   "main": "./src/tokens.css",
   "exports": {
     ".": "./src/tokens.css",
-    "./tokens.css": "./src/tokens.css"
+    "./tokens.css": "./src/tokens.css",
+    "./native": "./src/native.ts"
   },
   "files": ["src"]
 }
