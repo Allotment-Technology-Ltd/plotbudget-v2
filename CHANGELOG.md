@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.0.0...v1.0.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* profile-tab partner name, E2E logout/visual, Linear branch rule ([0d50413](https://github.com/adamboon1984-arch/plotbudget-v2/commit/0d504132d873e269f0b1e337a4ef284c2619cada))
+
 # [1.0.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v0.6.0...v1.0.0) (2026-02-14)
 
 
