@@ -2,11 +2,13 @@
 // Partner invite tests. Run in chromium-partner-guest project (no storage state by default).
 // These tests need the app at baseURL to serve /partner/join (this app). If you see the marketing page
 // instead, ensure Playwright is starting the server from apps/web (don't set SKIP_WEBSERVER=1 with a different app on the same port).
+// Serial: unauthenticated "valid token" test must run before authenticated test (which accepts the invite and consumes the pending state).
 import { test, expect } from '@playwright/test';
 import { PartnerJoinPage } from '../pages/partner-join.page';
 import { E2E_PARTNER_INVITE_TOKEN } from '../fixtures/test-data';
 import { getPartnerAuthCookie } from '../utils/auth-cookie';
 
+test.describe.serial('Partner invite', () => {
 test.describe('Partner invite (unauthenticated)', () => {
   test('shows invalid link when token is missing', async ({ page }) => {
     const partnerPage = new PartnerJoinPage(page);
@@ -31,14 +33,22 @@ test.describe('Partner invite (unauthenticated)', () => {
     const partnerPage = new PartnerJoinPage(page);
     await partnerPage.goto(E2E_PARTNER_INVITE_TOKEN);
     await expect(page).toHaveURL(/\/partner\/join/);
+    await page.waitForLoadState('networkidle');
 
     const joinHeading = page.getByRole('heading', { name: /Join as partner/i });
     const invalidOrExpired = page.getByText(/Invalid or Expired|Invalid Invitation/);
-    await expect(joinHeading.or(invalidOrExpired)).toBeVisible({ timeout: 15_000 });
-
-    if (!(await joinHeading.isVisible())) {
-      return;
+    await expect(joinHeading.or(invalidOrExpired)).toBeVisible({
+      timeout: process.env.CI ? 25_000 : 15_000,
+    });
+    // If fixture not ready (e.g. parallel run vs global-setup), retry once after a short delay
+    if (!(await joinHeading.isVisible().catch(() => false))) {
+      await page.waitForTimeout(2000);
+      await partnerPage.goto(E2E_PARTNER_INVITE_TOKEN);
+      await page.waitForLoadState('networkidle');
     }
+    await expect(joinHeading).toBeVisible({
+      timeout: process.env.CI ? 20_000 : 10_000,
+    });
 
     await partnerPage.expectUnauthenticatedJoin();
 
@@ -93,3 +103,4 @@ test.describe('Partner invite (authenticated)', () => {
     await expect(onDashboard.or(onOnboarding)).toBeVisible();
   });
 });
+}); // end describe.serial

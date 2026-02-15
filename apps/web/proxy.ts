@@ -131,11 +131,14 @@ export async function proxy(request: NextRequest) {
 
     const isPartner = !!partnerHousehold;
 
+    // Allow /dashboard/settings so owners can always reach it; the settings page redirects to onboarding if no household.
+    const isSettingsPath = request.nextUrl.pathname === '/dashboard/settings';
     if (
       profile != null &&
       !profile.has_completed_onboarding &&
       !isPartner &&
-      !request.nextUrl.pathname.includes('/onboarding')
+      !request.nextUrl.pathname.includes('/onboarding') &&
+      !isSettingsPath
     ) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }

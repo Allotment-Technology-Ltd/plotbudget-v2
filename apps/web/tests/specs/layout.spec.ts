@@ -27,9 +27,14 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
 
     test('settings page has no horizontal overflow', async ({ page }) => {
       await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(/\/(dashboard\/settings|login)/, { timeout: 15000 });
+      await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost — run with authenticated storage state');
+      }
+      if (page.url().includes('/dashboard/blueprint')) {
+        throw new Error(
+          'Redirected to /dashboard/blueprint instead of settings. Restart dev server and ensure test user has household (global-setup).'
+        );
       }
       await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
       await expectNoHorizontalOverflow(page);
