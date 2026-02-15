@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.2.0...v1.3.0) (2026-02-15)
+
+
+### Features
+
+* **PLOT-86:** marketing CTAs, first 50 free, founding-spots API ([#58](https://github.com/adamboon1984-arch/plotbudget-v2/issues/58)) ([c45e390](https://github.com/adamboon1984-arch/plotbudget-v2/commit/c45e390065904cde7359208e08f78563ae154495))
+
 # [1.2.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.1.1...v1.2.0) (2026-02-15)
 
 
