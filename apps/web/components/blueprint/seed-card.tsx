@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Trash, Repeat, CheckCircle2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

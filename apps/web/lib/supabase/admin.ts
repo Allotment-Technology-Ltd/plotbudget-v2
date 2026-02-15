@@ -1,5 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import { createAdminClient as createAdminClientFromPackage } from '@repo/supabase';
 
 // Admin client for server-side operations that bypass RLS
 // Only use in API routes and server actions where elevated privileges are needed
@@ -11,10 +10,5 @@ export function createAdminClient() {
     throw new Error('Missing Supabase admin credentials');
   }
 
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return createAdminClientFromPackage(supabaseUrl, serviceRoleKey);
 }

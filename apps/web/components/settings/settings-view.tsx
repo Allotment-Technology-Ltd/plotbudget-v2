@@ -6,7 +6,7 @@ import { IncomeSourcesTab } from './income-sources-tab';
 import { PrivacyTab } from './privacy-tab';
 import { ProfileTab } from './profile-tab';
 import { SubscriptionTab } from './subscription-tab';
-import type { IncomeSource } from '@/lib/supabase/database.types';
+import type { IncomeSource } from '@repo/supabase';
 
 export interface SettingsViewProps {
   user: {

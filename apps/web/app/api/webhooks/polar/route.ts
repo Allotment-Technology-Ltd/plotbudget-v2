@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateEvent } from '@polar-sh/sdk/webhooks';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 // Webhook handler for Polar subscription events
 // Env required: POLAR_WEBHOOK_SECRET, POLAR_PREMIUM_PRODUCT_ID / POLAR_PREMIUM_PRICE_ID (monthly), POLAR_PREMIUM_ANNUAL_PRODUCT_ID (optional)

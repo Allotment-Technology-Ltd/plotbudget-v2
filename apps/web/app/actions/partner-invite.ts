@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 import { sendPartnerInviteEmail } from '@/lib/email/partner-invite';
 import { getAppBaseUrl } from '@/lib/app-url';
 import { logAuditEvent } from '@/lib/audit';

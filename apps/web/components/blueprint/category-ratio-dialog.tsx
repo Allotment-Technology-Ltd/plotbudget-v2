@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { updateHouseholdPercentages } from '@/lib/actions/household-actions';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Household = Database['public']['Tables']['households']['Row'];
 

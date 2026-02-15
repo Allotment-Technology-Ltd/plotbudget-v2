@@ -2,7 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type RepaymentInsert = Database['public']['Tables']['repayments']['Insert'];
 type RepaymentRow = Database['public']['Tables']['repayments']['Row'];

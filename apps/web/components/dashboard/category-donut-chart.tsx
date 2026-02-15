@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Household, PayCycle } from '@/lib/supabase/database.types';
+import type { Household, PayCycle } from '@repo/supabase';
 
 /** Category colors (hex) for chart - matches PLOT design tokens */
 const CATEGORY_COLORS: Record<string, string> = {

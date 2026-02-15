@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
 

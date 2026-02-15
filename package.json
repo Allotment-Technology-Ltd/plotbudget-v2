@@ -3,6 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "packageManager": "pnpm@8.15.4",
+  "pnpm": { "overrides": { "@supabase/supabase-js": "2.94.1" } },
   "scripts": {
     "dev": "turbo dev",
     "dev:polar": "bash scripts/dev-with-polar-cli.sh",

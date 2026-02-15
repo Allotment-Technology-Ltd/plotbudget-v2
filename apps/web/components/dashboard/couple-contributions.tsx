@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
+import type { Household, PayCycle, Seed } from '@repo/supabase';
 
 interface CoupleContributionsProps {
   household: Household;

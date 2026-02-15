@@ -41,7 +41,7 @@ import {
   type FrequencyRule,
   type PaymentSource,
 } from '@/lib/actions/income-source-actions';
-import type { IncomeSource } from '@/lib/supabase/database.types';
+import type { IncomeSource } from '@repo/supabase';
 
 const FREQUENCY_LABELS: Record<FrequencyRule, string> = {
   specific_date: 'Specific date (e.g. 25th)',

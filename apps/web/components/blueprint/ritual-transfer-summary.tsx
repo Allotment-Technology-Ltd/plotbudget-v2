@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];

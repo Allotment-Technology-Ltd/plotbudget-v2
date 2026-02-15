@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import type { Household, PayCycle } from '@/lib/supabase/database.types';
+import type { Household, PayCycle } from '@repo/supabase';
 import { formatCurrency } from '@/lib/utils/currency';
 
 type HistoricalCycle = Pick<

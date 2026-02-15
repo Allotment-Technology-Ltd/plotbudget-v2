@@ -5,7 +5,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database } from '@repo/supabase';
 
 type UserRow = Pick<
   Database['public']['Tables']['users']['Row'],

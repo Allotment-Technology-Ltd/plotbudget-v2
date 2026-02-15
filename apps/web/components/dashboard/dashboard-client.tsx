@@ -14,7 +14,7 @@ import { UpcomingBills } from './upcoming-bills';
 import { RecentActivity } from './recent-activity';
 import { SpendingTrends } from './spending-trends';
 import { FoundingMemberCelebration } from './founding-member-celebration';
-import type { Household, PayCycle, Seed, Pot, Repayment } from '@/lib/supabase/database.types';
+import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 

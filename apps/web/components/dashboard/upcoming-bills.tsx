@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
-import type { Seed } from '@/lib/supabase/database.types';
+import type { Seed } from '@repo/supabase';
 
 interface UpcomingBillsProps {
   seeds: Seed[];

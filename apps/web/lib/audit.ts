@@ -1,7 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Json } from '@/lib/supabase/database.types';
+import type { Json } from '@repo/supabase';
 
 export type AuditEventType =
   | 'login'

@@ -2,7 +2,7 @@
 
 import { CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import type { Household, PayCycle, Seed } from '@/lib/supabase/database.types';
+import type { Household, PayCycle, Seed } from '@repo/supabase';
 
 interface FinancialHealthCardProps {
   paycycle: PayCycle;
