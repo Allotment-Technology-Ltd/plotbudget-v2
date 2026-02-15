@@ -75,8 +75,8 @@ function createSeedFormSchema(paycycle: { start_date: string; end_date: string }
         .refine((v) => parseIncome(v) >= 0.01, 'Amount must be greater than 0'),
       payment_source: z.enum(['me', 'partner', 'joint']),
       split_ratio: z.number().min(0).max(100).optional(),
-      uses_joint_account: z.boolean().default(false),
-      is_recurring: z.boolean().default(false),
+      uses_joint_account: z.boolean().default(true),
+      is_recurring: z.boolean().default(true),
       due_date: z.string().optional(),
       // Savings: link or create
       link_pot_id: z.string().optional(),
@@ -145,8 +145,8 @@ export function SeedDialog({
       amountStr: '',
       payment_source: 'me' as const,
       split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-      uses_joint_account: false,
-      is_recurring: false,
+      uses_joint_account: true,
+      is_recurring: true,
       due_date: '',
       link_pot_id: undefined,
       pot_current_str: '',
@@ -203,7 +203,7 @@ export function SeedDialog({
           amountStr: '',
           payment_source: defaultPaymentSource,
           split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-          is_recurring: false,
+          is_recurring: true,
           due_date: '',
           link_pot_id: undefined,
           pot_current_str: '',
@@ -214,7 +214,7 @@ export function SeedDialog({
           repayment_current_str: '',
           repayment_target_date: '',
           repayment_status: 'active',
-          uses_joint_account: false,
+          uses_joint_account: true,
         });
       }
     }
