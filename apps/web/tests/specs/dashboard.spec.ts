@@ -1,5 +1,5 @@
 // apps/web/tests/specs/dashboard.spec.ts
-// Dashboard load tests; settings tests live in settings.spec.ts (dedicated user so logout doesn't invalidate).
+// Dashboard load + settings-in-dashboard tests (same user; logout test removed). Other settings coverage in settings.spec.ts.
 import { test, expect } from '@playwright/test';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
 import { TEST_USERS } from '../fixtures/test-data';
@@ -27,5 +27,44 @@ test.describe('Dashboard and app shell', () => {
         throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
       }),
     ]);
+  });
+
+  test('settings page loads when authenticated', async ({ page }) => {
+    // Navigate directly so cookies are sent (client-side Link nav can lose session in CI)
+    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
+    // Accept settings, login, or blueprint (redirect chain: settings → onboarding → blueprint if user has no household)
+    await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20_000 });
+    if (page.url().includes('/login')) {
+      throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
+    }
+    if (page.url().includes('/dashboard/blueprint')) {
+      throw new Error(
+        'Redirected to /dashboard/blueprint instead of settings. Restart the dev server so proxy/middleware changes apply; ensure global-setup ran (dashboard user has household + has_completed_onboarding).'
+      );
+    }
+    const settingsPage = page.getByTestId('settings-page');
+    const serverError = page.getByRole('dialog', { name: 'Server Error' });
+    await Promise.race([
+      expect(settingsPage).toBeVisible({ timeout: 15_000 }),
+      serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
+        const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
+        throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
+      }),
+    ]);
+  });
+
+  test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
+    await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20_000 });
+    if (page.url().includes('/login')) {
+      throw new Error('Session lost: redirected to login.');
+    }
+    if (page.url().includes('/dashboard/blueprint')) {
+      throw new Error(
+        'Redirected to /dashboard/blueprint instead of settings. Restart the dev server so proxy changes apply; ensure dashboard user has household (global-setup).'
+      );
+    }
+    await expect(page.getByText('Who is signed in', { exact: false })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Logged in as:', { exact: false })).toBeVisible();
   });
 });

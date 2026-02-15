@@ -245,13 +245,26 @@ export async function ensureBlueprintReady(email: string) {
   }
 
   if (householdId) {
-    // User already has a household; cleanup mutable data only
+    // User already has a household; ensure onboarding flag so /dashboard/settings isn't redirected to /onboarding → blueprint
     await cleanupTestUser(email);
-    // Always ensure has_completed_onboarding is true so proxy doesn't redirect to /onboarding → /dashboard/blueprint
-    await supabase
+    const { data: cycle } = await supabase
+      .from('paycycles')
+      .select('id')
+      .eq('household_id', householdId)
+      .order('start_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const { error: updateErr } = await supabase
       .from('users')
-      .update({ has_completed_onboarding: true, household_id: householdId })
+      .update({
+        has_completed_onboarding: true,
+        household_id: householdId,
+        ...(cycle ? { current_paycycle_id: cycle.id } : { current_paycycle_id: null }),
+      })
       .eq('id', user.id);
+    if (updateErr) {
+      console.warn(`⚠️  Failed to set has_completed_onboarding for ${email}:`, updateErr.message);
+    }
     return;
   }
 

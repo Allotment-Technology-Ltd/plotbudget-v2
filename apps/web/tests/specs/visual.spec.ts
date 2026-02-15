@@ -8,7 +8,6 @@
 import { test, expect } from '@playwright/test';
 import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
-import { gotoSettingsPage, SKIP_SETTINGS_E2E, SKIP_SETTINGS_E2E_REASON } from '../utils/test-helpers';
 
 test.describe('Visual regression', () => {
   test.describe('unauthenticated', () => {
@@ -43,10 +42,15 @@ test.describe('Visual regression', () => {
     });
 
     test('settings page matches snapshot', async ({ page }) => {
-      test.skip(SKIP_SETTINGS_E2E, SKIP_SETTINGS_E2E_REASON);
-      await gotoSettingsPage(page, TEST_USERS.visual.email);
+      await page.goto('/dashboard/settings');
+      await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost — run with visual user auth state');
+      }
+      if (page.url().includes('/dashboard/blueprint')) {
+        throw new Error(
+          'Redirected to /dashboard/blueprint instead of settings. Restart dev server and ensure visual user has household (global-setup).'
+        );
       }
       await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
       // Higher tolerance: 0.08 local until snapshots updated after settings UI changes (sign-in methods, no avatar upload)
