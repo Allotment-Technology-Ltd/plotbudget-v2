@@ -18,8 +18,8 @@ export async function hapticImpact(style: 'light' | 'medium' | 'heavy' = 'light'
       heavy: Haptics.ImpactFeedbackStyle.Heavy,
     };
     await Haptics.impactAsync(styleMap[style]);
-  } catch {
-    // Haptics may fail on simulators or unsupported devices
+  } catch (err) {
+    if (__DEV__) console.warn('[haptics] impactAsync failed:', err);
   }
 }
 
@@ -28,8 +28,8 @@ export async function hapticSuccess(): Promise<void> {
   if (!isNative) return;
   try {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  } catch {
-    // Ignore
+  } catch (err) {
+    if (__DEV__) console.warn('[haptics] notificationAsync failed:', err);
   }
 }
 
@@ -38,7 +38,7 @@ export async function hapticSelection(): Promise<void> {
   if (!isNative) return;
   try {
     await Haptics.selectionAsync();
-  } catch {
-    // Ignore
+  } catch (err) {
+    if (__DEV__) console.warn('[haptics] selectionAsync failed:', err);
   }
 }

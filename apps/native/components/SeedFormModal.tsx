@@ -4,6 +4,7 @@ import { hapticImpact, hapticSelection } from '@/lib/haptics';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
+import { PillButton, DatePickerField, StatusPicker } from './SeedFormModalComponents';
 import {
   Container,
   Section,
@@ -391,9 +392,9 @@ export function SeedFormModal({
                     <View style={{ marginBottom: spacing.md }}>
                       <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Link to existing pot</Text>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PillButton label="None – create new" selected={!linkPotId} onPress={() => setLinkPotId(null)} colors={colors} spacing={spacing} />
+                        <PillButton label="None – create new" selected={!linkPotId} onPress={() => setLinkPotId(null)} />
                         {pots.map((p) => (
-                          <PillButton key={p.id} label={p.name} selected={linkPotId === p.id} onPress={() => setLinkPotId(p.id)} colors={colors} spacing={spacing} />
+                          <PillButton key={p.id} label={p.name} selected={linkPotId === p.id} onPress={() => setLinkPotId(p.id)} />
                         ))}
                       </ScrollView>
                     </View>
@@ -421,9 +422,6 @@ export function SeedFormModal({
                           showPicker={showPotDatePicker}
                           onShowPicker={() => setShowPotDatePicker(true)}
                           onHidePicker={() => setShowPotDatePicker(false)}
-                          colors={colors}
-                          spacing={spacing}
-                          borderRadius={borderRadius}
                         />
                       </View>
 
@@ -434,9 +432,6 @@ export function SeedFormModal({
                           options={POT_STATUS_OPTIONS}
                           value={potStatus}
                           onChange={(v) => setPotStatus(v as 'active' | 'complete' | 'paused')}
-                          colors={colors}
-                          spacing={spacing}
-                          borderRadius={borderRadius}
                         />
                       </View>
                     </>
@@ -454,9 +449,9 @@ export function SeedFormModal({
                     <View style={{ marginBottom: spacing.md }}>
                       <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Link to existing repayment</Text>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PillButton label="None – create new" selected={!linkRepaymentId} onPress={() => setLinkRepaymentId(null)} colors={colors} spacing={spacing} />
+                        <PillButton label="None – create new" selected={!linkRepaymentId} onPress={() => setLinkRepaymentId(null)} />
                         {repayments.map((r) => (
-                          <PillButton key={r.id} label={r.name} selected={linkRepaymentId === r.id} onPress={() => setLinkRepaymentId(r.id)} colors={colors} spacing={spacing} />
+                          <PillButton key={r.id} label={r.name} selected={linkRepaymentId === r.id} onPress={() => setLinkRepaymentId(r.id)} />
                         ))}
                       </ScrollView>
                     </View>
@@ -479,9 +474,6 @@ export function SeedFormModal({
                           showPicker={showRepayDatePicker}
                           onShowPicker={() => setShowRepayDatePicker(true)}
                           onHidePicker={() => setShowRepayDatePicker(false)}
-                          colors={colors}
-                          spacing={spacing}
-                          borderRadius={borderRadius}
                         />
                       </View>
 
@@ -492,9 +484,6 @@ export function SeedFormModal({
                           options={REPAYMENT_STATUS_OPTIONS}
                           value={repaymentStatus}
                           onChange={(v) => setRepaymentStatus(v as 'active' | 'paid' | 'paused')}
-                          colors={colors}
-                          spacing={spacing}
-                          borderRadius={borderRadius}
                         />
                       </View>
                     </>
@@ -644,162 +633,5 @@ export function SeedFormModal({
           </Container>
       </BottomSheetScrollView>
     </AppBottomSheet>
-  );
-}
-
-/* ---------- Shared sub-components ---------- */
-
-function PillButton({
-  label,
-  selected,
-  onPress,
-  colors,
-  spacing,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-}) {
-  return (
-    <Pressable
-      onPress={() => { hapticSelection(); onPress(); }}
-      style={{
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        borderRadius: 8,
-        marginRight: spacing.sm,
-        backgroundColor: selected ? colors.accentPrimary : colors.bgElevated,
-      }}>
-      <BodyText style={{ color: selected ? '#fff' : colors.textPrimary, fontSize: 14 }}>{label}</BodyText>
-    </Pressable>
-  );
-}
-
-function DatePickerField({
-  value,
-  onChange,
-  showPicker,
-  onShowPicker,
-  onHidePicker,
-  colors,
-  spacing,
-  borderRadius,
-  minDate,
-  maxDate,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  showPicker: boolean;
-  onShowPicker: () => void;
-  onHidePicker: () => void;
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-  borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
-  minDate?: Date;
-  maxDate?: Date;
-}) {
-  return (
-    <>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Pressable
-          onPress={() => { hapticImpact('light'); onShowPicker(); }}
-          style={{
-            flex: 1,
-            borderWidth: 1,
-            borderColor: colors.borderSubtle,
-            borderRadius: borderRadius.md,
-            paddingHorizontal: spacing.md,
-            paddingVertical: spacing.md,
-            backgroundColor: colors.bgSecondary,
-          }}>
-          <BodyText style={{ color: value ? colors.textPrimary : colors.textSecondary }}>
-            {value
-              ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-              : 'Pick date'}
-          </BodyText>
-        </Pressable>
-        {value ? (
-          <Pressable onPress={() => { hapticImpact('light'); onChange(''); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
-            <Text variant="body-sm" style={{ color: colors.error }}>Clear</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {showPicker && (
-        <>
-          <DateTimePicker
-            value={value ? new Date(value + 'T12:00:00') : new Date()}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            minimumDate={minDate}
-            maximumDate={maxDate}
-            onChange={(_, date) => {
-              if (Platform.OS === 'android') onHidePicker();
-              if (date) onChange(date.toISOString().slice(0, 10));
-            }}
-          />
-          {Platform.OS === 'ios' && (
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.xs }}>
-              <Pressable onPress={() => { hapticImpact('light'); onHidePicker(); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
-                <BodyText style={{ color: colors.accentPrimary }}>Done</BodyText>
-              </Pressable>
-            </View>
-          )}
-        </>
-      )}
-    </>
-  );
-}
-
-function StatusPicker({
-  options,
-  value,
-  onChange,
-  colors,
-  spacing,
-  borderRadius,
-}: {
-  options: { value: string; label: string }[];
-  value: string;
-  onChange: (v: string) => void;
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-  borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
-}) {
-  return (
-    <View style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, overflow: 'hidden' }}>
-      {options.map((opt, idx) => (
-        <Pressable
-          key={opt.value}
-          onPress={() => { hapticSelection(); onChange(opt.value); }}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.md,
-            backgroundColor: value === opt.value ? colors.accentPrimary + '15' : colors.bgSecondary,
-            borderBottomWidth: idx < options.length - 1 ? 1 : 0,
-            borderBottomColor: colors.borderSubtle,
-          }}>
-          <View
-            style={{
-              width: 18,
-              height: 18,
-              borderRadius: 9,
-              borderWidth: 2,
-              borderColor: value === opt.value ? colors.accentPrimary : colors.borderSubtle,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            {value === opt.value && (
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accentPrimary }} />
-            )}
-          </View>
-          <BodyText style={{ color: value === opt.value ? colors.textPrimary : colors.textSecondary }}>{opt.label}</BodyText>
-        </Pressable>
-      ))}
-    </View>
   );
 }

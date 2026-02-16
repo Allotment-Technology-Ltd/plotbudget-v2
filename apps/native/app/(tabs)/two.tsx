@@ -1,5 +1,4 @@
 import { ScrollView, View, RefreshControl, Pressable, Alert } from 'react-native';
-import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Container,
@@ -16,7 +15,7 @@ import { ErrorScreen } from '@/components/ErrorScreen';
 import { SeedFormModal } from '@/components/SeedFormModal';
 import { DeleteSeedConfirmModal } from '@/components/DeleteSeedConfirmModal';
 import { IncomeManageModal } from '@/components/IncomeManageModal';
-import { AppBottomSheet } from '@/components/AppBottomSheet';
+import { CyclePickerSheet } from '@/components/CyclePickerSheet';
 import { SeedCard } from '@/components/SeedCard';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
@@ -997,41 +996,13 @@ export default function BlueprintScreen() {
         />
       )}
 
-      <AppBottomSheet
+      <CyclePickerSheet
         visible={cyclePickerVisible}
         onClose={() => setCyclePickerVisible(false)}
-        snapPoints={['50%', '90%']}
-      >
-        <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.md }}>
-          <SubheadingText style={{ marginBottom: spacing.md }}>Select pay cycle</SubheadingText>
-        </View>
-        <BottomSheetFlatList<PaycycleOption>
-          data={data?.allPaycycles ?? []}
-          keyExtractor={(item: PaycycleOption) => item.id}
-          renderItem={({ item }: { item: PaycycleOption }) => (
-            <Pressable
-              onPress={() => { hapticImpact('light'); handleCycleSelect(item.id); }}
-              style={{
-                paddingVertical: spacing.md,
-                paddingHorizontal: spacing.md,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.borderSubtle,
-              }}>
-              <BodyText style={{ fontWeight: data?.paycycle?.id === item.id ? '600' : '400' }}>
-                {cycleLabel(item)}
-              </BodyText>
-              <Text variant="label-sm" color="secondary">
-                {format(new Date(item.start_date), 'MMM d')} – {format(new Date(item.end_date), 'MMM d, yyyy')}
-              </Text>
-            </Pressable>
-          )}
-          ListFooterComponent={
-            <Pressable onPress={() => { hapticImpact('light'); setCyclePickerVisible(false); }} style={{ marginTop: spacing.sm, paddingVertical: spacing.md, paddingHorizontal: spacing.md }}>
-              <Text variant="label-sm" color="secondary">Cancel</Text>
-            </Pressable>
-          }
-        />
-      </AppBottomSheet>
+        paycycles={data?.allPaycycles ?? []}
+        selectedPaycycleId={data?.paycycle?.id ?? null}
+        onSelect={handleCycleSelect}
+      />
     </>
   );
 }

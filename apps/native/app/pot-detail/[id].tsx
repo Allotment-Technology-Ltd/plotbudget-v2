@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, View, Pressable, Alert } from 'react-native';
 import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -12,36 +12,16 @@ import {
   BodyText,
   useTheme,
 } from '@repo/native-ui';
-import { currencySymbol, type CurrencyCode } from '@repo/logic';
-import type { Pot } from '@repo/supabase';
-import { fetchDashboardData } from '@/lib/dashboard-data';
+import { currencySymbol } from '@repo/logic';
 import { markPotComplete } from '@/lib/mark-pot-complete';
+import { usePotDetailData } from '@/lib/use-pot-detail-data';
 
 export default function PotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, spacing, borderRadius } = useTheme();
-  const [pot, setPot] = useState<Pot | null>(null);
-  const [currency, setCurrency] = useState<CurrencyCode>('GBP');
-  const [loading, setLoading] = useState(true);
+  const { pot, currency, loading, reload, setPot } = usePotDetailData(id);
   const [toggling, setToggling] = useState(false);
-
-  const loadData = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      const result = await fetchDashboardData();
-      const found = result.pots.find((p) => p.id === id);
-      setPot(found ?? null);
-      setCurrency((result.household?.currency ?? 'GBP') as CurrencyCode);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const handleToggleComplete = async () => {
     if (!pot || toggling) return;
@@ -52,8 +32,9 @@ export default function PotDetailScreen() {
     if ('success' in result) {
       hapticSuccess();
       setPot((p) => (p ? { ...p, status: nextStatus } : null));
+      void reload();
     } else {
-      Alert.alert('Couldn’t update pot', result.error ?? 'Try again.');
+      Alert.alert("Couldn't update pot", result.error ?? "Try again.");
     }
   };
 
