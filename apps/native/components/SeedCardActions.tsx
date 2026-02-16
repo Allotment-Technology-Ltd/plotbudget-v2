@@ -3,6 +3,7 @@ import { View, Pressable } from 'react-native';
 import { hapticImpact } from '@/lib/haptics';
 import { Text, useTheme } from '@repo/native-ui';
 import type { Payer } from '@/lib/mark-seed-paid';
+import { SeedCardMarkPaidChip } from './SeedCardMarkPaidChip';
 
 interface SeedCardActionsProps {
   isPaid: boolean;
@@ -44,71 +45,23 @@ export function SeedCardActions({
       {canMarkUnmark &&
         (isJoint ? (
           <>
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                hapticImpact('light');
-                (isPaidMe ? onUnmarkPaid : onMarkPaid)?.('me');
-              }}
-              style={{
-                paddingHorizontal: spacing.sm,
-                paddingVertical: spacing.xs,
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: isPaidMe ? colors.accentPrimary : colors.borderSubtle,
-                backgroundColor: isPaidMe ? colors.accentPrimary + '20' : undefined,
-              }}>
-              <Text variant="label-sm"
-                style={{
-                  color: isPaidMe ? colors.accentPrimary : colors.textSecondary,
-                }}>
-                You {isPaidMe ? '✓' : ''}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                hapticImpact('light');
-                (isPaidPartner ? onUnmarkPaid : onMarkPaid)?.('partner');
-              }}
-              style={{
-                paddingHorizontal: spacing.sm,
-                paddingVertical: spacing.xs,
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: isPaidPartner ? colors.accentPrimary : colors.borderSubtle,
-                backgroundColor: isPaidPartner ? colors.accentPrimary + '20' : undefined,
-              }}>
-              <Text variant="label-sm"
-                style={{
-                  color: isPaidPartner ? colors.accentPrimary : colors.textSecondary,
-                }}>
-                {otherLabel} {isPaidPartner ? '✓' : ''}
-              </Text>
-            </Pressable>
+            <SeedCardMarkPaidChip
+              label={`You ${isPaidMe ? '✓' : ''}`}
+              selected={isPaidMe}
+              onPress={() => (isPaidMe ? onUnmarkPaid : onMarkPaid)?.('me')}
+            />
+            <SeedCardMarkPaidChip
+              label={`${otherLabel} ${isPaidPartner ? '✓' : ''}`}
+              selected={isPaidPartner}
+              onPress={() => (isPaidPartner ? onUnmarkPaid : onMarkPaid)?.('partner')}
+            />
           </>
         ) : (
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              hapticImpact('light');
-              (isPaid ? onUnmarkPaid : onMarkPaid)?.('both');
-            }}
-            style={{
-              paddingHorizontal: spacing.sm,
-              paddingVertical: spacing.xs,
-              borderRadius: 6,
-              borderWidth: 1,
-              borderColor: isPaid ? colors.accentPrimary : colors.borderSubtle,
-              backgroundColor: isPaid ? colors.accentPrimary + '20' : undefined,
-            }}>
-            <Text variant="label-sm"
-              style={{
-                color: isPaid ? colors.accentPrimary : colors.textSecondary,
-              }}>
-              {isPaid ? 'Unmark paid' : 'Mark paid'}
-            </Text>
-          </Pressable>
+          <SeedCardMarkPaidChip
+            label={isPaid ? 'Unmark paid' : 'Mark paid'}
+            selected={isPaid}
+            onPress={() => (isPaid ? onUnmarkPaid : onMarkPaid)?.('both')}
+          />
         ))}
       {canEditOrDelete && (
         <Pressable

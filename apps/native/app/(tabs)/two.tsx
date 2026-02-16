@@ -16,7 +16,8 @@ import { SeedFormModal } from '@/components/SeedFormModal';
 import { DeleteSeedConfirmModal } from '@/components/DeleteSeedConfirmModal';
 import { IncomeManageModal } from '@/components/IncomeManageModal';
 import { CyclePickerSheet } from '@/components/CyclePickerSheet';
-import { SeedCard } from '@/components/SeedCard';
+import { PotCard } from '@/components/PotCard';
+import { BlueprintCategorySection } from '@/components/BlueprintCategorySection';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { hapticImpact, hapticSuccess } from '@/lib/haptics';
@@ -32,88 +33,6 @@ import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft } from '@/li
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PotStatus = 'active' | 'complete' | 'paused';
-
-const CATEGORY_LABELS: Record<SeedType, string> = {
-  need: 'Needs',
-  want: 'Wants',
-  savings: 'Savings',
-  repay: 'Repayments',
-};
-
-const CATEGORY_SINGULAR: Record<SeedType, string> = {
-  need: 'Need',
-  want: 'Want',
-  savings: 'Saving',
-  repay: 'Repayment',
-};
-
-function PotCard({
-  pot,
-  currency,
-  colors,
-  spacing,
-  borderRadius,
-  effectiveStatus,
-  onMarkComplete,
-}: {
-  pot: Pot;
-  currency: CurrencyCode;
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-  borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
-  effectiveStatus: PotStatus;
-  onMarkComplete: (potId: string, status: 'complete' | 'active') => void;
-}) {
-  const progress =
-    pot.target_amount > 0
-      ? Math.min(100, (pot.current_amount / pot.target_amount) * 100)
-      : 0;
-  const status =
-    effectiveStatus === 'complete'
-      ? 'Accomplished'
-      : effectiveStatus === 'paused'
-        ? 'Paused'
-        : 'Saving';
-  const canToggle =
-    effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
-  const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
-
-  return (
-    <Pressable
-      onPress={canToggle ? () => { hapticImpact('light'); onMarkComplete(pot.id, nextStatus); } : undefined}
-      disabled={!canToggle}>
-      <Card variant="default" padding="md" style={{ marginBottom: spacing.sm }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-          <BodyText style={{ fontSize: 20 }}>{pot.icon || '🏖️'}</BodyText>
-          <LabelText>{pot.name}</LabelText>
-        </View>
-        <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-          {formatCurrency(pot.current_amount, currency)} / {formatCurrency(pot.target_amount, currency)}
-        </Text>
-        <View
-          style={{
-            height: 8,
-            backgroundColor: colors.borderSubtle,
-            borderRadius: borderRadius.full,
-            overflow: 'hidden',
-            marginBottom: spacing.xs,
-          }}>
-          <View
-            style={{
-              height: '100%',
-              width: `${progress}%`,
-              backgroundColor: colors.savings,
-              borderRadius: borderRadius.full,
-            }}
-          />
-        </View>
-        <Text variant="label-sm" color="secondary">
-          {progress.toFixed(0)}% — {status}
-        </Text>
-      </Card>
-    </Pressable>
-  );
-}
 
 export default function BlueprintScreen() {
   const { colors, spacing, borderRadius } = useTheme();
@@ -870,64 +789,23 @@ export default function BlueprintScreen() {
                 )}
 
                 {/* Seed sections */}
-                {categories.map((cat) => {
-                  const seeds = seedsByCategory[cat] ?? [];
-                  const paidInCat = seeds.filter((s) => s.is_paid).length;
-                  return (
-                    <Card key={cat} variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: spacing.md }}>
-                        <View>
-                          <Text variant="sub-sm">
-                            {CATEGORY_LABELS[cat]} ({seeds.length})
-                          </Text>
-                          {isRitualMode && seeds.length > 0 && (
-                            <Text variant="body-sm" color="secondary">
-                              {paidInCat}/{seeds.length} paid
-                            </Text>
-                          )}
-                        </View>
-                        {!isCycleLocked && (
-                          <Pressable
-                            onPress={() => { hapticImpact('light'); openAddForm(cat); }}
-                            style={{
-                              paddingHorizontal: spacing.md,
-                              paddingVertical: spacing.sm,
-                              borderRadius: borderRadius.md,
-                              borderWidth: 1,
-                              borderColor: colors.borderSubtle,
-                            }}>
-                            <Text variant="body-sm">+ Add {CATEGORY_SINGULAR[cat]}</Text>
-                          </Pressable>
-                        )}
-                      </View>
-                      {seeds.length === 0 ? (
-                        <Text variant="body-sm" color="secondary" style={{ textAlign: 'center', marginVertical: spacing.md }}>
-                          No {CATEGORY_LABELS[cat].toLowerCase()} yet
-                        </Text>
-                      ) : (
-                        seeds.map((seed) => {
-                          const isJoint = !!(seed.payment_source === 'joint' && (data.household as { is_couple?: boolean })?.is_couple);
-                          const canMarkUnmark = !isCycleLocked && isRitualMode;
-                          return (
-                            <SeedCard
-                              key={seed.id}
-                              seed={seed}
-                              currency={currency}
-                              isRitualMode={isRitualMode}
-                              isCycleLocked={isCycleLocked}
-                              isJoint={isJoint}
-                              otherLabel={otherLabel}
-                              onEdit={() => openEditForm(seed)}
-                              onDelete={() => setSeedToDelete(seed)}
-                              onMarkPaid={canMarkUnmark ? (payer) => handleMarkSeedPaid(seed.id, payer) : undefined}
-                              onUnmarkPaid={canMarkUnmark ? (payer) => handleUnmarkSeedPaid(seed.id, payer) : undefined}
-                            />
-                          );
-                        })
-                      )}
-                    </Card>
-                  );
-                })}
+                {categories.map((cat) => (
+                  <BlueprintCategorySection
+                    key={cat}
+                    category={cat}
+                    seeds={seedsByCategory[cat] ?? []}
+                    currency={currency}
+                    isRitualMode={isRitualMode}
+                    isCycleLocked={isCycleLocked}
+                    isJoint={(seed) => !!(seed.payment_source === 'joint' && (data.household as { is_couple?: boolean })?.is_couple)}
+                    otherLabel={otherLabel}
+                    onAdd={() => openAddForm(cat)}
+                    onEdit={openEditForm}
+                    onDelete={setSeedToDelete}
+                    onMarkPaid={handleMarkSeedPaid}
+                    onUnmarkPaid={handleUnmarkSeedPaid}
+                  />
+                ))}
 
                 {data.pots.length > 0 && (
                   <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
@@ -937,9 +815,6 @@ export default function BlueprintScreen() {
                         key={pot.id}
                         pot={pot}
                         currency={currency}
-                        colors={colors}
-                        spacing={spacing}
-                        borderRadius={borderRadius}
                         effectiveStatus={(optimisticStatus[pot.id] ?? pot.status) as PotStatus}
                         onMarkComplete={handleMarkComplete}
                       />

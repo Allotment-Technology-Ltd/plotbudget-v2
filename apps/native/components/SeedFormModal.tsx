@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Pressable, Platform, ScrollView } from 'react-native';
-import { hapticImpact, hapticSelection } from '@/lib/haptics';
+import { View, Pressable } from 'react-native';
+import { hapticImpact } from '@/lib/haptics';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import Slider from '@react-native-community/slider';
-import { PillButton, DatePickerField, StatusPicker } from './SeedFormModalComponents';
+import {
+  SeedFormDueDateField,
+  SeedFormSavingsSection,
+  SeedFormRepaymentSection,
+  SeedFormPaymentSourceSection,
+  SeedFormRecurringCheckbox,
+} from './SeedFormSections';
 import {
   Container,
   Section,
@@ -38,18 +42,6 @@ const NAME_PLACEHOLDERS: Record<SeedType, string> = {
   repay: 'e.g. Credit card, Loan repayment',
 };
 
-const POT_STATUS_OPTIONS: { value: 'active' | 'complete' | 'paused'; label: string }[] = [
-  { value: 'active', label: 'Saving' },
-  { value: 'complete', label: 'Accomplished' },
-  { value: 'paused', label: 'Paused' },
-];
-
-const REPAYMENT_STATUS_OPTIONS: { value: 'active' | 'paid' | 'paused'; label: string }[] = [
-  { value: 'active', label: 'Clearing' },
-  { value: 'paused', label: 'Paused' },
-  { value: 'paid', label: 'Cleared' },
-];
-
 interface SeedFormModalProps {
   visible: boolean;
   onClose: () => void;
@@ -73,7 +65,7 @@ export function SeedFormModal({
   pots,
   repayments,
 }: SeedFormModalProps) {
-  const { colors, spacing, borderRadius } = useTheme();
+  const { colors, spacing } = useTheme();
   const isCouple = !!(household as { is_couple?: boolean }).is_couple;
   const ownerLabel = (household as { owner_name?: string }).owner_name?.toUpperCase() || 'ME';
   const partnerLabel = (household as { partner_name?: string }).partner_name?.toUpperCase() || 'PARTNER';
@@ -328,167 +320,52 @@ export function SeedFormModal({
                 />
               </View>
 
-              {/* Due date */}
-              <View style={{ marginBottom: spacing.md }}>
-                <LabelText color="secondary" style={{ marginBottom: spacing.xs }}>Due date (optional)</LabelText>
-                <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-                  When the due date has passed, this item is automatically marked as paid.
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Pressable
-                    onPress={() => { hapticImpact('light'); setShowDueDatePicker(true); }}
-                    style={{
-                      flex: 1,
-                      borderWidth: 1,
-                      borderColor: colors.borderSubtle,
-                      borderRadius: borderRadius.md,
-                      paddingHorizontal: spacing.md,
-                      paddingVertical: spacing.md,
-                      backgroundColor: colors.bgSecondary,
-                    }}>
-                    <BodyText style={{ color: dueDate ? colors.textPrimary : colors.textSecondary }}>
-                      {dueDate
-                        ? new Date(dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : 'Pick date'}
-                    </BodyText>
-                  </Pressable>
-                  {dueDate ? (
-                    <Pressable onPress={() => { hapticImpact('light'); setDueDate(''); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
-                      <Text variant="body-sm" style={{ color: colors.error }}>Clear</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-                {showDueDatePicker && (
-                  <>
-                    <DateTimePicker
-                      value={dueDate ? new Date(dueDate + 'T12:00:00') : new Date(cycleStartDate + 'T12:00:00')}
-                      mode="date"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      minimumDate={new Date(cycleStartDate + 'T00:00:00')}
-                      maximumDate={new Date(cycleEndDate + 'T23:59:59')}
-                      onChange={(_, date) => {
-                        if (Platform.OS === 'android') setShowDueDatePicker(false);
-                        if (date) setDueDate(date.toISOString().slice(0, 10));
-                      }}
-                    />
-                    {Platform.OS === 'ios' && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.xs }}>
-                        <Pressable onPress={() => { hapticImpact('light'); setShowDueDatePicker(false); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
-                          <BodyText style={{ color: colors.accentPrimary }}>Done</BodyText>
-                        </Pressable>
-                      </View>
-                    )}
-                  </>
-                )}
-              </View>
+              <SeedFormDueDateField
+                value={dueDate}
+                onChange={setDueDate}
+                showPicker={showDueDatePicker}
+                onShowPicker={() => setShowDueDatePicker(true)}
+                onHidePicker={() => setShowDueDatePicker(false)}
+                cycleStartDate={cycleStartDate}
+                cycleEndDate={cycleEndDate}
+              />
 
-              {/* Savings section */}
               {category === 'savings' && (
-                <Card variant="default" padding="md" style={{ marginBottom: spacing.md }}>
-                  <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Savings goal (optional)</LabelText>
-
-                  {/* Link selector */}
-                  {pots.length > 0 && (
-                    <View style={{ marginBottom: spacing.md }}>
-                      <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Link to existing pot</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PillButton label="None – create new" selected={!linkPotId} onPress={() => setLinkPotId(null)} />
-                        {pots.map((p) => (
-                          <PillButton key={p.id} label={p.name} selected={linkPotId === p.id} onPress={() => setLinkPotId(p.id)} />
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
-
-                  {showNewPotFields && (
-                    <>
-                      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md }}>
-                        <View style={{ flex: 1 }}>
-                          <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Current ({symbol})</Text>
-                          <Input value={potCurrentStr} onChangeText={(v) => setPotCurrentStr(v.replace(/[^0-9.]/g, ''))} placeholder="0" keyboardType="decimal-pad" />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Target ({symbol})</Text>
-                          <Input value={potTargetStr} onChangeText={(v) => setPotTargetStr(v.replace(/[^0-9.]/g, ''))} placeholder="0" keyboardType="decimal-pad" />
-                        </View>
-                      </View>
-
-                      {/* Target date */}
-                      <View style={{ marginBottom: spacing.md }}>
-                        <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Target date</Text>
-                        <DatePickerField
-                          value={potTargetDate}
-                          onChange={setPotTargetDate}
-                          showPicker={showPotDatePicker}
-                          onShowPicker={() => setShowPotDatePicker(true)}
-                          onHidePicker={() => setShowPotDatePicker(false)}
-                        />
-                      </View>
-
-                      {/* Status */}
-                      <View>
-                        <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Status</Text>
-                        <StatusPicker
-                          options={POT_STATUS_OPTIONS}
-                          value={potStatus}
-                          onChange={(v) => setPotStatus(v as 'active' | 'complete' | 'paused')}
-                        />
-                      </View>
-                    </>
-                  )}
-                </Card>
+                <SeedFormSavingsSection
+                  pots={pots}
+                  linkPotId={linkPotId}
+                  setLinkPotId={setLinkPotId}
+                  potCurrentStr={potCurrentStr}
+                  setPotCurrentStr={setPotCurrentStr}
+                  potTargetStr={potTargetStr}
+                  setPotTargetStr={setPotTargetStr}
+                  potTargetDate={potTargetDate}
+                  setPotTargetDate={setPotTargetDate}
+                  showPotDatePicker={showPotDatePicker}
+                  setShowPotDatePicker={setShowPotDatePicker}
+                  potStatus={potStatus}
+                  setPotStatus={setPotStatus}
+                  symbol={symbol}
+                  showNewPotFields={showNewPotFields}
+                />
               )}
 
-              {/* Repayment section */}
               {category === 'repay' && (
-                <Card variant="default" padding="md" style={{ marginBottom: spacing.md }}>
-                  <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Debt / Repayment (optional)</LabelText>
-
-                  {/* Link selector */}
-                  {repayments.length > 0 && (
-                    <View style={{ marginBottom: spacing.md }}>
-                      <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Link to existing repayment</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PillButton label="None – create new" selected={!linkRepaymentId} onPress={() => setLinkRepaymentId(null)} />
-                        {repayments.map((r) => (
-                          <PillButton key={r.id} label={r.name} selected={linkRepaymentId === r.id} onPress={() => setLinkRepaymentId(r.id)} />
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
-
-                  {showNewRepayFields && (
-                    <>
-                      {/* Current balance */}
-                      <View style={{ marginBottom: spacing.md }}>
-                        <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Current balance ({symbol})</Text>
-                        <Input value={repaymentCurrentStr} onChangeText={(v) => setRepaymentCurrentStr(v.replace(/[^0-9.]/g, ''))} placeholder="0" keyboardType="decimal-pad" />
-                      </View>
-
-                      {/* Target payoff date */}
-                      <View style={{ marginBottom: spacing.md }}>
-                        <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Target payoff date</Text>
-                        <DatePickerField
-                          value={repaymentTargetDate}
-                          onChange={setRepaymentTargetDate}
-                          showPicker={showRepayDatePicker}
-                          onShowPicker={() => setShowRepayDatePicker(true)}
-                          onHidePicker={() => setShowRepayDatePicker(false)}
-                        />
-                      </View>
-
-                      {/* Status */}
-                      <View>
-                        <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>Status</Text>
-                        <StatusPicker
-                          options={REPAYMENT_STATUS_OPTIONS}
-                          value={repaymentStatus}
-                          onChange={(v) => setRepaymentStatus(v as 'active' | 'paid' | 'paused')}
-                        />
-                      </View>
-                    </>
-                  )}
-                </Card>
+                <SeedFormRepaymentSection
+                  repayments={repayments}
+                  linkRepaymentId={linkRepaymentId}
+                  setLinkRepaymentId={setLinkRepaymentId}
+                  repaymentCurrentStr={repaymentCurrentStr}
+                  setRepaymentCurrentStr={setRepaymentCurrentStr}
+                  repaymentTargetDate={repaymentTargetDate}
+                  setRepaymentTargetDate={setRepaymentTargetDate}
+                  showRepayDatePicker={showRepayDatePicker}
+                  setShowRepayDatePicker={setShowRepayDatePicker}
+                  repaymentStatus={repaymentStatus}
+                  setRepaymentStatus={setRepaymentStatus}
+                  symbol={symbol}
+                  showNewRepayFields={showNewRepayFields}
+                />
               )}
 
               {/* Amount */}
@@ -502,124 +379,23 @@ export function SeedFormModal({
                 />
               </View>
 
-              {/* Payment source (couple only) */}
               {isCouple && (
-                <View style={{ marginBottom: spacing.md }}>
-                  <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Payment source</LabelText>
-                  <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                    {([
-                      { value: 'me' as const, label: ownerLabel },
-                      { value: 'partner' as const, label: partnerLabel },
-                      { value: 'joint' as const, label: 'JOINT' },
-                    ] as const).map((opt) => (
-                      <Pressable
-                        key={opt.value}
-                        onPress={() => { hapticSelection(); setPaymentSource(opt.value); }}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: spacing.xs,
-                          paddingVertical: spacing.sm,
-                          paddingHorizontal: spacing.sm,
-                        }}>
-                        <View
-                          style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 10,
-                            borderWidth: 2,
-                            borderColor: paymentSource === opt.value ? colors.accentPrimary : colors.borderSubtle,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}>
-                          {paymentSource === opt.value && (
-                            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accentPrimary }} />
-                          )}
-                        </View>
-                        <Text variant="body-sm">{opt.label}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
+                <SeedFormPaymentSourceSection
+                  paymentSource={paymentSource}
+                  setPaymentSource={setPaymentSource}
+                  ownerLabel={ownerLabel}
+                  partnerLabel={partnerLabel}
+                  splitRatio={splitRatio}
+                  setSplitRatio={setSplitRatio}
+                  usesJointAccount={usesJointAccount}
+                  setUsesJointAccount={setUsesJointAccount}
+                  amountStr={amountStr}
+                  symbol={symbol}
+                />
               )}
 
-              {/* Joint: split ratio + joint account checkbox */}
-              {isCouple && paymentSource === 'joint' && (
-                <>
-                  <View style={{ marginBottom: spacing.md }}>
-                    <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Split ratio</LabelText>
-                    <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-                      {ownerLabel}: {splitRatio}% / {partnerLabel}: {100 - splitRatio}%
-                    </Text>
-                    <Slider
-                      minimumValue={0}
-                      maximumValue={100}
-                      step={1}
-                      value={splitRatio}
-                      onValueChange={(v) => setSplitRatio(Math.round(v))}
-                      minimumTrackTintColor={colors.accentPrimary}
-                      maximumTrackTintColor={colors.borderSubtle}
-                      thumbTintColor={colors.accentPrimary}
-                      style={{ height: 40 }}
-                    />
-                    {parseIncome(amountStr) > 0 && (
-                      <Text variant="body-sm" color="secondary" style={{ marginTop: spacing.xs }}>
-                        {ownerLabel}: {symbol}{(parseIncome(amountStr) * splitRatio / 100).toFixed(2)} • {partnerLabel}: {symbol}{(parseIncome(amountStr) * (100 - splitRatio) / 100).toFixed(2)}
-                      </Text>
-                    )}
-                  </View>
-
-                  <Pressable
-                    onPress={() => { hapticImpact('light'); setUsesJointAccount(!usesJointAccount); }}
-                    style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: spacing.md }}>
-                    <View
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 4,
-                        borderWidth: 2,
-                        borderColor: usesJointAccount ? colors.accentPrimary : colors.borderSubtle,
-                        backgroundColor: usesJointAccount ? colors.accentPrimary : 'transparent',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginTop: 2,
-                      }}>
-                      {usesJointAccount && <BodyText style={{ color: '#fff', fontSize: 14, lineHeight: 18 }}>✓</BodyText>}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <BodyText style={{ fontWeight: '600' }}>Paid from joint account</BodyText>
-                      <Text variant="label-sm" color="secondary" style={{ marginTop: 2 }}>
-                        Include in joint transfer calculation. Uncheck if you each pay your share from your own accounts.
-                      </Text>
-                    </View>
-                  </Pressable>
-                </>
-              )}
-
-              {/* Recurring checkbox (needs/wants only) */}
               {(category === 'need' || category === 'want') && (
-                <Pressable
-                  onPress={() => { hapticImpact('light'); setIsRecurring(!isRecurring); }}
-                  style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: spacing.md }}>
-                  <View
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 4,
-                      borderWidth: 2,
-                      borderColor: isRecurring ? colors.accentPrimary : colors.borderSubtle,
-                      backgroundColor: isRecurring ? colors.accentPrimary : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginTop: 2,
-                    }}>
-                    {isRecurring && <BodyText style={{ color: '#fff', fontSize: 14, lineHeight: 18 }}>✓</BodyText>}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <BodyText style={{ fontWeight: '600' }}>Recurring</BodyText>
-                    <Text variant="label-sm" color="secondary" style={{ marginTop: 2 }}>Include in next pay cycle</Text>
-                  </View>
-                </Pressable>
+                <SeedFormRecurringCheckbox isRecurring={isRecurring} setIsRecurring={setIsRecurring} />
               )}
 
               {/* Actions */}

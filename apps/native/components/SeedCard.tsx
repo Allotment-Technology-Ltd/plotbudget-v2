@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { hapticImpact } from '@/lib/haptics';
-import { Card, Text, BodyText, useTheme } from '@repo/native-ui';
-import { currencySymbol, type CurrencyCode } from '@repo/logic';
+import { Card, useTheme } from '@repo/native-ui';
+import type { CurrencyCode } from '@repo/logic';
 import type { Seed } from '@repo/supabase';
 import type { Payer } from '@/lib/mark-seed-paid';
+import { useSeedCardCapabilities } from '@/lib/use-seed-card-capabilities';
+import { SeedCardContent } from './SeedCardContent';
 import { SeedCardActions } from './SeedCardActions';
 
 export interface SeedCardProps {
@@ -33,11 +35,13 @@ export function SeedCard({
   onUnmarkPaid,
 }: SeedCardProps) {
   const { colors, spacing } = useTheme();
-  const isPaid = !!seed.is_paid;
-  const isPaidMe = !!seed.is_paid_me;
-  const isPaidPartner = !!seed.is_paid_partner;
-  const canMarkUnmark = !isCycleLocked && isRitualMode && (onMarkPaid || onUnmarkPaid);
-  const canEditOrDelete = !isCycleLocked && (!isRitualMode || !isPaid);
+  const { isPaid, canMarkUnmark, canEditOrDelete } = useSeedCardCapabilities(
+    seed,
+    isRitualMode,
+    isCycleLocked,
+    onMarkPaid,
+    onUnmarkPaid
+  );
 
   const handleEdit = () => {
     if (!canEditOrDelete) return;
@@ -57,21 +61,14 @@ export function SeedCard({
           backgroundColor: isPaid && isRitualMode ? colors.accentPrimary + '0D' : undefined,
         }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <BodyText style={{ marginBottom: spacing.xs }}>{seed.name}</BodyText>
-            <Text variant="label-sm" color="secondary">
-              {currencySymbol(currency)}
-              {Number(seed.amount).toFixed(2)}
-              {isPaid ? ' • Paid' : ''}
-            </Text>
-          </View>
+          <SeedCardContent seed={seed} currency={currency} isPaid={isPaid} />
           <SeedCardActions
             isPaid={isPaid}
-            isPaidMe={isPaidMe}
-            isPaidPartner={isPaidPartner}
+            isPaidMe={!!seed.is_paid_me}
+            isPaidPartner={!!seed.is_paid_partner}
             isJoint={isJoint}
             otherLabel={otherLabel}
-            canMarkUnmark={!!canMarkUnmark}
+            canMarkUnmark={canMarkUnmark}
             canEditOrDelete={canEditOrDelete}
             onMarkPaid={onMarkPaid}
             onUnmarkPaid={onUnmarkPaid}
