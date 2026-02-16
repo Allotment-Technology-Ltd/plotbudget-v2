@@ -40,11 +40,19 @@ Phase 2 covers **writes** (mark seed/pot paid — already implemented), **notifi
 
 | Linear ID | Title | Theme | Status |
 |-----------|-------|-------|--------|
-| PLOT-131 | Implement **Physics-Based Gestures**: Swipe-to-action rows for transactions (Reanimated) | Animation | Backlog |
-| PLOT-132 | Add **Draggable Bottom Sheets** for transaction details/editing | Animation | Backlog |
-| PLOT-133 | Implement **Shared Element Transitions**: Budget cards expand into detail screens | Animation | Backlog |
-| PLOT-134 | Build **Interactive Skia Charts**: Donut chart with spin-to-select and haptics | Animation | Backlog |
-| PLOT-135 | Add **Micro-interactions**: Success confetti, tab bar morphs, liquid loaders | Animation | Backlog |
+| PLOT-131 | Implement **Physics-Based Gestures**: Swipe-to-action rows for transactions (Reanimated) | Animation | *Skipped — inline actions used* |
+| PLOT-132 | Add **Draggable Bottom Sheets** for transaction details/editing | Animation | **Done** |
+| PLOT-133 | Implement **Shared Element Transitions**: Budget cards expand into detail screens | Animation | **Done** (detail routes; transitions disabled for Expo Go) |
+| PLOT-134 | Build **Interactive Skia Charts**: Donut chart with spin-to-select and haptics | Animation | **Phase 4** |
+| PLOT-135 | Add **Micro-interactions**: Success confetti, tab bar morphs, liquid loaders | Animation | **Done** |
+
+---
+
+## Phase 4: Interactive Reporting (Charts)
+
+| Linear ID | Title | Note |
+|-----------|-------|------|
+| PLOT-134 | Build **Interactive Skia Charts**: Donut chart with spin-to-select and haptics | Moved from Phase 2b. Reporting APIs, filterable charts, cycle comparison. |
 
 ---
 
@@ -84,6 +92,6 @@ All of the following sub-issues are **Done** in Linear as of Phase 1 wrap-up:
 1. **Write flows:** PLOT-124 and PLOT-102 are **done** (native uses web API; optimistic update + rollback).
 2. **Notify:** PLOT-113 (push tokens), PLOT-112 (payday reminder), PLOT-123 (partner activity).
 3. **Polish:** PLOT-117 (deep links), PLOT-127 (biometric), PLOT-128 (PostHog).
-4. **Native Feel (Phase 2b):** PLOT-131 (swipe), PLOT-132 (sheets), PLOT-133 (transitions), PLOT-134 (skia), PLOT-135 (micro-interactions).
+4. **Native Feel (Phase 2b):** PLOT-132 (sheets), PLOT-133 (transitions), PLOT-135 (micro-interactions). PLOT-131 (swipe) skipped; PLOT-134 (charts) moved to Phase 4.
 
 **Phase 3 (Store):** When ready, do PLOT-103 (Play Developer Account), then PLOT-118, PLOT-129, PLOT-130, PLOT-120, PLOT-109, PLOT-104, PLOT-121, PLOT-106, PLOT-111.

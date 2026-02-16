@@ -13,6 +13,7 @@ import { ThemeProvider } from '@repo/native-ui';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemePreferenceProvider, useThemePreference } from '@/contexts/ThemePreferenceContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { useNavigationPersistence } from '@/lib/navigation-persistence';
@@ -132,22 +133,26 @@ function RootLayoutNav() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider colorScheme={resolvedScheme}>
-          <AppErrorBoundary>
-            <NavigationThemeProvider value={resolvedScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <AuthGate />
-              {process.env.EXPO_PUBLIC_POSTHOG_KEY ? <PostHogIdentifyOnAuth /> : null}
-              <PushAndDeepLinkHandlerSafe />
-              <BiometricProvider>
-                <Stack>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-                  <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-                </Stack>
-                <BiometricLockScreen />
-              </BiometricProvider>
-            </NavigationThemeProvider>
-          </AppErrorBoundary>
+          <BottomSheetModalProvider>
+            <AppErrorBoundary>
+              <NavigationThemeProvider value={resolvedScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <AuthGate />
+                {process.env.EXPO_PUBLIC_POSTHOG_KEY ? <PostHogIdentifyOnAuth /> : null}
+                <PushAndDeepLinkHandlerSafe />
+                <BiometricProvider>
+                  <Stack>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                    <Stack.Screen name="budget-detail/[type]" options={{ headerShown: false }} />
+                    <Stack.Screen name="pot-detail/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                  </Stack>
+                  <BiometricLockScreen />
+                </BiometricProvider>
+              </NavigationThemeProvider>
+            </AppErrorBoundary>
+          </BottomSheetModalProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
