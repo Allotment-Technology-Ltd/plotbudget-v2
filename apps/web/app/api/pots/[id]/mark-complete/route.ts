@@ -53,7 +53,7 @@ export async function POST(
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  // Notify partner (PLOT-123)
+  // Notify partner (PLOT-123). Only if requester is owner or partner of the household.
   try {
     const { data: pot } = await supabase.from('pots').select('household_id').eq('id', potId).single();
     const potRow = pot as { household_id: string } | null;
@@ -65,7 +65,8 @@ export async function POST(
         .eq('id', potHouseholdId)
         .single();
       const h = household as { owner_id: string; partner_user_id: string | null } | null;
-      if (h) {
+      const isMember = h && (user.id === h.owner_id || user.id === h.partner_user_id);
+      if (isMember) {
         const partnerUserId = user.id === h.owner_id ? h.partner_user_id : h.owner_id;
         if (partnerUserId) {
           await sendPushToUser(partnerUserId, {
@@ -77,8 +78,8 @@ export async function POST(
         }
       }
     }
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.warn('[mark-complete] Partner notification failed:', err);
   }
 
   return NextResponse.json({ success: true });

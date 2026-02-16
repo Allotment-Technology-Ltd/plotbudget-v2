@@ -34,6 +34,29 @@ export async function POST(
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Verify caller is owner or partner of the draft cycle's household before resync.
+  const { data: draftCycleData } = await supabase
+    .from('paycycles')
+    .select('household_id, status')
+    .eq('id', draftPaycycleId)
+    .single();
+  const draftCycle = draftCycleData as { household_id: string; status: string } | null;
+  if (!draftCycle || draftCycle.status !== 'draft') {
+    return NextResponse.json({ error: 'Draft paycycle not found or not a draft' }, { status: 404 });
+  }
+  const { data: household } = await supabase
+    .from('households')
+    .select('owner_id, partner_user_id')
+    .eq('id', draftCycle.household_id)
+    .single();
+  const isMember =
+    household &&
+    (user.id === (household as { owner_id: string; partner_user_id: string | null }).owner_id ||
+      user.id === (household as { owner_id: string; partner_user_id: string | null }).partner_user_id);
+  if (!isMember) {
+    return NextResponse.json({ error: 'Forbidden: not a member of this household' }, { status: 403 });
+  }
+
   const result = await resyncDraftFromActiveCore(supabase, draftPaycycleId, activePaycycleId);
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: 400 });

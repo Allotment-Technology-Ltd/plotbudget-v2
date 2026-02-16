@@ -15,9 +15,15 @@ function dateString(d: Date): string {
 }
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: 'Cron not configured (CRON_SECRET missing)' },
+      { status: 503 }
+    );
+  }
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

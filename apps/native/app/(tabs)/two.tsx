@@ -325,8 +325,8 @@ export default function BlueprintScreen() {
             setSelectedCycleId(refetch.paycycle?.id ?? null);
             return;
           }
-        } catch {
-          // Mark-overdue API unreachable (e.g. wrong EXPO_PUBLIC_APP_URL on emulator); show blueprint anyway
+        } catch (err) {
+          if (__DEV__) console.warn('[Blueprint] markOverdueSeedsPaid failed (showing blueprint anyway):', err);
         }
         setData({
           household: result.household,

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.push_tokens (
   UNIQUE(user_id, token)
 );
 
-CREATE INDEX IF NOT EXISTS push_tokens_user_id_idx ON public.push_tokens(user_id);
+-- token_idx for lookups by token; UNIQUE(user_id, token) already supports user_id lookups
 CREATE INDEX IF NOT EXISTS push_tokens_token_idx ON public.push_tokens(token);
 
 COMMENT ON TABLE public.push_tokens IS 'Expo push tokens for mobile app; one row per device token per user.';

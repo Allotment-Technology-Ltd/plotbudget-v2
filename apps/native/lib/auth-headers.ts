@@ -15,8 +15,9 @@ export async function getAuthHeaders(): Promise<
   const supabase = createSupabaseClient();
   try {
     await supabase.auth.refreshSession();
-  } catch {
+  } catch (err) {
     // Proceed with cached session if refresh fails (e.g. offline)
+    if (__DEV__) console.warn('[auth-headers] refreshSession failed:', err);
   }
   const {
     data: { session },

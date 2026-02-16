@@ -64,7 +64,9 @@ export function PushPreferencesProvider({ children }: { children: React.ReactNod
 
   const persist = useCallback((next: PushPreferenceFlags) => {
     setPreferencesState(next);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => {});
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch((err) => {
+      if (__DEV__) console.warn('[PushPreferences] persist failed:', err);
+    });
   }, []);
 
   const setPaydayReminders = useCallback(
