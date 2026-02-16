@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markSeedPaid } from '@/lib/actions/ritual-actions';
 import { createSupabaseClientFromToken } from '@/lib/supabase/client-from-token';
+import { sendPushToUser } from '@/lib/push/send-to-user';
 
 type Payer = 'me' | 'partner' | 'both';
 
@@ -52,6 +53,34 @@ export async function POST(
 
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  // Notify partner (PLOT-123). Only if requester is owner or partner of the household.
+  try {
+    const { data: seed } = await supabase.from('seeds').select('household_id').eq('id', seedId).single();
+    const seedRow = seed as { household_id: string } | null;
+    if (seedRow?.household_id) {
+      const { data: household } = await supabase
+        .from('households')
+        .select('owner_id, partner_user_id')
+        .eq('id', seedRow.household_id)
+        .single();
+      const h = household as { owner_id: string; partner_user_id: string | null } | null;
+      const isMember = h && (user.id === h.owner_id || user.id === h.partner_user_id);
+      if (isMember) {
+        const partnerUserId = user.id === h.owner_id ? h.partner_user_id : h.owner_id;
+        if (partnerUserId) {
+          await sendPushToUser(partnerUserId, {
+            title: 'Partner activity',
+            body: 'A seed was marked paid in your budget.',
+            data: { path: '/(tabs)' },
+            type: 'partner',
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[mark-paid] Partner notification failed:', err);
   }
 
   return NextResponse.json({ success: true });

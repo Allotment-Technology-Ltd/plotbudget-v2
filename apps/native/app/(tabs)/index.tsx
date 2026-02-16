@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
+import { ScrollView, View, RefreshControl, Pressable, Alert } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -495,6 +495,7 @@ export default function DashboardScreen() {
           next.delete(seedId);
           return next;
         });
+        Alert.alert('Couldn’t mark as paid', result.error ?? 'Something went wrong. Try again.');
       }
     },
     [loadData]
@@ -515,6 +516,7 @@ export default function DashboardScreen() {
         });
       } else {
         setOptimisticPotStatus((s) => ({ ...s, [potId]: prevStatus }));
+        Alert.alert('Couldn’t update pot', result.error ?? 'Something went wrong. Try again.');
       }
     },
     [data?.pots, loadData]

@@ -22,6 +22,14 @@ export type IncomeSource = {
   updated_at: string;
 };
 
+export type PaycycleOption = {
+  id: string;
+  name: string | null;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'draft' | 'completed' | 'archived';
+};
+
 export interface BlueprintData {
   household: Household | null;
   paycycle: PayCycle | null;
@@ -31,9 +39,21 @@ export interface BlueprintData {
   incomeSources: IncomeSource[];
   /** True when current user is the partner (household.partner_user_id === user.id) */
   isPartner: boolean;
+  /** All cycles for cycle selector (active, draft, completed, archived), newest first */
+  allPaycycles: PaycycleOption[];
+  /** Id of the active cycle, if any */
+  activePaycycleId: string | null;
+  /** Whether a draft cycle exists */
+  hasDraftCycle: boolean;
 }
 
-export async function fetchBlueprintData(): Promise<BlueprintData> {
+export interface FetchBlueprintOptions {
+  /** When set, load this cycle instead of default (current/active) */
+  selectedCycleId?: string | null;
+}
+
+export async function fetchBlueprintData(options: FetchBlueprintOptions = {}): Promise<BlueprintData> {
+  const { selectedCycleId } = options;
   if (process.env.EXPO_PUBLIC_SIMULATE_NETWORK_FAILURE === 'true') {
     await new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Simulated network failure')), 500)
@@ -46,7 +66,18 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], incomeSources: [], isPartner: false };
+    return {
+      household: null,
+      paycycle: null,
+      seeds: [],
+      pots: [],
+      repayments: [],
+      incomeSources: [],
+      isPartner: false,
+      allPaycycles: [],
+      activePaycycleId: null,
+      hasDraftCycle: false,
+    };
   }
 
   const { data: profile } = (await supabase
@@ -69,20 +100,38 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     if (partnerHousehold?.id) {
       householdId = partnerHousehold.id;
     } else {
-      return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], incomeSources: [], isPartner: false };
+      return {
+        household: null,
+        paycycle: null,
+        seeds: [],
+        pots: [],
+        repayments: [],
+        incomeSources: [],
+        isPartner: false,
+        allPaycycles: [],
+        activePaycycleId: null,
+        hasDraftCycle: false,
+      };
     }
   }
-  let paycycleId = profile?.current_paycycle_id ?? null;
 
+  const { data: allPaycyclesData } = await supabase
+    .from('paycycles')
+    .select('id, name, start_date, end_date, status')
+    .eq('household_id', householdId)
+    .in('status', ['active', 'draft', 'completed', 'archived'])
+    .order('start_date', { ascending: false });
+  const allPaycycles = (allPaycyclesData ?? []) as PaycycleOption[];
+  const activePaycycle = allPaycycles.find((p) => p.status === 'active');
+  const activePaycycleId = activePaycycle?.id ?? null;
+  const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
+
+  let paycycleId: string | null = selectedCycleId ?? profile?.current_paycycle_id ?? null;
   if (!paycycleId) {
-    const { data: activeCycle } = (await supabase
-      .from('paycycles')
-      .select('id')
-      .eq('household_id', householdId)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle()) as { data: { id: string } | null };
-    paycycleId = activeCycle?.id ?? null;
+    paycycleId = activePaycycleId;
+  }
+  if (paycycleId && !allPaycycles.some((p) => p.id === paycycleId)) {
+    paycycleId = activePaycycleId;
   }
 
   const { data: household } = (await supabase
@@ -92,7 +141,18 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     .single()) as { data: Household | null };
 
   if (!household) {
-    return { household: null, paycycle: null, seeds: [], pots: [], repayments: [], incomeSources: [], isPartner: false };
+    return {
+      household: null,
+      paycycle: null,
+      seeds: [],
+      pots: [],
+      repayments: [],
+      incomeSources: [],
+      isPartner: false,
+      allPaycycles: [],
+      activePaycycleId: null,
+      hasDraftCycle: false,
+    };
   }
 
   const isPartner = (household as { partner_user_id?: string | null }).partner_user_id === user.id;
@@ -146,5 +206,8 @@ export async function fetchBlueprintData(): Promise<BlueprintData> {
     repayments,
     incomeSources,
     isPartner,
+    allPaycycles,
+    activePaycycleId,
+    hasDraftCycle,
   };
 }

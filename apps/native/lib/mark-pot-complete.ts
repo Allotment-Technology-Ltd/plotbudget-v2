@@ -3,7 +3,7 @@
  * Calls web app API with Bearer token for revalidation and data parity.
  */
 
-import { createSupabaseClient } from './supabase';
+import { getAuthHeaders } from './auth-headers';
 
 export async function markPotComplete(
   potId: string,
@@ -14,21 +14,14 @@ export async function markPotComplete(
     return { error: 'EXPO_PUBLIC_APP_URL not configured' };
   }
 
-  const supabase = createSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
+  const headers = await getAuthHeaders();
+  if (!headers) {
     return { error: 'Not authenticated' };
   }
 
   const res = await fetch(`${baseUrl}/api/pots/${potId}/mark-complete`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
+    headers,
     body: JSON.stringify({ status }),
   });
 

@@ -21,7 +21,13 @@ import {
   OnboardingStatusProvider,
 } from '@/contexts/OnboardingStatusContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { BiometricProvider } from '@/contexts/BiometricContext';
+import { PushPreferencesProvider } from '@/contexts/PushPreferencesContext';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { PostHogProvider } from '@/providers/PostHogProvider';
+import { PushAndDeepLinkHandlerSafe } from '../components/PushAndDeepLinkHandlerSafe';
+import { PostHogIdentifyOnAuth } from '@/components/PostHogIdentifyOnAuth';
+import { BiometricLockScreen } from '@/components/BiometricLockScreen';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -65,13 +71,17 @@ export default function RootLayout() {
   return (
     <QueryProvider>
       <AuthProvider>
-        <OnboardingStatusProvider>
-          <FontLoader>
-            <ThemePreferenceProvider>
-              <RootLayoutNav />
-            </ThemePreferenceProvider>
-          </FontLoader>
-        </OnboardingStatusProvider>
+        <PostHogProvider>
+          <OnboardingStatusProvider>
+            <FontLoader>
+              <ThemePreferenceProvider>
+                <PushPreferencesProvider>
+                  <RootLayoutNav />
+                </PushPreferencesProvider>
+              </ThemePreferenceProvider>
+            </FontLoader>
+          </OnboardingStatusProvider>
+        </PostHogProvider>
       </AuthProvider>
     </QueryProvider>
   );
@@ -125,12 +135,17 @@ function RootLayoutNav() {
           <AppErrorBoundary>
             <NavigationThemeProvider value={resolvedScheme === 'dark' ? DarkTheme : DefaultTheme}>
               <AuthGate />
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-                <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-              </Stack>
+              {process.env.EXPO_PUBLIC_POSTHOG_KEY ? <PostHogIdentifyOnAuth /> : null}
+              <PushAndDeepLinkHandlerSafe />
+              <BiometricProvider>
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                </Stack>
+                <BiometricLockScreen />
+              </BiometricProvider>
             </NavigationThemeProvider>
           </AppErrorBoundary>
         </ThemeProvider>

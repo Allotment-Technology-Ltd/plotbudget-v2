@@ -102,6 +102,12 @@ describe('calculateCycleEndDate', () => {
     // Feb 2024: 29 is Thursday
     expect(end).toBe('2024-02-29');
   });
+
+  it('last_working_day: when start is last day of month (e.g. 31 Jan), end is LWD of next month', () => {
+    // Onboarding in Feb: start = 31 Jan, end must be LWD of Feb (27 or 28), not Jan (30)
+    const end = calculateCycleEndDate('last_working_day', '2026-01-31');
+    expect(end).toBe('2026-02-27'); // 28 Feb 2026 is Saturday → LWD Friday 27
+  });
 });
 
 describe('calculateNextCycleDates', () => {

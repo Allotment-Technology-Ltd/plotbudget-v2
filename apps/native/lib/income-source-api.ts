@@ -3,7 +3,7 @@
  * Calls web app API with Bearer token.
  */
 
-import { createSupabaseClient } from './supabase';
+import { getAuthHeaders } from './auth-headers';
 
 export type FrequencyRule = 'specific_date' | 'last_working_day' | 'every_4_weeks';
 export type PaymentSource = 'me' | 'partner' | 'joint';
@@ -43,22 +43,6 @@ export interface UpdateIncomeSourcePayload {
   payment_source?: PaymentSource;
   sort_order?: number;
   is_active?: boolean;
-}
-
-async function getAuthHeaders(): Promise<{ 'Content-Type': string; Authorization: string } | null> {
-  const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
-  if (!baseUrl) return null;
-
-  const supabase = createSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) return null;
-
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${session.access_token}`,
-  };
 }
 
 export async function fetchIncomeSourcesApi(

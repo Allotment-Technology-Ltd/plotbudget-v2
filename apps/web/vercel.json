@@ -1,11 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm turbo build --filter=@repo/web",
-  "crons": [
-    {
-      "path": "/api/cron/trial-emails",
-      "schedule": "0 9 * * *"
-    }
-  ]
-}
+{"$schema":"https://openapi.vercel.sh/vercel.json","installCommand":"cd ../.. && pnpm install","buildCommand":"cd ../.. && pnpm turbo build --filter=@repo/web","crons":[{"path":"/api/cron/trial-emails","schedule":"0 9 * * *"},{"path":"/api/cron/payday-reminder","schedule":"0 9 * * *"}]}

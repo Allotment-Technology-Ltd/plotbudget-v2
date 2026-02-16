@@ -558,6 +558,41 @@ export type Database = {
           created_at?: string;
         };
       };
+      push_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          token: string;
+          platform: 'ios' | 'android';
+          payday_reminders: boolean;
+          partner_activity: boolean;
+          bills_marked_paid: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          token: string;
+          platform: 'ios' | 'android';
+          payday_reminders?: boolean;
+          partner_activity?: boolean;
+          bills_marked_paid?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          token?: string;
+          platform?: 'ios' | 'android';
+          payday_reminders?: boolean;
+          partner_activity?: boolean;
+          bills_marked_paid?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Enums: {
       subscription_tier: 'free' | 'pro';
@@ -586,3 +621,4 @@ export type PayCycle = Tables<'paycycles'>;
 export type Seed = Tables<'seeds'>;
 export type Pot = Tables<'pots'>;
 export type Repayment = Tables<'repayments'>;
+export type PushToken = Tables<'push_tokens'>;

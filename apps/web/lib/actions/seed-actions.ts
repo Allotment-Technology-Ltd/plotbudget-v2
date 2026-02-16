@@ -5,8 +5,6 @@ import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@repo/supabase';
-import { rollDueDateToCycle } from '@/lib/utils/seed-utils';
-
 type SeedRow = Database['public']['Tables']['seeds']['Row'];
 type SeedInsert = Database['public']['Tables']['seeds']['Insert'];
 
@@ -458,11 +456,11 @@ export async function deleteSeed(
   }
 }
 
-/** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
+/** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. Returns count of seeds marked. */
 export async function markOverdueSeedsPaid(
   paycycleId: string,
   client?: SupabaseClient<Database>
-): Promise<void> {
+): Promise<number> {
   const supabase = client ?? (await createServerSupabaseClient());
   const today = new Date().toISOString().slice(0, 10);
 
@@ -475,7 +473,7 @@ export async function markOverdueSeedsPaid(
     .lt('due_date', today)
     .eq('is_paid', false);
 
-  if (!overdue || overdue.length === 0) return;
+  if (!overdue || overdue.length === 0) return 0;
 
   const { updateLinkedPotOrRepayment } = await import('@/lib/actions/ritual-actions');
 
@@ -493,6 +491,7 @@ export async function markOverdueSeedsPaid(
   await updatePaycycleAllocations(paycycleId);
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
+  return overdue.length;
 }
 
 /** Create next paycycle (as draft), clone recurring seeds, and return new cycle id */
@@ -524,102 +523,9 @@ export async function resyncDraftFromActive(
   draftPaycycleId: string,
   activePaycycleId: string
 ): Promise<{ error?: string }> {
-  try {
-    const supabase = await createServerSupabaseClient();
-
-    const { data: draftCycle } = (await supabase
-      .from('paycycles')
-      .select('id, status, household_id, start_date, end_date')
-      .eq('id', draftPaycycleId)
-      .single()) as {
-      data: { id: string; status: string; household_id: string; start_date: string; end_date: string } | null;
-    };
-
-    if (!draftCycle || draftCycle.status !== 'draft') {
-      return { error: 'Draft paycycle not found or not a draft' };
-    }
-    const draftStart = draftCycle.start_date;
-    const draftEnd = draftCycle.end_date;
-
-    const { data: activeRecurring } = await supabase
-      .from('seeds')
-      .select('*')
-      .eq('paycycle_id', activePaycycleId)
-      .eq('is_recurring', true);
-
-    const recurringSeeds = (activeRecurring ?? []) as SeedRow[];
-
-    const { data: draftSeedsData } = await supabase
-      .from('seeds')
-      .select('id, name, type')
-      .eq('paycycle_id', draftPaycycleId);
-
-    const draftSeeds = (draftSeedsData ?? []) as { id: string; name: string; type: string }[];
-    const draftByKey = new Map(draftSeeds.map((s) => [`${s.name}::${s.type}`, s]));
-
-    const { data: household } = (await supabase
-      .from('households')
-      .select('joint_ratio')
-      .eq('id', draftCycle.household_id)
-      .single()) as { data: { joint_ratio: number } | null };
-    const jointRatio = household?.joint_ratio ?? 0.5;
-
-    for (const seed of recurringSeeds) {
-      const key = `${seed.name}::${seed.type}`;
-      const existing = draftByKey.get(key);
-
-      const { amount_me, amount_partner } = calculateSeedSplit(
-        seed.amount,
-        seed.payment_source,
-        seed.split_ratio,
-        jointRatio
-      );
-
-      if (existing) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('seeds') as any)
-          .update({
-            amount: seed.amount,
-            payment_source: seed.payment_source,
-            split_ratio: seed.split_ratio,
-            amount_me,
-            amount_partner,
-            linked_pot_id: seed.linked_pot_id ?? null,
-            linked_repayment_id: seed.linked_repayment_id ?? null,
-            uses_joint_account: seed.uses_joint_account ?? false,
-            due_date: rollDueDateToCycle(seed.due_date ?? null, draftStart, draftEnd),
-          })
-          .eq('id', existing.id);
-      } else {
-        const insertData: SeedInsert = {
-          household_id: seed.household_id,
-          paycycle_id: draftPaycycleId,
-          name: seed.name,
-          amount: seed.amount,
-          type: seed.type,
-          category: seed.category,
-          payment_source: seed.payment_source,
-          split_ratio: seed.split_ratio,
-          is_recurring: true,
-          due_date: rollDueDateToCycle(seed.due_date ?? null, draftStart, draftEnd),
-          is_paid: false,
-          is_paid_me: false,
-          is_paid_partner: false,
-          amount_me,
-          amount_partner,
-          linked_pot_id: seed.linked_pot_id ?? null,
-          linked_repayment_id: seed.linked_repayment_id ?? null,
-          uses_joint_account: seed.uses_joint_account ?? false,
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('seeds') as any).insert(insertData);
-      }
-    }
-
-    await updatePaycycleAllocations(draftPaycycleId);
-    revalidatePath('/dashboard/blueprint');
-    return {};
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Failed to resync draft' };
-  }
+  const { resyncDraftFromActiveCore } = await import('@/lib/paycycle/resync-draft-core');
+  const supabase = await createServerSupabaseClient();
+  const result = await resyncDraftFromActiveCore(supabase, draftPaycycleId, activePaycycleId);
+  if (!result.error) revalidatePath('/dashboard/blueprint');
+  return result;
 }

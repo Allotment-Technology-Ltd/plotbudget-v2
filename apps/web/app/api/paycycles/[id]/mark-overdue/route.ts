@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import { createSupabaseClientFromToken } from '@/lib/supabase/client-from-token';
+import { sendPushToUser } from '@/lib/push/send-to-user';
 
 /**
  * POST /api/paycycles/[id]/mark-overdue
@@ -58,7 +59,21 @@ export async function POST(
     return NextResponse.json({ error: 'Paycycle not found' }, { status: 404 });
   }
 
-  await markOverdueSeedsPaid(paycycleId, supabase);
+  const count = await markOverdueSeedsPaid(paycycleId, supabase);
+
+  if (count > 0) {
+    const title = 'Bills marked as paid';
+    const body =
+      count === 1
+        ? '1 bill was marked as paid (due date passed).'
+        : `${count} bills were marked as paid (due date passed).`;
+    await sendPushToUser(user.id, {
+      title,
+      body,
+      data: { path: '/(tabs)/two' },
+      type: 'bills_marked_paid',
+    });
+  }
 
   return NextResponse.json({ success: true });
 }

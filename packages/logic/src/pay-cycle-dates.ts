@@ -90,8 +90,13 @@ export function calculateCycleEndDate(
   }
 
   if (type === 'last_working_day') {
-    const lwd = getLastWorkingDay(start.getFullYear(), start.getMonth());
-    return lwd.toISOString().split('T')[0];
+    // End = LWD of the month that contains start. If start is after that LWD (e.g. 31 Jan after 30 Jan),
+    // the cycle spans into next month so end = LWD of next month (fixes onboarding-in-February bug).
+    const lwdSameMonth = getLastWorkingDay(start.getFullYear(), start.getMonth());
+    const lwdDate = lwdSameMonth.toISOString().split('T')[0];
+    if (lwdDate >= startDate) return lwdDate;
+    const lwdNextMonth = getLastWorkingDay(start.getFullYear(), start.getMonth() + 1);
+    return lwdNextMonth.toISOString().split('T')[0];
   }
 
   if (type === 'specific_date' && payDay != null) {

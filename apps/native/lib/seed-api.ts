@@ -3,7 +3,7 @@
  * Calls web app API with Bearer token.
  */
 
-import { createSupabaseClient } from './supabase';
+import { getAuthHeaders } from './auth-headers';
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PaymentSource = 'me' | 'partner' | 'joint';
@@ -58,20 +58,17 @@ export interface UpdateSeedPayload {
   };
 }
 
-async function getAuthHeaders(): Promise<{ 'Content-Type': string; Authorization: string } | null> {
-  const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
-  if (!baseUrl) return null;
+const NETWORK_ERROR_MESSAGE =
+  'Cannot reach the web app. On Android emulator use EXPO_PUBLIC_APP_URL=http://10.0.2.2:3000 in .env.local and run the web app on your machine.';
 
-  const supabase = createSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) return null;
+function isNetworkError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /network request failed|failed to fetch|network error/i.test(msg);
+}
 
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${session.access_token}`,
-  };
+function toApiError(e: unknown): string {
+  if (isNetworkError(e)) return NETWORK_ERROR_MESSAGE;
+  return e instanceof Error ? e.message : 'Request failed';
 }
 
 export async function createSeedApi(
@@ -83,15 +80,19 @@ export async function createSeedApi(
   const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
   if (!baseUrl) return { error: 'EXPO_PUBLIC_APP_URL not configured' };
 
-  const res = await fetch(`${baseUrl}/api/seeds`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ ...payload, is_recurring: payload.is_recurring ?? true }),
-  });
+  try {
+    const res = await fetch(`${baseUrl}/api/seeds`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ ...payload, is_recurring: payload.is_recurring ?? true }),
+    });
 
-  const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
-  if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
-  return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+    const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+    if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
+    return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+  } catch (e) {
+    return { error: toApiError(e) };
+  }
 }
 
 export async function updateSeedApi(
@@ -104,15 +105,19 @@ export async function updateSeedApi(
   const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
   if (!baseUrl) return { error: 'EXPO_PUBLIC_APP_URL not configured' };
 
-  const res = await fetch(`${baseUrl}/api/seeds/${seedId}`, {
-    method: 'PATCH',
-    headers,
-    body: JSON.stringify(payload),
-  });
+  try {
+    const res = await fetch(`${baseUrl}/api/seeds/${seedId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(payload),
+    });
 
-  const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
-  if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
-  return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+    const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+    if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
+    return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+  } catch (e) {
+    return { error: toApiError(e) };
+  }
 }
 
 export async function deleteSeedApi(seedId: string): Promise<{ success: true } | { error: string }> {
@@ -122,12 +127,16 @@ export async function deleteSeedApi(seedId: string): Promise<{ success: true } |
   const baseUrl = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? '';
   if (!baseUrl) return { error: 'EXPO_PUBLIC_APP_URL not configured' };
 
-  const res = await fetch(`${baseUrl}/api/seeds/${seedId}`, {
-    method: 'DELETE',
-    headers,
-  });
+  try {
+    const res = await fetch(`${baseUrl}/api/seeds/${seedId}`, {
+      method: 'DELETE',
+      headers,
+    });
 
-  const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
-  if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
-  return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+    const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+    if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
+    return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
+  } catch (e) {
+    return { error: toApiError(e) };
+  }
 }

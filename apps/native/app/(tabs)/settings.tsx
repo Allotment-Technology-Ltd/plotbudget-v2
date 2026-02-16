@@ -1,6 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
-import { Linking, Pressable, ScrollView, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Switch, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import {
@@ -13,7 +13,11 @@ import {
   useTheme,
 } from '@repo/native-ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBiometricOptional } from '@/contexts/BiometricContext';
+import { usePushPreferences } from '@/contexts/PushPreferencesContext';
 import { useThemePreference, type ThemePreference } from '@/contexts/ThemePreferenceContext';
+import { updatePushPreferences } from '@/lib/push-preferences-api';
+import { unregisterPushToken } from '@/lib/unregister-push-token';
 import { SettingsLinkRow } from '@/components/SettingsLinkRow';
 import { SettingsSectionHeader } from '@/components/SettingsSectionHeader';
 
@@ -108,7 +112,36 @@ function AppearanceSegment({
 export default function SettingsScreen() {
   const { session, signOut } = useAuth();
   const { preference, setPreference } = useThemePreference();
+  const biometric = useBiometricOptional();
+  const biometricAvailable = biometric?.biometricAvailable ?? false;
+  const biometricEnabled = biometric?.enabled ?? false;
+  const setBiometricEnabled = biometric?.setEnabled ?? (() => {});
+  const {
+    paydayReminders,
+    partnerActivity,
+    billsMarkedPaid,
+    setPaydayReminders,
+    setPartnerActivity,
+    setBillsMarkedPaid,
+    preferences,
+  } = usePushPreferences();
   const { colors, spacing, borderRadius, typography } = useTheme();
+
+  const syncPreference = (
+    setter: (v: boolean) => void,
+    value: boolean,
+    key: 'paydayReminders' | 'partnerActivity' | 'billsMarkedPaid'
+  ) => {
+    const next = { ...preferences, [key]: value };
+    setter(value);
+    if (value) {
+      void updatePushPreferences(next);
+    } else {
+      const allOff = !next.paydayReminders && !next.partnerActivity && !next.billsMarkedPaid;
+      if (allOff) void unregisterPushToken();
+      else void updatePushPreferences(next);
+    }
+  };
 
   const email = session?.user?.email ?? '';
 
@@ -150,6 +183,78 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
+        {biometricAvailable ? (
+        <Card variant="default" padding="none" style={{ marginTop: spacing.md }}>
+          <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xs }}>
+            <SettingsSectionHeader title="Security" />
+            <SettingsLinkRow
+              label="Unlock app with biometrics"
+              sublabel="Use fingerprint or face when opening the app"
+              onPress={() => setBiometricEnabled(!biometricEnabled)}
+              isLastInSection
+              noHorizontalPadding
+              rightElement={
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={setBiometricEnabled}
+                  trackColor={{ false: colors.borderSubtle, true: colors.accentPrimary + '80' }}
+                  thumbColor={biometricEnabled ? colors.accentPrimary : colors.bgElevated}
+                />
+              }
+            />
+          </View>
+        </Card>
+      ) : null}
+        <Card variant="default" padding="none" style={{ marginTop: spacing.md }}>
+          <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xs }}>
+            <SettingsSectionHeader title="Notifications" />
+            <SettingsLinkRow
+              label="Payday reminders"
+              sublabel="When your pay cycle is ending today or tomorrow"
+              onPress={() => syncPreference(setPaydayReminders, !paydayReminders, 'paydayReminders')}
+              isLastInSection={false}
+              noHorizontalPadding
+              rightElement={
+                <Switch
+                  value={paydayReminders}
+                  onValueChange={(v) => syncPreference(setPaydayReminders, v, 'paydayReminders')}
+                  trackColor={{ false: colors.borderSubtle, true: colors.accentPrimary + '80' }}
+                  thumbColor={paydayReminders ? colors.accentPrimary : colors.bgElevated}
+                />
+              }
+            />
+            <SettingsLinkRow
+              label="Partner activity"
+              sublabel="When your partner marks something paid or updates a pot"
+              onPress={() => syncPreference(setPartnerActivity, !partnerActivity, 'partnerActivity')}
+              isLastInSection={false}
+              noHorizontalPadding
+              rightElement={
+                <Switch
+                  value={partnerActivity}
+                  onValueChange={(v) => syncPreference(setPartnerActivity, v, 'partnerActivity')}
+                  trackColor={{ false: colors.borderSubtle, true: colors.accentPrimary + '80' }}
+                  thumbColor={partnerActivity ? colors.accentPrimary : colors.bgElevated}
+                />
+              }
+            />
+            <SettingsLinkRow
+              label="Bills marked as paid"
+              sublabel="When bills are auto-marked paid (due date passed)"
+              onPress={() => syncPreference(setBillsMarkedPaid, !billsMarkedPaid, 'billsMarkedPaid')}
+              isLastInSection
+              noHorizontalPadding
+              rightElement={
+                <Switch
+                  value={billsMarkedPaid}
+                  onValueChange={(v) => syncPreference(setBillsMarkedPaid, v, 'billsMarkedPaid')}
+                  trackColor={{ false: colors.borderSubtle, true: colors.accentPrimary + '80' }}
+                  thumbColor={billsMarkedPaid ? colors.accentPrimary : colors.bgElevated}
+                />
+              }
+            />
+          </View>
+        </Card>
         <Card variant="default" padding="none" style={{ marginTop: spacing.md }}>
           <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xs }}>
             <SettingsSectionHeader title="Account" />

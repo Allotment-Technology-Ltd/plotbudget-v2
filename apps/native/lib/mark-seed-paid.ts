@@ -4,7 +4,7 @@
  * Supports payer: 'me' | 'partner' | 'both' for joint seeds.
  */
 
-import { createSupabaseClient } from './supabase';
+import { getAuthHeaders } from './auth-headers';
 
 export type Payer = 'me' | 'partner' | 'both';
 
@@ -18,21 +18,14 @@ async function seedPaidRequest(
     return { error: 'EXPO_PUBLIC_APP_URL not configured' };
   }
 
-  const supabase = createSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
+  const headers = await getAuthHeaders();
+  if (!headers) {
     return { error: 'Not authenticated' };
   }
 
   const res = await fetch(`${baseUrl}/api/seeds/${seedId}/${endpoint}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
+    headers,
     body: JSON.stringify({ payer }),
   });
 
