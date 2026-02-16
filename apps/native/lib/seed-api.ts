@@ -58,9 +58,17 @@ export interface UpdateSeedPayload {
   };
 }
 
+const NETWORK_ERROR_MESSAGE =
+  'Cannot reach the web app. On Android emulator use EXPO_PUBLIC_APP_URL=http://10.0.2.2:3000 in .env.local and run the web app on your machine.';
+
 function isNetworkError(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : String(e);
   return /network request failed|failed to fetch|network error/i.test(msg);
+}
+
+function toApiError(e: unknown): string {
+  if (isNetworkError(e)) return NETWORK_ERROR_MESSAGE;
+  return e instanceof Error ? e.message : 'Request failed';
 }
 
 export async function createSeedApi(
@@ -83,13 +91,7 @@ export async function createSeedApi(
     if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
     return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
   } catch (e) {
-    if (isNetworkError(e)) {
-      return {
-        error:
-          'Cannot reach the web app. On Android emulator use EXPO_PUBLIC_APP_URL=http://10.0.2.2:3000 in .env.local and run the web app on your machine.',
-      };
-    }
-    return { error: e instanceof Error ? e.message : 'Request failed' };
+    return { error: toApiError(e) };
   }
 }
 
@@ -114,13 +116,7 @@ export async function updateSeedApi(
     if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
     return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
   } catch (e) {
-    if (isNetworkError(e)) {
-      return {
-        error:
-          'Cannot reach the web app. On Android emulator use EXPO_PUBLIC_APP_URL=http://10.0.2.2:3000 in .env.local and run the web app on your machine.',
-      };
-    }
-    return { error: e instanceof Error ? e.message : 'Request failed' };
+    return { error: toApiError(e) };
   }
 }
 
@@ -141,12 +137,6 @@ export async function deleteSeedApi(seedId: string): Promise<{ success: true } |
     if (!res.ok) return { error: json.error ?? `Request failed (${res.status})` };
     return json.success ? { success: true } : { error: json.error ?? 'Unknown error' };
   } catch (e) {
-    if (isNetworkError(e)) {
-      return {
-        error:
-          'Cannot reach the web app. On Android emulator use EXPO_PUBLIC_APP_URL=http://10.0.2.2:3000 in .env.local and run the web app on your machine.',
-      };
-    }
-    return { error: e instanceof Error ? e.message : 'Request failed' };
+    return { error: toApiError(e) };
   }
 }

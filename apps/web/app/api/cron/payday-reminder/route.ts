@@ -76,16 +76,21 @@ export async function GET(req: Request) {
     const userIds = [h.owner_id];
     if (h.partner_user_id) userIds.push(h.partner_user_id);
 
-    for (const userId of userIds) {
-      const result = await sendPushToUser(userId, {
-        title,
-        body,
-        data: { path: '/(tabs)' },
-        type: 'payday',
-      });
+    const results = await Promise.all(
+      userIds.map((userId) =>
+        sendPushToUser(userId, {
+          title,
+          body,
+          data: { path: '/(tabs)' },
+          type: 'payday',
+        })
+      )
+    );
+    results.forEach((result, i) => {
+      const userId = userIds[i]!;
       if (result.sent > 0) processed.push(`${userId}: payday-reminder`);
       if (result.error) errors.push(`${userId}: ${result.error}`);
-    }
+    });
   }
 
   return NextResponse.json({

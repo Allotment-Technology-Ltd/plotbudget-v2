@@ -57,7 +57,9 @@ export function BiometricProvider({ children }: { children: React.ReactNode }) {
     } else {
       setUnlocked(true);
     }
-    AsyncStorage.setItem(STORAGE_KEY, String(value)).catch(() => {});
+    AsyncStorage.setItem(STORAGE_KEY, String(value)).catch((err) => {
+      if (__DEV__) console.warn('[BiometricContext] persist failed:', err);
+    });
   }, []);
 
   const authenticate = useCallback(async (): Promise<boolean> => {

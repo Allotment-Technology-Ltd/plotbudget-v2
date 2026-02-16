@@ -23,6 +23,9 @@ function calculateSeedSplit(
   return { amount_me: totalAmount * effectiveRatio, amount_partner: totalAmount - totalAmount * effectiveRatio };
 }
 
+/**
+ * Caller must be validated by the route (owner or partner of the draft cycle's household) before calling.
+ */
 export async function resyncDraftFromActiveCore(
   supabase: SupabaseClient<Database>,
   draftPaycycleId: string,
