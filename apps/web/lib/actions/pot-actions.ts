@@ -1,6 +1,8 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/supabase';
 
@@ -55,19 +57,65 @@ export async function createPot(
 
 export async function updatePot(
   potId: string,
-  data: UpdatePotInput
+  data: UpdatePotInput,
+  client?: SupabaseClient<Database>
 ): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('pots') as any).update(data).eq('id', potId);
 
     if (error) return { error: error.message };
     revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update pot' };
   }
+}
+
+/**
+ * Mark a pot as complete (accomplished) or active. Used by native app and API routes.
+ * @param client Optional Supabase client (e.g. from API route with Bearer token).
+ */
+export async function markPotComplete(
+  potId: string,
+  status: 'complete' | 'active',
+  client?: SupabaseClient<Database>
+): Promise<{ success: true } | { error: string }> {
+  const supabase = client ?? (await createServerSupabaseClient());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+
+  const { data: potData, error: potError } = await supabase
+    .from('pots')
+    .select('household_id')
+    .eq('id', potId)
+    .single();
+
+  if (potError || !potData) {
+    return { error: 'Pot not found' };
+  }
+
+  const pot = potData as { household_id: string };
+  const { data: profile } = (await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user?.id ?? '')
+    .maybeSingle()) as { data: { household_id: string | null } | null };
+
+  const ownHousehold = profile?.household_id === pot.household_id;
+  const partnerHousehold = isPartner && partnerHouseholdId === pot.household_id;
+  if (!ownHousehold && !partnerHousehold) {
+    return { error: 'Pot not found' };
+  }
+
+  const updateResult = await updatePot(potId, { status }, supabase);
+  if (updateResult.error) return { error: updateResult.error };
+  return { success: true };
 }
 
 export async function getPots(householdId: string): Promise<PotRow[]> {

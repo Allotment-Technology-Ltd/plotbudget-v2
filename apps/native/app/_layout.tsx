@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import '../global.css';
 
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -9,7 +10,10 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider } from '@repo/native-ui';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useColorScheme } from '@/components/useColorScheme';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { useNavigationPersistence } from '@/lib/navigation-persistence';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -51,15 +55,20 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  useNavigationPersistence();
 
   return (
-    <ThemeProvider>
-      <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </NavigationThemeProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AppErrorBoundary>
+          <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            </Stack>
+          </NavigationThemeProvider>
+        </AppErrorBoundary>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
