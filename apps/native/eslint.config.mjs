@@ -10,6 +10,7 @@ export default tseslint.config(
       ".expo/**",
       "node_modules/**",
       "web-build/**",
+      "app.config.js",
       "babel.config.js",
       "metro.config.js",
       "tailwind.config.js",

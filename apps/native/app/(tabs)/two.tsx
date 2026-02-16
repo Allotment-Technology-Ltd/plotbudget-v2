@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
+import { ScrollView, View, RefreshControl, Pressable, Alert, Modal, FlatList } from 'react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Container,
@@ -18,11 +18,12 @@ import { IncomeManageModal } from '@/components/IncomeManageModal';
 import { format } from 'date-fns';
 import { formatCurrency, currencySymbol, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
-import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource } from '@/lib/blueprint-data';
+import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
 import { markPotComplete } from '@/lib/mark-pot-complete';
 import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
 import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
 import { deleteSeedApi } from '@/lib/seed-api';
+import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft } from '@/lib/paycycle-api';
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PotStatus = 'active' | 'complete' | 'paused';
@@ -272,10 +273,19 @@ export default function BlueprintScreen() {
     repayments: Repayment[];
     incomeSources: BlueprintIncomeSource[];
     isPartner: boolean;
+    allPaycycles: PaycycleOption[];
+    activePaycycleId: string | null;
+    hasDraftCycle: boolean;
   } | null>(null);
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isClosingRitual, setIsClosingRitual] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [isCreatingNext, setIsCreatingNext] = useState(false);
+  const [isResyncing, setIsResyncing] = useState(false);
+  const [cyclePickerVisible, setCyclePickerVisible] = useState(false);
   const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
   const [optimisticUnpaidIds, setOptimisticUnpaidIds] = useState<Set<string>>(new Set());
   const [optimisticPaidMeIds, setOptimisticPaidMeIds] = useState<Set<string>>(new Set());
@@ -289,35 +299,48 @@ export default function BlueprintScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (cycleId?: string | null) => {
     setError(null);
+    const idToLoad = cycleId !== undefined ? cycleId : selectedCycleId;
     try {
-      const result = await fetchBlueprintData();
+      const result = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
       const paycycle = result.paycycle;
       if (paycycle?.status === 'active') {
-        const overdueResult = await markOverdueSeedsPaid(paycycle.id);
-        if ('success' in overdueResult) {
-          const refetch = await fetchBlueprintData();
-          setData({
-            household: refetch.household,
-            paycycle: refetch.paycycle,
-            seeds: refetch.seeds,
-            pots: refetch.pots,
-            repayments: refetch.repayments,
-            incomeSources: refetch.incomeSources,
-            isPartner: refetch.isPartner,
-          });
-        } else {
-          setData({
-            household: result.household,
-            paycycle: result.paycycle,
-            seeds: result.seeds,
-            pots: result.pots,
-            repayments: result.repayments,
-            incomeSources: result.incomeSources,
-            isPartner: result.isPartner,
-          });
+        try {
+          const overdueResult = await markOverdueSeedsPaid(paycycle.id);
+          if ('success' in overdueResult) {
+            const refetch = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
+            setData({
+              household: refetch.household,
+              paycycle: refetch.paycycle,
+              seeds: refetch.seeds,
+              pots: refetch.pots,
+              repayments: refetch.repayments,
+              incomeSources: refetch.incomeSources,
+              isPartner: refetch.isPartner,
+              allPaycycles: refetch.allPaycycles,
+              activePaycycleId: refetch.activePaycycleId,
+              hasDraftCycle: refetch.hasDraftCycle,
+            });
+            setSelectedCycleId(refetch.paycycle?.id ?? null);
+            return;
+          }
+        } catch {
+          // Mark-overdue API unreachable (e.g. wrong EXPO_PUBLIC_APP_URL on emulator); show blueprint anyway
         }
+        setData({
+          household: result.household,
+          paycycle: result.paycycle,
+          seeds: result.seeds,
+          pots: result.pots,
+          repayments: result.repayments,
+          incomeSources: result.incomeSources,
+          isPartner: result.isPartner,
+          allPaycycles: result.allPaycycles,
+          activePaycycleId: result.activePaycycleId,
+          hasDraftCycle: result.hasDraftCycle,
+        });
+        setSelectedCycleId(result.paycycle?.id ?? null);
       } else {
         setData({
           household: result.household,
@@ -327,7 +350,11 @@ export default function BlueprintScreen() {
           repayments: result.repayments,
           incomeSources: result.incomeSources,
           isPartner: result.isPartner,
+          allPaycycles: result.allPaycycles,
+          activePaycycleId: result.activePaycycleId,
+          hasDraftCycle: result.hasDraftCycle,
         });
+        setSelectedCycleId(result.paycycle?.id ?? null);
       }
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to load Blueprint'));
@@ -335,7 +362,7 @@ export default function BlueprintScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedCycleId]);
 
   useEffect(() => {
     loadData();
@@ -454,6 +481,7 @@ export default function BlueprintScreen() {
           next[potId] = prevStatus;
           return next;
         });
+        Alert.alert('Couldn’t update pot', result.error ?? 'Something went wrong. Try again.');
       }
     },
     [data?.pots, loadData]
@@ -527,6 +555,7 @@ export default function BlueprintScreen() {
             return n;
           });
         }
+        Alert.alert('Couldn’t mark as paid', result.error ?? 'Something went wrong. Try again.');
       }
     },
     [data?.seeds, data?.household, loadData]
@@ -600,6 +629,7 @@ export default function BlueprintScreen() {
             return n;
           });
         }
+        Alert.alert('Couldn’t unmark paid', result.error ?? 'Something went wrong. Try again.');
       }
     },
     [data?.seeds, data?.household, loadData]
@@ -690,7 +720,64 @@ export default function BlueprintScreen() {
   const totalSeeds = displaySeeds.length;
   const paidSeeds = displaySeeds.filter((s) => s.is_paid).length;
   const progressPercent = totalSeeds > 0 ? Math.round((paidSeeds / totalSeeds) * 100) : 0;
+  const allPaid = paidSeeds === totalSeeds && totalSeeds > 0;
   const totalIncome = Number(paycycle?.total_income ?? 0);
+
+  const cycleLabel = (c: PaycycleOption) =>
+    c.status === 'active' ? 'Current cycle' : c.status === 'draft' ? 'Next cycle' : format(new Date(c.start_date), 'MMM yyyy');
+
+  const handleCycleSelect = (cycleId: string) => {
+    setCyclePickerVisible(false);
+    loadData(cycleId);
+  };
+
+  const handleCreateNext = async () => {
+    if (!data?.paycycle || isCreatingNext) return;
+    setIsCreatingNext(true);
+    const result = await createNextPaycycle(data.paycycle.id);
+    setIsCreatingNext(false);
+    if ('cycleId' in result) {
+      loadData(result.cycleId);
+    } else {
+      Alert.alert('Couldn’t create next cycle', result.error ?? 'Try again.');
+    }
+  };
+
+  const handleResyncDraft = async () => {
+    if (!data?.paycycle || !data.activePaycycleId || isResyncing) return;
+    setIsResyncing(true);
+    const result = await resyncDraft(data.paycycle.id, data.activePaycycleId);
+    setIsResyncing(false);
+    if ('success' in result) {
+      loadData(data.paycycle.id);
+    } else {
+      Alert.alert('Couldn’t resync draft', result.error ?? 'Try again.');
+    }
+  };
+
+  const handleCloseRitual = async () => {
+    if (!data?.paycycle || isClosingRitual) return;
+    setIsClosingRitual(true);
+    const result = await closeRitual(data.paycycle.id);
+    setIsClosingRitual(false);
+    if ('success' in result) {
+      loadData(data.paycycle!.id);
+    } else {
+      Alert.alert('Couldn’t close cycle', result.error ?? 'Try again.');
+    }
+  };
+
+  const handleUnlockRitual = async () => {
+    if (!data?.paycycle || isUnlocking) return;
+    setIsUnlocking(true);
+    const result = await unlockRitual(data.paycycle.id);
+    setIsUnlocking(false);
+    if ('success' in result) {
+      loadData(data.paycycle!.id);
+    } else {
+      Alert.alert('Couldn’t unlock', result.error ?? 'Try again.');
+    }
+  };
   const totalAllocated = Number(paycycle?.total_allocated ?? 0);
   const allocationDifference = totalIncome - totalAllocated;
 
@@ -730,6 +817,60 @@ export default function BlueprintScreen() {
               <>
                 {/* Header */}
                 <Text variant="headline-sm" style={{ marginBottom: spacing.xs }}>Your Blueprint</Text>
+                {/* Cycle selector + actions */}
+                {data.allPaycycles.length > 0 && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
+                    <Pressable
+                      onPress={() => setCyclePickerVisible(true)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: spacing.sm,
+                        paddingHorizontal: spacing.md,
+                        borderRadius: borderRadius.md,
+                        borderWidth: 1,
+                        borderColor: colors.borderSubtle,
+                        minWidth: 160,
+                      }}>
+                      <BodyText numberOfLines={1} style={{ flex: 1 }}>
+                        {paycycle ? cycleLabel(data.allPaycycles.find((p) => p.id === paycycle.id) ?? paycycle as PaycycleOption) : 'Select cycle'}
+                      </BodyText>
+                      <Text variant="label-sm" color="secondary">▼</Text>
+                    </Pressable>
+                    {isRitualMode && !data.hasDraftCycle && (
+                      <Pressable
+                        onPress={handleCreateNext}
+                        disabled={isCreatingNext}
+                        style={{
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          borderRadius: borderRadius.md,
+                          borderWidth: 1,
+                          borderColor: colors.accentPrimary,
+                        }}>
+                        <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
+                          {isCreatingNext ? 'Creating…' : '+ Next cycle'}
+                        </Text>
+                      </Pressable>
+                    )}
+                    {data.paycycle?.status === 'draft' && data.activePaycycleId && (
+                      <Pressable
+                        onPress={handleResyncDraft}
+                        disabled={isResyncing}
+                        style={{
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          borderRadius: borderRadius.md,
+                          borderWidth: 1,
+                          borderColor: colors.borderSubtle,
+                        }}>
+                        <Text variant="label-sm" color="secondary">
+                          {isResyncing ? 'Resyncing…' : 'Resync from active'}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                )}
                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.sm }}>
                   <Text variant="body-sm" color="secondary">
                     {paycycle ? `${format(new Date(paycycle.start_date), 'MMM d')} – ${format(new Date(paycycle.end_date), 'MMM d, yyyy')}` : ''}
@@ -747,6 +888,45 @@ export default function BlueprintScreen() {
                     <View style={{ height: '100%', width: 0 }} />
                   )}
                 </View>
+
+                {/* Close cycle ritual (same as web) */}
+                {isRitualMode && allPaid && !isCycleLocked && (
+                  <Card variant="default" padding="lg" style={{ marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.accentPrimary + '50' }}>
+                    <SubheadingText style={{ marginBottom: spacing.xs, textAlign: 'center' }}>All bills paid for this cycle</SubheadingText>
+                    <BodyText color="secondary" style={{ marginBottom: spacing.md, textAlign: 'center', fontSize: 14 }}>
+                      Close your cycle and lock your budget?
+                    </BodyText>
+                    <Pressable
+                      onPress={handleCloseRitual}
+                      disabled={isClosingRitual}
+                      style={{
+                        alignSelf: 'center',
+                        paddingVertical: spacing.sm,
+                        paddingHorizontal: spacing.lg,
+                        borderRadius: borderRadius.full,
+                        backgroundColor: colors.accentPrimary,
+                      }}>
+                      <Text variant="label-sm" style={{ color: colors.bgPrimary }}>
+                        {isClosingRitual ? 'Closing…' : 'Close cycle'}
+                      </Text>
+                    </Pressable>
+                  </Card>
+                )}
+
+                {/* Unlock cycle (same as web) */}
+                {isRitualMode && isCycleLocked && (
+                  <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
+                    <BodyText style={{ marginBottom: spacing.sm }}>Cycle closed — budget locked for this month</BodyText>
+                    <Pressable
+                      onPress={handleUnlockRitual}
+                      disabled={isUnlocking}
+                      style={{ alignSelf: 'flex-start' }}>
+                      <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
+                        {isUnlocking ? 'Unlocking…' : 'Unlock (e.g. new bill)'}
+                      </Text>
+                    </Pressable>
+                  </Card>
+                )}
 
                 {/* Total allocated */}
                 <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
@@ -952,6 +1132,44 @@ export default function BlueprintScreen() {
           isPartner={data.isPartner}
         />
       )}
+
+      <Modal
+        visible={cyclePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCyclePickerVisible(false)}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.lg }}
+          onPress={() => setCyclePickerVisible(false)}>
+          <Pressable style={{ backgroundColor: colors.bgPrimary, borderRadius: borderRadius.lg, padding: spacing.md, maxHeight: '70%' }} onPress={(e) => e.stopPropagation()}>
+            <SubheadingText style={{ marginBottom: spacing.md }}>Select pay cycle</SubheadingText>
+            <FlatList
+              data={data?.allPaycycles ?? []}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => handleCycleSelect(item.id)}
+                  style={{
+                    paddingVertical: spacing.md,
+                    paddingHorizontal: spacing.sm,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.borderSubtle,
+                  }}>
+                  <BodyText style={{ fontWeight: data?.paycycle?.id === item.id ? '600' : '400' }}>
+                    {cycleLabel(item)}
+                  </BodyText>
+                  <Text variant="label-sm" color="secondary">
+                    {format(new Date(item.start_date), 'MMM d')} – {format(new Date(item.end_date), 'MMM d, yyyy')}
+                  </Text>
+                </Pressable>
+              )}
+            />
+            <Pressable onPress={() => setCyclePickerVisible(false)} style={{ marginTop: spacing.sm, paddingVertical: spacing.sm }}>
+              <Text variant="label-sm" color="secondary">Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }

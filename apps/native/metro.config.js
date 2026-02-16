@@ -32,10 +32,14 @@ const singletonModules = [
 const singletonPrefixes = ['react/', 'react-native/', '@react-native-community/'];
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (
-    singletonModules.includes(moduleName) ||
-    singletonPrefixes.some((p) => moduleName.startsWith(p))
-  ) {
+  // Only resolve allowlisted package names; reject path traversal or absolute paths.
+  const isAllowlisted =
+    (singletonModules.includes(moduleName) ||
+      singletonPrefixes.some((p) => moduleName.startsWith(p))) &&
+    !moduleName.includes('..') &&
+    !path.isAbsolute(moduleName);
+
+  if (isAllowlisted) {
     try {
       return {
         type: 'sourceFile',

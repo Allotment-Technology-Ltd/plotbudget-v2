@@ -13,6 +13,8 @@ export interface SettingsLinkRowProps {
   isLastInSection?: boolean;
   /** When true, no horizontal padding (use when parent already applies consistent inset). */
   noHorizontalPadding?: boolean;
+  /** Optional right-side element (e.g. Switch). */
+  rightElement?: React.ReactNode;
 }
 
 /**
@@ -26,6 +28,7 @@ export function SettingsLinkRow({
   destructive = false,
   isLastInSection = true,
   noHorizontalPadding = false,
+  rightElement,
 }: SettingsLinkRowProps) {
   const { colors, spacing, typography } = useTheme();
   const linkColor = destructive ? colors.error : colors.accentPrimary;
@@ -63,6 +66,7 @@ export function SettingsLinkRow({
           </LabelText>
         )}
       </View>
+      {rightElement != null ? <View style={{ marginLeft: spacing.sm }}>{rightElement}</View> : null}
     </Pressable>
   );
 }

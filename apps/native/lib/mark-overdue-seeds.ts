@@ -2,7 +2,7 @@
  * Mark overdue seeds as paid. Call when loading Blueprint for active cycle.
  */
 
-import { createSupabaseClient } from './supabase';
+import { getAuthHeaders } from './auth-headers';
 
 export async function markOverdueSeedsPaid(
   paycycleId: string
@@ -12,21 +12,14 @@ export async function markOverdueSeedsPaid(
     return { error: 'EXPO_PUBLIC_APP_URL not configured' };
   }
 
-  const supabase = createSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
+  const headers = await getAuthHeaders();
+  if (!headers) {
     return { error: 'Not authenticated' };
   }
 
   const res = await fetch(`${baseUrl}/api/paycycles/${paycycleId}/mark-overdue`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
+    headers,
   });
 
   const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
