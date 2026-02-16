@@ -9,6 +9,7 @@ export default function AuthLayout() {
       }}>
       <Stack.Screen name="login" options={{ title: 'Sign in' }} />
       <Stack.Screen name="sign-up" options={{ title: 'Sign up' }} />
+      <Stack.Screen name="forgot-password" options={{ title: 'Reset password' }} />
     </Stack>
   );
 }

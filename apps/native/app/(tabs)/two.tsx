@@ -4,7 +4,8 @@ import {
   Container,
   Section,
   Card,
-  HeadlineText,
+  Text,
+  SubheadingText,
   BodyText,
   LabelText,
   useTheme,
@@ -13,9 +14,11 @@ import { BlueprintSkeleton } from '@/components/BlueprintSkeleton';
 import { ErrorScreen } from '@/components/ErrorScreen';
 import { SeedFormModal } from '@/components/SeedFormModal';
 import { DeleteSeedConfirmModal } from '@/components/DeleteSeedConfirmModal';
+import { IncomeManageModal } from '@/components/IncomeManageModal';
+import { format } from 'date-fns';
 import { formatCurrency, currencySymbol, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
-import { fetchBlueprintData } from '@/lib/blueprint-data';
+import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource } from '@/lib/blueprint-data';
 import { markPotComplete } from '@/lib/mark-pot-complete';
 import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
 import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
@@ -95,11 +98,11 @@ function SeedCard({
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <BodyText style={{ marginBottom: spacing.xs }}>{seed.name}</BodyText>
-            <LabelText color="secondary">
+            <Text variant="label-sm" color="secondary">
               {currencySymbol(currency)}
               {Number(seed.amount).toFixed(2)}
               {isPaid ? ' • Paid' : ''}
-            </LabelText>
+            </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
             {canMarkUnmark &&
@@ -118,13 +121,12 @@ function SeedCard({
                       borderColor: isPaidMe ? colors.accentPrimary : colors.borderSubtle,
                       backgroundColor: isPaidMe ? colors.accentPrimary + '20' : undefined,
                     }}>
-                    <LabelText
+                    <Text variant="label-sm"
                       style={{
                         color: isPaidMe ? colors.accentPrimary : colors.textSecondary,
-                        fontSize: 12,
                       }}>
                       You {isPaidMe ? '✓' : ''}
-                    </LabelText>
+                    </Text>
                   </Pressable>
                   <Pressable
                     onPress={(e) => {
@@ -139,13 +141,12 @@ function SeedCard({
                       borderColor: isPaidPartner ? colors.accentPrimary : colors.borderSubtle,
                       backgroundColor: isPaidPartner ? colors.accentPrimary + '20' : undefined,
                     }}>
-                    <LabelText
+                    <Text variant="label-sm"
                       style={{
                         color: isPaidPartner ? colors.accentPrimary : colors.textSecondary,
-                        fontSize: 12,
                       }}>
                       {otherLabel} {isPaidPartner ? '✓' : ''}
-                    </LabelText>
+                    </Text>
                   </Pressable>
                 </>
               ) : (
@@ -162,13 +163,12 @@ function SeedCard({
                     borderColor: isPaid ? colors.accentPrimary : colors.borderSubtle,
                     backgroundColor: isPaid ? colors.accentPrimary + '20' : undefined,
                   }}>
-                  <LabelText
+                  <Text variant="label-sm"
                     style={{
                       color: isPaid ? colors.accentPrimary : colors.textSecondary,
-                      fontSize: 12,
                     }}>
                     {isPaid ? 'Unmark paid' : 'Mark paid'}
-                  </LabelText>
+                  </Text>
                 </Pressable>
               ))}
             {canEditOrDelete && (
@@ -184,7 +184,7 @@ function SeedCard({
                   borderWidth: 1,
                   borderColor: colors.error,
                 }}>
-                <LabelText style={{ color: colors.error, fontSize: 12 }}>Delete</LabelText>
+                <Text variant="label-sm" style={{ color: colors.error }}>Delete</Text>
               </Pressable>
             )}
           </View>
@@ -234,9 +234,9 @@ function PotCard({
           <BodyText style={{ fontSize: 20 }}>{pot.icon || '🏖️'}</BodyText>
           <LabelText>{pot.name}</LabelText>
         </View>
-        <BodyText color="secondary" style={{ marginBottom: spacing.sm, fontSize: 14 }}>
+        <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
           {formatCurrency(pot.current_amount, currency)} / {formatCurrency(pot.target_amount, currency)}
-        </BodyText>
+        </Text>
         <View
           style={{
             height: 8,
@@ -254,9 +254,9 @@ function PotCard({
             }}
           />
         </View>
-        <BodyText color="secondary" style={{ fontSize: 12 }}>
+        <Text variant="label-sm" color="secondary">
           {progress.toFixed(0)}% — {status}
-        </BodyText>
+        </Text>
       </Card>
     </Pressable>
   );
@@ -270,6 +270,7 @@ export default function BlueprintScreen() {
     seeds: Seed[];
     pots: Pot[];
     repayments: Repayment[];
+    incomeSources: BlueprintIncomeSource[];
     isPartner: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -286,6 +287,7 @@ export default function BlueprintScreen() {
   const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
   const [seedToDelete, setSeedToDelete] = useState<Seed | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [incomeModalVisible, setIncomeModalVisible] = useState(false);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -302,6 +304,7 @@ export default function BlueprintScreen() {
             seeds: refetch.seeds,
             pots: refetch.pots,
             repayments: refetch.repayments,
+            incomeSources: refetch.incomeSources,
             isPartner: refetch.isPartner,
           });
         } else {
@@ -311,6 +314,7 @@ export default function BlueprintScreen() {
             seeds: result.seeds,
             pots: result.pots,
             repayments: result.repayments,
+            incomeSources: result.incomeSources,
             isPartner: result.isPartner,
           });
         }
@@ -321,6 +325,7 @@ export default function BlueprintScreen() {
           seeds: result.seeds,
           pots: result.pots,
           repayments: result.repayments,
+          incomeSources: result.incomeSources,
           isPartner: result.isPartner,
         });
       }
@@ -644,14 +649,14 @@ export default function BlueprintScreen() {
       <ScrollView style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
         <Container paddingX="md">
           <Section spacing="xl">
-            <HeadlineText style={{ marginBottom: spacing.md }}>Blueprint</HeadlineText>
+            <Text variant="headline-sm" style={{ marginBottom: spacing.sm }}>Your Blueprint</Text>
             <Card variant="default" padding="lg">
               <BodyText style={{ textAlign: 'center', marginBottom: spacing.md }}>
                 Sign in to view your Blueprint
               </BodyText>
-              <BodyText color="secondary" style={{ textAlign: 'center' }}>
+              <Text variant="body-sm" color="secondary" style={{ textAlign: 'center' }}>
                 Complete onboarding on the web app, then sign in here.
-              </BodyText>
+              </Text>
             </Card>
           </Section>
         </Container>
@@ -668,6 +673,34 @@ export default function BlueprintScreen() {
 
   const categories: SeedType[] = ['need', 'want', 'savings', 'repay'];
 
+  const paycycle = data.paycycle as PayCycle & {
+    alloc_needs_me?: number; alloc_needs_partner?: number; alloc_needs_joint?: number;
+    alloc_wants_me?: number; alloc_wants_partner?: number; alloc_wants_joint?: number;
+    alloc_savings_me?: number; alloc_savings_partner?: number; alloc_savings_joint?: number;
+    alloc_repay_me?: number; alloc_repay_partner?: number; alloc_repay_joint?: number;
+    rem_needs_me?: number; rem_needs_partner?: number; rem_needs_joint?: number;
+    rem_wants_me?: number; rem_wants_partner?: number; rem_wants_joint?: number;
+    rem_savings_me?: number; rem_savings_partner?: number; rem_savings_joint?: number;
+    rem_repay_me?: number; rem_repay_partner?: number; rem_repay_joint?: number;
+  } | null;
+  const household = data.household as Household & {
+    needs_percent?: number; wants_percent?: number; savings_percent?: number; repay_percent?: number;
+  };
+
+  const totalSeeds = displaySeeds.length;
+  const paidSeeds = displaySeeds.filter((s) => s.is_paid).length;
+  const progressPercent = totalSeeds > 0 ? Math.round((paidSeeds / totalSeeds) * 100) : 0;
+  const totalIncome = Number(paycycle?.total_income ?? 0);
+  const totalAllocated = Number(paycycle?.total_allocated ?? 0);
+  const allocationDifference = totalIncome - totalAllocated;
+
+  const CATEGORY_GRID = [
+    { key: 'needs' as const, label: 'Needs', percentKey: 'needs_percent' as const, allocKey: 'alloc_needs' as const, remKey: 'rem_needs' as const },
+    { key: 'wants' as const, label: 'Wants', percentKey: 'wants_percent' as const, allocKey: 'alloc_wants' as const, remKey: 'rem_wants' as const },
+    { key: 'savings' as const, label: 'Savings', percentKey: 'savings_percent' as const, allocKey: 'alloc_savings' as const, remKey: 'rem_savings' as const },
+    { key: 'repay' as const, label: 'Repay', percentKey: 'repay_percent' as const, allocKey: 'alloc_repay' as const, remKey: 'rem_repay' as const },
+  ] as const;
+
   return (
     <>
       <ScrollView
@@ -681,63 +714,151 @@ export default function BlueprintScreen() {
         }>
         <Container paddingX="md">
           <Section spacing="xl">
-            <HeadlineText style={{ marginBottom: spacing.lg }}>Blueprint</HeadlineText>
-            <BodyText color="secondary" style={{ marginBottom: spacing.lg }}>
-              Needs, wants, savings, and repayments
-            </BodyText>
-
             {!hasPaycycle ? (
-              <Card variant="default" padding="lg">
-                <BodyText style={{ textAlign: 'center', marginBottom: spacing.md }}>
-                  No active pay cycle
-                </BodyText>
-                <BodyText color="secondary" style={{ textAlign: 'center' }}>
-                  Create or activate a pay cycle on the web app to add bills.
-                </BodyText>
-              </Card>
+              <>
+                <Text variant="headline-sm" style={{ marginBottom: spacing.sm }}>Your Blueprint</Text>
+                <Card variant="default" padding="lg">
+                  <BodyText style={{ textAlign: 'center', marginBottom: spacing.md }}>
+                    No active pay cycle
+                  </BodyText>
+                  <Text variant="body-sm" color="secondary" style={{ textAlign: 'center' }}>
+                    Create or activate a pay cycle on the web app to add bills.
+                  </Text>
+                </Card>
+              </>
             ) : (
               <>
+                {/* Header */}
+                <Text variant="headline-sm" style={{ marginBottom: spacing.xs }}>Your Blueprint</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.sm }}>
+                  <Text variant="body-sm" color="secondary">
+                    {paycycle ? `${format(new Date(paycycle.start_date), 'MMM d')} – ${format(new Date(paycycle.end_date), 'MMM d, yyyy')}` : ''}
+                  </Text>
+                  {isRitualMode && totalSeeds > 0 && (
+                    <Text variant="body-sm" color="secondary">
+                      {paidSeeds} of {totalSeeds} bills paid ({progressPercent}%)
+                    </Text>
+                  )}
+                </View>
+                <View style={{ height: 8, borderRadius: borderRadius.full, backgroundColor: colors.borderSubtle, overflow: 'hidden', marginBottom: spacing.lg }}>
+                  {isRitualMode ? (
+                    <View style={{ height: '100%', width: `${progressPercent}%`, backgroundColor: colors.accentPrimary, borderRadius: borderRadius.full }} />
+                  ) : (
+                    <View style={{ height: '100%', width: 0 }} />
+                  )}
+                </View>
+
+                {/* Total allocated */}
+                <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
+                  <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Total allocated</LabelText>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: spacing.sm, marginBottom: spacing.xs }}>
+                    <SubheadingText>{formatCurrency(totalAllocated, currency)}</SubheadingText>
+                    <Text variant="body-sm" color="secondary">of</Text>
+                    <Text variant="sub-sm">{formatCurrency(totalIncome, currency)}</Text>
+                  </View>
+                  <Text variant="body-sm"
+                    style={{
+                      color: allocationDifference > 0 ? colors.accentPrimary : allocationDifference < 0 ? colors.warning : colors.textSecondary,
+                    }}>
+                    {allocationDifference > 0
+                      ? `${formatCurrency(allocationDifference, currency)} under`
+                      : allocationDifference < 0
+                        ? `${formatCurrency(Math.abs(allocationDifference), currency)} over`
+                        : 'Fully allocated'}
+                  </Text>
+                </Card>
+
+                {/* Income this cycle */}
+                <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                    <Text variant="sub-sm">Income this cycle</Text>
+                    <Pressable
+                      onPress={() => setIncomeModalVisible(true)}
+                      hitSlop={8}
+                      style={{ paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}>
+                      <Text variant="label-sm" style={{ color: colors.accentPrimary }}>Manage</Text>
+                    </Pressable>
+                  </View>
+                  <SubheadingText style={{ marginBottom: spacing.xs }}>
+                    {formatCurrency(totalIncome, currency)}
+                  </SubheadingText>
+                  <Text variant="body-sm" color="secondary">
+                    {data.incomeSources.length === 0
+                      ? 'Add income sources to see pay dates and projected income.'
+                      : `${data.incomeSources.filter((s) => s.is_active).length} source(s)`}
+                  </Text>
+                </Card>
+
+                {/* Category summary grid */}
+                {paycycle && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
+                    {CATEGORY_GRID.map((cat) => {
+                      const percent = household[cat.percentKey] ?? 50;
+                      const target = totalIncome * (percent / 100);
+                      const allocMe = Number(paycycle[`${cat.allocKey}_me`]) || 0;
+                      const allocPartner = Number(paycycle[`${cat.allocKey}_partner`]) || 0;
+                      const allocJoint = Number(paycycle[`${cat.allocKey}_joint`]) || 0;
+                      const allocated = allocMe + allocPartner + allocJoint;
+                      const remMe = Number(paycycle[`${cat.remKey}_me`]) || 0;
+                      const remPartner = Number(paycycle[`${cat.remKey}_partner`]) || 0;
+                      const remJoint = Number(paycycle[`${cat.remKey}_joint`]) || 0;
+                      const remaining = remMe + remPartner + remJoint;
+                      const catProgress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
+                      const isOver = target > 0 && allocated > target;
+                      return (
+                        <View key={cat.key} style={{ flex: 1, minWidth: '45%', maxWidth: '48%' }}>
+                          <Card variant="default" padding="md" style={{ borderWidth: 1, borderColor: isOver ? colors.warning + '80' : colors.borderSubtle }}>
+                            <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>{cat.label}</LabelText>
+                            <Text variant="sub-sm" style={{ marginBottom: 2 }}>{formatCurrency(allocated, currency)}</Text>
+                            <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>
+                              of {formatCurrency(target, currency)} ({percent}%){isOver ? ' — Over' : ''}
+                            </Text>
+                            <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.borderSubtle, overflow: 'hidden', marginBottom: spacing.xs }}>
+                              <View style={{ height: '100%', width: `${catProgress}%`, backgroundColor: isOver ? colors.warning : colors.accentPrimary, borderRadius: 3 }} />
+                            </View>
+                            <Text variant="label-sm" color="secondary">{formatCurrency(remaining, currency)} remaining</Text>
+                          </Card>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Seed sections */}
                 {categories.map((cat) => {
                   const seeds = seedsByCategory[cat] ?? [];
+                  const paidInCat = seeds.filter((s) => s.is_paid).length;
                   return (
-                    <View key={cat} style={{ marginBottom: spacing.xl }}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          marginBottom: spacing.md,
-                        }}>
-                        <HeadlineText style={{ fontSize: 18 }}>
-                          {CATEGORY_LABELS[cat]} ({seeds.length})
-                        </HeadlineText>
+                    <Card key={cat} variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: spacing.md }}>
+                        <View>
+                          <Text variant="sub-sm">
+                            {CATEGORY_LABELS[cat]} ({seeds.length})
+                          </Text>
+                          {isRitualMode && seeds.length > 0 && (
+                            <Text variant="body-sm" color="secondary">
+                              {paidInCat}/{seeds.length} paid
+                            </Text>
+                          )}
+                        </View>
                         {!isCycleLocked && (
                           <Pressable
                             onPress={() => openAddForm(cat)}
                             style={{
                               paddingHorizontal: spacing.md,
                               paddingVertical: spacing.sm,
-                              borderRadius: 8,
-                              backgroundColor: colors.accentPrimary,
+                              borderRadius: borderRadius.md,
+                              borderWidth: 1,
+                              borderColor: colors.borderSubtle,
                             }}>
-                            <BodyText style={{ color: '#fff', fontSize: 14 }}>+ Add {CATEGORY_SINGULAR[cat]}</BodyText>
+                            <Text variant="body-sm">+ Add {CATEGORY_SINGULAR[cat]}</Text>
                           </Pressable>
                         )}
                       </View>
-
                       {seeds.length === 0 ? (
-                        <Card variant="default" padding="md">
-                          <BodyText color="secondary" style={{ textAlign: 'center', marginBottom: spacing.sm }}>
-                            No {CATEGORY_LABELS[cat].toLowerCase()} yet
-                          </BodyText>
-                          {!isCycleLocked && (
-                            <Pressable
-                              onPress={() => openAddForm(cat)}
-                              style={{ alignSelf: 'center' }}>
-                              <BodyText style={{ color: colors.accentPrimary }}>Add your first</BodyText>
-                            </Pressable>
-                          )}
-                        </Card>
+                        <Text variant="body-sm" color="secondary" style={{ textAlign: 'center', marginVertical: spacing.md }}>
+                          No {CATEGORY_LABELS[cat].toLowerCase()} yet
+                        </Text>
                       ) : (
                         seeds.map((seed) => {
                           const isJoint = !!(seed.payment_source === 'joint' && (data.household as { is_couple?: boolean })?.is_couple);
@@ -761,15 +882,13 @@ export default function BlueprintScreen() {
                           );
                         })
                       )}
-                    </View>
+                    </Card>
                   );
                 })}
 
                 {data.pots.length > 0 && (
-                  <View style={{ marginBottom: spacing.xl }}>
-                    <HeadlineText style={{ fontSize: 18, marginBottom: spacing.md }}>
-                      Savings pots
-                    </HeadlineText>
+                  <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
+                    <Text variant="sub-sm" style={{ marginBottom: spacing.md }}>Savings pots</Text>
                     {data.pots.map((pot) => (
                       <PotCard
                         key={pot.id}
@@ -782,7 +901,7 @@ export default function BlueprintScreen() {
                         onMarkComplete={handleMarkComplete}
                       />
                     ))}
-                  </View>
+                  </Card>
                 )}
               </>
             )}
@@ -818,6 +937,21 @@ export default function BlueprintScreen() {
         onConfirm={handleDeleteSeed}
         isDeleting={isDeleting}
       />
+
+      {data?.household && (
+        <IncomeManageModal
+          visible={incomeModalVisible}
+          onClose={() => setIncomeModalVisible(false)}
+          onSuccess={() => {
+            loadData();
+            setIncomeModalVisible(false);
+          }}
+          householdId={data.household.id}
+          incomeSources={data.incomeSources}
+          currency={(data.household.currency ?? 'GBP') as CurrencyCode}
+          isPartner={data.isPartner}
+        />
+      )}
     </>
   );
 }

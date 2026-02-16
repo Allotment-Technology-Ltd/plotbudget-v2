@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Modal, View, Pressable } from 'react-native';
 import {

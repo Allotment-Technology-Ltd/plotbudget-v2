@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,65 +19,88 @@ import {
   LabelText,
   useTheme,
 } from '@repo/native-ui';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
-const PASSWORD_MIN_LENGTH = 12;
-const PASSWORD_REGEX = /^[a-zA-Z0-9-_]+$/;
+const WEB_APP_URL = process.env.EXPO_PUBLIC_APP_URL ?? '';
 
-function validatePassword(password: string): string | null {
-  if (password.length < PASSWORD_MIN_LENGTH) {
-    return 'Password must be at least 12 characters';
-  }
-  if (!PASSWORD_REGEX.test(password)) {
-    return 'Password can only contain letters, numbers, hyphens, and underscores';
-  }
-  return null;
-}
-
-export default function SignUpScreen() {
-  const { signUp } = useAuth();
+export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { colors, spacing, borderRadius } = useTheme();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
-  async function handleSignUp() {
+  async function handleSubmit() {
     setError(null);
-    if (!email.trim()) {
-      setError('Please enter a valid email address');
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      setError('Please enter your email address');
       return;
     }
-    if (!password) {
-      setError('Password is required');
-      return;
-    }
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords don't match");
+    if (!WEB_APP_URL) {
+      setError('App is misconfigured. Please contact support.');
       return;
     }
     setLoading(true);
-    const { error: signUpError } = await signUp(email.trim().toLowerCase(), password);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: `${WEB_APP_URL.replace(/\/$/, '')}/auth/callback`,
+    });
     setLoading(false);
-    if (signUpError) {
-      if (signUpError.message.includes('User already registered')) {
-        setError('An account with this email already exists');
-      } else {
-        setError(signUpError.message);
-      }
+    if (err) {
+      setError(err.message);
       return;
     }
-    Alert.alert(
-      'Account created',
-      'Check your email for a confirmation link. Sign in after confirming (or use sign in if you already confirmed).',
-      [{ text: 'OK', onPress: () => router.replace('/(auth)/login' as import('expo-router').Href) }]
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.bgPrimary }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: spacing.lg }}
+          keyboardShouldPersistTaps="handled">
+          <Container paddingX="md">
+            <Card variant="default" padding="lg">
+              <HeadlineText
+                style={{
+                  textAlign: 'center',
+                  marginBottom: spacing.xs,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1,
+                }}>
+                Check your email
+              </HeadlineText>
+              <BodyText
+                color="secondary"
+                style={{ textAlign: 'center', marginBottom: spacing.lg }}>
+                If we have an account with that email, we&apos;ve sent a link to reset your password.
+                Check your inbox and spam folder.
+              </BodyText>
+              <BodyText
+                color="secondary"
+                style={{ textAlign: 'center', marginBottom: spacing.lg, fontSize: 14 }}>
+                Open the link on this device or another to set a new password, then sign in here with
+                your new password.
+              </BodyText>
+              <Pressable
+                onPress={() => router.replace('/(auth)/login' as import('expo-router').Href)}
+                style={{
+                  backgroundColor: colors.accentPrimary,
+                  borderRadius: borderRadius.md,
+                  paddingVertical: spacing.md,
+                  alignItems: 'center',
+                }}>
+                <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
+                  Back to sign in
+                </Text>
+              </Pressable>
+            </Card>
+          </Container>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -98,10 +120,10 @@ export default function SignUpScreen() {
                 textTransform: 'uppercase',
                 letterSpacing: 1,
               }}>
-              Create Account
+              Reset password
             </HeadlineText>
             <BodyText color="secondary" style={{ textAlign: 'center', marginBottom: spacing.lg }}>
-              Sign up to start plotting your budget together
+              Enter your email and we&apos;ll send a link to reset your password.
             </BodyText>
 
             <View style={{ marginBottom: spacing.md }}>
@@ -115,54 +137,6 @@ export default function SignUpScreen() {
                 placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={(t) => setEmail(t)}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.borderSubtle,
-                  borderRadius: borderRadius.md,
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.md,
-                  backgroundColor: colors.bgSecondary,
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                }}
-              />
-            </View>
-
-            <View style={{ marginBottom: spacing.md }}>
-              <LabelText style={{ marginBottom: spacing.xs }}>Password</LabelText>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="password-new"
-                editable={!loading}
-                placeholder="e.g. coffee-piano-sunset"
-                placeholderTextColor={colors.textSecondary}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.borderSubtle,
-                  borderRadius: borderRadius.md,
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.md,
-                  backgroundColor: colors.bgSecondary,
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                }}
-              />
-            </View>
-
-            <View style={{ marginBottom: spacing.md }}>
-              <LabelText style={{ marginBottom: spacing.xs }}>Confirm Password</LabelText>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="password-new"
-                editable={!loading}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textSecondary}
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
                 style={{
                   borderWidth: 1,
                   borderColor: colors.borderSubtle,
@@ -191,7 +165,7 @@ export default function SignUpScreen() {
             )}
 
             <Pressable
-              onPress={() => void handleSignUp()}
+              onPress={() => void handleSubmit()}
               disabled={loading}
               style={{
                 backgroundColor: colors.accentPrimary,
@@ -205,13 +179,13 @@ export default function SignUpScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
-                  Create Account
+                  Send reset link
                 </Text>
               )}
             </Pressable>
 
             <BodyText color="secondary" style={{ textAlign: 'center', fontSize: 14 }}>
-              Already have an account?{' '}
+              Remember your password?{' '}
               <Text
                 style={{ color: colors.accentPrimary, fontWeight: '500' }}
                 onPress={() => router.back()}>

@@ -1,13 +1,13 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
-import { 
-  colors, 
-  spacing, 
-  borderRadius, 
-  typography, 
-  shadows, 
+import {
+  colors,
+  spacing,
+  borderRadius,
+  typography,
+  shadows,
   type ColorScheme,
-  type ColorPalette 
+  type ColorPalette,
 } from '@repo/design-tokens/native';
 
 type ThemeContextType = {
@@ -21,9 +21,16 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export interface ThemeProviderProps {
+  children: ReactNode;
+  /** When set, overrides system color scheme. Omit to use system preference. */
+  colorScheme?: ColorScheme;
+}
+
+export function ThemeProvider({ children, colorScheme: colorSchemeOverride }: ThemeProviderProps) {
   const systemColorScheme = useRNColorScheme();
-  const colorScheme: ColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
+  const colorScheme: ColorScheme =
+    colorSchemeOverride ?? (systemColorScheme === 'dark' ? 'dark' : 'light');
 
   const theme: ThemeContextType = {
     colorScheme,

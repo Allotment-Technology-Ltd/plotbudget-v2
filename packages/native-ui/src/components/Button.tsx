@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
-export type ButtonVariant = 'primary' | 'ghost' | 'secondary' | 'outline';
+export type ButtonVariant = 'primary' | 'ghost' | 'secondary' | 'outline' | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -34,16 +34,16 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const { colors, spacing, borderRadius, typography } = useTheme();
+  const { colors, spacing, borderRadius, typography, colorScheme } = useTheme();
 
   const isDisabled = disabled || isLoading;
 
-  // Base styles
+  // Base styles — rounded corners to match web (pill-like)
   const baseButtonStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     ...getButtonSizeStyles(size, spacing),
   };
 
@@ -54,8 +54,8 @@ export function Button({
     ...getTextSizeStyles(size, typography),
   };
 
-  // Variant-specific styles
-  const variantStyles = getVariantStyles(variant, colors, isDisabled);
+  // Variant-specific styles (match web: primary = filled accent, outline = transparent + border)
+  const variantStyles = getVariantStyles(variant, colors, colorScheme, isDisabled);
 
   return (
     <TouchableOpacity
@@ -134,8 +134,14 @@ function getTextSizeStyles(size: ButtonSize, typography: typeof import('@repo/de
 function getVariantStyles(
   variant: ButtonVariant,
   colors: import('@repo/design-tokens/native').ColorPalette,
+  colorScheme: 'light' | 'dark',
   isDisabled: boolean
 ) {
+  // Match web: primary = accent bg; dark mode uses dark text on mint, light mode uses white on green
+  const primaryTextColor = colorScheme === 'dark' ? '#111111' : '#FFFFFF';
+  // Outline: transparent bg, visible border (light grey/off-white); match web border-input
+  const outlineBorderColor = colorScheme === 'dark' ? colors.textSecondary : colors.borderSubtle;
+
   switch (variant) {
     case 'primary':
       return {
@@ -143,7 +149,7 @@ function getVariantStyles(
           backgroundColor: colors.accentPrimary,
         } as ViewStyle,
         text: {
-          color: '#FFFFFF',
+          color: isDisabled ? (colorScheme === 'dark' ? '#333333' : 'rgba(255,255,255,0.7)') : primaryTextColor,
         } as TextStyle,
       };
 
@@ -176,10 +182,22 @@ function getVariantStyles(
         button: {
           backgroundColor: 'transparent',
           borderWidth: 1,
-          borderColor: colors.borderSubtle,
+          borderColor: isDisabled ? colors.borderSubtle : outlineBorderColor,
         } as ViewStyle,
         text: {
-          color: colors.textPrimary,
+          color: isDisabled ? colors.textSecondary : colors.textPrimary,
+        } as TextStyle,
+      };
+
+    case 'destructive':
+      return {
+        button: {
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: isDisabled ? colors.borderSubtle : colors.error,
+        } as ViewStyle,
+        text: {
+          color: isDisabled ? colors.textSecondary : colors.error,
         } as TextStyle,
       };
 

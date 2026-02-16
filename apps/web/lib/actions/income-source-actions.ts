@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@repo/supabase';
 
 type IncomeSourceInsert = Database['public']['Tables']['income_sources']['Insert'];
@@ -33,10 +34,11 @@ export interface UpdateIncomeSourceInput {
 }
 
 export async function createIncomeSource(
-  data: CreateIncomeSourceInput
+  data: CreateIncomeSourceInput,
+  client?: SupabaseClient<Database>
 ): Promise<{ incomeSourceId?: string; error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
     const insertData: IncomeSourceInsert = {
       household_id: data.household_id,
       name: data.name.trim(),
@@ -66,10 +68,11 @@ export async function createIncomeSource(
 
 export async function updateIncomeSource(
   id: string,
-  data: UpdateIncomeSourceInput
+  data: UpdateIncomeSourceInput,
+  client?: SupabaseClient<Database>
 ): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
     const update: Record<string, unknown> = {};
     if (data.name !== undefined) update.name = data.name.trim();
     if (data.amount !== undefined) update.amount = data.amount;
@@ -97,9 +100,12 @@ export async function updateIncomeSource(
   }
 }
 
-export async function deleteIncomeSource(id: string): Promise<{ error?: string }> {
+export async function deleteIncomeSource(
+  id: string,
+  client?: SupabaseClient<Database>
+): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('income_sources') as any).delete().eq('id', id);
 
@@ -113,8 +119,11 @@ export async function deleteIncomeSource(id: string): Promise<{ error?: string }
   }
 }
 
-export async function getIncomeSources(householdId: string): Promise<IncomeSourceRow[]> {
-  const supabase = await createServerSupabaseClient();
+export async function getIncomeSources(
+  householdId: string,
+  client?: SupabaseClient<Database>
+): Promise<IncomeSourceRow[]> {
+  const supabase = client ?? (await createServerSupabaseClient());
   const { data } = await supabase
     .from('income_sources')
     .select('*')

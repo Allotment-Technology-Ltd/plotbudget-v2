@@ -4,12 +4,14 @@
  */
 
 import { createSupabaseClient } from './supabase';
-import type { Household, PayCycle, Seed } from '@repo/supabase';
+import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 
 export interface DashboardData {
   household: Household | null;
   currentPaycycle: PayCycle | null;
   seeds: Seed[];
+  pots: Pot[];
+  repayments: Repayment[];
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
@@ -20,13 +22,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   }
 
   const supabase = createSupabaseClient();
+  const empty: DashboardData = { household: null, currentPaycycle: null, seeds: [], pots: [], repayments: [] };
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    return { household: null, currentPaycycle: null, seeds: [] };
-  }
+  if (!user) return empty;
 
   const { data: profile } = (await supabase
     .from('users')
@@ -36,9 +37,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     data: { household_id: string | null; current_paycycle_id: string | null } | null;
   };
 
-  if (!profile?.household_id) {
-    return { household: null, currentPaycycle: null, seeds: [] };
-  }
+  if (!profile?.household_id) return empty;
 
   const householdId = profile.household_id;
   let currentPaycycleId = profile.current_paycycle_id;
@@ -60,9 +59,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     .eq('id', householdId)
     .single()) as { data: Household | null };
 
-  if (!household) {
-    return { household: null, currentPaycycle: null, seeds: [] };
-  }
+  if (!household) return empty;
 
   let currentPaycycle: PayCycle | null = null;
   let seeds: Seed[] = [];
@@ -83,9 +80,23 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     seeds = seedsData ?? [];
   }
 
+  const { data: potsData } = await supabase
+    .from('pots')
+    .select('*')
+    .eq('household_id', householdId)
+    .order('created_at', { ascending: false });
+
+  const { data: repaymentsData } = await supabase
+    .from('repayments')
+    .select('*')
+    .eq('household_id', householdId)
+    .order('created_at', { ascending: false });
+
   return {
     household,
     currentPaycycle,
     seeds,
+    pots: (potsData ?? []) as Pot[],
+    repayments: (repaymentsData ?? []) as Repayment[],
   };
 }

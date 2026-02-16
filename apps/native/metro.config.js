@@ -20,18 +20,30 @@ config.resolver.nodeModulesPaths = [
 // packages (e.g. @tanstack/react-query in root node_modules) resolve to
 // root node_modules/react (React 18) instead of the app's React 19,
 // causing "Invalid hook call" / "useState of null".
-const singletonModules = ['react', 'react-native'];
-const singletonPrefixes = ['react/', 'react-native/'];
+// Also resolve react-native-gesture-handler and @react-native-community/* from
+// project so Metro finds them in pnpm layout.
+const singletonModules = [
+  'react',
+  'react-native',
+  'react-native-gesture-handler',
+  '@react-native-community/datetimepicker',
+  '@react-native-community/slider',
+];
+const singletonPrefixes = ['react/', 'react-native/', '@react-native-community/'];
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (
     singletonModules.includes(moduleName) ||
     singletonPrefixes.some((p) => moduleName.startsWith(p))
   ) {
-    return {
-      type: 'sourceFile',
-      filePath: require.resolve(moduleName, { paths: [projectRoot] }),
-    };
+    try {
+      return {
+        type: 'sourceFile',
+        filePath: require.resolve(moduleName, { paths: [projectRoot, monorepoRoot] }),
+      };
+    } catch (_) {
+      // fall through to default
+    }
   }
   return context.resolveRequest(context, moduleName, platform);
 };

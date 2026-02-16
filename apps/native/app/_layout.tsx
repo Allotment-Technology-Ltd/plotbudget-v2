@@ -12,9 +12,14 @@ import 'react-native-reanimated';
 import { ThemeProvider } from '@repo/native-ui';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useColorScheme } from '@/components/useColorScheme';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemePreferenceProvider, useThemePreference } from '@/contexts/ThemePreferenceContext';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { useNavigationPersistence } from '@/lib/navigation-persistence';
+import {
+  useOnboardingStatus,
+  OnboardingStatusProvider,
+} from '@/contexts/OnboardingStatusContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { QueryProvider } from '@/providers/QueryProvider';
 
@@ -60,51 +65,76 @@ export default function RootLayout() {
   return (
     <QueryProvider>
       <AuthProvider>
-        <FontLoader>
-          <RootLayoutNav />
-        </FontLoader>
+        <OnboardingStatusProvider>
+          <FontLoader>
+            <ThemePreferenceProvider>
+              <RootLayoutNav />
+            </ThemePreferenceProvider>
+          </FontLoader>
+        </OnboardingStatusProvider>
       </AuthProvider>
     </QueryProvider>
   );
 }
 
 function AuthGate() {
-  const { session, loading } = useAuth();
+  const { session, loading: authLoading } = useAuth();
+  const { completed: onboardingCompleted, loading: onboardingLoading } = useOnboardingStatus();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
+    if (authLoading) return;
     const first = segments[0] as string;
     const inAuthGroup = first === '(auth)';
+    const inOnboardingGroup = first === '(onboarding)';
+
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login' as import('expo-router').Href);
-    } else if (session && inAuthGroup) {
-      router.replace('/(tabs)');
+      return;
     }
-  }, [loading, session, segments, router]);
+    if (session && inAuthGroup) {
+      if (onboardingLoading) return;
+      if (onboardingCompleted === false) {
+        router.replace('/(onboarding)' as import('expo-router').Href);
+      } else {
+        router.replace('/(tabs)');
+      }
+      return;
+    }
+    if (session && !inOnboardingGroup && onboardingCompleted === false && !onboardingLoading) {
+      router.replace('/(onboarding)' as import('expo-router').Href);
+      return;
+    }
+    if (session && inOnboardingGroup && onboardingCompleted === true) {
+      router.replace('/(tabs)/two' as import('expo-router').Href);
+    }
+  }, [authLoading, session, segments, router, onboardingCompleted, onboardingLoading]);
 
   return null;
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const { resolvedScheme } = useThemePreference();
   useNavigationPersistence();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AppErrorBoundary>
-          <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AuthGate />
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-            </Stack>
-          </NavigationThemeProvider>
-        </AppErrorBoundary>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider colorScheme={resolvedScheme}>
+          <AppErrorBoundary>
+            <NavigationThemeProvider value={resolvedScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <AuthGate />
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+              </Stack>
+            </NavigationThemeProvider>
+          </AppErrorBoundary>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
