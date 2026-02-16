@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  ScrollView,
-  View,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  Switch,
-  Alert,
-} from 'react-native';
+import { View, Pressable, Switch, Alert } from 'react-native';
+import { hapticImpact, hapticSelection } from '@/lib/haptics';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import {
   Card,
   HeadlineText,
@@ -30,6 +23,7 @@ import {
   type PaymentSource,
 } from '@/lib/income-source-api';
 import type { IncomeSource as BlueprintIncomeSource } from '@/lib/blueprint-data';
+import { AppBottomSheet } from './AppBottomSheet';
 
 const FREQUENCY_OPTIONS: { value: FrequencyRule; label: string }[] = [
   { value: 'specific_date', label: 'Specific date (e.g. 25th)' },
@@ -215,32 +209,33 @@ export function IncomeManageModal({
     });
   };
 
-  if (!visible) return null;
-
   return (
-    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: colors.bgPrimary }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }}>
-          <HeadlineText style={{ fontSize: 18 }}>Income sources</HeadlineText>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {showForm ? (
-              <Pressable onPress={() => setShowForm(false)}>
-                <BodyText style={{ color: colors.accentPrimary }}>Cancel</BodyText>
-              </Pressable>
-            ) : (
-              <Pressable onPress={openAdd}>
-                <BodyText style={{ color: colors.accentPrimary, fontWeight: '600' }}>Add</BodyText>
-              </Pressable>
-            )}
-            <Pressable onPress={onClose}>
-              <BodyText style={{ color: colors.textSecondary }}>Done</BodyText>
+    <AppBottomSheet
+      visible={visible}
+      onClose={onClose}
+      snapPoints={['60%', '95%']}
+      keyboardBehavior="interactive"
+      android_keyboardInputMode="adjustResize"
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }}>
+        <HeadlineText style={{ fontSize: 18 }}>Income sources</HeadlineText>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {showForm ? (
+            <Pressable onPress={() => { hapticImpact('light'); setShowForm(false); }}>
+              <BodyText style={{ color: colors.accentPrimary }}>Cancel</BodyText>
             </Pressable>
-          </View>
+          ) : (
+            <Pressable onPress={() => { hapticImpact('light'); openAdd(); }}>
+              <BodyText style={{ color: colors.accentPrimary, fontWeight: '600' }}>Add</BodyText>
+            </Pressable>
+          )}
+          <Pressable onPress={() => { hapticImpact('light'); onClose(); }}>
+            <BodyText style={{ color: colors.textSecondary }}>Done</BodyText>
+          </Pressable>
         </View>
+      </View>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing['2xl'] }} keyboardShouldPersistTaps="handled">
+      <BottomSheetScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing['2xl'] }} keyboardShouldPersistTaps="handled">
           {error ? (
             <View style={{ marginBottom: spacing.md, padding: spacing.sm, backgroundColor: colors.error + '20', borderRadius: borderRadius.md }}>
               <BodyText style={{ color: colors.error }}>{error}</BodyText>
@@ -270,7 +265,7 @@ export function IncomeManageModal({
                 {FREQUENCY_OPTIONS.map((opt) => (
                   <Pressable
                     key={opt.value}
-                    onPress={() => setFrequencyRule(opt.value)}
+                    onPress={() => { hapticSelection(); setFrequencyRule(opt.value); }}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -313,7 +308,7 @@ export function IncomeManageModal({
                   {PAYMENT_SOURCE_OPTIONS.map((opt) => (
                     <Pressable
                       key={opt.value}
-                      onPress={() => setPaymentSource(opt.value)}
+                      onPress={() => { hapticSelection(); setPaymentSource(opt.value); }}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -330,7 +325,7 @@ export function IncomeManageModal({
                   ))}
                 </View>
               )}
-              <Button onPress={handleSubmit} disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save' : 'Add'}</Button>
+              <Button onPress={() => { hapticImpact('light'); void handleSubmit(); }} disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save' : 'Add'}</Button>
             </Card>
           ) : null}
 
@@ -360,11 +355,12 @@ export function IncomeManageModal({
                       value={source.is_active}
                       onValueChange={() => handleToggleActive(source)}
                     />
-                    <Pressable onPress={() => openEdit(source)} hitSlop={8} style={{ padding: spacing.xs }}>
+                    <Pressable onPress={() => { hapticImpact('light'); openEdit(source); }} hitSlop={8} style={{ padding: spacing.xs }}>
                       <BodyText style={{ color: colors.accentPrimary, fontSize: 14 }}>Edit</BodyText>
                     </Pressable>
                     <Pressable
                       onPress={() => {
+                        hapticImpact('light');
                         Alert.alert('Remove income source?', 'Future cycles will no longer include it. You can add it again later.', [
                           { text: 'Cancel', style: 'cancel' },
                           { text: 'Remove', style: 'destructive', onPress: () => handleDeleteConfirm(source.id) },
@@ -381,8 +377,7 @@ export function IncomeManageModal({
             ))
           )}
 
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Modal>
+      </BottomSheetScrollView>
+    </AppBottomSheet>
   );
 }

@@ -1,5 +1,6 @@
-import { ScrollView, View, RefreshControl, Pressable, Alert, Modal, FlatList } from 'react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, View, RefreshControl, Pressable, Alert } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Container,
   Section,
@@ -15,8 +16,13 @@ import { ErrorScreen } from '@/components/ErrorScreen';
 import { SeedFormModal } from '@/components/SeedFormModal';
 import { DeleteSeedConfirmModal } from '@/components/DeleteSeedConfirmModal';
 import { IncomeManageModal } from '@/components/IncomeManageModal';
+import { AppBottomSheet } from '@/components/AppBottomSheet';
+import { SeedCard } from '@/components/SeedCard';
+import { SuccessAnimation } from '@/components/SuccessAnimation';
+import { AnimatedPressable } from '@/components/AnimatedPressable';
+import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 import { format } from 'date-fns';
-import { formatCurrency, currencySymbol, type CurrencyCode } from '@repo/logic';
+import { formatCurrency, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
 import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
 import { markPotComplete } from '@/lib/mark-pot-complete';
@@ -41,159 +47,6 @@ const CATEGORY_SINGULAR: Record<SeedType, string> = {
   savings: 'Saving',
   repay: 'Repayment',
 };
-
-function SeedCard({
-  seed,
-  currency,
-  colors,
-  spacing,
-  isRitualMode,
-  isCycleLocked,
-  isJoint,
-  otherLabel,
-  onEdit,
-  onDelete,
-  onMarkPaid,
-  onUnmarkPaid,
-}: {
-  seed: Seed & { is_paid_me?: boolean; is_paid_partner?: boolean };
-  currency: CurrencyCode;
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-  isRitualMode: boolean;
-  isCycleLocked: boolean;
-  isJoint: boolean;
-  otherLabel: string;
-  onEdit: () => void;
-  onDelete: () => void;
-  onMarkPaid?: (payer: Payer) => void;
-  onUnmarkPaid?: (payer: Payer) => void;
-}) {
-  const isPaid = !!seed.is_paid;
-  const isPaidMe = !!seed.is_paid_me;
-  const isPaidPartner = !!seed.is_paid_partner;
-  const canMarkUnmark = !isCycleLocked && isRitualMode && (onMarkPaid || onUnmarkPaid);
-  const canEditOrDelete = !isCycleLocked && (!isRitualMode || !isPaid);
-
-  const handleEdit = () => {
-    if (!canEditOrDelete) return;
-    onEdit();
-  };
-
-  const handleDelete = () => {
-    if (!canEditOrDelete) return;
-    onDelete();
-  };
-
-  return (
-    <Pressable onPress={handleEdit} disabled={!canEditOrDelete}>
-      <Card
-        variant="default"
-        padding="md"
-        style={{
-          marginBottom: spacing.sm,
-          borderWidth: isPaid && isRitualMode ? 2 : 1,
-          borderColor: isPaid && isRitualMode ? colors.accentPrimary + '80' : colors.borderSubtle,
-          backgroundColor: isPaid && isRitualMode ? colors.accentPrimary + '0D' : undefined,
-        }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <BodyText style={{ marginBottom: spacing.xs }}>{seed.name}</BodyText>
-            <Text variant="label-sm" color="secondary">
-              {currencySymbol(currency)}
-              {Number(seed.amount).toFixed(2)}
-              {isPaid ? ' • Paid' : ''}
-            </Text>
-          </View>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-            {canMarkUnmark &&
-              (isJoint ? (
-                <>
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      (isPaidMe ? onUnmarkPaid : onMarkPaid)?.('me');
-                    }}
-                    style={{
-                      paddingHorizontal: spacing.sm,
-                      paddingVertical: spacing.xs,
-                      borderRadius: 6,
-                      borderWidth: 1,
-                      borderColor: isPaidMe ? colors.accentPrimary : colors.borderSubtle,
-                      backgroundColor: isPaidMe ? colors.accentPrimary + '20' : undefined,
-                    }}>
-                    <Text variant="label-sm"
-                      style={{
-                        color: isPaidMe ? colors.accentPrimary : colors.textSecondary,
-                      }}>
-                      You {isPaidMe ? '✓' : ''}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      (isPaidPartner ? onUnmarkPaid : onMarkPaid)?.('partner');
-                    }}
-                    style={{
-                      paddingHorizontal: spacing.sm,
-                      paddingVertical: spacing.xs,
-                      borderRadius: 6,
-                      borderWidth: 1,
-                      borderColor: isPaidPartner ? colors.accentPrimary : colors.borderSubtle,
-                      backgroundColor: isPaidPartner ? colors.accentPrimary + '20' : undefined,
-                    }}>
-                    <Text variant="label-sm"
-                      style={{
-                        color: isPaidPartner ? colors.accentPrimary : colors.textSecondary,
-                      }}>
-                      {otherLabel} {isPaidPartner ? '✓' : ''}
-                    </Text>
-                  </Pressable>
-                </>
-              ) : (
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    (isPaid ? onUnmarkPaid : onMarkPaid)?.('both');
-                  }}
-                  style={{
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xs,
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: isPaid ? colors.accentPrimary : colors.borderSubtle,
-                    backgroundColor: isPaid ? colors.accentPrimary + '20' : undefined,
-                  }}>
-                  <Text variant="label-sm"
-                    style={{
-                      color: isPaid ? colors.accentPrimary : colors.textSecondary,
-                    }}>
-                    {isPaid ? 'Unmark paid' : 'Mark paid'}
-                  </Text>
-                </Pressable>
-              ))}
-            {canEditOrDelete && (
-              <Pressable
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
-                style={{
-                  paddingHorizontal: spacing.sm,
-                  paddingVertical: spacing.xs,
-                  borderRadius: 6,
-                  borderWidth: 1,
-                  borderColor: colors.error,
-                }}>
-                <Text variant="label-sm" style={{ color: colors.error }}>Delete</Text>
-              </Pressable>
-            )}
-          </View>
-        </View>
-      </Card>
-    </Pressable>
-  );
-}
 
 function PotCard({
   pot,
@@ -228,7 +81,7 @@ function PotCard({
 
   return (
     <Pressable
-      onPress={canToggle ? () => onMarkComplete(pot.id, nextStatus) : undefined}
+      onPress={canToggle ? () => { hapticImpact('light'); onMarkComplete(pot.id, nextStatus); } : undefined}
       disabled={!canToggle}>
       <Card variant="default" padding="md" style={{ marginBottom: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
@@ -278,6 +131,8 @@ export default function BlueprintScreen() {
     hasDraftCycle: boolean;
   } | null>(null);
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+  const selectedCycleIdRef = useRef<string | null>(null);
+  selectedCycleIdRef.current = selectedCycleId;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -298,10 +153,11 @@ export default function BlueprintScreen() {
   const [seedToDelete, setSeedToDelete] = useState<Seed | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const loadData = useCallback(async (cycleId?: string | null) => {
     setError(null);
-    const idToLoad = cycleId !== undefined ? cycleId : selectedCycleId;
+    const idToLoad = cycleId !== undefined ? cycleId : selectedCycleIdRef.current;
     try {
       const result = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
       const paycycle = result.paycycle;
@@ -362,7 +218,7 @@ export default function BlueprintScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedCycleId]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -469,6 +325,10 @@ export default function BlueprintScreen() {
       setOptimisticStatus((s) => ({ ...s, [potId]: status }));
       const result = await markPotComplete(potId, status);
       if ('success' in result) {
+        if (status === 'complete') {
+          hapticSuccess();
+          setShowSuccess(true);
+        }
         await loadData();
         setOptimisticStatus((s) => {
           const next = { ...s };
@@ -517,6 +377,8 @@ export default function BlueprintScreen() {
       }
       const result = await markSeedPaid(seedId, payer);
       if ('success' in result) {
+        hapticSuccess();
+        setShowSuccess(true);
         await loadData();
         setOptimisticPaidIds((p) => {
           const n = new Set(p);
@@ -790,6 +652,10 @@ export default function BlueprintScreen() {
 
   return (
     <>
+      <SuccessAnimation
+        visible={showSuccess}
+        onComplete={() => setShowSuccess(false)}
+      />
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.bgPrimary }}
         refreshControl={
@@ -821,7 +687,7 @@ export default function BlueprintScreen() {
                 {data.allPaycycles.length > 0 && (
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
                     <Pressable
-                      onPress={() => setCyclePickerVisible(true)}
+                      onPress={() => { hapticImpact('light'); setCyclePickerVisible(true); }}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -839,7 +705,7 @@ export default function BlueprintScreen() {
                     </Pressable>
                     {isRitualMode && !data.hasDraftCycle && (
                       <Pressable
-                        onPress={handleCreateNext}
+                        onPress={() => { hapticImpact('light'); handleCreateNext(); }}
                         disabled={isCreatingNext}
                         style={{
                           paddingVertical: spacing.sm,
@@ -855,7 +721,7 @@ export default function BlueprintScreen() {
                     )}
                     {data.paycycle?.status === 'draft' && data.activePaycycleId && (
                       <Pressable
-                        onPress={handleResyncDraft}
+                        onPress={() => { hapticImpact('light'); handleResyncDraft(); }}
                         disabled={isResyncing}
                         style={{
                           paddingVertical: spacing.sm,
@@ -896,7 +762,7 @@ export default function BlueprintScreen() {
                     <BodyText color="secondary" style={{ marginBottom: spacing.md, textAlign: 'center', fontSize: 14 }}>
                       Close your cycle and lock your budget?
                     </BodyText>
-                    <Pressable
+                    <AnimatedPressable
                       onPress={handleCloseRitual}
                       disabled={isClosingRitual}
                       style={{
@@ -909,7 +775,7 @@ export default function BlueprintScreen() {
                       <Text variant="label-sm" style={{ color: colors.bgPrimary }}>
                         {isClosingRitual ? 'Closing…' : 'Close cycle'}
                       </Text>
-                    </Pressable>
+                    </AnimatedPressable>
                   </Card>
                 )}
 
@@ -917,14 +783,14 @@ export default function BlueprintScreen() {
                 {isRitualMode && isCycleLocked && (
                   <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
                     <BodyText style={{ marginBottom: spacing.sm }}>Cycle closed — budget locked for this month</BodyText>
-                    <Pressable
+                    <AnimatedPressable
                       onPress={handleUnlockRitual}
                       disabled={isUnlocking}
                       style={{ alignSelf: 'flex-start' }}>
                       <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
                         {isUnlocking ? 'Unlocking…' : 'Unlock (e.g. new bill)'}
                       </Text>
-                    </Pressable>
+                    </AnimatedPressable>
                   </Card>
                 )}
 
@@ -953,7 +819,7 @@ export default function BlueprintScreen() {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                     <Text variant="sub-sm">Income this cycle</Text>
                     <Pressable
-                      onPress={() => setIncomeModalVisible(true)}
+                      onPress={() => { hapticImpact('light'); setIncomeModalVisible(true); }}
                       hitSlop={8}
                       style={{ paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}>
                       <Text variant="label-sm" style={{ color: colors.accentPrimary }}>Manage</Text>
@@ -1023,7 +889,7 @@ export default function BlueprintScreen() {
                         </View>
                         {!isCycleLocked && (
                           <Pressable
-                            onPress={() => openAddForm(cat)}
+                            onPress={() => { hapticImpact('light'); openAddForm(cat); }}
                             style={{
                               paddingHorizontal: spacing.md,
                               paddingVertical: spacing.sm,
@@ -1048,8 +914,6 @@ export default function BlueprintScreen() {
                               key={seed.id}
                               seed={seed}
                               currency={currency}
-                              colors={colors}
-                              spacing={spacing}
                               isRitualMode={isRitualMode}
                               isCycleLocked={isCycleLocked}
                               isJoint={isJoint}
@@ -1133,43 +997,41 @@ export default function BlueprintScreen() {
         />
       )}
 
-      <Modal
+      <AppBottomSheet
         visible={cyclePickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setCyclePickerVisible(false)}>
-        <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.lg }}
-          onPress={() => setCyclePickerVisible(false)}>
-          <Pressable style={{ backgroundColor: colors.bgPrimary, borderRadius: borderRadius.lg, padding: spacing.md, maxHeight: '70%' }} onPress={(e) => e.stopPropagation()}>
-            <SubheadingText style={{ marginBottom: spacing.md }}>Select pay cycle</SubheadingText>
-            <FlatList
-              data={data?.allPaycycles ?? []}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => handleCycleSelect(item.id)}
-                  style={{
-                    paddingVertical: spacing.md,
-                    paddingHorizontal: spacing.sm,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.borderSubtle,
-                  }}>
-                  <BodyText style={{ fontWeight: data?.paycycle?.id === item.id ? '600' : '400' }}>
-                    {cycleLabel(item)}
-                  </BodyText>
-                  <Text variant="label-sm" color="secondary">
-                    {format(new Date(item.start_date), 'MMM d')} – {format(new Date(item.end_date), 'MMM d, yyyy')}
-                  </Text>
-                </Pressable>
-              )}
-            />
-            <Pressable onPress={() => setCyclePickerVisible(false)} style={{ marginTop: spacing.sm, paddingVertical: spacing.sm }}>
+        onClose={() => setCyclePickerVisible(false)}
+        snapPoints={['50%', '90%']}
+      >
+        <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.md }}>
+          <SubheadingText style={{ marginBottom: spacing.md }}>Select pay cycle</SubheadingText>
+        </View>
+        <BottomSheetFlatList<PaycycleOption>
+          data={data?.allPaycycles ?? []}
+          keyExtractor={(item: PaycycleOption) => item.id}
+          renderItem={({ item }: { item: PaycycleOption }) => (
+            <Pressable
+              onPress={() => { hapticImpact('light'); handleCycleSelect(item.id); }}
+              style={{
+                paddingVertical: spacing.md,
+                paddingHorizontal: spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.borderSubtle,
+              }}>
+              <BodyText style={{ fontWeight: data?.paycycle?.id === item.id ? '600' : '400' }}>
+                {cycleLabel(item)}
+              </BodyText>
+              <Text variant="label-sm" color="secondary">
+                {format(new Date(item.start_date), 'MMM d')} – {format(new Date(item.end_date), 'MMM d, yyyy')}
+              </Text>
+            </Pressable>
+          )}
+          ListFooterComponent={
+            <Pressable onPress={() => { hapticImpact('light'); setCyclePickerVisible(false); }} style={{ marginTop: spacing.sm, paddingVertical: spacing.md, paddingHorizontal: spacing.md }}>
               <Text variant="label-sm" color="secondary">Cancel</Text>
             </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          }
+        />
+      </AppBottomSheet>
     </>
   );
 }

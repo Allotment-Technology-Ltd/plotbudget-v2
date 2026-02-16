@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { hapticImpact } from '@/lib/haptics';
 import { BodyText, LabelText, useTheme } from '@repo/native-ui';
 
 /** Minimum touch target: 48dp/pt (Material 48dp, Apple 44pt). */
@@ -35,7 +36,10 @@ export function SettingsLinkRow({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        hapticImpact('light');
+        onPress();
+      }}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',

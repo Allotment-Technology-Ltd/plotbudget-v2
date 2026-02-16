@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  ScrollView,
-  View,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Pressable, Platform, ScrollView } from 'react-native';
+import { hapticImpact, hapticSelection } from '@/lib/haptics';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
 import {
@@ -23,6 +18,7 @@ import {
 import { parseIncome } from '@repo/logic';
 import type { Seed, Pot, Repayment, PayCycle, Household } from '@repo/supabase';
 import { createSeedApi, updateSeedApi } from '@/lib/seed-api';
+import { AppBottomSheet } from './AppBottomSheet';
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PaymentSource = 'me' | 'partner' | 'joint';
@@ -293,23 +289,22 @@ export function SeedFormModal({
   const showNewRepayFields = !linkRepaymentId || (editMode && !!seed?.linked_repayment_id);
 
   return (
-    <Modal
+    <AppBottomSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: colors.bgPrimary }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">
-          <Container paddingX="md">
+      onClose={onClose}
+      snapPoints={['60%', '95%']}
+      keyboardBehavior="interactive"
+      android_keyboardInputMode="adjustResize"
+    >
+      <BottomSheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 48 }}>
+        <Container paddingX="md">
             <Section spacing="lg">
               {/* Header */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
                 <Text variant="headline-sm">
                   {editMode ? `Edit ${CATEGORY_LABELS[category]}` : `Add ${CATEGORY_LABELS[category]}`}
                 </Text>
-                <Pressable onPress={onClose} hitSlop={12}>
+                <Pressable onPress={() => { hapticImpact('light'); onClose(); }} hitSlop={12}>
                   <BodyText color="secondary" style={{ fontSize: 18 }}>✕</BodyText>
                 </Pressable>
               </View>
@@ -340,7 +335,7 @@ export function SeedFormModal({
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                   <Pressable
-                    onPress={() => setShowDueDatePicker(true)}
+                    onPress={() => { hapticImpact('light'); setShowDueDatePicker(true); }}
                     style={{
                       flex: 1,
                       borderWidth: 1,
@@ -357,7 +352,7 @@ export function SeedFormModal({
                     </BodyText>
                   </Pressable>
                   {dueDate ? (
-                    <Pressable onPress={() => setDueDate('')} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
+                    <Pressable onPress={() => { hapticImpact('light'); setDueDate(''); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
                       <Text variant="body-sm" style={{ color: colors.error }}>Clear</Text>
                     </Pressable>
                   ) : null}
@@ -377,7 +372,7 @@ export function SeedFormModal({
                     />
                     {Platform.OS === 'ios' && (
                       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.xs }}>
-                        <Pressable onPress={() => setShowDueDatePicker(false)} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
+                        <Pressable onPress={() => { hapticImpact('light'); setShowDueDatePicker(false); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
                           <BodyText style={{ color: colors.accentPrimary }}>Done</BodyText>
                         </Pressable>
                       </View>
@@ -530,7 +525,7 @@ export function SeedFormModal({
                     ] as const).map((opt) => (
                       <Pressable
                         key={opt.value}
-                        onPress={() => setPaymentSource(opt.value)}
+                        onPress={() => { hapticSelection(); setPaymentSource(opt.value); }}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
@@ -586,7 +581,7 @@ export function SeedFormModal({
                   </View>
 
                   <Pressable
-                    onPress={() => setUsesJointAccount(!usesJointAccount)}
+                    onPress={() => { hapticImpact('light'); setUsesJointAccount(!usesJointAccount); }}
                     style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: spacing.md }}>
                     <View
                       style={{
@@ -615,7 +610,7 @@ export function SeedFormModal({
               {/* Recurring checkbox (needs/wants only) */}
               {(category === 'need' || category === 'want') && (
                 <Pressable
-                  onPress={() => setIsRecurring(!isRecurring)}
+                  onPress={() => { hapticImpact('light'); setIsRecurring(!isRecurring); }}
                   style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: spacing.md }}>
                   <View
                     style={{
@@ -640,16 +635,15 @@ export function SeedFormModal({
 
               {/* Actions */}
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md }}>
-                <Button variant="outline" onPress={onClose}>Cancel</Button>
-                <Button onPress={handleSubmit} isLoading={submitting} disabled={submitting}>
+                <Button variant="outline" onPress={() => { hapticImpact('light'); onClose(); }}>Cancel</Button>
+                <Button onPress={() => { hapticImpact('light'); void handleSubmit(); }} isLoading={submitting} disabled={submitting}>
                   {editMode ? 'Save Changes' : 'Add'}
                 </Button>
               </View>
             </Section>
           </Container>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Modal>
+      </BottomSheetScrollView>
+    </AppBottomSheet>
   );
 }
 
@@ -670,7 +664,7 @@ function PillButton({
 }) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => { hapticSelection(); onPress(); }}
       style={{
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
@@ -710,7 +704,7 @@ function DatePickerField({
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Pressable
-          onPress={onShowPicker}
+          onPress={() => { hapticImpact('light'); onShowPicker(); }}
           style={{
             flex: 1,
             borderWidth: 1,
@@ -727,7 +721,7 @@ function DatePickerField({
           </BodyText>
         </Pressable>
         {value ? (
-          <Pressable onPress={() => onChange('')} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
+          <Pressable onPress={() => { hapticImpact('light'); onChange(''); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }}>
             <Text variant="body-sm" style={{ color: colors.error }}>Clear</Text>
           </Pressable>
         ) : null}
@@ -747,7 +741,7 @@ function DatePickerField({
           />
           {Platform.OS === 'ios' && (
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.xs }}>
-              <Pressable onPress={onHidePicker} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
+              <Pressable onPress={() => { hapticImpact('light'); onHidePicker(); }} style={{ paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
                 <BodyText style={{ color: colors.accentPrimary }}>Done</BodyText>
               </Pressable>
             </View>
@@ -778,7 +772,7 @@ function StatusPicker({
       {options.map((opt, idx) => (
         <Pressable
           key={opt.value}
-          onPress={() => onChange(opt.value)}
+          onPress={() => { hapticSelection(); onChange(opt.value); }}
           style={{
             flexDirection: 'row',
             alignItems: 'center',

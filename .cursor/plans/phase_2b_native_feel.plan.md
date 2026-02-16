@@ -1,7 +1,7 @@
 # Phase 2b: Native Feel — Implementation Plan
 
 **Source:** [docs/PLOT-93-phase-2-plan.md](docs/PLOT-93-phase-2-plan.md)  
-**Goal:** The app feels native and tactile; gestures are natural, transitions seamless, graphics smooth. Dashboard charts are interactive, filterable, and adaptable so users can immerse themselves in their budgeting.
+**Goal:** The app feels native and tactile; gestures are natural, transitions seamless. Charts moved to Phase 4.
 
 ---
 
@@ -18,10 +18,11 @@
 ## Recommended Order
 
 1. **PLOT-132** Bottom Sheets (foundation for modals)
-2. **PLOT-131** Swipe Gestures (row-level actions)
+2. **PLOT-131** Swipe Gestures (row-level actions) — *swipe removed; SeedCard inline actions used*
 3. **PLOT-135** Micro-interactions (feedback on actions)
-4. **PLOT-133** Shared Element Transitions (screen-level polish)
-5. **PLOT-134** Interactive Reporting Suite (charts, APIs, CFO/CMO/UX/design-led)
+4. **PLOT-133** Shared Element Transitions (screen-level polish) — *detail routes added; transitions disabled for Expo Go compatibility*
+
+**Moved to Phase 4:** PLOT-134 Interactive Reporting Suite (charts, APIs)
 
 ---
 

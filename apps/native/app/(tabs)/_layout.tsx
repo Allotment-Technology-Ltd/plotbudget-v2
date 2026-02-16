@@ -4,6 +4,7 @@ import { Tabs } from 'expo-router';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { hapticSelection } from '@/lib/haptics';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -13,6 +14,10 @@ function TabBarIcon(props: {
   return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
+const tabPressListener = () => {
+  hapticSelection();
+};
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -20,6 +25,9 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+      }}
+      screenListeners={{
+        tabPress: tabPressListener,
       }}>
       <Tabs.Screen
         name="index"

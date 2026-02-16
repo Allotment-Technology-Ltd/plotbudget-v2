@@ -1,4 +1,5 @@
 import { ScrollView, View, RefreshControl, Pressable, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -26,6 +27,9 @@ import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import { fetchDashboardData } from '@/lib/dashboard-data';
 import { markSeedPaid } from '@/lib/mark-seed-paid';
 import { markPotComplete } from '@/lib/mark-pot-complete';
+import { SeedFormModal } from '@/components/SeedFormModal';
+import { SuccessAnimation } from '@/components/SuccessAnimation';
+import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 
 type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
 type PotStatus = 'active' | 'complete' | 'paused';
@@ -218,6 +222,7 @@ function SavingsDebtSection({
   borderRadius,
   optimisticPotStatus,
   onMarkPotComplete,
+  onPotPress,
 }: {
   pots: Pot[];
   repayments: Repayment[];
@@ -227,6 +232,7 @@ function SavingsDebtSection({
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
   optimisticPotStatus: Record<string, PotStatus>;
   onMarkPotComplete: (potId: string, status: 'complete' | 'active') => void;
+  onPotPress: (potId: string) => void;
 }) {
   if (pots.length === 0 && repayments.length === 0) return null;
 
@@ -241,27 +247,36 @@ function SavingsDebtSection({
           const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
           const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
           return (
-            <Pressable key={pot.id} onPress={canToggle ? () => onMarkPotComplete(pot.id, nextStatus as 'complete' | 'active') : undefined} disabled={!canToggle}>
+            <Pressable key={pot.id} onPress={() => onPotPress(pot.id)}>
               <View style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, padding: spacing.md }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 }}>
-                    <BodyText style={{ fontSize: 18 }}>{pot.icon || '🏖️'}</BodyText>
-                    <LabelText numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{pot.name}</LabelText>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 }}>
+                      <BodyText style={{ fontSize: 18 }}>{pot.icon || '🏖️'}</BodyText>
+                      <LabelText numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{pot.name}</LabelText>
+                    </View>
+                    {canToggle && (
+                      <Pressable
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          hapticImpact('light');
+                          onMarkPotComplete(pot.id, nextStatus as 'complete' | 'active');
+                        }}
+                        hitSlop={8}
+                      >
+                        <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
+                          {effectiveStatus === 'complete' ? 'Active' : 'Done'}
+                        </Text>
+                      </Pressable>
+                    )}
                   </View>
-                  {canToggle && (
-                    <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
-                      {effectiveStatus === 'complete' ? 'Active' : 'Done'}
-                    </Text>
-                  )}
+                  <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
+                    {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}{pot.target_amount.toFixed(2)}
+                  </Text>
+                  <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden', marginBottom: spacing.xs }}>
+                    <View style={{ height: '100%', width: `${progress}%`, backgroundColor: colors.savings, borderRadius: borderRadius.full }} />
+                  </View>
+                  <Text variant="label-sm" color="secondary">{progress.toFixed(0)}% — {statusLabel}</Text>
                 </View>
-                <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-                  {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}{pot.target_amount.toFixed(2)}
-                </Text>
-                <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden', marginBottom: spacing.xs }}>
-                  <View style={{ height: '100%', width: `${progress}%`, backgroundColor: colors.savings, borderRadius: borderRadius.full }} />
-                </View>
-                <Text variant="label-sm" color="secondary">{progress.toFixed(0)}% — {statusLabel}</Text>
-              </View>
             </Pressable>
           );
         })}
@@ -299,6 +314,7 @@ function CategoryBreakdownSection({
   colors,
   spacing,
   borderRadius,
+  onCategoryPress,
 }: {
   paycycle: PayCycle;
   household: Household;
@@ -306,17 +322,18 @@ function CategoryBreakdownSection({
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
+  onCategoryPress: (type: 'needs' | 'wants' | 'savings' | 'repay') => void;
 }) {
   const totalIncome = Number(paycycle.total_income);
   const categories = [
-    { key: 'needs', label: 'Needs' },
-    { key: 'wants', label: 'Wants' },
-    { key: 'savings', label: 'Savings' },
-    { key: 'repay', label: 'Repay' },
-  ] as const;
+    { key: 'needs' as const, label: 'Needs' },
+    { key: 'wants' as const, label: 'Wants' },
+    { key: 'savings' as const, label: 'Savings' },
+    { key: 'repay' as const, label: 'Repay' },
+  ];
 
   return (
-    <Card variant="default" padding="md">
+    <View>
       <Text variant="sub-sm" style={{ marginBottom: spacing.md }}>Category Breakdown</Text>
       <View style={{ gap: spacing.md }}>
         {categories.map((cat) => {
@@ -329,31 +346,33 @@ function CategoryBreakdownSection({
           const progress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
           const isOver = target > 0 && allocated > target;
           return (
-            <View key={cat.key}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
-                <LabelText>{cat.label}</LabelText>
-                <Text variant="body-sm" color="secondary">
-                  {formatCurrency(allocated, currency)} / {formatCurrency(target, currency)}
-                </Text>
-              </View>
-              <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden' }}>
-                <View
-                  style={{
-                    height: '100%',
-                    width: `${progress}%`,
-                    backgroundColor: isOver ? colors.warning : colors.accentPrimary,
-                    borderRadius: borderRadius.full,
-                  }}
-                />
-              </View>
-              {isOver && (
-                <Text variant="label-sm" style={{ color: colors.warning, marginTop: 2 }}>Over budget</Text>
-              )}
-            </View>
+            <Pressable key={cat.key} onPress={() => onCategoryPress(cat.key)}>
+              <Card variant="default" padding="md">
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
+                    <LabelText>{cat.label}</LabelText>
+                    <Text variant="body-sm" color="secondary">
+                      {formatCurrency(allocated, currency)} / {formatCurrency(target, currency)}
+                    </Text>
+                  </View>
+                  <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden' }}>
+                    <View
+                      style={{
+                        height: '100%',
+                        width: `${progress}%`,
+                        backgroundColor: isOver ? colors.warning : colors.accentPrimary,
+                        borderRadius: borderRadius.full,
+                      }}
+                    />
+                  </View>
+                  {isOver && (
+                    <Text variant="label-sm" style={{ color: colors.warning, marginTop: 2 }}>Over budget</Text>
+                  )}
+                </Card>
+            </Pressable>
           );
         })}
       </View>
-    </Card>
+    </View>
   );
 }
 
@@ -371,6 +390,7 @@ function UpcomingBillsSection({
   currency,
   optimisticPaidIds,
   onMarkPaid,
+  onEdit,
   colors,
   spacing,
   borderRadius,
@@ -379,6 +399,7 @@ function UpcomingBillsSection({
   currency: CurrencyCode;
   optimisticPaidIds: Set<string>;
   onMarkPaid: (seedId: string) => void;
+  onEdit: (seed: Seed) => void;
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
@@ -399,7 +420,10 @@ function UpcomingBillsSection({
             {unpaidSeeds.slice(0, 7).map((seed, idx) => (
               <Pressable
                 key={seed.id}
-                onPress={() => onMarkPaid(seed.id)}
+                onPress={() => {
+                  hapticImpact('light');
+                  onMarkPaid(seed.id);
+                }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -423,6 +447,16 @@ function UpcomingBillsSection({
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginLeft: spacing.sm }}>
                   <Text variant="label-sm" color="secondary">{TYPE_LABELS[seed.type] ?? seed.type}</Text>
                   <Text variant="body-sm">{currencySymbol(currency)}{Number(seed.amount).toFixed(2)}</Text>
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      hapticImpact('light');
+                      onEdit(seed);
+                    }}
+                    hitSlop={8}
+                    style={{ padding: spacing.xs }}>
+                    <FontAwesome name="pencil" size={14} color={colors.accentPrimary} />
+                  </Pressable>
                 </View>
               </Pressable>
             ))}
@@ -441,6 +475,7 @@ function UpcomingBillsSection({
 /* ---------- Dashboard screen ---------- */
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const { colors, spacing, borderRadius } = useTheme();
   const [data, setData] = useState<{
     household: Household | null;
@@ -454,6 +489,8 @@ export default function DashboardScreen() {
   const [error, setError] = useState<Error | null>(null);
   const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
   const [optimisticPotStatus, setOptimisticPotStatus] = useState<Record<string, PotStatus>>({});
+  const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -488,6 +525,8 @@ export default function DashboardScreen() {
       setOptimisticPaidIds((prev) => new Set(prev).add(seedId));
       const result = await markSeedPaid(seedId, 'both');
       if ('success' in result) {
+        hapticSuccess();
+        setShowSuccess(true);
         await loadData();
       } else {
         setOptimisticPaidIds((prev) => {
@@ -508,6 +547,10 @@ export default function DashboardScreen() {
       setOptimisticPotStatus((s) => ({ ...s, [potId]: status }));
       const result = await markPotComplete(potId, status);
       if ('success' in result) {
+        if (status === 'complete') {
+          hapticSuccess();
+          setShowSuccess(true);
+        }
         await loadData();
         setOptimisticPotStatus((s) => {
           const next = { ...s };
@@ -628,6 +671,11 @@ export default function DashboardScreen() {
   ];
 
   return (
+    <>
+      <SuccessAnimation
+        visible={showSuccess}
+        onComplete={() => setShowSuccess(false)}
+      />
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bgPrimary }}
       refreshControl={
@@ -679,6 +727,10 @@ export default function DashboardScreen() {
               colors={colors}
               spacing={spacing}
               borderRadius={borderRadius}
+              onCategoryPress={(type) => {
+                hapticImpact('light');
+                router.push(`/budget-detail/${type}` as import('expo-router').Href);
+              }}
             />
           </View>
 
@@ -689,6 +741,7 @@ export default function DashboardScreen() {
               currency={currency}
               optimisticPaidIds={optimisticPaidIds}
               onMarkPaid={handleMarkPaid}
+              onEdit={(seed) => setEditingSeed(seed)}
               colors={colors}
               spacing={spacing}
               borderRadius={borderRadius}
@@ -707,11 +760,33 @@ export default function DashboardScreen() {
                 borderRadius={borderRadius}
                 optimisticPotStatus={optimisticPotStatus}
                 onMarkPotComplete={handleMarkPotComplete}
+                onPotPress={(id) => {
+                hapticImpact('light');
+                router.push(`/pot-detail/${id}` as import('expo-router').Href);
+              }}
               />
             </View>
           )}
         </Section>
       </Container>
+
+      {editingSeed && data.household && data.currentPaycycle && (
+        <SeedFormModal
+          visible={!!editingSeed}
+          onClose={() => setEditingSeed(null)}
+          onSuccess={() => {
+            loadData();
+            setEditingSeed(null);
+          }}
+          category={editingSeed.type as 'need' | 'want' | 'savings' | 'repay'}
+          seed={editingSeed}
+          household={data.household}
+          paycycle={data.currentPaycycle}
+          pots={data.pots}
+          repayments={data.repayments}
+        />
+      )}
     </ScrollView>
+    </>
   );
 }
