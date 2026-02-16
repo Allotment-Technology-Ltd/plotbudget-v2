@@ -56,7 +56,7 @@ export function useNavigationPersistence() {
         pathname.startsWith('/(tabs)');
       if (isAtRoot && savedPath && savedPath !== pathname) {
         isRestoring.current = true;
-        router.replace(savedPath as `/${string}`);
+        router.replace(savedPath as import('expo-router').Href);
         requestAnimationFrame(() => {
           isRestoring.current = false;
         });

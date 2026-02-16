@@ -46,6 +46,12 @@ Owners
 - Product/Engineering: Adam Boon
 - Mobile lead: (assign later)
 
+Go-live scope (Android first)
+------------------------------
+- **Initial mobile release:** Android only. iOS development and App Store admin are treated as separate, follow-on work.
+- **OAuth:** Step 09 (OAuth in Expo) is blocked until Google verification is complete. Apple OAuth is not yet implemented on web; do not gate Android work on it.
+- **When implementing Android:** Keep iOS in mind (e.g. avoid Android-only APIs where a cross-platform approach is trivial; document iOS follow-up where relevant). Do not prioritise iOS-specific features, store config, or Apple Sign-In for current go-live.
+
 Notes
 -----
 This ADR recommends an iterative, low-risk migration path: phase-based work (Foundation → Auth & Read → Write & Notify → Polish & Store). Revisit local-first or Solito only if product requirements change to justify their complexity.

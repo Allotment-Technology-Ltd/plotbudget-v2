@@ -26,7 +26,11 @@ export function PostHogIdentifyOnAuth() {
 
     setUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        identified.current.clear();
+        return;
+      }
       setUser();
     });
 

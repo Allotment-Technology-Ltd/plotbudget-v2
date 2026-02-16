@@ -20,3 +20,5 @@ export function createSupabaseClient() {
     },
   });
 }
+
+export const supabase = createSupabaseClient();
