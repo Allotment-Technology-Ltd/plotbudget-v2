@@ -41,10 +41,26 @@ Exit Criteria for Phase 0 (Foundation)
 4. `apps/native` scaffolded (Expo Router) and boots to a placeholder screen on emulator.
 5. `turbo build` and `turbo lint` succeed across workspaces including `apps/native`.
 
+Exit Criteria for Phase 1 (Auth & Read)
+---------------------------------------
+1. **Auth:** Users can sign up, sign in, and sign out with email/password in the native app. Session persists across app restarts.
+2. **Password reset:** "Forgot password?" is available from the login screen; requesting a reset sends an email; the user completes the reset via the link (web or in-app) and can then sign in with the new password.
+3. **Onboarding:** New users can complete onboarding in the app (household mode, names, currency, income, pay cycle, joint split for couples) so that household and first pay cycle exist without using the web app.
+4. **Read-only core screens:** Dashboard (pay cycle summary, totals, days remaining), Blueprint/Pots list, and Settings are implemented and show data consistent with the web app for the same user.
+5. **Navigation:** Tab navigation (e.g. Dashboard, Pots, Settings) is in place and state persists across restarts.
+6. **Theme:** User theme (light/dark) is respected and persists.
+7. **Quality:** Skeleton loading and error boundaries are in place for data loads; no Phase 0 regressions (`turbo build`, `turbo lint` pass).
+
 Owners
 ------
 - Product/Engineering: Adam Boon
 - Mobile lead: (assign later)
+
+Go-live scope (Android first)
+------------------------------
+- **Initial mobile release:** Android only. iOS development and App Store admin are treated as separate, follow-on work.
+- **OAuth:** Step 09 (OAuth in Expo) is blocked until Google verification is complete. Apple OAuth is not yet implemented on web; do not gate Android work on it.
+- **When implementing Android:** Keep iOS in mind (e.g. avoid Android-only APIs where a cross-platform approach is trivial; document iOS follow-up where relevant). Do not prioritise iOS-specific features, store config, or Apple Sign-In for current go-live.
 
 Notes
 -----

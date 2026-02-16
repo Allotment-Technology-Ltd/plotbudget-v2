@@ -353,7 +353,7 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              {/* Your name (couple: required for labels) */}
+              {/* User's name → User's salary → Partner's name → Partner's salary → Currency */}
               {isCouple && (
                 <div className="space-y-2">
                   <Label htmlFor="myName">Your Name</Label>
@@ -383,37 +383,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Currency */}
-              <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
-                <Controller
-                  name="currency"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      aria-label="Currency for income and bills"
-                      data-testid="currency-select"
-                    >
-                      <SelectTrigger id="currency">
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GBP">British Pound (GBP)</SelectItem>
-                        <SelectItem value="USD">US Dollar (USD)</SelectItem>
-                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used for all income and bills in your budget.
-                </p>
-              </div>
-
-              {/* Section 2: Income */}
-                <div className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="myIncome">Your Monthly Income</Label>
                   <p className="text-xs text-muted-foreground">
@@ -441,27 +411,6 @@ export default function OnboardingPage() {
                 {isCouple && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="partnerIncome">
-                        Partner&apos;s Monthly Income
-                      </Label>
-                      <IncomeInput
-                        id="partnerIncome"
-                        placeholder={`e.g. ${currency === 'USD' ? '3200' : currency === 'EUR' ? '3000' : '2800'}`}
-                        error={!!form.formState.errors.partnerIncome}
-                        currency={currency}
-                        {...form.register('partnerIncome')}
-                      />
-                      {form.formState.errors.partnerIncome && (
-                        <p
-                          id="partnerIncome-error"
-                          className="text-sm text-destructive"
-                          role="alert"
-                        >
-                          {form.formState.errors.partnerIncome.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
                       <Label htmlFor="partnerName">Partner&apos;s Name</Label>
                       <Input
                         id="partnerName"
@@ -485,8 +434,57 @@ export default function OnboardingPage() {
                         </p>
                       )}
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerIncome">
+                        Partner&apos;s Monthly Income
+                      </Label>
+                      <IncomeInput
+                        id="partnerIncome"
+                        placeholder={`e.g. ${currency === 'USD' ? '3200' : currency === 'EUR' ? '3000' : '2800'}`}
+                        error={!!form.formState.errors.partnerIncome}
+                        currency={currency}
+                        {...form.register('partnerIncome')}
+                      />
+                      {form.formState.errors.partnerIncome && (
+                        <p
+                          id="partnerIncome-error"
+                          className="text-sm text-destructive"
+                          role="alert"
+                        >
+                          {form.formState.errors.partnerIncome.message}
+                        </p>
+                      )}
+                    </div>
                   </>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Controller
+                  name="currency"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      aria-label="Currency for income and bills"
+                      data-testid="currency-select"
+                    >
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                        <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used for all income and bills in your budget.
+                </p>
               </div>
 
               {/* Section 3: Pay Cycle */}

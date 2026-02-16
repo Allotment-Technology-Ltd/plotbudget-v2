@@ -168,8 +168,8 @@ PLOT exists to **liberate couples from financial friction** — eliminating the 
 # SUPABASE
 # ============================================
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxx
+SUPABASE_SERVICE_ROLE_KEY=xxxxx
 
 # ============================================
 # POLAR.SH

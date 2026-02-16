@@ -204,9 +204,12 @@ function isDueDateInPaycycleRange(
   return dueDate >= startDate && dueDate <= endDate;
 }
 
-export async function createSeed(data: CreateSeedInput): Promise<{ error?: string }> {
+export async function createSeed(
+  data: CreateSeedInput,
+  client?: SupabaseClient<Database>
+): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
 
     if (data.due_date) {
       const { data: paycycle } = (await supabase
@@ -309,6 +312,7 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
 
     await updatePaycycleAllocations(data.paycycle_id);
     revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard');
     return {};
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
@@ -318,10 +322,11 @@ export async function createSeed(data: CreateSeedInput): Promise<{ error?: strin
 
 export async function updateSeed(
   seedId: string,
-  data: UpdateSeedInput
+  data: UpdateSeedInput,
+  client?: SupabaseClient<Database>
 ): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
 
     const { data: seed } = (await supabase
       .from('seeds')
@@ -418,15 +423,19 @@ export async function updateSeed(
 
     await updatePaycycleAllocations(seed.paycycle_id);
     revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update seed' };
   }
 }
 
-export async function deleteSeed(seedId: string): Promise<{ error?: string }> {
+export async function deleteSeed(
+  seedId: string,
+  client?: SupabaseClient<Database>
+): Promise<{ error?: string }> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
 
     const { data: seed } = (await supabase
       .from('seeds')
@@ -442,6 +451,7 @@ export async function deleteSeed(seedId: string): Promise<{ error?: string }> {
 
     await updatePaycycleAllocations(seed.paycycle_id);
     revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to delete seed' };
@@ -450,9 +460,10 @@ export async function deleteSeed(seedId: string): Promise<{ error?: string }> {
 
 /** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. */
 export async function markOverdueSeedsPaid(
-  paycycleId: string
+  paycycleId: string,
+  client?: SupabaseClient<Database>
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = client ?? (await createServerSupabaseClient());
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: overdue } = await supabase
