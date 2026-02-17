@@ -116,11 +116,12 @@ export function SavingsDebtProgress({
             const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
             const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
             return (
-              <div
+              <Link
                 key={pot.id}
-                className="rounded-lg border border-border p-4 bg-background/50"
+                href={`/dashboard/forecast/pot/${pot.id}`}
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
-                aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%`}
+                aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%. View forecast`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -135,7 +136,11 @@ export function SavingsDebtProgress({
                     <Button
                       variant="ghost"
                       className="shrink-0 text-xs h-7 px-2"
-                      onClick={() => handleMarkPotComplete(pot.id, nextStatus)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMarkPotComplete(pot.id, nextStatus);
+                      }}
                       aria-label={effectiveStatus === 'complete' ? 'Mark as active' : 'Mark as accomplished'}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
@@ -164,7 +169,7 @@ export function SavingsDebtProgress({
                 <p className="text-xs text-muted-foreground mt-1">
                   {progress.toFixed(0)}% — {status}
                 </p>
-              </div>
+              </Link>
             );
           })}
 
@@ -185,11 +190,12 @@ export function SavingsDebtProgress({
                   ? 'Paused'
                   : 'Clearing';
             return (
-              <div
+              <Link
                 key={rep.id}
-                className="rounded-lg border border-border p-4 bg-background/50"
+                href={`/dashboard/forecast/repayment/${rep.id}`}
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
-                aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}`}
+                aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}. View forecast`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard
@@ -221,7 +227,7 @@ export function SavingsDebtProgress({
                 <p className="text-xs text-muted-foreground mt-1">
                   {progress.toFixed(0)}% — {status}
                 </p>
-              </div>
+              </Link>
             );
           })}
       </div>
