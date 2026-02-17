@@ -148,6 +148,14 @@
     @apply py-16 md:py-20 xl:py-24;
   }
 
+  /*
+   * Content page container — matches Privacy/Terms static pages.
+   * Use for Changelog and other long-form content (max 680px, legal-style padding).
+   */
+  .content-page {
+    @apply w-full max-w-[680px] mx-auto px-6 py-12 md:py-16 pb-24;
+  }
+
   /* Terminal cursor blink */
   .cursor-blink {
     display: inline-block;

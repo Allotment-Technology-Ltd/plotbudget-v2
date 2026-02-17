@@ -128,8 +128,30 @@ function renameSection(line) {
 }
 
 /**
+ * Strip the leading "What's new" H1 and the subline paragraph so the page body
+ * starts at the first ## (month/year) or ---. The page title and subline are rendered by the app.
+ */
+function stripLeadingTitleAndSubline(lines) {
+  let i = 0;
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    if (trimmed.startsWith('## ') || trimmed === '---') return lines.slice(i);
+    if (trimmed.startsWith('# ')) {
+      i++;
+      while (i < lines.length && lines[i].trim() === '') i++;
+      while (i < lines.length && lines[i].trim() !== '' && !lines[i].trim().startsWith('#')) i++;
+      while (i < lines.length && lines[i].trim() === '') i++;
+      return lines.slice(i);
+    }
+    i++;
+  }
+  return lines;
+}
+
+/**
  * Sanitize raw CHANGELOG content for public, marketing-safe display.
  * Strips links, refs, and internal-only lines; renames sections; formats version headers.
+ * Removes the leading # title and subline paragraph (rendered by the page).
  */
 export function sanitizeChangelogContent(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -138,7 +160,9 @@ export function sanitizeChangelogContent(raw) {
     .replace(COAUTHORED_BY, '')
     .replace(/\r\n/g, '\n');
 
-  const lines = text.split('\n');
+  let lines = text.split('\n');
+  lines = stripLeadingTitleAndSubline(lines);
+
   const out = [];
   let inSensitiveBlock = false;
 
