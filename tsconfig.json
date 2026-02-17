@@ -30,6 +30,5 @@
     ".next",
     ".turbo",
     "apps"
-  ],
-  "extends": "expo/tsconfig.base"
+  ]
 }
