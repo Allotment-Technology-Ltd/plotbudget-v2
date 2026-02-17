@@ -11,7 +11,7 @@
     "lint": "echo 'No lint configured'",
     "type-check": "echo 'No type-check configured'",
     "clean": "rm -rf dist .turbo node_modules",
-    "prebuild": "mkdir -p public && (cp ../../CHANGELOG.md public/changelog.md || true)"
+    "prebuild": "mkdir -p public && (test -f content/changelog.md && cp content/changelog.md public/changelog.md || cp ../../CHANGELOG.md public/changelog.md)"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",

@@ -293,6 +293,16 @@
     50% { opacity: 0; }
   }
 
+  /* Navigation progress bar: sliding stripe during route transitions */
+  @keyframes navigation-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+
+  .navigation-progress-stripe {
+    animation: navigation-progress 0.8s ease-in-out infinite;
+  }
+
   .text-glow {
     text-shadow: 0 0 20px rgb(var(--accent-glow) / 0.4);
   }

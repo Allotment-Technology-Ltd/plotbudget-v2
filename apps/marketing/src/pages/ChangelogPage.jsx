@@ -45,9 +45,11 @@ export default function ChangelogPage() {
             <article
               className="prose prose-invert max-w-none
                 prose-headings:font-heading prose-headings:uppercase prose-headings:tracking-wider prose-headings:text-plot-accent
-                prose-p:text-plot-muted prose-p:font-body
+                prose-h2:mt-10 prose-h2:mb-4 prose-h2:first:mt-4
+                prose-h3:mt-6 prose-h3:mb-3
+                prose-p:text-plot-muted prose-p:font-body prose-p:mb-4
                 prose-a:text-plot-accent prose-a:no-underline hover:prose-a:underline
-                prose-ul:text-plot-muted prose-li:font-body
+                prose-ul:text-plot-muted prose-ul:my-4 prose-li:font-body prose-li:my-1
                 dark:prose-invert"
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{safeContent}</ReactMarkdown>

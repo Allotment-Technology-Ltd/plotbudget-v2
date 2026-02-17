@@ -80,7 +80,9 @@ export function PwaInstallPrompt() {
         <p className="text-sm text-muted-foreground">
           {isIOS
             ? 'Tap the Share button and then "Add to Home Screen" to open PLOT from your home screen.'
-            : 'Install PLOT for a quicker launch and an app-like experience.'}
+            : deferredPrompt
+              ? 'Install PLOT for a quicker launch and an app-like experience.'
+              : 'Tap your browser’s 3 dots (⋮) → Add to Home screen → Install to add PLOT to your phone.'}
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">

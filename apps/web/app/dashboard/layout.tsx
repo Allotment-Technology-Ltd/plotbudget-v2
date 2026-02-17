@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
+import { DashboardContentTransition } from './dashboard-content-transition';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -79,7 +80,9 @@ export default async function DashboardLayout({
         </div>
       </header>
       <div className="flex min-h-[calc(100vh-4rem)] flex-col">
-        <div className="flex-1">{children}</div>
+        <div className="flex-1">
+          <DashboardContentTransition>{children}</DashboardContentTransition>
+        </div>
         <DashboardFooterClient />
       </div>
     </div>

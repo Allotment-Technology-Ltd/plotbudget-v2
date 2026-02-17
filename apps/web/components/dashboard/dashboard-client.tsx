@@ -17,6 +17,7 @@ import { FoundingMemberCelebration } from './founding-member-celebration';
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useNavigationProgress } from '@/components/navigation/navigation-progress-context';
 
 type HistoricalCycle = Pick<
   PayCycle,
@@ -80,6 +81,7 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const otherLabel = isPartner ? ownerLabel : partnerLabel;
   const [, setSelectedCategory] = useState<string | null>(null);
+  const { setNavigating } = useNavigationProgress();
 
   const isFoundingMember =
     foundingMemberUntil &&
@@ -118,7 +120,7 @@ export function DashboardClient({
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Create or activate a pay cycle in Blueprint to see your dashboard.
             </p>
-            <Link href="/dashboard/blueprint">
+            <Link href="/dashboard/blueprint" onClick={() => setNavigating(true)}>
               <Button className="btn-primary">Go to Blueprint</Button>
             </Link>
           </div>

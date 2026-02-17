@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { marketingUrl } from '@/lib/marketing-url';
 import { useCookieConsentOptional } from '@/components/providers/cookie-consent-context';
+import { useNavigationProgress } from '@/components/navigation/navigation-progress-context';
 
 export function AppFooter() {
   const cookieConsent = useCookieConsentOptional();
+  const { setNavigating } = useNavigationProgress();
 
   return (
     <footer
@@ -23,6 +25,7 @@ export function AppFooter() {
         <Link
           href="/dashboard/feedback"
           className="font-heading uppercase tracking-wider hover:text-foreground transition-colors"
+          onClick={() => setNavigating(true)}
         >
           Feedback & bugs
         </Link>

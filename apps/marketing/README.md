@@ -67,6 +67,10 @@ plot-marketing/
 | `prefers-reduced-motion` respected | All animations disabled globally for users who request it. |
 | 0px border-radius everywhere | Enforces the terminal/cyberpunk aesthetic from the PLOT app. |
 
+### Changelog ("What's new" page)
+
+The public changelog at `/changelog` is built from **`content/changelog.md`** (copied to `public/changelog.md` at prebuild). Write entries in plain, user-facing language per the repo’s **[docs/CHANGELOG-UX-GUIDE.md](../../docs/CHANGELOG-UX-GUIDE.md)** so the page stays clear and needs minimal sanitization.
+
 ---
 
 ## Adding Your Screenshots

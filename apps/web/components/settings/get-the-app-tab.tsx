@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
+import { PwaInstallSection } from '@/components/pwa-install-section';
 import { Button } from '@/components/ui/button';
 import { createPartnerInviteLink, getPartnerInviteLink } from '@/app/actions/partner-invite';
 
@@ -45,7 +45,7 @@ export function GetTheAppTab({ household, isPartner = false }: GetTheAppTabProps
         <p className="text-sm text-muted-foreground mb-4">
           Add PLOT to your home screen or install it on your computer for quick access.
         </p>
-        <PwaInstallPrompt />
+        <PwaInstallSection />
       </section>
 
       {showPartnerInvite && (
