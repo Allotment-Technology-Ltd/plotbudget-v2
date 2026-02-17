@@ -34,8 +34,8 @@ export function PwaInstallPrompt() {
     try {
       const dismissed = sessionStorage.getItem(STORAGE_KEY);
       if (dismissed === 'true') return;
-    } catch {
-      /* ignore */
+    } catch (e) {
+      console.warn('[PwaInstallPrompt] sessionStorage read failed (e.g. private mode or quota)', e);
     }
     setIsIOS(getIsIOS());
     const handler = (e: Event) => {
@@ -50,8 +50,8 @@ export function PwaInstallPrompt() {
   const handleDismiss = () => {
     try {
       sessionStorage.setItem(STORAGE_KEY, 'true');
-    } catch {
-      /* ignore */
+    } catch (e) {
+      console.warn('[PwaInstallPrompt] sessionStorage write failed (e.g. private mode or quota)', e);
     }
     setVisible(false);
   };
@@ -62,8 +62,8 @@ export function PwaInstallPrompt() {
       setVisible(false);
       try {
         sessionStorage.setItem(STORAGE_KEY, 'true');
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.warn('[PwaInstallPrompt] sessionStorage write failed (e.g. private mode or quota)', e);
       }
     }
   };

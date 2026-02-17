@@ -1,9 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import App from './App';
+import ChangelogPage from './pages/ChangelogPage';
 import { getStoredConsent } from './components/CookieConsent';
 import './index.css';
 
@@ -17,7 +19,12 @@ if (consent?.analytics) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <HelmetProvider>
-      <App />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/changelog" element={<ChangelogPage />} />
+        </Routes>
+      </BrowserRouter>
     </HelmetProvider>
   </StrictMode>,
 );

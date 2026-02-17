@@ -27,6 +27,14 @@ export function AppFooter() {
           Feedback & bugs
         </Link>
         <a
+          href={marketingUrl('/changelog')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-heading uppercase tracking-wider hover:text-foreground transition-colors"
+        >
+          What&apos;s new
+        </a>
+        <a
           href={marketingUrl('/privacy')}
           target="_blank"
           rel="noopener noreferrer"
