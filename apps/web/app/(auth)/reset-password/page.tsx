@@ -40,9 +40,9 @@ export default function ResetPasswordPage(_props: PageProps) {
 
   if (sent) {
     return (
-      <div className="bg-card rounded-lg p-8 space-y-6">
-        <div className="space-y-3 text-center">
-          <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
+      <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm">
+        <div className="space-y-3">
+          <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground">
             Check your email
           </h1>
           <p className="text-muted-foreground font-body text-sm">
@@ -67,10 +67,13 @@ export default function ResetPasswordPage(_props: PageProps) {
   }
 
   return (
-    <div className="bg-card rounded-lg p-8 space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
-          Reset Password
+    <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm">
+      <div className="space-y-2">
+        <p className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
+          Reset password
+        </p>
+        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground">
+          Reset password
         </h1>
         <p className="text-muted-foreground font-body text-sm">
           Enter your email and we&apos;ll send a link to reset your password.

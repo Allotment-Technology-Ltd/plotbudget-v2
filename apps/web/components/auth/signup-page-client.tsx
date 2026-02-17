@@ -37,7 +37,7 @@ export function SignupPageClient() {
 
   if (showGated) {
     return (
-      <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
+      <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
         <DeletedAccountToast />
         <SignupGatedView waitlistUrl={waitlistUrl} />
       </div>
@@ -46,7 +46,7 @@ export function SignupPageClient() {
 
   if (regionAllowed === false && !allowSignupForPartnerInvite) {
     return (
-      <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
+      <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
         <DeletedAccountToast />
         <RegionRestrictedView />
       </div>
@@ -61,14 +61,17 @@ export function SignupPageClient() {
   }, [redirectTo]);
 
   return (
-    <div className="bg-card rounded-lg p-8 space-y-6" data-testid="signup-page">
+    <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
       <DeletedAccountToast />
-      <div className="space-y-2 text-center">
-        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
-          Create Account
+      <div className="space-y-2">
+        <p className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
+          Sign up
+        </p>
+        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground">
+          Create account
         </h1>
-        <p className="text-muted-foreground font-body">
-          Sign up to start plotting your budget together
+        <p className="text-muted-foreground font-body text-sm">
+          Start plotting your budget together — no bank access needed.
         </p>
       </div>
       <AuthForm

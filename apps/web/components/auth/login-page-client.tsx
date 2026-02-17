@@ -19,7 +19,7 @@ export function LoginPageClient() {
   const showMagicLink = magicLinkEnabled;
 
   return (
-    <div className="bg-card rounded-lg p-8 space-y-6">
+    <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm">
       <DeletedAccountToast />
       {authError === 'auth_failed' && (
         <div
@@ -39,14 +39,17 @@ export function LoginPageClient() {
           This email is not on the invite list. Please contact support for access.
         </div>
       )}
-      <div className="space-y-2 text-center">
-        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider">
-          Welcome Back
+      <div className="space-y-2">
+        <p className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
+          Sign in
+        </p>
+        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground">
+          Welcome back
         </h1>
-        <p className="text-muted-foreground font-body">
+        <p className="text-muted-foreground font-body text-sm">
           {showBetaMessage
             ? 'PLOT is in private beta. Sign in to your account below.'
-            : 'Sign in to your PLOT account'}
+            : 'Pick up where you left off — your budget awaits.'}
         </p>
       </div>
 

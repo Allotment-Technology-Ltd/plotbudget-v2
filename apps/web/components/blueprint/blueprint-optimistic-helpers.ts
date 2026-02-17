@@ -11,14 +11,17 @@ export type OptimisticState = {
   unpaidPartnerIds: Set<string>;
 };
 
-export const initialOptimisticState: OptimisticState = {
-  paidIds: new Set(),
-  unpaidIds: new Set(),
-  paidMeIds: new Set(),
-  paidPartnerIds: new Set(),
-  unpaidMeIds: new Set(),
-  unpaidPartnerIds: new Set(),
-};
+/** Returns fresh initial state. Use per hook instance to avoid shared mutable Sets. */
+export function createInitialOptimisticState(): OptimisticState {
+  return {
+    paidIds: new Set(),
+    unpaidIds: new Set(),
+    paidMeIds: new Set(),
+    paidPartnerIds: new Set(),
+    unpaidMeIds: new Set(),
+    unpaidPartnerIds: new Set(),
+  };
+}
 
 /** Apply optimistic state to seeds for display. Pure function. */
 export function computeDisplaySeeds(
@@ -57,51 +60,31 @@ export function computeDisplaySeeds(
   });
 }
 
-/** Prune optimistic sets when server seeds have caught up. Returns new state only if changed. */
+/** Prune optimistic sets when server seeds have caught up. Single pass O(n). Returns new state only if changed. */
 export function pruneOptimisticState(
   prev: OptimisticState,
   seeds: Seed[]
 ): OptimisticState {
-  const pruneSet = (
-    set: Set<string>,
-    shouldRemove: (s: Seed) => boolean
-  ): Set<string> => {
-    const next = new Set(set);
-    seeds.forEach((s) => {
-      if (shouldRemove(s)) next.delete(s.id);
-    });
-    return next.size === set.size ? set : next;
-  };
+  const paidIds = new Set(prev.paidIds);
+  const unpaidIds = new Set(prev.unpaidIds);
+  const paidMeIds = new Set(prev.paidMeIds);
+  const paidPartnerIds = new Set(prev.paidPartnerIds);
+  const unpaidMeIds = new Set(prev.unpaidMeIds);
+  const unpaidPartnerIds = new Set(prev.unpaidPartnerIds);
 
-  const paidIds = pruneSet(prev.paidIds, (s) => s.is_paid);
-  const unpaidIds = pruneSet(prev.unpaidIds, (s) => !s.is_paid);
-  const paidMeIds = pruneSet(
-    prev.paidMeIds,
-    (s) => s.payment_source === 'joint' && !!s.is_paid_me
-  );
-  const paidPartnerIds = pruneSet(
-    prev.paidPartnerIds,
-    (s) => s.payment_source === 'joint' && !!s.is_paid_partner
-  );
-  const unpaidMeIds = pruneSet(
-    prev.unpaidMeIds,
-    (s) => s.payment_source === 'joint' && !s.is_paid_me
-  );
-  const unpaidPartnerIds = pruneSet(
-    prev.unpaidPartnerIds,
-    (s) => s.payment_source === 'joint' && !s.is_paid_partner
-  );
-
-  if (
-    paidIds === prev.paidIds &&
-    unpaidIds === prev.unpaidIds &&
-    paidMeIds === prev.paidMeIds &&
-    paidPartnerIds === prev.paidPartnerIds &&
-    unpaidMeIds === prev.unpaidMeIds &&
-    unpaidPartnerIds === prev.unpaidPartnerIds
-  ) {
-    return prev;
+  let changed = false;
+  for (const s of seeds) {
+    if (s.is_paid && paidIds.delete(s.id)) changed = true;
+    if (!s.is_paid && unpaidIds.delete(s.id)) changed = true;
+    if (s.payment_source === 'joint') {
+      if (s.is_paid_me && paidMeIds.delete(s.id)) changed = true;
+      if (s.is_paid_partner && paidPartnerIds.delete(s.id)) changed = true;
+      if (!s.is_paid_me && unpaidMeIds.delete(s.id)) changed = true;
+      if (!s.is_paid_partner && unpaidPartnerIds.delete(s.id)) changed = true;
+    }
   }
+
+  if (!changed) return prev;
 
   return {
     paidIds,

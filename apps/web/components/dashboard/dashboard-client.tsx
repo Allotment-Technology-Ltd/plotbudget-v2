@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { HeroMetrics } from './hero-metrics';
 import { IncomeThisCycle } from './income-this-cycle';
-import { QuickActions } from './quick-actions';
 import { SavingsProgressCards } from './savings-progress-cards';
 import { RepaymentProgressCards } from './repayment-progress-cards';
 import { CoupleContributions } from './couple-contributions';
@@ -71,7 +70,7 @@ export function DashboardClient({
   pots,
   repayments,
   historicalCycles,
-  hasDraftCycle,
+  hasDraftCycle: _hasDraftCycle,
   incomeEvents = [],
   isPartner = false,
   ownerLabel = 'Account owner',
@@ -182,11 +181,21 @@ export function DashboardClient({
           />
         </div>
 
-        <QuickActions
-          household={household}
-          paycycle={currentPaycycle}
-          hasDraftCycle={hasDraftCycle}
-        />
+        {household.is_couple && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <CoupleContributions
+              household={household}
+              paycycle={currentPaycycle}
+              seeds={seeds}
+              isPartner={isPartner}
+              otherLabel={otherLabel}
+            />
+          </motion.div>
+        )}
 
         <SpendingTrends
           currentCycle={currentPaycycle}
@@ -221,7 +230,6 @@ export function DashboardClient({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.05 }}
-              className="space-y-6"
             >
               {repayments.length > 0 ? (
                 <div className="bg-card rounded-lg p-6 border border-border">
@@ -236,40 +244,32 @@ export function DashboardClient({
                   </Link>
                 </div>
               )}
-              <DebtTrendChart
-                currentCycle={currentPaycycle}
-                historicalCycles={historicalCycles}
-                repayments={repayments}
-                seeds={seeds}
-                householdConfig={
-                  household
-                    ? {
-                        pay_cycle_type: household.pay_cycle_type,
-                        pay_day: household.pay_day,
-                        anchor_date: household.pay_cycle_anchor,
-                      }
-                    : null
-                }
-                currency={household.currency}
-              />
             </motion.div>
           </div>
 
-          {household.is_couple && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <CoupleContributions
-                household={household}
-                paycycle={currentPaycycle}
-                seeds={seeds}
-                isPartner={isPartner}
-                otherLabel={otherLabel}
-              />
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="w-full"
+          >
+            <DebtTrendChart
+              currentCycle={currentPaycycle}
+              historicalCycles={historicalCycles}
+              repayments={repayments}
+              seeds={seeds}
+              householdConfig={
+                household
+                  ? {
+                      pay_cycle_type: household.pay_cycle_type,
+                      pay_day: household.pay_day,
+                      anchor_date: household.pay_cycle_anchor,
+                    }
+                  : null
+              }
+              currency={household.currency}
+            />
+          </motion.div>
         </div>
       </main>
     </div>

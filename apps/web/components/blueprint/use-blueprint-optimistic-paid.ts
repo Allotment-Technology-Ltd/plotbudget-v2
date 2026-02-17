@@ -7,7 +7,7 @@ import type { Database } from '@repo/supabase';
 import {
   type Payer,
   type OptimisticState,
-  initialOptimisticState,
+  createInitialOptimisticState,
   computeDisplaySeeds,
   pruneOptimisticState,
   applyMarkPaid,
@@ -76,7 +76,8 @@ function optimisticReducer(
 export function useBlueprintOptimisticPaid(seeds: Seed[], household: Household) {
   const [state, dispatch] = useReducer(
     optimisticReducer,
-    initialOptimisticState
+    undefined,
+    createInitialOptimisticState
   );
 
   useEffect(() => {
