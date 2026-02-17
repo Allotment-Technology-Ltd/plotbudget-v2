@@ -146,6 +146,7 @@ function RootLayoutNav() {
                     <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
                     <Stack.Screen name="budget-detail/[type]" options={{ headerShown: false }} />
                     <Stack.Screen name="pot-detail/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="repayment-detail/[id]" options={{ headerShown: false }} />
                     <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
                   </Stack>
                   <BiometricLockScreen />

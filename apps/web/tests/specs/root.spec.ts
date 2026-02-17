@@ -10,7 +10,7 @@ test.describe('Root / redirect (no holding page)', () => {
     // Use domcontentloaded: redirect can happen before 'load', causing net::ERR_ABORTED
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByTestId('email-input')).toBeVisible();
+    await expect(page.getByTestId('login-with-email')).toBeVisible();
     await dismissCookieBanner(page);
   });
 });

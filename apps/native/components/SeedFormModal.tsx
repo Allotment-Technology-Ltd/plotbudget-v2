@@ -88,6 +88,7 @@ export function SeedFormModal({
   const [linkRepaymentId, setLinkRepaymentId] = useState<string | null>(null);
   const [repaymentCurrentStr, setRepaymentCurrentStr] = useState('');
   const [repaymentTargetDate, setRepaymentTargetDate] = useState('');
+  const [repaymentInterestRateStr, setRepaymentInterestRateStr] = useState('');
   const [showRepayDatePicker, setShowRepayDatePicker] = useState(false);
   const [repaymentStatus, setRepaymentStatus] = useState<'active' | 'paid' | 'paused'>('active');
 
@@ -139,6 +140,9 @@ export function SeedFormModal({
         setLinkRepaymentId(seed.linked_repayment_id ?? null);
         setRepaymentCurrentStr(linkedRep ? String(linkedRep.current_balance) : '');
         setRepaymentTargetDate(linkedRep?.target_date ?? '');
+        setRepaymentInterestRateStr(
+          linkedRep?.interest_rate != null ? String(linkedRep.interest_rate) : ''
+        );
         setRepaymentStatus((linkedRep?.status as 'active' | 'paid' | 'paused') ?? 'active');
       } else {
         setName('');
@@ -156,6 +160,7 @@ export function SeedFormModal({
         setLinkRepaymentId(null);
         setRepaymentCurrentStr('');
         setRepaymentTargetDate('');
+        setRepaymentInterestRateStr('');
         setRepaymentStatus('active');
       }
     }
@@ -208,19 +213,23 @@ export function SeedFormModal({
         }
         if (category === 'repay') {
           if (seed.linked_repayment_id) {
+            const rateVal = parseIncome(repaymentInterestRateStr);
             payload.repayment = {
               current_balance: parseIncome(repaymentCurrentStr) || 0,
               target_date: repaymentTargetDate || null,
               status: repaymentStatus,
+              interest_rate: Number.isFinite(rateVal) && rateVal >= 0 ? rateVal : null,
             };
           } else if (linkRepaymentId || parseIncome(repaymentCurrentStr) > 0) {
             payload.linked_repayment_id = linkRepaymentId;
             if (!linkRepaymentId) {
+              const rateVal = parseIncome(repaymentInterestRateStr);
               payload.repayment = {
                 starting_balance: parseIncome(repaymentCurrentStr) || 0,
                 current_balance: parseIncome(repaymentCurrentStr) || 0,
                 target_date: repaymentTargetDate || null,
                 status: repaymentStatus,
+                interest_rate: Number.isFinite(rateVal) && rateVal >= 0 ? rateVal : null,
               };
             }
           }
@@ -259,11 +268,13 @@ export function SeedFormModal({
             payload.linked_repayment_id = linkRepaymentId;
           } else if (parseIncome(repaymentCurrentStr) > 0) {
             const bal = parseIncome(repaymentCurrentStr) || 0;
+            const rateVal = parseIncome(repaymentInterestRateStr);
             payload.repayment = {
               starting_balance: bal,
               current_balance: bal,
               target_date: repaymentTargetDate || null,
               status: repaymentStatus,
+              interest_rate: Number.isFinite(rateVal) && rateVal >= 0 ? rateVal : null,
             };
           }
         }
@@ -359,6 +370,8 @@ export function SeedFormModal({
                   setRepaymentCurrentStr={setRepaymentCurrentStr}
                   repaymentTargetDate={repaymentTargetDate}
                   setRepaymentTargetDate={setRepaymentTargetDate}
+                  repaymentInterestRateStr={repaymentInterestRateStr}
+                  setRepaymentInterestRateStr={setRepaymentInterestRateStr}
                   showRepayDatePicker={showRepayDatePicker}
                   setShowRepayDatePicker={setShowRepayDatePicker}
                   repaymentStatus={repaymentStatus}

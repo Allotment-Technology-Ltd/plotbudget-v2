@@ -20,9 +20,15 @@ test.describe('Authentication Flow', () => {
     test.setTimeout(60_000);
     await setAuthState(page, TEST_USERS.solo.email, TEST_USERS.solo.password);
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/dashboard/, { timeout: 45_000 });
+    if (page.url().includes('/dashboard/payday-complete')) {
+      throw new Error(
+        'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users (global-setup).'
+      );
+    }
     await expect(
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-    ).toBeVisible({ timeout: 45_000 });
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   // TODO: Un-skip when login form submit is reliably handled (form currently triggers native submit)
@@ -33,7 +39,7 @@ test.describe('Authentication Flow', () => {
     await expect(page.getByTestId('login-error-message')).toBeVisible({ timeout: 10_000 });
   });
 
-  test('user can navigate to signup page and sees either form or gated waitlist', async ({
+  test('user can navigate to signup page and sees either hub/form or gated waitlist', async ({
     page,
   }) => {
     test.setTimeout(60_000);
@@ -47,13 +53,15 @@ test.describe('Authentication Flow', () => {
       waitUntil: 'commit',
     });
     await expect(page.getByTestId('signup-page')).toBeVisible({ timeout: 15_000 });
-    const formVisible = await page.getByTestId('signup-form').isVisible();
     const gatedVisible = await page.getByTestId('signup-gated-view').isVisible();
-    expect(formVisible || gatedVisible).toBeTruthy();
-    if (formVisible) {
-      await expect(page.getByTestId('submit-signup-form')).toBeVisible();
-    } else {
+    if (gatedVisible) {
       await expect(page.getByTestId('waitlist-cta')).toBeVisible();
+    } else {
+      await expect(page.getByTestId('signup-with-email')).toBeVisible();
+      await page.getByTestId('signup-with-email').click();
+      await page.waitForURL(/\/signup\/email/, { timeout: 10_000 });
+      await expect(page.getByTestId('signup-form')).toBeVisible();
+      await expect(page.getByTestId('submit-signup-form')).toBeVisible();
     }
   });
 

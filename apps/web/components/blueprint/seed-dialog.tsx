@@ -61,6 +61,10 @@ interface SeedDialogProps {
   pots: Pot[];
   repayments: Repayment[];
   onSuccess: () => void;
+  /** Pre-select this pot when opening in add mode (e.g. from forecast "Edit in Blueprint"). */
+  initialLinkPotId?: string;
+  /** Pre-select this repayment when opening in add mode (e.g. from forecast "Edit in Blueprint"). */
+  initialLinkRepaymentId?: string;
   isPartner?: boolean;
   otherLabel?: string;
   ownerLabel?: string;
@@ -90,6 +94,7 @@ function createSeedFormSchema(paycycle: { start_date: string; end_date: string }
       repayment_current_str: z.string().optional(),
       repayment_target_date: z.string().optional(),
       repayment_status: z.enum(['active', 'paid', 'paused']).optional(),
+      repayment_interest_rate_str: z.string().optional(),
     })
     .refine(
       (data) => {
@@ -126,6 +131,8 @@ export function SeedDialog({
   pots,
   repayments,
   onSuccess,
+  initialLinkPotId,
+  initialLinkRepaymentId,
   isPartner = false,
   otherLabel: _otherLabel = 'Partner',
   ownerLabel = 'Account owner',
@@ -168,68 +175,127 @@ export function SeedDialog({
       repayment_current_str: '',
       repayment_target_date: '',
       repayment_status: 'active',
+      repayment_interest_rate_str: '',
     },
   });
 
   useEffect(() => {
-    if (open) {
-      setError(null);
-      if (seed) {
-        const base = {
-          name: seed.name,
-          amountStr: seed.amount ? String(seed.amount) : '',
-          payment_source: seed.payment_source,
-          split_ratio:
-            seed.split_ratio != null
-              ? Math.round(seed.split_ratio * 100)
-              : Math.round((household.joint_ratio ?? 0.5) * 100),
-          uses_joint_account: seed.uses_joint_account ?? false,
-          is_recurring: seed.is_recurring,
-          due_date: (seed as { due_date?: string | null }).due_date ?? '',
-        };
-        if (linkedPot) {
-          form.reset({
-            ...base,
-            link_pot_id: linkedPot.id,
-            pot_current_str: String(linkedPot.current_amount ?? 0),
-            pot_target_str: String(linkedPot.target_amount ?? 0),
-            pot_target_date: linkedPot.target_date ?? '',
-            pot_status: linkedPot.status,
-          });
-        } else if (linkedRepayment) {
-          form.reset({
-            ...base,
-            link_repayment_id: linkedRepayment.id,
-            repayment_current_str: String(linkedRepayment.current_balance ?? 0),
-            repayment_target_date: linkedRepayment.target_date ?? '',
-            repayment_status: linkedRepayment.status,
-          });
-        } else {
-          form.reset({ ...base });
-        }
-      } else {
-        const defaultPaymentSource = isPartner ? ('partner' as const) : ('me' as const);
+    if (!open) return;
+
+    setError(null);
+
+    if (seed) {
+      const base = {
+        name: seed.name,
+        amountStr: seed.amount ? String(seed.amount) : '',
+        payment_source: seed.payment_source,
+        split_ratio:
+          seed.split_ratio != null
+            ? Math.round(seed.split_ratio * 100)
+            : Math.round((household.joint_ratio ?? 0.5) * 100),
+        uses_joint_account: seed.uses_joint_account ?? false,
+        is_recurring: seed.is_recurring,
+        due_date: (seed as { due_date?: string | null }).due_date ?? '',
+      };
+      if (linkedPot) {
         form.reset({
-          name: '',
-          amountStr: '',
-          payment_source: defaultPaymentSource,
-          split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-          is_recurring: true,
-          due_date: '',
-          link_pot_id: undefined,
-          pot_current_str: '',
-          pot_target_str: '',
-          pot_target_date: '',
-          pot_status: 'active',
-          link_repayment_id: undefined,
-          repayment_current_str: '',
-          repayment_target_date: '',
-          repayment_status: 'active',
-          uses_joint_account: true,
+          ...base,
+          link_pot_id: linkedPot.id,
+          pot_current_str: String(linkedPot.current_amount ?? 0),
+          pot_target_str: String(linkedPot.target_amount ?? 0),
+          pot_target_date: linkedPot.target_date ?? '',
+          pot_status: linkedPot.status,
         });
+      } else if (linkedRepayment) {
+        form.reset({
+          ...base,
+          link_repayment_id: linkedRepayment.id,
+          repayment_current_str: String(linkedRepayment.current_balance ?? 0),
+          repayment_target_date: linkedRepayment.target_date ?? '',
+          repayment_status: linkedRepayment.status,
+          repayment_interest_rate_str:
+            linkedRepayment.interest_rate != null
+              ? String(linkedRepayment.interest_rate)
+              : '',
+        });
+      } else {
+        form.reset({ ...base });
       }
+      return;
     }
-  }, [open, seed, household.joint_ratio, form, linkedPot, linkedRepayment, isPartner]);
+
+    const defaultPaymentSource = isPartner ? ('partner' as const) : ('me' as const);
+    const jointRatio = Math.round((household.joint_ratio ?? 0.5) * 100);
+    const preLinkedPot = initialLinkPotId
+      ? pots.find((p) => p.id === initialLinkPotId)
+      : null;
+    const preLinkedRepayment = initialLinkRepaymentId
+      ? repayments.find((r) => r.id === initialLinkRepaymentId)
+      : null;
+
+    const emptyAddDefaults: SeedFormInput = {
+      name: '',
+      amountStr: '',
+      payment_source: defaultPaymentSource,
+      split_ratio: jointRatio,
+      is_recurring: true,
+      due_date: '',
+      link_pot_id: undefined,
+      pot_current_str: '',
+      pot_target_str: '',
+      pot_target_date: '',
+      pot_status: 'active',
+      link_repayment_id: undefined,
+      repayment_current_str: '',
+      repayment_target_date: '',
+      repayment_status: 'active',
+      repayment_interest_rate_str: '',
+      uses_joint_account: true,
+    };
+
+    if (preLinkedPot) {
+      form.reset({
+        ...emptyAddDefaults,
+        name: preLinkedPot.name ?? '',
+        link_pot_id: preLinkedPot.id,
+        pot_current_str: String(preLinkedPot.current_amount ?? 0),
+        pot_target_str: String(preLinkedPot.target_amount ?? 0),
+        pot_target_date: preLinkedPot.target_date ?? '',
+        pot_status: preLinkedPot.status ?? 'active',
+      });
+      return;
+    }
+
+    if (preLinkedRepayment) {
+      form.reset({
+        ...emptyAddDefaults,
+        name: preLinkedRepayment.name ?? '',
+        link_repayment_id: preLinkedRepayment.id,
+        repayment_current_str: String(preLinkedRepayment.current_balance ?? 0),
+        repayment_target_date: preLinkedRepayment.target_date ?? '',
+        repayment_status: preLinkedRepayment.status ?? 'active',
+        repayment_interest_rate_str:
+          preLinkedRepayment.interest_rate != null
+            ? String(preLinkedRepayment.interest_rate)
+            : '',
+      });
+      return;
+    }
+
+    form.reset(emptyAddDefaults);
+  }, [
+    open,
+    seed,
+    household.joint_ratio,
+    form,
+    linkedPot,
+    linkedRepayment,
+    isPartner,
+    initialLinkPotId,
+    initialLinkRepaymentId,
+    pots,
+    repayments,
+  ]);
 
   const paymentSource = form.watch('payment_source');
   const splitRatio = form.watch('split_ratio') ?? 50;
@@ -337,18 +403,22 @@ export function SeedDialog({
         if (data.link_repayment_id) {
           payload.linked_repayment_id = data.link_repayment_id;
           if (editMode && seed?.linked_repayment_id) {
+            const rateVal = parseIncome(data.repayment_interest_rate_str ?? '');
             payload.repayment = {
               current_balance: parseIncome(data.repayment_current_str) || 0,
               target_date: data.repayment_target_date || null,
               status: (data.repayment_status ?? 'active') as 'active' | 'paid' | 'paused',
+              interest_rate: Number.isFinite(rateVal) && rateVal >= 0 ? rateVal : null,
             };
           }
         } else if (data.repayment_current_str && parseIncome(data.repayment_current_str) > 0) {
+          const rateVal = parseIncome(data.repayment_interest_rate_str ?? '');
           payload.repayment = {
             starting_balance: parseIncome(data.repayment_current_str) || 0,
             current_balance: parseIncome(data.repayment_current_str) || 0,
             target_date: data.repayment_target_date || null,
             status: (data.repayment_status ?? 'active') as 'active' | 'paid' | 'paused',
+            interest_rate: Number.isFinite(rateVal) && rateVal >= 0 ? rateVal : null,
           };
         }
       }
@@ -707,6 +777,29 @@ export function SeedDialog({
                           type="date"
                           value={field.value ?? ''}
                           onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="repayment-interest-rate">
+                      Interest rate (APR %)
+                      <span className="text-muted-foreground font-normal ml-1">optional</span>
+                    </Label>
+                    <Controller
+                      name="repayment_interest_rate_str"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="repayment-interest-rate"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="e.g. 18.9"
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9.]/g, '');
+                            field.onChange(v);
+                          }}
                         />
                       )}
                     />

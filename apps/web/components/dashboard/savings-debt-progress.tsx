@@ -1,13 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CreditCard, CheckCircle2 } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { currencySymbol } from '@/lib/utils/currency';
-import { markPotComplete } from '@/lib/actions/pot-actions';
-import { Button } from '@/components/ui/button';
 import type { Pot, Repayment } from '@repo/supabase';
 
 type PotStatus = 'active' | 'complete' | 'paused';
@@ -23,29 +19,6 @@ export function SavingsDebtProgress({
   repayments,
   currency = 'GBP',
 }: SavingsDebtProgressProps) {
-  const router = useRouter();
-  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
-
-  const handleMarkPotComplete = async (potId: string, status: 'complete' | 'active') => {
-    const pot = pots.find((p) => p.id === potId);
-    const prevStatus = (pot?.status ?? 'active') as PotStatus;
-    setOptimisticStatus((s) => ({ ...s, [potId]: status }));
-    const result = await markPotComplete(potId, status);
-    if ('success' in result) {
-      router.refresh();
-      setOptimisticStatus((s) => {
-        const next = { ...s };
-        delete next[potId];
-        return next;
-      });
-    } else {
-      setOptimisticStatus((s) => {
-        const next = { ...s };
-        next[potId] = prevStatus;
-        return next;
-      });
-    }
-  };
   const hasPots = pots.length > 0;
   const hasRepayments = repayments.length > 0;
 
@@ -99,7 +72,7 @@ export function SavingsDebtProgress({
       <div className="space-y-6">
         {hasPots &&
           pots.map((pot, index) => {
-            const effectiveStatus = (optimisticStatus[pot.id] ?? pot.status) as PotStatus;
+            const potStatus = (pot.status ?? 'active') as PotStatus;
             const progress =
               pot.target_amount > 0
                 ? Math.min(
@@ -108,19 +81,18 @@ export function SavingsDebtProgress({
                   )
                 : 0;
             const status =
-              effectiveStatus === 'complete'
+              potStatus === 'complete'
                 ? 'Accomplished'
-                : effectiveStatus === 'paused'
+                : potStatus === 'paused'
                   ? 'Paused'
                   : 'Saving';
-            const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
-            const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
             return (
-              <div
+              <Link
                 key={pot.id}
-                className="rounded-lg border border-border p-4 bg-background/50"
+                href={`/dashboard/forecast/pot/${pot.id}`}
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
-                aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%`}
+                aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%. View forecast`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -131,17 +103,6 @@ export function SavingsDebtProgress({
                       {pot.name}
                     </span>
                   </div>
-                  {canToggle && (
-                    <Button
-                      variant="ghost"
-                      className="shrink-0 text-xs h-7 px-2"
-                      onClick={() => handleMarkPotComplete(pot.id, nextStatus)}
-                      aria-label={effectiveStatus === 'complete' ? 'Mark as active' : 'Mark as accomplished'}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                      {effectiveStatus === 'complete' ? 'Active' : 'Accomplished'}
-                    </Button>
-                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
                   {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}
@@ -164,7 +125,7 @@ export function SavingsDebtProgress({
                 <p className="text-xs text-muted-foreground mt-1">
                   {progress.toFixed(0)}% — {status}
                 </p>
-              </div>
+              </Link>
             );
           })}
 
@@ -185,11 +146,12 @@ export function SavingsDebtProgress({
                   ? 'Paused'
                   : 'Clearing';
             return (
-              <div
+              <Link
                 key={rep.id}
-                className="rounded-lg border border-border p-4 bg-background/50"
+                href={`/dashboard/forecast/repayment/${rep.id}`}
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
-                aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}`}
+                aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}. View forecast`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard
@@ -221,7 +183,7 @@ export function SavingsDebtProgress({
                 <p className="text-xs text-muted-foreground mt-1">
                   {progress.toFixed(0)}% — {status}
                 </p>
-              </div>
+              </Link>
             );
           })}
       </div>

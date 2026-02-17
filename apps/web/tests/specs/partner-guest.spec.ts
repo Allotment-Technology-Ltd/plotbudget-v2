@@ -97,6 +97,11 @@ test.describe('Partner invite (authenticated)', () => {
       timeout: 45_000,
       waitUntil: 'domcontentloaded',
     });
+    if (page.url().includes('/dashboard/payday-complete')) {
+      throw new Error(
+        'Partner landed on payday-complete. ensureBlueprintReady should clear ritual_closed_at for dashboard household (global-setup).'
+      );
+    }
     const onDashboard =
       page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
     const onOnboarding = page.getByTestId('onboarding-step-1');

@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: '%s | PLOT',
   },
   description:
-    'The 20-minute payday ritual that replaces every awkward money conversation. For UK households - without sharing bank access.',
+    'The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access.',
   icons: {
     icon: [
       {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
       },
       { url: '/favicon-dark.svg?v=3', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/apple-touch-icon.svg?v=3', sizes: '180x180' }],
+    apple: [{ url: '/apple-icon', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
     type: 'website',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
         url: `${MARKETING_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'PLOT - The 20-minute payday ritual for UK households',
+        alt: 'PLOT - The 20-minute payday ritual',
       },
     ],
   },

@@ -69,6 +69,7 @@ export async function updateRepayment(
 
     if (error) return { error: error.message };
     revalidatePath('/dashboard/blueprint');
+    revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update repayment' };

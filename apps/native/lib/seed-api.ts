@@ -32,6 +32,7 @@ export interface CreateSeedPayload {
     current_balance: number;
     target_date: string | null;
     status: 'active' | 'paid' | 'paused';
+    interest_rate?: number | null;
   };
 }
 
@@ -55,6 +56,7 @@ export interface UpdateSeedPayload {
     current_balance?: number;
     target_date?: string | null;
     status?: 'active' | 'paid' | 'paused';
+    interest_rate?: number | null;
   };
 }
 

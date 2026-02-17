@@ -30,33 +30,37 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
 
   const startDate = new Date(paycycle.start_date);
 
+  const daysMetricLabel = cycleNotStarted ? 'Starts in' : 'Days Left';
+  const daysMetricValue = cycleNotStarted
+    ? `${daysUntilStart} days`
+    : `${daysRemaining} days`;
+  const daysMetricSubtext = cycleNotStarted
+    ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+    : `${cycleProgress.toFixed(0)}% through`;
+
+  let allocatedStatus: StatusKey = 'good';
+  if (allocatedPercent > 100) allocatedStatus = 'danger';
+  else if (allocatedPercent > 90) allocatedStatus = 'warning';
+
   const metrics = [
     {
       label: 'Allocated',
       value: formatCurrency(paycycle.total_allocated, currency),
       subtext: `of ${formatCurrency(paycycle.total_income, currency)}`,
       percentage: allocatedPercent,
-      status: (allocatedPercent > 100
-        ? 'danger'
-        : allocatedPercent > 90
-          ? 'warning'
-          : 'good') as StatusKey,
+      status: allocatedStatus,
     },
     {
-      label: 'Left to spend',
+      label: 'Left to pay',
       value: formatCurrency(totalRemaining, currency),
       subtext: `${remainingPercent.toFixed(0)}% of income left this cycle`,
       percentage: remainingPercent,
       status: (remainingPercent < 10 ? 'warning' : 'good') as StatusKey,
     },
     {
-      label: 'Days Left',
-      value: cycleNotStarted
-        ? `Starts in ${daysUntilStart} days`
-        : `${daysRemaining} days`,
-      subtext: cycleNotStarted
-        ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-        : `${cycleProgress.toFixed(0)}% through`,
+      label: daysMetricLabel,
+      value: daysMetricValue,
+      subtext: daysMetricSubtext,
       percentage: cycleProgress,
       status: 'neutral' as StatusKey,
     },
@@ -81,7 +85,7 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors duration-200 min-w-0 overflow-hidden"
+            className="bg-card rounded-lg p-6 border border-border min-w-0 overflow-hidden"
             role="article"
             aria-label={`${metric.label}: ${metric.value}`}
           >

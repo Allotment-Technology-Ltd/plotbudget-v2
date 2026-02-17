@@ -13,7 +13,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
     test('login page has no horizontal overflow', async ({ page }) => {
       await page.goto('/login', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/login/);
-      await expect(page.getByTestId('email-input')).toBeVisible();
+      await expect(page.getByTestId('login-with-email')).toBeVisible();
       await expectNoHorizontalOverflow(page);
     });
   });
@@ -26,7 +26,12 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
 
     test('dashboard has no horizontal overflow', async ({ page }) => {
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(/\/dashboard/);
+      await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+      if (page.url().includes('/dashboard/payday-complete')) {
+        throw new Error(
+          'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
+        );
+      }
       await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);
     });
@@ -48,9 +53,16 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
 
     test('blueprint page has no horizontal overflow', async ({ page }) => {
       await page.goto('/dashboard/blueprint', { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(/\/(dashboard\/blueprint|login)/, { timeout: 15000 });
+      await page.waitForURL(/\/(dashboard\/blueprint|dashboard\/payday-complete|login)/, {
+        timeout: 15000,
+      });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost');
+      }
+      if (page.url().includes('/dashboard/payday-complete')) {
+        throw new Error(
+          'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
+        );
       }
       await expect(
         page.getByTestId('blueprint-empty-state').or(page.locator('[data-testid^="seed-card-"]').first())
@@ -60,7 +72,12 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
 
     test('app header and content-wrapper do not overflow', async ({ page }) => {
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(/\/dashboard/);
+      await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+      if (page.url().includes('/dashboard/payday-complete')) {
+        throw new Error(
+          'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
+        );
+      }
       await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);
       const header = page.locator('header .content-wrapper').first();

@@ -405,3 +405,149 @@ export async function unlockRitual(
   revalidatePath('/dashboard');
   return { success: true };
 }
+
+/** Resolve authenticated user and household id for start-next-cycle flow. */
+async function resolveHouseholdForNextCycle(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
+): Promise<{ householdId: string } | { error: string }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(
+    supabase,
+    user?.id ?? null
+  );
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user.id)
+    .maybeSingle();
+  const profileRow = profile as { household_id: string | null } | null;
+  const householdId = profileRow?.household_id ?? (isPartner ? partnerHouseholdId : null);
+  if (!householdId) return { error: 'No household' };
+  return { householdId };
+}
+
+/** Fetch active and draft paycycles for the household. */
+async function getActiveAndDraftCycles(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  householdId: string
+): Promise<
+  | { activeCycle: { id: string }; draftCycle: { id: string } | null }
+  | { error: string }
+> {
+  const { data: activeRow } = await supabase
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('status', 'active')
+    .maybeSingle();
+  const activeCycle = activeRow as { id: string } | null;
+  if (!activeCycle) return { error: 'No active pay cycle' };
+
+  const { data: draftRow } = await supabase
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('status', 'draft')
+    .maybeSingle();
+  const draftCycle = draftRow as { id: string } | null;
+  return { activeCycle, draftCycle };
+}
+
+/** Activate existing draft or create a new cycle; return the new active cycle id. */
+async function activateDraftOrCreateNext(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  activeCycleId: string,
+  draftCycle: { id: string } | null
+): Promise<{ newActiveId: string } | { error: string }> {
+  const now = new Date().toISOString();
+  if (draftCycle) {
+    const { error: activateErr } = await (supabase.from('paycycles') as any)
+      .update({ status: 'active', updated_at: now })
+      .eq('id', draftCycle.id);
+    if (activateErr) return { error: (activateErr as { message: string }).message };
+    return { newActiveId: draftCycle.id };
+  }
+  const { createNextPaycycleCore } = await import(
+    '@/lib/paycycle/create-next-paycycle-core'
+  );
+  const result = await createNextPaycycleCore(supabase, activeCycleId, {
+    status: 'active',
+  });
+  if (result.error || !result.cycleId)
+    return { error: result.error ?? 'Failed to create next cycle' };
+  return { newActiveId: result.cycleId };
+}
+
+/** Mark active cycle completed and set all household members' current_paycycle_id. */
+async function completeActiveAndSetMembersCurrent(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  activeCycleId: string,
+  newActiveId: string,
+  householdId: string
+): Promise<{ error?: string }> {
+  const now = new Date().toISOString();
+  const { error: completeErr } = await (supabase.from('paycycles') as any)
+    .update({
+      status: 'completed',
+      ritual_closed_at: now,
+      updated_at: now,
+    })
+    .eq('id', activeCycleId);
+  if (completeErr) return { error: (completeErr as { message: string }).message };
+
+  const { data: members } = await supabase
+    .from('users')
+    .select('id')
+    .eq('household_id', householdId);
+  const memberIds = (members ?? []).map((m: { id: string }) => m.id);
+  if (memberIds.length > 0) {
+    await (supabase.from('users') as any)
+      .update({ current_paycycle_id: newActiveId, updated_at: now })
+      .in('id', memberIds);
+  }
+  return {};
+}
+
+function revalidateNextCyclePaths(): void {
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/payday-complete');
+}
+
+/**
+ * Start the next pay cycle: mark current active as completed, then either activate
+ * the existing draft or create a new cycle from the completed one and set it active.
+ * Updates all household members' current_paycycle_id. Used by the payday-complete ritual.
+ */
+export async function startNextCycle(): Promise<
+  { success: true; newCycleId: string } | { error: string }
+> {
+  const supabase = await createServerSupabaseClient();
+  const auth = await resolveHouseholdForNextCycle(supabase);
+  if ('error' in auth) return { error: auth.error };
+
+  const cycles = await getActiveAndDraftCycles(supabase, auth.householdId);
+  if ('error' in cycles) return { error: cycles.error };
+
+  const next = await activateDraftOrCreateNext(
+    supabase,
+    cycles.activeCycle.id,
+    cycles.draftCycle
+  );
+  if ('error' in next) return { error: next.error };
+
+  const complete = await completeActiveAndSetMembersCurrent(
+    supabase,
+    cycles.activeCycle.id,
+    next.newActiveId,
+    auth.householdId
+  );
+  if (complete.error) return { error: complete.error };
+
+  revalidateNextCyclePaths();
+  return { success: true, newCycleId: next.newActiveId };
+}

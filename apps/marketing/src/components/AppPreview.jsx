@@ -83,7 +83,7 @@ export default function AppPreview({ variant = 'light' }) {
       >
         {[
           { label: 'Allocated', value: '£2,400', sub: 'of £2,800', pct: 86 },
-          { label: 'Left to spend', value: '£412', sub: '15% left', pct: 15 },
+          { label: 'Left to pay', value: '£412', sub: '15% left', pct: 15 },
         ].map((m) => (
           <div
             key={m.label}

@@ -119,7 +119,11 @@ export async function POST(request: NextRequest) {
       repayment.status === 'active' || repayment.status === 'paid' || repayment.status === 'paused'
         ? repayment.status
         : 'active';
-    input.repayment = { starting_balance, current_balance, target_date, status };
+    const interest_rate =
+      typeof repayment.interest_rate === 'number' && repayment.interest_rate >= 0
+        ? repayment.interest_rate
+        : null;
+    input.repayment = { starting_balance, current_balance, target_date, status, interest_rate };
   }
 
   const result = await createSeed(input, supabase);

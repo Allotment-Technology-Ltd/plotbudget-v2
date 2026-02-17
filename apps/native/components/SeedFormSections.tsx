@@ -159,6 +159,8 @@ export function SeedFormRepaymentSection({
   setRepaymentCurrentStr,
   repaymentTargetDate,
   setRepaymentTargetDate,
+  repaymentInterestRateStr,
+  setRepaymentInterestRateStr,
   showRepayDatePicker,
   setShowRepayDatePicker,
   repaymentStatus,
@@ -173,6 +175,8 @@ export function SeedFormRepaymentSection({
   setRepaymentCurrentStr: (v: string) => void;
   repaymentTargetDate: string;
   setRepaymentTargetDate: (v: string) => void;
+  repaymentInterestRateStr: string;
+  setRepaymentInterestRateStr: (v: string) => void;
   showRepayDatePicker: boolean;
   setShowRepayDatePicker: (v: boolean) => void;
   repaymentStatus: 'active' | 'paid' | 'paused';
@@ -213,6 +217,18 @@ export function SeedFormRepaymentSection({
               showPicker={showRepayDatePicker}
               onShowPicker={() => setShowRepayDatePicker(true)}
               onHidePicker={() => setShowRepayDatePicker(false)}
+            />
+          </View>
+
+          <View style={{ marginBottom: spacing.md }}>
+            <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>
+              Interest rate (APR %) — optional
+            </Text>
+            <Input
+              value={repaymentInterestRateStr}
+              onChangeText={(v) => setRepaymentInterestRateStr(v.replace(/[^0-9.]/g, ''))}
+              placeholder="e.g. 18.9"
+              keyboardType="decimal-pad"
             />
           </View>
 

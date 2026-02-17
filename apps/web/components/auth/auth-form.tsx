@@ -10,11 +10,13 @@ import { createClient } from '@/lib/supabase/client';
 import { checkEmailAllowed } from '@/app/actions/auth';
 import { ALLOWLIST_ERROR_MESSAGE } from '@/lib/auth/allowlist';
 import { setRedirectAfterAuthCookie } from '@/lib/auth/redirect-after-auth';
+import { setLastLoginMethod } from '@/lib/auth/last-login-method';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { marketingUrl } from '@/lib/marketing-url';
 
 // Login schema
 const loginSchema = z.object({
@@ -51,6 +53,8 @@ interface AuthFormProps {
   showAppleLogin?: boolean;
   /** When true, show "Email me a sign-in link" (magic link) on login. */
   showMagicLink?: boolean;
+  /** When true, hide OAuth and magic link in footer (e.g. on dedicated /login/email page). */
+  hideAlternateMethods?: boolean;
   /** After success, redirect here instead of /dashboard (e.g. partner join URL). */
   redirectTo?: string;
 }
@@ -61,6 +65,7 @@ export function AuthForm({
   showGoogleLogin = false,
   showAppleLogin = false,
   showMagicLink = false,
+  hideAlternateMethods = false,
   redirectTo,
 }: AuthFormProps) {
   const router = useRouter();
@@ -77,6 +82,7 @@ export function AuthForm({
         showGoogleLogin={showGoogleLogin}
         showAppleLogin={showAppleLogin}
         showMagicLink={showMagicLink}
+        hideAlternateMethods={hideAlternateMethods}
         redirectTo={redirectTo}
       />
     );
@@ -89,10 +95,12 @@ export function AuthForm({
       router={router}
       showGoogleLogin={showGoogleLogin}
       showAppleLogin={showAppleLogin}
+      hideAlternateMethods={hideAlternateMethods}
       redirectTo={redirectTo}
     />
   );
 }
+
 
 // Login Form Component
 function LoginForm({
@@ -103,6 +111,7 @@ function LoginForm({
   showGoogleLogin = false,
   showAppleLogin = false,
   showMagicLink = false,
+  hideAlternateMethods = false,
   redirectTo,
 }: {
   isLoading: boolean;
@@ -112,6 +121,7 @@ function LoginForm({
   showGoogleLogin?: boolean;
   showAppleLogin?: boolean;
   showMagicLink?: boolean;
+  hideAlternateMethods?: boolean;
   redirectTo?: string;
 }) {
   const form = useForm<LoginFormData>({
@@ -143,6 +153,7 @@ function LoginForm({
         return;
       }
 
+      setLastLoginMethod('email');
       router.push(redirectTo ?? '/dashboard');
       try {
         toast.success('Welcome back!');
@@ -167,25 +178,25 @@ function LoginForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <form
         method="post"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmitForm();
         }}
-        className="space-y-4"
+        className="space-y-3.5"
         noValidate
         aria-label="Sign in"
       >
         {/* Email field */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
-            className="normal-case"
+            className="normal-case h-10"
             data-testid="email-input"
             {...form.register('email')}
             onKeyDown={onEnterSubmit}
@@ -200,13 +211,13 @@ function LoginForm({
         </div>
 
         {/* Password field */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
             <Label htmlFor="password">Password</Label>
             {showForgotPassword && (
               <Link
                 href="/reset-password"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline shrink-0"
                 data-testid="nav-reset-password"
               >
                 Forgot password?
@@ -217,7 +228,7 @@ function LoginForm({
             id="password"
             type="password"
             placeholder="••••••••"
-            className="normal-case"
+            className="normal-case h-10"
             data-testid="password-input"
             {...form.register('password')}
             onKeyDown={onEnterSubmit}
@@ -261,6 +272,7 @@ function LoginForm({
         showGoogleLogin={showGoogleLogin}
         showAppleLogin={showAppleLogin}
         showMagicLink={showMagicLink}
+        hideAlternateMethods={hideAlternateMethods}
         redirectTo={redirectTo}
       />
     </div>
@@ -274,6 +286,7 @@ function SignupForm({
   router,
   showGoogleLogin = false,
   showAppleLogin = false,
+  hideAlternateMethods = false,
   redirectTo,
 }: {
   isLoading: boolean;
@@ -281,6 +294,7 @@ function SignupForm({
   router: ReturnType<typeof useRouter>;
   showGoogleLogin?: boolean;
   showAppleLogin?: boolean;
+  hideAlternateMethods?: boolean;
   redirectTo?: string;
 }) {
   const form = useForm<SignupFormData>({
@@ -448,6 +462,7 @@ function SignupForm({
         isLogin={false}
         showGoogleLogin={showGoogleLogin}
         showAppleLogin={showAppleLogin}
+        hideAlternateMethods={hideAlternateMethods}
         redirectTo={redirectTo}
       />
     </div>
@@ -460,12 +475,15 @@ function AuthFooter({
   showGoogleLogin = false,
   showAppleLogin = false,
   showMagicLink = false,
+  hideAlternateMethods = false,
   redirectTo,
 }: {
   isLogin: boolean;
   showGoogleLogin?: boolean;
   showAppleLogin?: boolean;
   showMagicLink?: boolean;
+  /** When true, only show sign up / sign in link; no OAuth or magic link. */
+  hideAlternateMethods?: boolean;
   redirectTo?: string;
 }) {
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
@@ -474,6 +492,8 @@ function AuthFooter({
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [magicLinkError, setMagicLinkError] = useState<string | null>(null);
   const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
+  const showOAuth = !hideAlternateMethods && (showGoogleLogin || showAppleLogin);
+  const showMagicLinkBlock = isLogin && !hideAlternateMethods && showMagicLink;
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     if (oauthLoading) return;
@@ -535,7 +555,6 @@ function AuthFooter({
     }
   };
 
-  const showOAuth = showGoogleLogin || showAppleLogin;
   return (
     <>
       {showOAuth && (
@@ -604,7 +623,7 @@ function AuthFooter({
         </>
       )}
 
-      {isLogin && showMagicLink && (
+      {showMagicLinkBlock && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -653,13 +672,35 @@ function AuthFooter({
       {/* Switch mode link */}
       <p className="text-center text-sm text-muted-foreground">
         {isLogin ? "Don't have an account? " : 'Already have an account? '}
-        <Link
-          href={isLogin ? `/signup${redirectQuery}` : `/login${redirectQuery}`}
-          className="text-primary hover:underline font-medium"
-          data-testid={isLogin ? 'nav-signup' : 'nav-login'}
-        >
-          {isLogin ? 'Sign up' : 'Sign in'}
-        </Link>
+        {isLogin ? (
+          <>
+            <Link
+              href={`/signup${redirectQuery}`}
+              className="text-primary hover:underline font-medium"
+              data-testid="nav-signup"
+            >
+              Sign up
+            </Link>
+            {' or '}
+            <Link
+              href={marketingUrl('/')}
+              className="text-primary hover:underline font-medium"
+              data-testid="nav-learn-more"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              learn more
+            </Link>
+          </>
+        ) : (
+          <Link
+            href={`/login${redirectQuery}`}
+            className="text-primary hover:underline font-medium"
+            data-testid="nav-login"
+          >
+            Log in
+          </Link>
+        )}
       </p>
     </>
   );

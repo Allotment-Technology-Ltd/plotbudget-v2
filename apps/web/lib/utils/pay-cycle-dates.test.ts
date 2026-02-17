@@ -133,6 +133,15 @@ describe('calculateNextCycleDates', () => {
     expect(start).toBe('2024-02-01');
     expect(end).toBe('2024-02-29');
   });
+
+  it('last_working_day: when start is after LWD of its month, end uses next month LWD', () => {
+    // Jan 31 2026 is Saturday; LWD of Jan 2026 is Fri 30. Prev end Jan 30 -> start Jan 31 (Sat).
+    // end must be LWD of next month (Feb 27) so end >= start
+    const { start, end } = calculateNextCycleDates('2026-01-30', 'last_working_day');
+    expect(start).toBe('2026-01-31');
+    expect(new Date(end) >= new Date(start)).toBe(true);
+    expect(end).toBe('2026-02-27'); // Feb 28 2026 is Sat -> LWD Fri 27
+  });
 });
 
 describe('getPaymentDatesInRange', () => {

@@ -1,0 +1,88 @@
+import { cache } from 'react';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import type { User } from '@supabase/supabase-js';
+
+/**
+ * React's cache() is request-scoped: it is invalidated for each server request.
+ * Results are never shared across requests, so auth/profile data cannot leak between users.
+ * @see https://react.dev/reference/react/cache
+ */
+
+/** Request-scoped Supabase client. Deduplicated per RSC request so layout + page share one client. */
+export const getCachedSupabase = cache(createServerSupabaseClient);
+
+type DashboardProfile = {
+  display_name: string | null;
+  avatar_url: string | null;
+  household_id: string | null;
+  current_paycycle_id: string | null;
+  has_completed_onboarding: boolean;
+} | null;
+
+type OwnedHousehold = { id: string } | null;
+type PartnerHousehold = { id: string; partner_name: string | null } | null;
+
+/**
+ * Auth + profile + household ownership for dashboard in one deduplicated call.
+ * Layout and all dashboard pages can call this; only the first call in a request runs the fetches.
+ * Cache is request-scoped (React cache()); no cross-request sharing of auth data.
+ */
+export const getCachedDashboardAuth = cache(async (): Promise<{
+  user: User | null;
+  profile: DashboardProfile;
+  owned: OwnedHousehold;
+  partnerOf: PartnerHousehold;
+}> => {
+  const supabase = await getCachedSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { user: null, profile: null, owned: null, partnerOf: null };
+  }
+
+  const [profileRes, ownedRes, partnerOfRes] = await Promise.all([
+    supabase
+      .from('users')
+      .select('display_name, avatar_url, household_id, current_paycycle_id, has_completed_onboarding')
+      .eq('id', user.id)
+      .single(),
+    supabase.from('households').select('id').eq('owner_id', user.id).maybeSingle(),
+    supabase
+      .from('households')
+      .select('id, partner_name')
+      .eq('partner_user_id', user.id)
+      .maybeSingle(),
+  ]);
+
+  const profile = profileRes.data as DashboardProfile;
+  const owned = ownedRes.data as OwnedHousehold;
+  const partnerOf = partnerOfRes.data as PartnerHousehold;
+
+  return { user, profile, owned, partnerOf };
+});
+
+/**
+ * True when the household has an active pay cycle that has "finished" — either the user
+ * closed the ritual (ritual_closed_at set) or the cycle's end_date is in the past.
+ * Used to redirect to the payday-complete ritual so the user can go through it even if
+ * they didn't log in on payday.
+ */
+export const getPaydayCompleteRequired = cache(async (householdId: string): Promise<boolean> => {
+  const supabase = await getCachedSupabase();
+  const { data } = await supabase
+    .from('paycycles')
+    .select('id, end_date, ritual_closed_at')
+    .eq('household_id', householdId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!data) return false;
+  const row = data as { id: string; end_date: string; ritual_closed_at: string | null };
+  const today = new Date().toISOString().slice(0, 10);
+  const ritualClosed = row.ritual_closed_at != null;
+  const endDateInPast = row.end_date < today;
+  return ritualClosed || endDateInPast;
+});
+
+export type { DashboardProfile, OwnedHousehold, PartnerHousehold };
