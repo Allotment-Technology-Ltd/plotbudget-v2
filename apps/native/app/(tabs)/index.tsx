@@ -26,13 +26,11 @@ import {
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import { fetchDashboardData } from '@/lib/dashboard-data';
 import { markSeedPaid } from '@/lib/mark-seed-paid';
-import { markPotComplete } from '@/lib/mark-pot-complete';
 import { SeedFormModal } from '@/components/SeedFormModal';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 
 type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
-type PotStatus = 'active' | 'complete' | 'paused';
 
 /* ---------- Hero metric card ---------- */
 
@@ -214,72 +212,24 @@ function FinancialHealthSection({
 /* ---------- Savings & debt progress ---------- */
 
 function SavingsDebtSection({
-  pots,
   repayments,
   currency,
   colors,
   spacing,
   borderRadius,
-  optimisticPotStatus,
-  onMarkPotComplete,
-  onPotPress,
 }: {
-  pots: Pot[];
   repayments: Repayment[];
   currency: CurrencyCode;
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
-  optimisticPotStatus: Record<string, PotStatus>;
-  onMarkPotComplete: (potId: string, status: 'complete' | 'active') => void;
-  onPotPress: (potId: string) => void;
 }) {
-  if (pots.length === 0 && repayments.length === 0) return null;
+  if (repayments.length === 0) return null;
 
   return (
     <Card variant="default" padding="md">
       <Text variant="sub-sm" style={{ marginBottom: spacing.md }}>Savings & Debt</Text>
       <View style={{ gap: spacing.md }}>
-        {pots.map((pot) => {
-          const effectiveStatus = (optimisticPotStatus[pot.id] ?? pot.status) as PotStatus;
-          const progress = pot.target_amount > 0 ? Math.min(100, (pot.current_amount / pot.target_amount) * 100) : 0;
-          const statusLabel = effectiveStatus === 'complete' ? 'Accomplished' : effectiveStatus === 'paused' ? 'Paused' : 'Saving';
-          const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
-          const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
-          return (
-            <Pressable key={pot.id} onPress={() => onPotPress(pot.id)}>
-              <View style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, padding: spacing.md }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 }}>
-                      <BodyText style={{ fontSize: 18 }}>{pot.icon || '🏖️'}</BodyText>
-                      <LabelText numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{pot.name}</LabelText>
-                    </View>
-                    {canToggle && (
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          hapticImpact('light');
-                          onMarkPotComplete(pot.id, nextStatus as 'complete' | 'active');
-                        }}
-                        hitSlop={8}
-                      >
-                        <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
-                          {effectiveStatus === 'complete' ? 'Active' : 'Done'}
-                        </Text>
-                      </Pressable>
-                    )}
-                  </View>
-                  <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-                    {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}{pot.target_amount.toFixed(2)}
-                  </Text>
-                  <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden', marginBottom: spacing.xs }}>
-                    <View style={{ height: '100%', width: `${progress}%`, backgroundColor: colors.savings, borderRadius: borderRadius.full }} />
-                  </View>
-                  <Text variant="label-sm" color="secondary">{progress.toFixed(0)}% — {statusLabel}</Text>
-                </View>
-            </Pressable>
-          );
-        })}
         {repayments.map((rep) => {
           const paid = rep.starting_balance - rep.current_balance;
           const progress = rep.starting_balance > 0 ? Math.min(100, (paid / rep.starting_balance) * 100) : 0;
@@ -488,7 +438,6 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
-  const [optimisticPotStatus, setOptimisticPotStatus] = useState<Record<string, PotStatus>>({});
   const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -538,31 +487,6 @@ export default function DashboardScreen() {
       }
     },
     [loadData]
-  );
-
-  const handleMarkPotComplete = useCallback(
-    async (potId: string, status: 'complete' | 'active') => {
-      const pot = data?.pots.find((p) => p.id === potId);
-      const prevStatus = (pot?.status ?? 'active') as PotStatus;
-      setOptimisticPotStatus((s) => ({ ...s, [potId]: status }));
-      const result = await markPotComplete(potId, status);
-      if ('success' in result) {
-        if (status === 'complete') {
-          hapticSuccess();
-          setShowSuccess(true);
-        }
-        await loadData();
-        setOptimisticPotStatus((s) => {
-          const next = { ...s };
-          delete next[potId];
-          return next;
-        });
-      } else {
-        setOptimisticPotStatus((s) => ({ ...s, [potId]: prevStatus }));
-        Alert.alert('Couldn’t update pot', result.error ?? 'Something went wrong. Try again.');
-      }
-    },
-    [data?.pots, loadData]
   );
 
   if (loading && !data) {
@@ -748,22 +672,15 @@ export default function DashboardScreen() {
             />
           </View>
 
-          {/* Savings & debt */}
-          {(data.pots.length > 0 || data.repayments.length > 0) && (
+          {/* Savings & debt (repayments only; pots are managed via Blueprint savings seeds) */}
+          {data.repayments.length > 0 && (
             <View style={{ marginTop: spacing.lg }}>
               <SavingsDebtSection
-                pots={data.pots}
                 repayments={data.repayments}
                 currency={currency}
                 colors={colors}
                 spacing={spacing}
                 borderRadius={borderRadius}
-                optimisticPotStatus={optimisticPotStatus}
-                onMarkPotComplete={handleMarkPotComplete}
-                onPotPress={(id) => {
-                hapticImpact('light');
-                router.push(`/pot-detail/${id}` as import('expo-router').Href);
-              }}
               />
             </View>
           )}

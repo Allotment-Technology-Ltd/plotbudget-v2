@@ -1,5 +1,7 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@repo/supabase';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
@@ -12,7 +14,8 @@ export interface UpdatePercentagesInput {
 
 export async function updateHouseholdPercentages(
   householdId: string,
-  data: UpdatePercentagesInput
+  data: UpdatePercentagesInput,
+  client?: SupabaseClient<Database>
 ): Promise<{ error?: string }> {
   const total =
     data.needs_percent + data.wants_percent + data.savings_percent + data.repay_percent;
@@ -21,7 +24,7 @@ export async function updateHouseholdPercentages(
   }
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = client ?? (await createServerSupabaseClient());
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('households') as any)
@@ -35,7 +38,7 @@ export async function updateHouseholdPercentages(
 
     if (error) return { error: error.message };
 
-    revalidatePath('/dashboard/blueprint');
+    if (!client) revalidatePath('/dashboard/blueprint');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update percentages' };

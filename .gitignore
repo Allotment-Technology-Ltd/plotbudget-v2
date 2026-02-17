@@ -68,5 +68,8 @@ supabase/.temp/
 # Vercel & deployment
 .vercel/
 
+# Expo (native app build/cache)
+.expo/
+
 # Misc
 .cache/
