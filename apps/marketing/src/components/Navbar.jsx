@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Features:
  *  - Hide-on-scroll-down / show-on-scroll-up (reduces distraction per Hick's Law)
  *  - Theme toggle (sun/moon)
- *  - "Get started free" CTA links to app signup (first 50 users free)
  *  - Responsive: CTA text shortens on mobile
  */
 export default function Navbar({ theme, onToggleTheme, pricingEnabled = false }) {
@@ -69,7 +68,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
         PLOT
       </a>
 
-      {/* Right side: Pricing + Get started free + Log in + theme toggle */}
+      {/* Right side: Pricing + Log in + theme toggle */}
       <div className="flex items-center gap-4">
         {/* Pricing — scrolls to pricing section when pricing is enabled */}
         {pricingEnabled && (
@@ -81,16 +80,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
             Pricing
           </button>
         )}
-        {/* Get started free — primary CTA (first 50 users free) */}
-        <a
-          href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/signup`}
-          className="btn-primary text-cta-sm"
-          aria-label="Get started free — first 50 users"
-        >
-          <span className="hidden xs:inline">Get started free</span>
-          <span className="xs:hidden">Get started</span>
-        </a>
-        {/* Log in — secondary */}
+        {/* Log in */}
         <a
           href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login`}
           className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors"

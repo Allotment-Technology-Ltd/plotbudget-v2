@@ -141,11 +141,11 @@ function Hero() {
           className="w-full flex flex-col items-center gap-4 mt-2"
         >
           <a
-            href={`${APP_URL}/signup`}
+            href={APP_URL}
             className="btn-primary text-cta-sm px-8 py-3 font-heading uppercase tracking-widest"
-            aria-label="Get started free"
+            aria-label="Get the app"
           >
-            Get started free
+            Get the app
           </a>
           <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
           <MailerLiteForm variant="hero" id="hero-form" />
@@ -968,11 +968,11 @@ function FinalCTA() {
 
           <motion.div variants={staggerItem} className="w-full flex flex-col items-center gap-4 mt-2">
             <a
-              href={`${APP_URL}/signup`}
+              href={APP_URL}
               className="btn-primary text-cta-sm px-8 py-3 font-heading uppercase tracking-widest"
-              aria-label="Get started free"
+              aria-label="Get the app"
             >
-              Get started free
+              Get the app
             </a>
             <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
             <MailerLiteForm variant="footer" id="footer-form" />
@@ -1017,7 +1017,7 @@ function Footer() {
           <nav aria-label="Footer navigation" className="flex gap-6 flex-wrap">
             {[
               ...(PRICING_ENABLED ? [{ label: 'Pricing', href: '#pricing' }] : []),
-              { label: 'Get started', href: `${APP_URL}/signup` },
+              { label: 'Get the app', href: APP_URL },
               { label: 'Log in', href: `${APP_URL}/login` },
               { label: 'Privacy', href: '/privacy' },
               { label: 'Cookie settings', href: '#', onClick: (e) => { e.preventDefault(); window.dispatchEvent(new Event('plot_show_cookie_settings')); } },
