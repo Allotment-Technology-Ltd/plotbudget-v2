@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createNextPaycycle } from '@/lib/actions/seed-actions';
 import { toast } from 'sonner';
+import { InlineLoading } from '@/components/loading/inline-loading';
 import type { Household, PayCycle } from '@repo/supabase';
 
 interface QuickActionsProps {
@@ -18,8 +20,10 @@ export function QuickActions({
   hasDraftCycle,
 }: QuickActionsProps) {
   const router = useRouter();
+  const [isCreatingCycle, setIsCreatingCycle] = useState(false);
 
   const handleCreateNext = async () => {
+    setIsCreatingCycle(true);
     try {
       const result = await createNextPaycycle(paycycle.id);
       if (result.error) {
@@ -30,6 +34,8 @@ export function QuickActions({
       router.refresh();
     } catch {
       toast.error('Failed to create next cycle');
+    } finally {
+      setIsCreatingCycle(false);
     }
   };
 
@@ -84,13 +90,17 @@ export function QuickActions({
             </Link>
           );
         }
+        const isNextCycle = action.label === 'Next Cycle';
+        const isLoading = isNextCycle && isCreatingCycle;
         return (
           <button
             key={action.label}
             type="button"
             onClick={action.onClick}
-            className={`${action.color} rounded-lg p-6 transition-all cursor-pointer border border-transparent hover:border-current text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+            disabled={isLoading}
+            aria-busy={isLoading}
             aria-label={`${action.label}: ${action.description}`}
+            className={`${action.color} rounded-lg p-6 transition-all cursor-pointer border border-transparent hover:border-current text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-wait`}
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-md bg-background/50" aria-hidden>
@@ -100,7 +110,13 @@ export function QuickActions({
                 <p className="font-heading text-lg uppercase tracking-wider mb-1">
                   {action.label}
                 </p>
-                <p className="text-sm opacity-80">{action.description}</p>
+                <p className="text-sm opacity-80">
+                  {isLoading ? (
+                    <InlineLoading message="Creating cycle…" />
+                  ) : (
+                    action.description
+                  )}
+                </p>
               </div>
             </div>
           </button>

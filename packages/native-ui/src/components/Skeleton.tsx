@@ -11,7 +11,7 @@ export interface SkeletonProps extends ViewProps {
 
 /**
  * Skeleton placeholder for loading states.
- * Shows a subtle pulse animation.
+ * Shows a visible pulse animation so users see that content is loading.
  */
 export function Skeleton({
   width,
@@ -21,19 +21,19 @@ export function Skeleton({
   ...props
 }: SkeletonProps) {
   const { colors, borderRadius: themeRadius } = useTheme();
-  const opacity = useRef(new Animated.Value(0.4)).current;
+  const opacity = useRef(new Animated.Value(0.35)).current;
 
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.7,
-          duration: 800,
+          toValue: 0.85,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
-          toValue: 0.4,
-          duration: 800,
+          toValue: 0.35,
+          duration: 600,
           useNativeDriver: true,
         }),
       ])

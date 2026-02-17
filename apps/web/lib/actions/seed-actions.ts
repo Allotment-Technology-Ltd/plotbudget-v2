@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
+import { validateDueDateInCycle } from '@/lib/utils/date-cycle-validation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@repo/supabase';
 type SeedRow = Database['public']['Tables']['seeds']['Row'];
@@ -193,14 +194,6 @@ export async function updatePaycycleAllocations(
   await (supabase.from('paycycles') as any).update(updatePayload).eq('id', paycycleId);
 }
 
-function isDueDateInPaycycleRange(
-  dueDate: string | null | undefined,
-  startDate: string,
-  endDate: string
-): boolean {
-  if (!dueDate || !dueDate.trim()) return true;
-  return dueDate >= startDate && dueDate <= endDate;
-}
 
 export async function createSeed(
   data: CreateSeedInput,
@@ -215,10 +208,13 @@ export async function createSeed(
         .select('start_date, end_date')
         .eq('id', data.paycycle_id)
         .single()) as { data: { start_date: string; end_date: string } | null };
-      if (paycycle && !isDueDateInPaycycleRange(data.due_date, paycycle.start_date, paycycle.end_date)) {
-        return {
-          error: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
-        };
+      if (paycycle) {
+        const result = validateDueDateInCycle(
+          data.due_date,
+          paycycle.start_date,
+          paycycle.end_date
+        );
+        if (!result.valid) return { error: result.message };
       }
     }
 
@@ -350,10 +346,13 @@ export async function updateSeed(
         .select('start_date, end_date')
         .eq('id', seed.paycycle_id)
         .single()) as { data: { start_date: string; end_date: string } | null };
-      if (paycycle && !isDueDateInPaycycleRange(data.due_date, paycycle.start_date, paycycle.end_date)) {
-        return {
-          error: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
-        };
+      if (paycycle) {
+        const result = validateDueDateInCycle(
+          data.due_date,
+          paycycle.start_date,
+          paycycle.end_date
+        );
+        if (!result.valid) return { error: result.message };
       }
     }
 

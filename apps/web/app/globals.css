@@ -293,6 +293,16 @@
     50% { opacity: 0; }
   }
 
+  /* Loading indicator: gentle pulse in line with onboarding transition aesthetic */
+  @keyframes loading-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .loading-pulse {
+    animation: loading-pulse 1.2s ease-in-out infinite;
+  }
+
   /* Navigation progress bar: sliding stripe during route transitions */
   @keyframes navigation-progress {
     0% { transform: translateX(-100%); }
@@ -301,6 +311,24 @@
 
   .navigation-progress-stripe {
     animation: navigation-progress 0.8s ease-in-out infinite;
+  }
+
+  /* Skeleton loading: shimmer sweep so cards clearly indicate loading */
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--muted) / 0.6) 0%,
+      rgb(var(--muted) / 1) 40%,
+      rgb(var(--muted) / 1) 60%,
+      rgb(var(--muted) / 0.6) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
   }
 
   .text-glow {
