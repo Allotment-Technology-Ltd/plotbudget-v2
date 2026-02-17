@@ -72,11 +72,9 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
       <Link
         to="/"
         onClick={(e) => {
-          const target = e.currentTarget.getAttribute('href');
-          if (target === '/' && window.location.pathname === '/') {
-            e.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
+          if (window.location.pathname !== '/') return;
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         className="font-display font-bold text-2xl text-plot-accent tracking-[0.25em] hover:text-glow transition-all"
         aria-label="PLOT — return to top"

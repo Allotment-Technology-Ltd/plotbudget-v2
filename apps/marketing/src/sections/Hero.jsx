@@ -20,17 +20,20 @@ function TerminalHeadline({ text }) {
       return;
     }
 
+    let intervalId;
     const startDelay = setTimeout(() => {
       let i = 0;
-      const interval = setInterval(() => {
+      intervalId = setInterval(() => {
         i++;
         setDisplayedChars(i);
-        if (i >= text.length) clearInterval(interval);
+        if (i >= text.length) clearInterval(intervalId);
       }, 50);
-      return () => clearInterval(interval);
     }, 400);
 
-    return () => clearTimeout(startDelay);
+    return () => {
+      clearTimeout(startDelay);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [text, prefersReducedMotion]);
 
   useEffect(() => {
