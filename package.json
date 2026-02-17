@@ -5,7 +5,8 @@
   "packageManager": "pnpm@8.15.4",
   "pnpm": {
     "overrides": {
-      "@supabase/supabase-js": "2.94.1"
+      "@supabase/supabase-js": "2.94.1",
+      "node-forge": ">=1.3.2"
     }
   },
   "scripts": {

@@ -28,48 +28,15 @@ import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 import { format } from 'date-fns';
 import { formatCurrency, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
-import { fetchBlueprintData, type BlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
+import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
+import { repairStaleAllocations, tryOverdueRefetch } from '@/lib/blueprint-load-helpers';
+import { CATEGORY_GRID, computeCategoryTotalsFromSeeds, type SeedType } from '@/lib/blueprint-categories';
 import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
 import { markPotComplete } from '@/lib/mark-pot-complete';
-import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
 import { deleteSeedApi } from '@/lib/seed-api';
-import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft, recomputePaycycleAllocations } from '@/lib/paycycle-api';
+import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft } from '@/lib/paycycle-api';
 
-type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PotStatus = 'active' | 'complete' | 'paused';
-
-/** Repair stale allocations: recompute when total_allocated is missing/zero or doesn't match sum of seed amounts. Returns refetched result if recomputed, else original. */
-async function repairStaleAllocations(result: BlueprintData): Promise<BlueprintData> {
-  const pc = result.paycycle as { total_allocated?: number } | null;
-  const storedTotal = pc?.total_allocated != null ? Number(pc.total_allocated) : null;
-  const sumFromSeeds = result.seeds.reduce((s, seed) => s + Number(seed.amount), 0);
-  const totalMismatch =
-    result.paycycle &&
-    result.seeds.length > 0 &&
-    (storedTotal == null || storedTotal === 0 || Math.abs(storedTotal - sumFromSeeds) > 0.01);
-  if (!totalMismatch) return result;
-  const recomputed = await recomputePaycycleAllocations(result.paycycle!.id);
-  if ('success' in recomputed) {
-    return fetchBlueprintData({ selectedCycleId: result.paycycle!.id });
-  }
-  return result;
-}
-
-/** If active paycycle, try mark-overdue then refetch. Returns refetched data or null on skip/failure. */
-async function tryOverdueRefetch(
-  paycycleId: string,
-  selectedCycleId: string | null | undefined
-): Promise<BlueprintData | null> {
-  try {
-    const overdueResult = await markOverdueSeedsPaid(paycycleId);
-    if ('success' in overdueResult) {
-      return fetchBlueprintData({ selectedCycleId: selectedCycleId ?? undefined });
-    }
-  } catch (err) {
-    if (__DEV__) console.warn('[Blueprint] markOverdueSeedsPaid failed (showing blueprint anyway):', err);
-  }
-  return null;
-}
 
 export default function BlueprintScreen() {
   const { colors, spacing, borderRadius } = useTheme();
@@ -235,32 +202,10 @@ export default function BlueprintScreen() {
     [displaySeeds]
   );
 
-  const CATEGORY_GRID = [
-    { key: 'needs' as const, label: 'Needs', percentKey: 'needs_percent' as const, allocKey: 'alloc_needs' as const, remKey: 'rem_needs' as const, seedType: 'need' as const },
-    { key: 'wants' as const, label: 'Wants', percentKey: 'wants_percent' as const, allocKey: 'alloc_wants' as const, remKey: 'rem_wants' as const, seedType: 'want' as const },
-    { key: 'savings' as const, label: 'Savings', percentKey: 'savings_percent' as const, allocKey: 'alloc_savings' as const, remKey: 'rem_savings' as const, seedType: 'savings' as const },
-    { key: 'repay' as const, label: 'Repay', percentKey: 'repay_percent' as const, allocKey: 'alloc_repay' as const, remKey: 'rem_repay' as const, seedType: 'repay' as const },
-  ] as const;
-
-  // Derive category allocated/remaining from seeds so cards are correct even when paycycle alloc_* / rem_* are stale
-  const categoryTotalsFromSeeds = useMemo(() => {
-    const out: Record<string, { allocated: number; remaining: number }> = {};
-    for (const cat of CATEGORY_GRID) {
-      const seedsInCat = displaySeeds.filter((s) => s.type === cat.seedType);
-      const allocated = seedsInCat.reduce((sum, s) => sum + Number(s.amount), 0);
-      let remaining = 0;
-      for (const s of seedsInCat) {
-        if (s.payment_source === 'me' || s.payment_source === 'partner') {
-          remaining += s.is_paid ? 0 : Number(s.amount);
-        } else {
-          remaining += (s.is_paid_me ? 0 : Number(s.amount_me ?? 0)) + (s.is_paid_partner ? 0 : Number(s.amount_partner ?? 0));
-        }
-      }
-      out[cat.key] = { allocated, remaining };
-    }
-    return out;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- CATEGORY_GRID is in-component constant; displaySeeds is the only real dependency
-  }, [displaySeeds]);
+  const categoryTotalsFromSeeds = useMemo(
+    () => computeCategoryTotalsFromSeeds(displaySeeds, CATEGORY_GRID),
+    [displaySeeds]
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
