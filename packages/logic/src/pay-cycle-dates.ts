@@ -131,7 +131,14 @@ export function calculateNextCycleDates(
     end = new Date(start);
     end.setDate(end.getDate() + 27);
   } else if (type === 'last_working_day') {
-    end = getLastWorkingDay(start.getFullYear(), start.getMonth());
+    const lwdSameMonth = getLastWorkingDay(start.getFullYear(), start.getMonth());
+    const startStr = start.toISOString().split('T')[0];
+    const lwdStr = lwdSameMonth.toISOString().split('T')[0];
+    if (lwdStr >= startStr) {
+      end = lwdSameMonth;
+    } else {
+      end = getLastWorkingDay(start.getFullYear(), start.getMonth() + 1);
+    }
   } else {
     const nextPay = new Date(start.getFullYear(), start.getMonth() + 1, payDay ?? 1);
     const nextPayWorking = toWorkingDay(nextPay);

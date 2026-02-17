@@ -54,7 +54,7 @@ export const metadata: Metadata = {
       },
       { url: '/favicon-dark.svg?v=3', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/apple-touch-icon.svg?v=3', sizes: '180x180' }],
+    apple: [{ url: '/apple-icon', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
     type: 'website',

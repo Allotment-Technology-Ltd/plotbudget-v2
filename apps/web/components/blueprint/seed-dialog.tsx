@@ -180,119 +180,109 @@ export function SeedDialog({
   });
 
   useEffect(() => {
-    if (open) {
-      setError(null);
-      if (seed) {
-        const base = {
-          name: seed.name,
-          amountStr: seed.amount ? String(seed.amount) : '',
-          payment_source: seed.payment_source,
-          split_ratio:
-            seed.split_ratio != null
-              ? Math.round(seed.split_ratio * 100)
-              : Math.round((household.joint_ratio ?? 0.5) * 100),
-          uses_joint_account: seed.uses_joint_account ?? false,
-          is_recurring: seed.is_recurring,
-          due_date: (seed as { due_date?: string | null }).due_date ?? '',
-        };
-        if (linkedPot) {
-          form.reset({
-            ...base,
-            link_pot_id: linkedPot.id,
-            pot_current_str: String(linkedPot.current_amount ?? 0),
-            pot_target_str: String(linkedPot.target_amount ?? 0),
-            pot_target_date: linkedPot.target_date ?? '',
-            pot_status: linkedPot.status,
-          });
-        } else if (linkedRepayment) {
-          form.reset({
-            ...base,
-            link_repayment_id: linkedRepayment.id,
-            repayment_current_str: String(linkedRepayment.current_balance ?? 0),
-            repayment_target_date: linkedRepayment.target_date ?? '',
-            repayment_status: linkedRepayment.status,
-            repayment_interest_rate_str:
-              linkedRepayment.interest_rate != null
-                ? String(linkedRepayment.interest_rate)
-                : '',
-          });
-        } else {
-          form.reset({ ...base });
-        }
+    if (!open) return;
+
+    setError(null);
+
+    if (seed) {
+      const base = {
+        name: seed.name,
+        amountStr: seed.amount ? String(seed.amount) : '',
+        payment_source: seed.payment_source,
+        split_ratio:
+          seed.split_ratio != null
+            ? Math.round(seed.split_ratio * 100)
+            : Math.round((household.joint_ratio ?? 0.5) * 100),
+        uses_joint_account: seed.uses_joint_account ?? false,
+        is_recurring: seed.is_recurring,
+        due_date: (seed as { due_date?: string | null }).due_date ?? '',
+      };
+      if (linkedPot) {
+        form.reset({
+          ...base,
+          link_pot_id: linkedPot.id,
+          pot_current_str: String(linkedPot.current_amount ?? 0),
+          pot_target_str: String(linkedPot.target_amount ?? 0),
+          pot_target_date: linkedPot.target_date ?? '',
+          pot_status: linkedPot.status,
+        });
+      } else if (linkedRepayment) {
+        form.reset({
+          ...base,
+          link_repayment_id: linkedRepayment.id,
+          repayment_current_str: String(linkedRepayment.current_balance ?? 0),
+          repayment_target_date: linkedRepayment.target_date ?? '',
+          repayment_status: linkedRepayment.status,
+          repayment_interest_rate_str:
+            linkedRepayment.interest_rate != null
+              ? String(linkedRepayment.interest_rate)
+              : '',
+        });
       } else {
-        const defaultPaymentSource = isPartner ? ('partner' as const) : ('me' as const);
-        const preLinkedPot = initialLinkPotId
-          ? pots.find((p) => p.id === initialLinkPotId)
-          : null;
-        const preLinkedRepayment = initialLinkRepaymentId
-          ? repayments.find((r) => r.id === initialLinkRepaymentId)
-          : null;
-        if (preLinkedPot) {
-          form.reset({
-            name: preLinkedPot.name ?? '',
-            amountStr: '',
-            payment_source: defaultPaymentSource,
-            split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-            is_recurring: true,
-            due_date: '',
-            link_pot_id: preLinkedPot.id,
-            pot_current_str: String(preLinkedPot.current_amount ?? 0),
-            pot_target_str: String(preLinkedPot.target_amount ?? 0),
-            pot_target_date: preLinkedPot.target_date ?? '',
-            pot_status: preLinkedPot.status ?? 'active',
-            link_repayment_id: undefined,
-            repayment_current_str: '',
-            repayment_target_date: '',
-            repayment_status: 'active',
-            repayment_interest_rate_str: '',
-            uses_joint_account: true,
-          });
-        } else if (preLinkedRepayment) {
-          form.reset({
-            name: preLinkedRepayment.name ?? '',
-            amountStr: '',
-            payment_source: defaultPaymentSource,
-            split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-            is_recurring: true,
-            due_date: '',
-            link_pot_id: undefined,
-            pot_current_str: '',
-            pot_target_str: '',
-            pot_target_date: '',
-            pot_status: 'active',
-            link_repayment_id: preLinkedRepayment.id,
-            repayment_current_str: String(preLinkedRepayment.current_balance ?? 0),
-            repayment_target_date: preLinkedRepayment.target_date ?? '',
-            repayment_status: preLinkedRepayment.status ?? 'active',
-            repayment_interest_rate_str:
-              preLinkedRepayment.interest_rate != null
-                ? String(preLinkedRepayment.interest_rate)
-                : '',
-            uses_joint_account: true,
-          });
-        } else {
-          form.reset({
-            name: '',
-            amountStr: '',
-            payment_source: defaultPaymentSource,
-            split_ratio: Math.round((household.joint_ratio ?? 0.5) * 100),
-            is_recurring: true,
-            due_date: '',
-            link_pot_id: undefined,
-            pot_current_str: '',
-            pot_target_str: '',
-            pot_target_date: '',
-            pot_status: 'active',
-            link_repayment_id: undefined,
-            repayment_current_str: '',
-            repayment_target_date: '',
-            repayment_status: 'active',
-            repayment_interest_rate_str: '',
-            uses_joint_account: true,
-          });
-        }
+        form.reset({ ...base });
       }
+      return;
     }
+
+    const defaultPaymentSource = isPartner ? ('partner' as const) : ('me' as const);
+    const jointRatio = Math.round((household.joint_ratio ?? 0.5) * 100);
+    const preLinkedPot = initialLinkPotId
+      ? pots.find((p) => p.id === initialLinkPotId)
+      : null;
+    const preLinkedRepayment = initialLinkRepaymentId
+      ? repayments.find((r) => r.id === initialLinkRepaymentId)
+      : null;
+
+    const emptyAddDefaults: SeedFormInput = {
+      name: '',
+      amountStr: '',
+      payment_source: defaultPaymentSource,
+      split_ratio: jointRatio,
+      is_recurring: true,
+      due_date: '',
+      link_pot_id: undefined,
+      pot_current_str: '',
+      pot_target_str: '',
+      pot_target_date: '',
+      pot_status: 'active',
+      link_repayment_id: undefined,
+      repayment_current_str: '',
+      repayment_target_date: '',
+      repayment_status: 'active',
+      repayment_interest_rate_str: '',
+      uses_joint_account: true,
+    };
+
+    if (preLinkedPot) {
+      form.reset({
+        ...emptyAddDefaults,
+        name: preLinkedPot.name ?? '',
+        link_pot_id: preLinkedPot.id,
+        pot_current_str: String(preLinkedPot.current_amount ?? 0),
+        pot_target_str: String(preLinkedPot.target_amount ?? 0),
+        pot_target_date: preLinkedPot.target_date ?? '',
+        pot_status: preLinkedPot.status ?? 'active',
+      });
+      return;
+    }
+
+    if (preLinkedRepayment) {
+      form.reset({
+        ...emptyAddDefaults,
+        name: preLinkedRepayment.name ?? '',
+        link_repayment_id: preLinkedRepayment.id,
+        repayment_current_str: String(preLinkedRepayment.current_balance ?? 0),
+        repayment_target_date: preLinkedRepayment.target_date ?? '',
+        repayment_status: preLinkedRepayment.status ?? 'active',
+        repayment_interest_rate_str:
+          preLinkedRepayment.interest_rate != null
+            ? String(preLinkedRepayment.interest_rate)
+            : '',
+      });
+      return;
+    }
+
+    form.reset(emptyAddDefaults);
   }, [
     open,
     seed,

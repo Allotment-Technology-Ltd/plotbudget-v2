@@ -55,18 +55,18 @@ export function PotForecastSection({
   const currentAmount = Number(pot.current_amount);
   const targetDateFromPot = pot.target_date ?? null;
 
+  const [targetDate, setTargetDate] = useState(targetDateFromPot ?? '');
+
   const suggestedAmount = useMemo(() => {
-    if (!targetDateFromPot) return null;
+    if (!targetDate) return null;
     return suggestedSavingsAmount(
       currentAmount,
       targetAmount,
       cycleStart,
-      targetDateFromPot,
+      targetDate,
       config.payCycleType
     );
-  }, [currentAmount, targetAmount, cycleStart, targetDateFromPot, config.payCycleType]);
-
-  const [targetDate, setTargetDate] = useState(targetDateFromPot ?? '');
+  }, [currentAmount, targetAmount, cycleStart, targetDate, config.payCycleType]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [amountStr, setAmountStr] = useState(
     linkedSeed

@@ -9,6 +9,130 @@ import type { CreateSeedInput } from '@/lib/actions/seed-actions';
 
 type PaymentSource = 'me' | 'partner' | 'joint';
 
+type LockInParams = {
+  potId: string | null;
+  repaymentId: string | null;
+  amount: number;
+  name: string;
+  type: 'savings' | 'repay';
+};
+
+function validateLockInInput(params: LockInParams): string | null {
+  const { potId, repaymentId, amount, type } = params;
+  if (amount <= 0) return 'Amount must be positive';
+  if (!potId && !repaymentId) return 'Must specify pot or repayment';
+  if ((type === 'savings' && !potId) || (type === 'repay' && !repaymentId)) {
+    return 'Pot required for savings, repayment required for repay';
+  }
+  return null;
+}
+
+async function getHouseholdIdForUser(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<string | null> {
+  const { data: profile } = (await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', userId)
+    .single()) as { data: { household_id: string | null } | null };
+  return profile?.household_id ?? null;
+}
+
+async function findPaycycleForHousehold(
+  supabase: SupabaseClient<Database>,
+  householdId: string
+): Promise<string | null> {
+  const { data: activeCycle } = (await supabase
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()) as { data: { id: string } | null };
+
+  if (activeCycle?.id) return activeCycle.id;
+
+  const { data: draftCycle } = (await supabase
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('status', 'draft')
+    .limit(1)
+    .maybeSingle()) as { data: { id: string } | null };
+
+  return draftCycle?.id ?? null;
+}
+
+async function findExistingRecurringSeed(
+  supabase: SupabaseClient<Database>,
+  paycycleId: string,
+  potId: string | null,
+  repaymentId: string | null,
+  type: 'savings' | 'repay'
+): Promise<{ id: string; payment_source: PaymentSource; split_ratio: number | null } | null> {
+  let query = supabase
+    .from('seeds')
+    .select('id, payment_source, split_ratio')
+    .eq('paycycle_id', paycycleId)
+    .eq('is_recurring', true)
+    .eq('type', type);
+
+  if (potId) query = query.eq('linked_pot_id', potId);
+  else if (repaymentId) query = query.eq('linked_repayment_id', repaymentId);
+
+  const { data } = (await query.maybeSingle()) as {
+    data: { id: string; payment_source: PaymentSource; split_ratio: number | null } | null;
+  };
+  return data;
+}
+
+async function updateOrCreateLockInSeed(
+  supabase: SupabaseClient<Database>,
+  params: LockInParams & { paycycleId: string; householdId: string },
+  existingSeed: { id: string; payment_source: PaymentSource; split_ratio: number | null } | null
+): Promise<string | null> {
+  const { potId, repaymentId, amount, name, type, paycycleId, householdId } = params;
+
+  if (existingSeed) {
+    const result = await updateSeed(existingSeed.id, {
+      amount,
+      payment_source: existingSeed.payment_source,
+      split_ratio: existingSeed.split_ratio,
+    });
+    return result.error ?? null;
+  }
+
+  const { data: household } = (await supabase
+    .from('households')
+    .select('joint_ratio')
+    .eq('id', householdId)
+    .single()) as { data: { joint_ratio: number } | null };
+
+  const createInput: CreateSeedInput = {
+    name,
+    amount,
+    type,
+    payment_source: 'joint',
+    is_recurring: true,
+    paycycle_id: paycycleId,
+    household_id: householdId,
+  };
+  if (potId) createInput.linked_pot_id = potId;
+  if (repaymentId) createInput.linked_repayment_id = repaymentId;
+  if (household?.joint_ratio != null) createInput.split_ratio = household.joint_ratio;
+
+  const result = await createSeed(createInput);
+  return result.error ?? null;
+}
+
+function revalidateForecastPaths(potId: string | null, repaymentId: string | null): void {
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/blueprint');
+  if (potId) revalidatePath(`/dashboard/forecast/pot/${potId}`);
+  if (repaymentId) revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
+}
+
 /**
  * Lock in an amount for a pot (savings) or repayment (debt).
  * Finds or creates the recurring seed in the active or draft cycle linked to the pot/repayment.
@@ -22,11 +146,10 @@ export async function lockInForecastAmount(
   type: 'savings' | 'repay',
   supabaseClient?: SupabaseClient<Database>
 ): Promise<{ success?: boolean; error?: string }> {
-  if (amount <= 0) return { error: 'Amount must be positive' };
-  if (!potId && !repaymentId) return { error: 'Must specify pot or repayment' };
-  if ((type === 'savings' && !potId) || (type === 'repay' && !repaymentId)) {
-    return { error: 'Pot required for savings, repayment required for repay' };
-  }
+  const params: LockInParams = { potId, repaymentId, amount, name, type };
+
+  const validationError = validateLockInInput(params);
+  if (validationError) return { error: validationError };
 
   const supabase = supabaseClient ?? (await createServerSupabaseClient());
   const {
@@ -34,84 +157,27 @@ export async function lockInForecastAmount(
   } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('household_id')
-    .eq('id', user.id)
-    .single()) as { data: { household_id: string | null } | null };
-
-  const householdId = profile?.household_id;
+  const householdId = await getHouseholdIdForUser(supabase, user.id);
   if (!householdId) return { error: 'No household' };
 
-  // Prefer active, else draft
-  const { data: activeCycle } = (await supabase
-    .from('paycycles')
-    .select('id')
-    .eq('household_id', householdId)
-    .eq('status', 'active')
-    .limit(1)
-    .maybeSingle()) as { data: { id: string } | null };
-
-  const { data: draftCycle } = (await supabase
-    .from('paycycles')
-    .select('id')
-    .eq('household_id', householdId)
-    .eq('status', 'draft')
-    .limit(1)
-    .maybeSingle()) as { data: { id: string } | null };
-
-  const paycycleId = activeCycle?.id ?? draftCycle?.id;
+  const paycycleId = await findPaycycleForHousehold(supabase, householdId);
   if (!paycycleId) return { error: 'No active or draft pay cycle' };
 
-  // Find existing recurring seed linked to this pot/repayment in this cycle
-  let query = supabase
-    .from('seeds')
-    .select('id, payment_source, split_ratio')
-    .eq('paycycle_id', paycycleId)
-    .eq('is_recurring', true)
-    .eq('type', type);
+  const existingSeed = await findExistingRecurringSeed(
+    supabase,
+    paycycleId,
+    potId,
+    repaymentId,
+    type
+  );
 
-  if (potId) query = query.eq('linked_pot_id', potId);
-  else if (repaymentId) query = query.eq('linked_repayment_id', repaymentId);
+  const seedError = await updateOrCreateLockInSeed(
+    supabase,
+    { ...params, paycycleId, householdId },
+    existingSeed
+  );
+  if (seedError) return { error: seedError };
 
-  const { data: existingSeed } = (await query.maybeSingle()) as {
-    data: { id: string; payment_source: PaymentSource; split_ratio: number | null } | null;
-  };
-
-  if (existingSeed) {
-    const result = await updateSeed(existingSeed.id, {
-      amount,
-      payment_source: existingSeed.payment_source,
-      split_ratio: existingSeed.split_ratio,
-    });
-    if (result.error) return { error: result.error };
-  } else {
-    const { data: household } = (await supabase
-      .from('households')
-      .select('joint_ratio')
-      .eq('id', householdId)
-      .single()) as { data: { joint_ratio: number } | null };
-
-    const createInput: CreateSeedInput = {
-      name,
-      amount,
-      type,
-      payment_source: 'joint',
-      is_recurring: true,
-      paycycle_id: paycycleId,
-      household_id: householdId,
-    };
-    if (potId) createInput.linked_pot_id = potId;
-    if (repaymentId) createInput.linked_repayment_id = repaymentId;
-    if (household?.joint_ratio != null) createInput.split_ratio = household.joint_ratio;
-
-    const result = await createSeed(createInput);
-    if (result.error) return { error: result.error };
-  }
-
-  revalidatePath('/dashboard');
-  revalidatePath('/dashboard/blueprint');
-  if (potId) revalidatePath(`/dashboard/forecast/pot/${potId}`);
-  if (repaymentId) revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
+  revalidateForecastPaths(potId, repaymentId);
   return { success: true };
 }

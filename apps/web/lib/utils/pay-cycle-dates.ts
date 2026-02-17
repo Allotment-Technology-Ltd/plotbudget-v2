@@ -137,8 +137,14 @@ export function calculateNextCycleDates(
     end = new Date(start);
     end.setDate(end.getDate() + 27);
   } else if (type === 'last_working_day') {
-    // End = last working day of the month that contains cycle start
-    end = getLastWorkingDay(start.getFullYear(), start.getMonth());
+    const lwdSameMonth = getLastWorkingDay(start.getFullYear(), start.getMonth());
+    const startStr = start.toISOString().split('T')[0];
+    const lwdStr = lwdSameMonth.toISOString().split('T')[0];
+    if (lwdStr >= startStr) {
+      end = lwdSameMonth;
+    } else {
+      end = getLastWorkingDay(start.getFullYear(), start.getMonth() + 1);
+    }
   } else {
     // specific_date: end = last working day before next month's pay day (so next pay funds next cycle)
     const nextPay = new Date(start.getFullYear(), start.getMonth() + 1, payDay ?? 1);

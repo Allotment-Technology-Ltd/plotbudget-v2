@@ -118,18 +118,18 @@ export function RepaymentForecastClient({
     router.refresh();
   };
 
+  const [targetDate, setTargetDate] = useState(targetDateFromRep ?? '');
+
   const suggestedAmount = useMemo(() => {
-    if (!targetDateFromRep) return null;
+    if (!targetDate) return null;
     return suggestedRepaymentAmount(
       currentBalance,
       cycleStart,
-      targetDateFromRep,
+      targetDate,
       config.payCycleType,
       config.payDay
     );
-  }, [currentBalance, cycleStart, targetDateFromRep, config.payCycleType, config.payDay]);
-
-  const [targetDate, setTargetDate] = useState(targetDateFromRep ?? '');
+  }, [currentBalance, cycleStart, targetDate, config.payCycleType, config.payDay]);
   const [amountStr, setAmountStr] = useState(
     linkedSeed ? String(linkedSeed.amount) : suggestedAmount != null ? String(suggestedAmount) : ''
   );

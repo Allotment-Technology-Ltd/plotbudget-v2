@@ -84,22 +84,23 @@ export function PotForecastClient({
     router.refresh();
   };
 
-  const suggestedAmount = useMemo(() => {
-    if (!targetDateFromPot) return null;
-    return suggestedSavingsAmount(
-      currentAmount,
-      targetAmount,
-      cycleStart,
-      targetDateFromPot,
-      config.payCycleType,
-      config.payDay
-    );
-  }, [currentAmount, targetAmount, cycleStart, targetDateFromPot, config.payCycleType, config.payDay]);
-
   const [mode, setMode] = useState<'target' | 'project'>(
     targetDateFromPot ? 'target' : 'project'
   );
   const [targetDate, setTargetDate] = useState(targetDateFromPot ?? '');
+
+  const suggestedAmount = useMemo(() => {
+    if (!targetDate) return null;
+    return suggestedSavingsAmount(
+      currentAmount,
+      targetAmount,
+      cycleStart,
+      targetDate,
+      config.payCycleType,
+      config.payDay
+    );
+  }, [currentAmount, targetAmount, cycleStart, targetDate, config.payCycleType, config.payDay]);
+
   const [amountStr, setAmountStr] = useState(
     linkedSeed ? String(linkedSeed.amount) : suggestedAmount != null ? String(suggestedAmount) : ''
   );

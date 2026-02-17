@@ -30,17 +30,25 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
 
   const startDate = new Date(paycycle.start_date);
 
+  const daysMetricLabel = cycleNotStarted ? 'Starts in' : 'Days Left';
+  const daysMetricValue = cycleNotStarted
+    ? `${daysUntilStart} days`
+    : `${daysRemaining} days`;
+  const daysMetricSubtext = cycleNotStarted
+    ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+    : `${cycleProgress.toFixed(0)}% through`;
+
+  let allocatedStatus: StatusKey = 'good';
+  if (allocatedPercent > 100) allocatedStatus = 'danger';
+  else if (allocatedPercent > 90) allocatedStatus = 'warning';
+
   const metrics = [
     {
       label: 'Allocated',
       value: formatCurrency(paycycle.total_allocated, currency),
       subtext: `of ${formatCurrency(paycycle.total_income, currency)}`,
       percentage: allocatedPercent,
-      status: (allocatedPercent > 100
-        ? 'danger'
-        : allocatedPercent > 90
-          ? 'warning'
-          : 'good') as StatusKey,
+      status: allocatedStatus,
     },
     {
       label: 'Left to pay',
@@ -50,13 +58,9 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
       status: (remainingPercent < 10 ? 'warning' : 'good') as StatusKey,
     },
     {
-      label: cycleNotStarted ? 'Starts in' : 'Days Left',
-      value: cycleNotStarted
-        ? `${daysUntilStart} days`
-        : `${daysRemaining} days`,
-      subtext: cycleNotStarted
-        ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-        : `${cycleProgress.toFixed(0)}% through`,
+      label: daysMetricLabel,
+      value: daysMetricValue,
+      subtext: daysMetricSubtext,
       percentage: cycleProgress,
       status: 'neutral' as StatusKey,
     },

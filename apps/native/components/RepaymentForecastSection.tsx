@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { hapticImpact } from '@/lib/haptics';
@@ -13,15 +13,8 @@ import {
 import { DatePickerField } from './SeedFormModalComponents';
 import { format } from 'date-fns';
 import { currencySymbol, formatCurrency, type CurrencyCode } from '@repo/logic';
-import {
-  projectRepaymentOverTime,
-  suggestedRepaymentAmount,
-  endDateFromCycles,
-  cyclesToClearFromAmount,
-} from '@/lib/forecast-projection';
-import { lockInForecastApi } from '@/lib/forecast-api';
+import { useRepaymentForecast } from '@/lib/use-repayment-forecast';
 import type { Repayment, Household, PayCycle, Seed } from '@repo/supabase';
-import * as Haptics from 'expo-haptics';
 
 interface RepaymentForecastSectionProps {
   repayment: Repayment;
@@ -43,100 +36,36 @@ export function RepaymentForecastSection({
   const router = useRouter();
   const { colors, spacing, borderRadius } = useTheme();
   const symbol = currencySymbol(currency);
-
-  const config = useMemo(
-    () => ({
-      payCycleType: (household?.pay_cycle_type ?? 'specific_date') as
-        | 'specific_date'
-        | 'last_working_day'
-        | 'every_4_weeks',
-      payDay: household?.pay_day ?? undefined,
-      anchorDate: household?.pay_cycle_anchor,
-    }),
-    [household?.pay_cycle_type, household?.pay_day, household?.pay_cycle_anchor]
-  );
-
-  const cycleStart =
-    paycycle?.start_date ?? new Date().toISOString().slice(0, 10);
-  const currentBalance = Number(repayment.current_balance);
-  const startingBalance = Number(repayment.starting_balance);
-  const targetDateFromRep = repayment.target_date ?? null;
-  const interestRate =
-    repayment.interest_rate != null ? Number(repayment.interest_rate) : null;
-
-  const suggestedAmount = useMemo(() => {
-    if (!targetDateFromRep) return null;
-    return suggestedRepaymentAmount(
-      currentBalance,
-      cycleStart,
-      targetDateFromRep,
-      config.payCycleType
-    );
-  }, [currentBalance, cycleStart, targetDateFromRep, config.payCycleType]);
-
-  const [targetDate, setTargetDate] = useState(targetDateFromRep ?? '');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [amountStr, setAmountStr] = useState(
-    linkedSeed
-      ? String(linkedSeed.amount)
-      : suggestedAmount != null
-        ? String(suggestedAmount)
-        : ''
-  );
-  const [includeInterest, setIncludeInterest] = useState(false);
-  const [locking, setLocking] = useState(false);
 
-  const amount = parseFloat(amountStr) || 0;
-
-  const projection = useMemo(() => {
-    if (amount <= 0) return [];
-    return projectRepaymentOverTime(
-      currentBalance,
-      amount,
-      cycleStart,
-      config,
-      { includeInterest, interestRateAnnualPercent: interestRate }
-    );
-  }, [
-    currentBalance,
+  const {
+    suggestedAmount,
+    targetDate,
+    setTargetDate,
+    amountStr,
+    setAmountStr,
     amount,
-    cycleStart,
-    config,
     includeInterest,
     interestRate,
-  ]);
+    locking,
+    projection,
+    payoffDate,
+    currentBalance,
+    startingBalance,
+    progress,
+    handleLockIn,
+    handleUseSuggested,
+    handleToggleInterest,
+    isReady,
+  } = useRepaymentForecast({
+    repayment,
+    household,
+    paycycle,
+    linkedSeed,
+    onLockInSuccess,
+  });
 
-  const cyclesToClear =
-    amount > 0 ? cyclesToClearFromAmount(currentBalance, amount) : 0;
-  const payoffDate =
-    cyclesToClear > 0
-      ? endDateFromCycles(cycleStart, cyclesToClear - 1, config)
-      : null;
-
-  const handleLockIn = async () => {
-    if (amount <= 0) return;
-    hapticImpact('medium');
-    setLocking(true);
-    const result = await lockInForecastApi({
-      potId: null,
-      repaymentId: repayment.id,
-      amount,
-      name: repayment.name,
-      type: 'repay',
-    });
-    setLocking(false);
-    if ('success' in result && result.success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onLockInSuccess?.();
-    }
-  };
-
-  if (!household || !paycycle) return null;
-
-  const progress =
-    startingBalance > 0
-      ? Math.min(100, ((startingBalance - currentBalance) / startingBalance) * 100)
-      : 0;
+  if (!isReady) return null;
 
   return (
     <Card variant="default" padding="lg" style={{ marginTop: spacing.lg }}>
@@ -167,7 +96,8 @@ export function RepaymentForecastSection({
       </View>
 
       <BodyText color="secondary" style={{ marginBottom: spacing.md, fontSize: 13 }}>
-        Set a target payoff date to get a suggested amount, or enter an amount to see when you’ll clear the debt.
+        Set a target payoff date to get a suggested amount, or enter an amount
+        to see when you{'\''}ll clear the debt.
       </BodyText>
 
       <View style={{ marginBottom: spacing.md }}>
@@ -202,10 +132,7 @@ export function RepaymentForecastSection({
           </Text>
           {suggestedAmount != null && targetDate && (
             <Pressable
-              onPress={() => {
-                hapticImpact('light');
-                setAmountStr(suggestedAmount.toFixed(2));
-              }}
+              onPress={handleUseSuggested}
               style={{
                 paddingHorizontal: spacing.sm,
                 paddingVertical: spacing.xs,
@@ -274,10 +201,7 @@ export function RepaymentForecastSection({
 
       {interestRate != null && interestRate > 0 && (
         <Pressable
-          onPress={() => {
-            hapticImpact('light');
-            setIncludeInterest((prev) => !prev);
-          }}
+          onPress={handleToggleInterest}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
