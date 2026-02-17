@@ -29,6 +29,7 @@ import {
   suggestedRepaymentAmount,
 } from '@/lib/utils/suggested-amount';
 import { currencySymbol, formatCurrency, parseIncome } from '@/lib/utils/currency';
+import { validateDueDateInCycle } from '@/lib/utils/date-cycle-validation';
 import type { Database } from '@repo/supabase';
 
 type Seed = Database['public']['Tables']['seeds']['Row'];
@@ -92,13 +93,23 @@ function createSeedFormSchema(paycycle: { start_date: string; end_date: string }
     })
     .refine(
       (data) => {
-        if (!data.due_date || !data.due_date.trim()) return true;
-        const d = data.due_date;
-        return d >= paycycle.start_date && d <= paycycle.end_date;
+        const result = validateDueDateInCycle(
+          data.due_date,
+          paycycle.start_date,
+          paycycle.end_date
+        );
+        return result.valid;
       },
-      {
-        message: `Due date must be within this pay cycle (${paycycle.start_date} – ${paycycle.end_date}).`,
-        path: ['due_date'],
+      (data) => {
+        const result = validateDueDateInCycle(
+          data.due_date,
+          paycycle.start_date,
+          paycycle.end_date
+        );
+        return {
+          message: result.valid ? '' : result.message,
+          path: ['due_date'] as const,
+        };
       }
     );
 }
@@ -481,9 +492,22 @@ export function SeedDialog({
                 min={paycycle.start_date}
                 max={paycycle.end_date}
                 aria-label="Due date"
+                aria-invalid={!!form.formState.errors.due_date}
+                aria-describedby={
+                  form.formState.errors.due_date ? 'seed-due-date-error' : undefined
+                }
                 data-testid="seed-due-date-input"
                 {...form.register('due_date')}
               />
+              {form.formState.errors.due_date && (
+                <p
+                  id="seed-due-date-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
+                  {form.formState.errors.due_date.message}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 When the due date has passed, this item is automatically marked as paid.
               </p>

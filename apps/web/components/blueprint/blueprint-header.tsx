@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { InlineLoading } from '@/components/loading/inline-loading';
 import { format } from 'date-fns';
 import { Calendar, Plus, RefreshCw } from 'lucide-react';
 import type { Database } from '@repo/supabase';
@@ -38,6 +39,12 @@ interface BlueprintHeaderProps {
   onResyncDraft?: () => void;
   /** When viewing the active (current) cycle, show payment progress. Draft/archived do not. */
   paidProgress?: PaidProgress;
+  /** Show loading state for create-next-cycle action */
+  isCreatingCycle?: boolean;
+  /** Show loading state for resync-draft action */
+  isResyncingDraft?: boolean;
+  /** Show loading state when switching cycle (select) */
+  isSwitchingCycle?: boolean;
 }
 
 export function BlueprintHeader({
@@ -48,6 +55,9 @@ export function BlueprintHeader({
   onCreateNext,
   onResyncDraft,
   paidProgress,
+  isCreatingCycle = false,
+  isResyncingDraft = false,
+  isSwitchingCycle = false,
 }: BlueprintHeaderProps) {
   const startDate = format(new Date(paycycle.start_date), 'MMM d');
   const endDate = format(new Date(paycycle.end_date), 'MMM d, yyyy');
@@ -84,44 +94,62 @@ export function BlueprintHeader({
             className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-center sm:gap-3 sm:flex-nowrap sm:min-w-[320px] sm:justify-end"
             aria-label="Blueprint controls"
           >
-            <Select
-              value={paycycle.id}
-              onValueChange={onCycleChange}
-              aria-label="Select pay cycle"
-            >
-              <SelectTrigger className="w-full min-w-0 sm:min-w-[200px] sm:max-w-[280px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allPaycycles.map((cycle) => {
-                  const dateLabel = cycle.name || format(new Date(cycle.start_date), 'MMM yyyy');
-                  const statusLabel =
-                    cycle.status === 'active'
-                      ? 'Current cycle'
-                      : cycle.status === 'draft'
-                        ? 'Next cycle'
+            {isSwitchingCycle ? (
+              <div
+                className="flex items-center gap-2 w-full min-w-0 sm:min-w-[200px] sm:max-w-[280px] rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground"
+                role="status"
+                aria-label="Switching cycle"
+              >
+                <InlineLoading message="Switching cycle…" />
+              </div>
+            ) : (
+              <Select
+                value={paycycle.id}
+                onValueChange={onCycleChange}
+                aria-label="Select pay cycle"
+              >
+                <SelectTrigger className="w-full min-w-0 sm:min-w-[200px] sm:max-w-[280px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {allPaycycles.map((cycle) => {
+                    const dateLabel = cycle.name || format(new Date(cycle.start_date), 'MMM yyyy');
+                    const statusLabel =
+                      cycle.status === 'active'
+                        ? 'Current cycle'
+                        : cycle.status === 'draft'
+                          ? 'Next cycle'
+                          : dateLabel;
+                    const displayLabel =
+                      cycle.status === 'active' || cycle.status === 'draft'
+                        ? statusLabel
                         : dateLabel;
-                  const displayLabel =
-                    cycle.status === 'active' || cycle.status === 'draft'
-                      ? statusLabel
-                      : dateLabel;
-                  return (
-                    <SelectItem key={cycle.id} value={cycle.id}>
-                      {displayLabel}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+                    return (
+                      <SelectItem key={cycle.id} value={cycle.id}>
+                        {displayLabel}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
 
             {paycycle.status === 'active' && onCreateNext && (
               <Button
                 variant="outline"
                 className="w-full sm:w-auto px-4 py-2 text-sm shrink-0"
                 onClick={onCreateNext}
+                disabled={isCreatingCycle}
+                aria-busy={isCreatingCycle}
               >
-                <Plus className="w-4 h-4 mr-2" aria-hidden />
-                Create Next Cycle
+                {isCreatingCycle ? (
+                  <InlineLoading message="Creating cycle…" />
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" aria-hidden />
+                    Create Next Cycle
+                  </>
+                )}
               </Button>
             )}
             {paycycle.status === 'draft' && onResyncDraft && (
@@ -129,9 +157,17 @@ export function BlueprintHeader({
                 variant="outline"
                 className="w-full sm:w-auto px-4 py-2 text-sm shrink-0"
                 onClick={onResyncDraft}
+                disabled={isResyncingDraft}
+                aria-busy={isResyncingDraft}
               >
-                <RefreshCw className="w-4 h-4 mr-2" aria-hidden />
-                Resync from current
+                {isResyncingDraft ? (
+                  <InlineLoading message="Resyncing…" />
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" aria-hidden />
+                    Resync from current
+                  </>
+                )}
               </Button>
             )}
           </div>

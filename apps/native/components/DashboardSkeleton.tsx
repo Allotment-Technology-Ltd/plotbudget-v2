@@ -1,13 +1,16 @@
 import { View } from 'react-native';
-import { Container, Section, Card, Skeleton, useTheme } from '@repo/native-ui';
+import { Container, Section, Card, Skeleton, LabelText, useTheme } from '@repo/native-ui';
 
 export function DashboardSkeleton() {
   const { spacing } = useTheme();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} accessibilityRole="progressbar" accessibilityLabel="Loading dashboard">
       <Container paddingX="md">
         <Section spacing="xl">
+          <LabelText color="secondary" style={{ marginBottom: spacing.md }}>
+            Loading dashboard…
+          </LabelText>
           <Skeleton width={180} height={28} style={{ marginBottom: spacing.xs }} />
           <Skeleton width={140} height={16} style={{ marginBottom: spacing.lg }} />
 

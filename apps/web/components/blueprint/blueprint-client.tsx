@@ -151,6 +151,9 @@ export function BlueprintClient({
   const [isClosingRitual, setIsClosingRitual] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [showNewCycleCelebration, setShowNewCycleCelebration] = useState(initialNewCycleCelebration);
+  const [isCreatingCycle, setIsCreatingCycle] = useState(false);
+  const [isResyncingDraft, setIsResyncingDraft] = useState(false);
+  const [isSwitchingCycle, setIsSwitchingCycle] = useState(false);
 
   useEffect(() => {
     if (!initialEditSeedId || seeds.length === 0) return;
@@ -213,8 +216,14 @@ export function BlueprintClient({
   }, [seeds]);
 
   const handleCycleChange = (cycleId: string) => {
+    if (cycleId === paycycle.id) return;
+    setIsSwitchingCycle(true);
     router.push(`/dashboard/blueprint?cycle=${cycleId}`);
   };
+
+  useEffect(() => {
+    setIsSwitchingCycle(false);
+  }, [paycycle.id]);
 
   const handleAddSeed = (category: 'need' | 'want' | 'savings' | 'repay') => {
     setSelectedCategory(category);
@@ -244,18 +253,36 @@ export function BlueprintClient({
   };
 
   const handleCreateNext = async () => {
-    const result = await createNextPaycycle(paycycle.id);
-    if (result.cycleId) {
-      router.push(`/dashboard/blueprint?cycle=${result.cycleId}&newCycle=1`);
-      router.refresh();
+    setIsCreatingCycle(true);
+    try {
+      const result = await createNextPaycycle(paycycle.id);
+      if (result.cycleId) {
+        router.push(`/dashboard/blueprint?cycle=${result.cycleId}&newCycle=1`);
+        router.refresh();
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error('Failed to create next cycle');
+    } finally {
+      setIsCreatingCycle(false);
     }
   };
 
   const handleResyncDraft = async () => {
     if (!activePaycycleId) return;
-    const result = await resyncDraftFromActive(paycycle.id, activePaycycleId);
-    if (!result.error) {
-      router.refresh();
+    setIsResyncingDraft(true);
+    try {
+      const result = await resyncDraftFromActive(paycycle.id, activePaycycleId);
+      if (!result.error) {
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error('Failed to resync draft');
+    } finally {
+      setIsResyncingDraft(false);
     }
   };
 
@@ -387,6 +414,9 @@ export function BlueprintClient({
             ? handleResyncDraft
             : undefined
         }
+        isCreatingCycle={isCreatingCycle}
+        isResyncingDraft={isResyncingDraft}
+        isSwitchingCycle={isSwitchingCycle}
         paidProgress={{
           paid: paidSeeds,
           total: totalSeeds,
