@@ -1,5 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getPartnerContext } from '@/lib/partner-context';
+import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
 import { getAvatarInitials } from '@/lib/utils/avatar-initials';
 import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { redirect } from 'next/navigation';
@@ -11,6 +10,8 @@ import type { Database } from '@repo/supabase';
 type Pot = Database['public']['Tables']['pots']['Row'];
 type Repayment = Database['public']['Tables']['repayments']['Row'];
 type PaycycleRow = Database['public']['Tables']['paycycles']['Row'];
+type HouseholdRow = Database['public']['Tables']['households']['Row'];
+type SeedRow = Database['public']['Tables']['seeds']['Row'];
 type PaycycleOption = {
   id: string;
   name: string | null;
@@ -18,11 +19,6 @@ type PaycycleOption = {
   end_date: string;
   status: string;
 };
-
-type UserProfile = Pick<
-  Database['public']['Tables']['users']['Row'],
-  'household_id' | 'current_paycycle_id' | 'has_completed_onboarding' | 'avatar_url' | 'display_name'
->;
 
 export default async function BlueprintPage({
   searchParams,
@@ -36,20 +32,11 @@ export default async function BlueprintPage({
   }>;
 }) {
   const params = await searchParams;
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding, avatar_url, display_name')
-    .eq('id', user.id)
-    .single()) as { data: UserProfile | null };
-
-  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user.id);
-
+  const isPartner = !owned && !!partnerOf;
+  const partnerHouseholdId = partnerOf?.id ?? null;
   let householdId: string;
   let currentPaycycleId: string | null = null;
 
@@ -58,6 +45,7 @@ export default async function BlueprintPage({
     currentPaycycleId = profile.current_paycycle_id;
   } else if (isPartner && partnerHouseholdId) {
     householdId = partnerHouseholdId;
+    const supabase = await getCachedSupabase();
     const { data: activeCycle } = (await supabase
       .from('paycycles')
       .select('id')
@@ -70,14 +58,54 @@ export default async function BlueprintPage({
     redirect('/onboarding');
   }
 
-  type HouseholdRow = Database['public']['Tables']['households']['Row'];
-  const { data: household } = (await supabase
-    .from('households')
-    .select('*')
-    .eq('id', householdId)
-    .single()) as { data: HouseholdRow | null };
+  const targetCycleId = params.cycle || currentPaycycleId;
+  if (!targetCycleId) redirect('/onboarding');
 
-  if (!household) redirect('/onboarding');
+  const supabase = await getCachedSupabase();
+
+  const [
+    householdRes,
+    paycycleRes,
+    seedsRes,
+    potsRes,
+    repaymentsRes,
+    allPaycyclesRes,
+    incomeSourcesRes,
+  ] = await Promise.all([
+    supabase.from('households').select('*').eq('id', householdId).single(),
+    supabase.from('paycycles').select('*').eq('id', targetCycleId).single(),
+    supabase.from('seeds').select('*').eq('paycycle_id', targetCycleId).order('created_at', { ascending: true }),
+    supabase.from('pots').select('*').eq('household_id', householdId).order('created_at', { ascending: false }),
+    supabase.from('repayments').select('*').eq('household_id', householdId).order('created_at', { ascending: false }),
+    supabase
+      .from('paycycles')
+      .select('id, name, start_date, end_date, status')
+      .eq('household_id', householdId)
+      .in('status', ['active', 'draft', 'completed', 'archived'])
+      .order('start_date', { ascending: false }),
+    supabase
+      .from('income_sources')
+      .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
+      .eq('household_id', householdId)
+      .eq('is_active', true),
+  ]);
+
+  const { data: householdData } = householdRes as { data: HouseholdRow | null };
+  if (!householdData) redirect('/onboarding');
+  const household = householdData;
+
+  const { data: paycycleData } = paycycleRes as { data: PaycycleRow | null };
+  if (!paycycleData) redirect('/dashboard');
+  const paycycle = paycycleData;
+  const paycycleRow = paycycle as { id: string; status: string };
+  if (paycycleRow.status === 'active') {
+    await markOverdueSeedsPaid(paycycleRow.id);
+  }
+
+  const seeds = (seedsRes.data ?? []) as SeedRow[];
+  const pots = (potsRes.data ?? []) as Pot[];
+  const repayments = (repaymentsRes.data ?? []) as Repayment[];
+  const allPaycycles = (allPaycyclesRes.data ?? []) as PaycycleOption[];
 
   let ownerDisplayName: string | null = null;
   if (household.owner_id) {
@@ -91,51 +119,6 @@ export default async function BlueprintPage({
   const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
   const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
 
-  const targetCycleId = params.cycle || currentPaycycleId;
-  if (!targetCycleId) redirect('/onboarding');
-
-  const { data: paycycleData } = await supabase
-    .from('paycycles')
-    .select('*')
-    .eq('id', targetCycleId)
-    .single();
-
-  if (!paycycleData) redirect('/dashboard');
-
-  const paycycle = paycycleData as PaycycleRow;
-  const paycycleRow = paycycle as { id: string; status: string };
-  if (paycycleRow.status === 'active') {
-    await markOverdueSeedsPaid(paycycleRow.id);
-  }
-
-  const { data: seeds } = await supabase
-    .from('seeds')
-    .select('*')
-    .eq('paycycle_id', targetCycleId)
-    .order('created_at', { ascending: true });
-
-  const { data: potsData } = await supabase
-    .from('pots')
-    .select('*')
-    .eq('household_id', householdId)
-    .order('created_at', { ascending: false });
-  const pots = (potsData ?? []) as Pot[];
-
-  const { data: repaymentsData } = await supabase
-    .from('repayments')
-    .select('*')
-    .eq('household_id', householdId)
-    .order('created_at', { ascending: false });
-  const repayments = (repaymentsData ?? []) as Repayment[];
-
-  const { data: allPaycyclesData } = await supabase
-    .from('paycycles')
-    .select('id, name, start_date, end_date, status')
-    .eq('household_id', householdId)
-    .in('status', ['active', 'draft', 'completed', 'archived'])
-    .order('start_date', { ascending: false });
-  const allPaycycles = (allPaycyclesData ?? []) as PaycycleOption[];
-
   const activePaycycle = allPaycycles.find((p) => p.status === 'active');
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
   const editSeedId = params.edit ?? null;
@@ -145,12 +128,7 @@ export default async function BlueprintPage({
   const userInitials = getAvatarInitials(profile?.display_name ?? null, userEmail);
   const showNewCycleCelebration = params.newCycle != null;
 
-  const { data: incomeSources } = await supabase
-    .from('income_sources')
-    .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
-    .eq('household_id', householdId)
-    .eq('is_active', true);
-  const sources = (incomeSources ?? []) as {
+  const sources = (incomeSourcesRes.data ?? []) as {
     id: string;
     name: string;
     amount: number;

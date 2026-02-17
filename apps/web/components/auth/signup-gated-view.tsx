@@ -34,7 +34,7 @@ export function SignupGatedView({ waitlistUrl }: SignupGatedViewProps) {
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
           <Link href="/login" className="text-primary hover:underline font-medium" data-testid="nav-login">
-            Sign in
+            Log in
           </Link>
         </p>
       </div>

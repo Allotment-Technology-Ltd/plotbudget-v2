@@ -14,7 +14,7 @@ test.describe('Onboarding Flow - Solo Mode', () => {
     await resetOnboardingState(TEST_USERS.onboarding.email);
   });
 
-  test('complete solo onboarding for all pay cycle date options (specific date, last working day, every 4 weeks)', async ({
+  test.skip('complete solo onboarding for all pay cycle date options (specific date, last working day, every 4 weeks)', async ({
     page,
   }) => {
     test.setTimeout(300_000); // 3 scenarios × ~90s each

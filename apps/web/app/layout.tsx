@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: '%s | PLOT',
   },
   description:
-    'The 20-minute payday ritual that replaces every awkward money conversation. For UK households - without sharing bank access.',
+    'The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access.',
   icons: {
     icon: [
       {
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
         url: `${MARKETING_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'PLOT - The 20-minute payday ritual for UK households',
+        alt: 'PLOT - The 20-minute payday ritual',
       },
     ],
   },

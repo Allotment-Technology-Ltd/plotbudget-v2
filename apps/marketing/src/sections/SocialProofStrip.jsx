@@ -15,7 +15,7 @@ export default function SocialProofStrip() {
         uppercase tracking-[0.15em] text-plot-accent
         content-wrapper
       ">
-        Built for UK couples who budget with spreadsheets — and for anyone who wants to plan their household finances, with or without a partner.
+        Built for couples who budget with spreadsheets — and for anyone who wants to plan their household finances, with or without a partner.
       </p>
     </motion.section>
   );

@@ -9,8 +9,7 @@ test.describe('Smoke', () => {
   test('unauthenticated / redirects to login and login form is visible', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByTestId('email-input')).toBeVisible();
-    await expect(page.getByTestId('password-input')).toBeVisible();
+    await expect(page.getByTestId('login-with-email')).toBeVisible();
     await dismissCookieBanner(page);
   });
 });

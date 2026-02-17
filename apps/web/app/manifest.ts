@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'PLOT - Budget Together',
     short_name: 'PLOT',
     description:
-      'The 20-minute payday ritual that replaces every awkward money conversation. For UK households - without sharing bank access.',
+      'The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

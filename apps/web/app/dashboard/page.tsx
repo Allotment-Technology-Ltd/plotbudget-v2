@@ -1,35 +1,41 @@
 import { Suspense } from 'react';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getPartnerContext } from '@/lib/partner-context';
+import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
 import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
 import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
 import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
-import type { Household, PayCycle, Seed } from '@repo/supabase';
+import type { Household, PayCycle, Pot, Repayment, Seed } from '@repo/supabase';
+
+type HistoricalCycleRow = Pick<
+  PayCycle,
+  | 'id'
+  | 'name'
+  | 'start_date'
+  | 'end_date'
+  | 'total_income'
+  | 'total_allocated'
+  | 'alloc_needs_me'
+  | 'alloc_needs_partner'
+  | 'alloc_needs_joint'
+  | 'alloc_wants_me'
+  | 'alloc_wants_partner'
+  | 'alloc_wants_joint'
+  | 'alloc_savings_me'
+  | 'alloc_savings_partner'
+  | 'alloc_savings_joint'
+  | 'alloc_repay_me'
+  | 'alloc_repay_partner'
+  | 'alloc_repay_joint'
+>;
 
 export default async function DashboardPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('household_id, current_paycycle_id, has_completed_onboarding')
-    .eq('id', user.id)
-    .single()) as {
-    data: {
-      household_id: string | null;
-      current_paycycle_id: string | null;
-      has_completed_onboarding: boolean;
-    } | null;
-  };
-
-  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user.id);
-
+  const isPartner = !owned && !!partnerOf;
+  const partnerHouseholdId = partnerOf?.id ?? null;
   let householdId: string;
   let currentPaycycleId: string | null = null;
 
@@ -38,6 +44,7 @@ export default async function DashboardPage() {
     currentPaycycleId = profile.current_paycycle_id;
   } else if (isPartner && partnerHouseholdId) {
     householdId = partnerHouseholdId;
+    const supabase = await getCachedSupabase();
     const { data: activeCycle } = (await supabase
       .from('paycycles')
       .select('id')
@@ -50,84 +57,25 @@ export default async function DashboardPage() {
     redirect('/onboarding');
   }
 
-  const { data: household } = (await supabase
+  const supabase = await getCachedSupabase();
+
+  // Parallel fetch: household + owner display name, and all household-scoped data
+  const householdPromise = supabase
     .from('households')
     .select('*')
     .eq('id', householdId)
-    .single()) as { data: Household | null };
-
-  if (!household) redirect('/onboarding');
-
-  let ownerDisplayName: string | null = null;
-  if (household.owner_id) {
-    const { data: ownerRow } = await supabase
-      .from('users')
-      .select('display_name')
-      .eq('id', household.owner_id)
-      .single();
-    ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
-  }
-  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
-  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
-
-  let currentPaycycle: PayCycle | null = null;
-  let seeds: Seed[] = [];
-  type HistoricalCycleRow = Pick<
-    PayCycle,
-    | 'id'
-    | 'name'
-    | 'start_date'
-    | 'end_date'
-    | 'total_income'
-    | 'total_allocated'
-    | 'alloc_needs_me'
-    | 'alloc_needs_partner'
-    | 'alloc_needs_joint'
-    | 'alloc_wants_me'
-    | 'alloc_wants_partner'
-    | 'alloc_wants_joint'
-    | 'alloc_savings_me'
-    | 'alloc_savings_partner'
-    | 'alloc_savings_joint'
-    | 'alloc_repay_me'
-    | 'alloc_repay_partner'
-    | 'alloc_repay_joint'
-  >;
-  let historicalCycles: HistoricalCycleRow[] = [];
-
-  if (currentPaycycleId) {
-    const { data: paycycle } = await supabase
-      .from('paycycles')
-      .select('*')
-      .eq('id', currentPaycycleId)
-      .single();
-    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
-
-    if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
-      await markOverdueSeedsPaid(currentPaycycleId);
-    }
-
-    const { data: seedsData } = await supabase
-      .from('seeds')
-      .select('*, pots(*), repayments(*)')
-      .eq('paycycle_id', currentPaycycleId)
-      .order('created_at', { ascending: false });
-    seeds = seedsData ?? [];
-  }
-
-  const { data: pots } = await supabase
+    .single();
+  const potsPromise = supabase
     .from('pots')
     .select('*')
     .eq('household_id', householdId)
     .in('status', ['active', 'paused']);
-
-  const { data: repayments } = await supabase
+  const repaymentsPromise = supabase
     .from('repayments')
     .select('*')
     .eq('household_id', householdId)
     .in('status', ['active', 'paused']);
-
-  const { data: historical } = await supabase
+  const historicalPromise = supabase
     .from('paycycles')
     .select(
       'id, name, start_date, end_date, total_income, total_allocated, alloc_needs_me, alloc_needs_partner, alloc_needs_joint, alloc_wants_me, alloc_wants_partner, alloc_wants_joint, alloc_savings_me, alloc_savings_partner, alloc_savings_joint, alloc_repay_me, alloc_repay_partner, alloc_repay_joint'
@@ -136,16 +84,61 @@ export default async function DashboardPage() {
     .eq('status', 'completed')
     .order('start_date', { ascending: false })
     .limit(6);
-  historicalCycles = historical ?? [];
-
-  const { data: draftCycle } = await supabase
+  const draftCyclePromise = supabase
     .from('paycycles')
     .select('id')
     .eq('household_id', householdId)
     .eq('status', 'draft')
     .limit(1)
     .maybeSingle();
-  const hasDraftCycle = !!draftCycle;
+
+  const [
+    householdRes,
+    potsRes,
+    repaymentsRes,
+    historicalRes,
+    draftCycleRes,
+  ] = await Promise.all([
+    householdPromise,
+    potsPromise,
+    repaymentsPromise,
+    historicalPromise,
+    draftCyclePromise,
+  ]);
+
+  const { data: household } = householdRes as { data: Household | null };
+  if (!household) redirect('/onboarding');
+
+  const ownerDisplayNamePromise = household.owner_id
+    ? supabase.from('users').select('display_name').eq('id', household.owner_id).single()
+    : Promise.resolve({ data: null });
+  const ownerDisplayNameRes = await ownerDisplayNamePromise;
+  const ownerDisplayName = (ownerDisplayNameRes.data as { display_name: string | null } | null)?.display_name ?? null;
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
+
+  let currentPaycycle: PayCycle | null = null;
+  let seeds: Seed[] = [];
+  const historicalCycles: HistoricalCycleRow[] = (historicalRes.data ?? []) as HistoricalCycleRow[];
+  const hasDraftCycle = !!draftCycleRes.data;
+
+  if (currentPaycycleId) {
+    const { data: paycycle } = await supabase
+      .from('paycycles')
+      .select('*')
+      .eq('id', currentPaycycleId)
+      .single();
+    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
+    if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
+      await markOverdueSeedsPaid(currentPaycycleId);
+    }
+    const { data: seedsData } = await supabase
+      .from('seeds')
+      .select('*, pots(*), repayments(*)')
+      .eq('paycycle_id', currentPaycycleId)
+      .order('created_at', { ascending: false });
+    seeds = seedsData ?? [];
+  }
 
   let incomeEvents: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[] = [];
   if (currentPaycycle) {
@@ -179,8 +172,8 @@ export default async function DashboardPage() {
         household={household as Household}
         currentPaycycle={currentPaycycle}
         seeds={seeds}
-        pots={pots ?? []}
-        repayments={repayments ?? []}
+        pots={(potsRes.data ?? []) as Pot[]}
+        repayments={(repaymentsRes.data ?? []) as Repayment[]}
         historicalCycles={historicalCycles}
         hasDraftCycle={hasDraftCycle}
         incomeEvents={incomeEvents}

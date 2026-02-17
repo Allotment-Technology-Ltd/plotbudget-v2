@@ -1,29 +1,36 @@
 'use client';
 
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { AuthCardBrand } from '@/components/auth/auth-brand-header';
+import { AuthMinimalHeader } from '@/components/auth/auth-brand-header';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { useAuthFeatureFlags } from '@/hooks/use-auth-feature-flags';
+import { ChevronLeft } from 'lucide-react';
 
-export function LoginPageClient() {
+/**
+ * Linear-style: logo + "Log in to PLOT", then email/password form.
+ */
+export function LoginEmailClient() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect');
   const authError = searchParams.get('error');
-  const { signupGated, googleLoginEnabled, appleLoginEnabled, magicLinkEnabled } =
-    useAuthFeatureFlags();
-
-  const showBetaMessage = signupGated;
-  const showForgotPassword = !signupGated;
-  const showGoogleLogin = googleLoginEnabled;
-  const showAppleLogin = appleLoginEnabled;
-  const showMagicLink = magicLinkEnabled;
+  const { signupGated } = useAuthFeatureFlags();
+  const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
 
   return (
-    <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm">
+    <div className="flex flex-col items-center text-center w-full">
       <DeletedAccountToast />
-      <AuthCardBrand tagline="The 20-minute payday ritual" />
-      <div className="border-t border-border/50 pt-5 mt-5 space-y-4">
+      <Link
+        href={`/login${redirectQuery}`}
+        className="self-start inline-flex items-center text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded mb-4"
+        data-testid="back-to-login"
+      >
+        <ChevronLeft className="h-4 w-4 mr-0.5" aria-hidden />
+        Back
+      </Link>
+      <AuthMinimalHeader title="Log in to PLOT" />
+      <div className="w-full mt-8 space-y-4 text-left">
         {authError === 'auth_failed' && (
           <div
             className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive"
@@ -42,23 +49,13 @@ export function LoginPageClient() {
             This email is not on the invite list. Please contact support for access.
           </div>
         )}
-        <div className="space-y-0.5">
-          <h1 className="font-heading text-lg font-semibold uppercase tracking-wider text-foreground">
-            Sign in to your account
-          </h1>
-          <p className="text-muted-foreground font-body text-sm">
-            {showBetaMessage
-              ? 'PLOT is in private beta. Sign in below.'
-              : 'Your budget awaits.'}
-          </p>
-        </div>
-
         <AuthForm
           mode="login"
-          showForgotPassword={showForgotPassword}
-          showGoogleLogin={showGoogleLogin}
-          showAppleLogin={showAppleLogin}
-          showMagicLink={showMagicLink}
+          showForgotPassword={!signupGated}
+          showGoogleLogin={false}
+          showAppleLogin={false}
+          showMagicLink={false}
+          hideAlternateMethods
           redirectTo={redirectTo ?? undefined}
         />
       </div>

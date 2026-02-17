@@ -109,7 +109,14 @@ export class BlueprintPage {
     if (this.page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
-    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: 15_000 });
+    await this.page.waitForURL(/\/(dashboard\/blueprint|dashboard\/payday-complete)/, {
+      timeout: 15_000,
+    });
+    if (this.page.url().includes('/dashboard/payday-complete')) {
+      throw new Error(
+        'Redirected to payday-complete instead of blueprint. ensureBlueprintReady should clear ritual_closed_at for test users.'
+      );
+    }
     // When cycle is locked, Add buttons are hidden; wait for either editable state or Unlock button (or Server Error — fail fast)
     const addOrEmpty = this.page.getByTestId('add-seed-button').or(this.page.getByTestId('blueprint-empty-state'));
     const unlockBtn = this.page.getByRole('button', { name: /Unlock/i });

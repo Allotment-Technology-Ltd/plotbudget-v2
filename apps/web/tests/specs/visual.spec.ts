@@ -15,7 +15,7 @@ test.describe('Visual regression', () => {
     test('login page matches snapshot', async ({ page }) => {
       await page.goto('/login');
       await page.waitForURL(/\/login/);
-      await expect(page.getByTestId('email-input')).toBeVisible();
+      await expect(page.getByTestId('login-with-email')).toBeVisible();
       // Tolerance: 0.12 (CI and local) until snapshots updated; mobile viewport often differs more in CI.
       await expect(page).toHaveScreenshot('login.png', {
         maxDiffPixelRatio: 0.12,
@@ -31,7 +31,12 @@ test.describe('Visual regression', () => {
 
     test('dashboard matches snapshot', async ({ page }) => {
       await page.goto('/dashboard');
-      await page.waitForURL(/\/dashboard/);
+      await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+      if (page.url().includes('/dashboard/payday-complete')) {
+        throw new Error(
+          'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
+        );
+      }
       await expect(
         page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
       ).toBeVisible({ timeout: 10000 });
@@ -61,9 +66,16 @@ test.describe('Visual regression', () => {
 
     test('blueprint page matches snapshot', async ({ page }) => {
       await page.goto('/dashboard/blueprint');
-      await page.waitForURL(/\/(dashboard\/blueprint|login)/, { timeout: 15000 });
+      await page.waitForURL(/\/(dashboard\/blueprint|dashboard\/payday-complete|login)/, {
+        timeout: 15000,
+      });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost');
+      }
+      if (page.url().includes('/dashboard/payday-complete')) {
+        throw new Error(
+          'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
+        );
       }
       await expect(
         page.getByTestId('blueprint-empty-state').or(page.locator('[data-testid^="seed-card-"]').first())

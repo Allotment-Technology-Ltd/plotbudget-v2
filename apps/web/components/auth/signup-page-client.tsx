@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { AuthCardBrand } from '@/components/auth/auth-brand-header';
 import { AuthForm } from '@/components/auth/auth-form';
 import { DeletedAccountToast } from '@/components/auth/deleted-account-toast';
 import { SignupGatedView } from '@/components/auth/signup-gated-view';
@@ -37,18 +38,24 @@ export function SignupPageClient() {
 
   if (showGated) {
     return (
-      <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
+      <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
         <DeletedAccountToast />
-        <SignupGatedView waitlistUrl={waitlistUrl} />
+        <AuthCardBrand tagline="The 20-minute payday ritual" />
+        <div className="border-t border-border/50 pt-5 mt-5">
+          <SignupGatedView waitlistUrl={waitlistUrl} />
+        </div>
       </div>
     );
   }
 
   if (regionAllowed === false && !allowSignupForPartnerInvite) {
     return (
-      <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
+      <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
         <DeletedAccountToast />
-        <RegionRestrictedView />
+        <AuthCardBrand tagline="The 20-minute payday ritual" />
+        <div className="border-t border-border/50 pt-5 mt-5">
+          <RegionRestrictedView />
+        </div>
       </div>
     );
   }
@@ -61,25 +68,25 @@ export function SignupPageClient() {
   }, [redirectTo]);
 
   return (
-    <div className="bg-card border border-border/50 rounded-xl p-8 md:p-10 space-y-6 shadow-sm" data-testid="signup-page">
+    <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
       <DeletedAccountToast />
-      <div className="space-y-2">
-        <p className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
-          Sign up
-        </p>
-        <h1 className="font-heading text-headline-sm md:text-headline uppercase tracking-wider text-foreground">
-          Create account
-        </h1>
-        <p className="text-muted-foreground font-body text-sm">
-          Start plotting your budget together — no bank access needed.
-        </p>
+      <AuthCardBrand tagline="The 20-minute payday ritual" />
+      <div className="border-t border-border/50 pt-5 mt-5 space-y-4">
+        <div className="space-y-0.5">
+          <h1 className="font-heading text-lg font-semibold uppercase tracking-wider text-foreground">
+            Create your account
+          </h1>
+          <p className="text-muted-foreground font-body text-sm">
+            Start plotting your budget together — no bank access needed.
+          </p>
+        </div>
+        <AuthForm
+          mode="signup"
+          showGoogleLogin={googleLoginEnabled}
+          showAppleLogin={appleLoginEnabled}
+          redirectTo={redirectTo ?? undefined}
+        />
       </div>
-      <AuthForm
-        mode="signup"
-        showGoogleLogin={googleLoginEnabled}
-        showAppleLogin={appleLoginEnabled}
-        redirectTo={redirectTo ?? undefined}
-      />
     </div>
   );
 }

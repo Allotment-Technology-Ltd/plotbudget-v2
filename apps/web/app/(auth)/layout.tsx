@@ -1,5 +1,3 @@
-import { AuthBrandHeader } from '@/components/auth/auth-brand-header';
-
 export default function AuthLayout({
   children,
 }: {
@@ -15,13 +13,7 @@ export default function AuthLayout({
             'radial-gradient(ellipse 80% 50% at 50% -20%, rgb(var(--primary)), transparent)',
         }}
       />
-      <div className="relative z-10">
-        <AuthBrandHeader
-          tagline="The 20-minute payday ritual for UK households"
-          linkToHome
-        />
-      </div>
-      <div className="w-full max-w-md mt-10 relative z-10">
+      <div className="w-full max-w-md relative z-10">
         {children}
       </div>
     </div>

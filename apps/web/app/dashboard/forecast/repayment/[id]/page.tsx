@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { RepaymentForecastClient } from '@/components/forecast/repayment-forecast-client';
@@ -10,75 +10,47 @@ export default async function RepaymentForecastPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: repaymentId } = await params;
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, profile, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('household_id, current_paycycle_id')
-    .eq('id', user.id)
-    .single()) as {
-    data: { household_id: string | null; current_paycycle_id: string | null } | null;
-  };
-
-  const householdId = profile?.household_id;
+  const householdId = profile?.household_id ?? partnerOf?.id ?? null;
   if (!householdId) redirect('/onboarding');
 
-  const { data: repayment } = (await supabase
-    .from('repayments')
-    .select('*')
-    .eq('id', repaymentId)
-    .eq('household_id', householdId)
-    .single()) as { data: Repayment | null };
+  const supabase = await getCachedSupabase();
 
+  const [repaymentRes, householdRes, activeCycleRes, draftCycleRes] = await Promise.all([
+    supabase.from('repayments').select('*').eq('id', repaymentId).eq('household_id', householdId).single(),
+    supabase.from('households').select('*').eq('id', householdId).single(),
+    supabase.from('paycycles').select('id').eq('household_id', householdId).eq('status', 'active').limit(1).maybeSingle(),
+    supabase.from('paycycles').select('id').eq('household_id', householdId).eq('status', 'draft').limit(1).maybeSingle(),
+  ]);
+
+  const { data: repayment } = repaymentRes as { data: Repayment | null };
   if (!repayment) notFound();
 
-  const { data: household } = (await supabase
-    .from('households')
-    .select('*')
-    .eq('id', householdId)
-    .single()) as { data: Household | null };
-
+  const { data: household } = householdRes as { data: Household | null };
   if (!household) redirect('/onboarding');
 
-  const { data: activeCycle } = (await supabase
-    .from('paycycles')
-    .select('id')
-    .eq('household_id', householdId)
-    .eq('status', 'active')
-    .limit(1)
-    .maybeSingle()) as { data: { id: string } | null };
-
-  const { data: draftCycle } = (await supabase
-    .from('paycycles')
-    .select('id')
-    .eq('household_id', householdId)
-    .eq('status', 'draft')
-    .limit(1)
-    .maybeSingle()) as { data: { id: string } | null };
-
+  const activeCycle = activeCycleRes.data as { id: string } | null;
+  const draftCycle = draftCycleRes.data as { id: string } | null;
   const paycycleId = activeCycle?.id ?? draftCycle?.id ?? profile?.current_paycycle_id;
   let paycycle: PayCycle | null = null;
   let linkedSeed: Seed | null = null;
 
   if (paycycleId) {
-    const { data: pc } = (await supabase
-      .from('paycycles')
-      .select('*')
-      .eq('id', paycycleId)
-      .single()) as { data: PayCycle | null };
+    const [paycycleRes, seedRes] = await Promise.all([
+      supabase.from('paycycles').select('*').eq('id', paycycleId).single(),
+      supabase
+        .from('seeds')
+        .select('*')
+        .eq('paycycle_id', paycycleId)
+        .eq('linked_repayment_id', repaymentId)
+        .eq('is_recurring', true)
+        .maybeSingle(),
+    ]);
+    const { data: pc } = paycycleRes as { data: PayCycle | null };
     paycycle = pc ?? null;
-
-    const { data: seed } = (await supabase
-      .from('seeds')
-      .select('*')
-      .eq('paycycle_id', paycycleId)
-      .eq('linked_repayment_id', repaymentId)
-      .eq('is_recurring', true)
-      .maybeSingle()) as { data: Seed | null };
+    const { data: seed } = seedRes as { data: Seed | null };
     linkedSeed = seed ?? null;
   }
 

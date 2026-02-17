@@ -125,6 +125,67 @@ export async function cleanupTestUser(email: string) {
 }
 
 /**
+ * Clear ritual_closed_at on the household's active paycycle so the app does not
+ * redirect to /dashboard/payday-complete. Call from ensureBlueprintReady so
+ * E2E tests that visit /dashboard or /dashboard/blueprint see the normal page.
+ */
+export async function clearPaydayCompleteStateForHousehold(
+  householdId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('paycycles')
+    .update({ ritual_closed_at: null })
+    .eq('household_id', householdId)
+    .eq('status', 'active');
+  if (error) {
+    console.warn(
+      `⚠️  Failed to clear payday-complete state for household ${householdId}:`,
+      error.message
+    );
+  }
+}
+
+/**
+ * Ensure the household's active paycycle has end_date >= today so the app does not
+ * redirect to /dashboard/payday-complete (we show that screen when end_date is in the past).
+ * Call from ensureBlueprintReady so E2E tests never see the payday-complete redirect.
+ */
+export async function ensureActiveCycleEndDateInFuture(
+  householdId: string
+): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: cycle } = await supabase
+    .from('paycycles')
+    .select('id, end_date')
+    .eq('household_id', householdId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!cycle) return;
+  const row = cycle as { id: string; end_date: string };
+  if (row.end_date >= today) return;
+
+  const now = new Date();
+  const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  const endOfThisMonthStr = endOfThisMonth.toISOString().slice(0, 10);
+  const endOfNextMonthStr = endOfNextMonth.toISOString().slice(0, 10);
+  const newEndDate =
+    endOfThisMonthStr >= today ? endOfThisMonthStr : endOfNextMonthStr;
+
+  const { error } = await supabase
+    .from('paycycles')
+    .update({ end_date: newEndDate })
+    .eq('id', row.id);
+  if (error) {
+    console.warn(
+      `⚠️  Failed to set active cycle end_date in future for household ${householdId}:`,
+      error.message
+    );
+  }
+}
+
+/**
  * Reset a test user so they have not completed onboarding.
  * Use before onboarding tests so /onboarding is not redirected to dashboard.
  */
@@ -261,6 +322,8 @@ export async function ensureBlueprintReady(email: string) {
   if (householdId) {
     // User already has a household; ensure onboarding flag so /dashboard/settings isn't redirected to /onboarding → blueprint
     await cleanupTestUser(email);
+    await clearPaydayCompleteStateForHousehold(householdId);
+    await ensureActiveCycleEndDateInFuture(householdId);
     const { data: cycle } = await supabase
       .from('paycycles')
       .select('id')
@@ -341,6 +404,8 @@ export async function ensureBlueprintReady(email: string) {
     })
     .eq('id', user.id);
 
+  await clearPaydayCompleteStateForHousehold(newHousehold.id);
+  await ensureActiveCycleEndDateInFuture(newHousehold.id);
   console.log(`✅ Blueprint ready for ${email}`);
 }
 

@@ -25,10 +25,16 @@ export class AuthPage {
     return this.page.getByTestId('nav-reset-password');
   }
 
-  // Actions
+  // Actions — go to the email/password screen (Linear-style: hub → email page)
   async goto() {
-    await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await this.page.goto('/login/email', { waitUntil: 'domcontentloaded' });
     await expect(this.emailInput).toBeVisible();
+  }
+
+  /** Go to the login hub (choice of sign-in method). */
+  async gotoHub() {
+    await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await expect(this.page.getByTestId('login-with-email')).toBeVisible();
   }
 
   async login(email: string, password: string) {

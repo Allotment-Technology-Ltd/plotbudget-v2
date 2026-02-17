@@ -21,10 +21,10 @@ setup.describe('authentication setup', () => {
       fs.mkdirSync(authDir, { recursive: true });
     }
 
-    // Navigate to login page
-    await page.goto('/login');
+    // Navigate to login email page (Linear-style flow: form is on /login/email)
+    await page.goto('/login/email');
 
-    // Wait for page to load
+    // Wait for email/password form to load
     await expect(page.getByTestId('email-input')).toBeVisible();
 
     // Fill login form

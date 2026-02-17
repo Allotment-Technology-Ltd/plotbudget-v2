@@ -15,7 +15,12 @@ test.describe('Dashboard and app shell', () => {
 
   test('dashboard loads and shows hero or empty state', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 45_000 });
-    await page.waitForURL(/\/dashboard/);
+    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    if (page.url().includes('/dashboard/payday-complete')) {
+      throw new Error(
+        'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users; check db-cleanup and global-setup.'
+      );
+    }
     const hero = page.getByTestId('dashboard-hero');
     const noCycle = page.getByTestId('dashboard-no-cycle');
     const serverError = page.getByRole('dialog', { name: 'Server Error' });

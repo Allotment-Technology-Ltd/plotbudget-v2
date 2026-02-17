@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getCachedDashboardAuth, getPaydayCompleteRequired } from '@/lib/auth/server-auth-cache';
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
 import { DashboardHeaderNavClient, DashboardFooterClient } from './dashboard-shell-client';
 import { DashboardContentTransition } from './dashboard-content-transition';
+import { PaydayCompleteRedirect } from './payday-complete-redirect';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -16,38 +17,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
+  const householdId = profile?.household_id ?? partnerOf?.id ?? null;
+  const shouldRedirectToPaydayComplete =
+    !!householdId && (await getPaydayCompleteRequired(householdId));
+
   const email = user.email ?? '';
-  const { data: profile } = await supabase
-    .from('users')
-    .select('display_name, avatar_url')
-    .eq('id', user.id)
-    .maybeSingle();
-  type ProfileRow = { display_name: string | null; avatar_url: string | null };
-  const profileRow = profile as ProfileRow | null;
-  let displayName = profileRow?.display_name ?? null;
-  const avatarUrl = profileRow?.avatar_url ?? null;
-
-  const { data: owned } = await supabase
-    .from('households')
-    .select('id')
-    .eq('owner_id', user.id)
-    .maybeSingle();
-
-  const { data: partnerOfData } = await supabase
-    .from('households')
-    .select('id, partner_name')
-    .eq('partner_user_id', user.id)
-    .maybeSingle();
-  type PartnerHousehold = { id: string; partner_name: string | null };
-  const partnerOf = partnerOfData as PartnerHousehold | null;
-
+  let displayName = profile?.display_name ?? null;
+  const avatarUrl = profile?.avatar_url ?? null;
   const isPartner = !owned && !!partnerOf;
   if (isPartner && partnerOf) {
     displayName = (partnerOf.partner_name ?? displayName ?? 'Partner').trim() || 'Partner';
@@ -57,6 +36,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <PaydayCompleteRedirect shouldRedirectToPaydayComplete={shouldRedirectToPaydayComplete} />
       <header className="border-b border-border bg-card">
         <div className="content-wrapper flex h-16 items-center justify-between">
           <Link
