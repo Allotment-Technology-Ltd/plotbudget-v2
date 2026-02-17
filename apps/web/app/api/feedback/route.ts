@@ -24,6 +24,46 @@ const FeedbackSchema = z
   });
 
 const FEEDBACK_EMAIL = 'hello@plotbudget.com';
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'General',
+  idea: 'Idea / suggestion',
+  something_wrong: "Something's wrong",
+  praise: 'Praise',
+  other: 'Other',
+};
+
+type FeedbackParsed = z.infer<typeof FeedbackSchema>;
+
+function buildFeedbackEmailSections(data: FeedbackParsed): string[] {
+  const { type, message, rating, context, expected, category } = data;
+  const sections: string[] = [];
+  if (rating != null) {
+    sections.push(`<p><strong>Satisfaction (1–5):</strong> ${rating}</p>`);
+  }
+  if (type === 'bug') {
+    if (context?.trim()) {
+      sections.push(`<p><strong>What they were doing:</strong></p><p>${escapeHtml(context.trim())}</p>`);
+    }
+    if (expected?.trim()) {
+      sections.push(`<p><strong>What they expected:</strong></p><p>${escapeHtml(expected.trim())}</p>`);
+    }
+  } else if (category) {
+    const label = CATEGORY_LABELS[category] ?? category;
+    sections.push(`<p><strong>Category:</strong> ${escapeHtml(label)}</p>`);
+  }
+  sections.push(`<p><strong>Message:</strong></p><pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(message)}</pre>`);
+  return sections;
+}
+
+function buildFeedbackEmailHtml(data: FeedbackParsed, userEmail: string | undefined, userId: string): string {
+  const typeLabel = data.type === 'bug' ? 'Bug report' : 'General feedback';
+  const sections = buildFeedbackEmailSections(data);
+  return `
+    <p><strong>${typeLabel}</strong></p>
+    <p><strong>From:</strong> ${userEmail ?? 'Unknown'} (user id: ${userId})</p>
+    ${sections.join('')}
+  `;
+}
 
 /**
  * POST /api/feedback
@@ -34,7 +74,6 @@ export async function POST(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -53,42 +92,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: String(msg) }, { status: 400 });
   }
 
-  const { type, message, rating, context, expected, category } = parsed.data;
+  const { type, rating, category } = parsed.data;
   const subject =
     type === 'bug'
       ? `[PLOT Feedback] Bug report from ${user.email ?? 'user'}`
       : `[PLOT Feedback] General feedback from ${user.email ?? 'user'}`;
-  const typeLabel = type === 'bug' ? 'Bug report' : 'General feedback';
-  const categoryLabels: Record<string, string> = {
-    general: 'General',
-    idea: 'Idea / suggestion',
-    something_wrong: "Something's wrong",
-    praise: 'Praise',
-    other: 'Other',
-  };
-  const categoryLabel = category ? categoryLabels[category] ?? category : null;
-
-  const sections: string[] = [];
-  if (rating != null) {
-    sections.push(`<p><strong>Satisfaction (1–5):</strong> ${rating}</p>`);
-  }
-  if (type === 'bug') {
-    if (context?.trim()) {
-      sections.push(`<p><strong>What they were doing:</strong></p><p>${escapeHtml(context.trim())}</p>`);
-    }
-    if (expected?.trim()) {
-      sections.push(`<p><strong>What they expected:</strong></p><p>${escapeHtml(expected.trim())}</p>`);
-    }
-  } else if (categoryLabel) {
-    sections.push(`<p><strong>Category:</strong> ${escapeHtml(categoryLabel)}</p>`);
-  }
-  sections.push(`<p><strong>Message:</strong></p><pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(message)}</pre>`);
-
-  const html = `
-    <p><strong>${typeLabel}</strong></p>
-    <p><strong>From:</strong> ${user.email ?? 'Unknown'} (user id: ${user.id})</p>
-    ${sections.join('')}
-  `;
+  const html = buildFeedbackEmailHtml(parsed.data, user.email ?? undefined, user.id);
 
   const result = await sendEmail({
     to: FEEDBACK_EMAIL,
@@ -96,7 +105,6 @@ export async function POST(request: NextRequest) {
     html,
     replyTo: user.email ?? undefined,
   });
-
   if (!result.success) {
     return NextResponse.json(
       { error: result.error ?? 'Failed to send feedback' },

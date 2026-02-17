@@ -12,6 +12,49 @@ export interface JointAccountSummaryProps {
   userInitials?: string;
 }
 
+interface JointAccountTotals {
+  jointTotal: number;
+  userJointTransfer: number;
+  partnerJointTransfer: number;
+  userMeTotal: number;
+  userJointOwnAccount: number;
+  partnerTotal: number;
+  partnerJointOwnAccount: number;
+}
+
+/** Single pass over seeds to compute all joint-account and set-aside totals. */
+function computeJointAccountTotals(seeds: Seed[]): JointAccountTotals {
+  const acc: JointAccountTotals = {
+    jointTotal: 0,
+    userJointTransfer: 0,
+    partnerJointTransfer: 0,
+    userMeTotal: 0,
+    userJointOwnAccount: 0,
+    partnerTotal: 0,
+    partnerJointOwnAccount: 0,
+  };
+  for (const s of seeds) {
+    const usesJoint = (s as Seed & { uses_joint_account?: boolean }).uses_joint_account;
+    const amountMe = Number((s as Seed & { amount_me?: number }).amount_me ?? 0);
+    const amountPartner = Number((s as Seed & { amount_partner?: number }).amount_partner ?? 0);
+    if (s.payment_source === 'joint') {
+      if (usesJoint === true) {
+        acc.jointTotal += Number(s.amount);
+        acc.userJointTransfer += amountMe;
+        acc.partnerJointTransfer += amountPartner;
+      } else {
+        acc.userJointOwnAccount += amountMe;
+        acc.partnerJointOwnAccount += amountPartner;
+      }
+    } else if (s.payment_source === 'me') {
+      acc.userMeTotal += Number(s.amount);
+    } else if (s.payment_source === 'partner') {
+      acc.partnerTotal += Number(s.amount);
+    }
+  }
+  return acc;
+}
+
 /**
  * Joint Account & Personal Set-Aside. Shown when couple and NOT active cycle (draft/archived). Matches web logic.
  */
@@ -24,20 +67,16 @@ export function JointAccountSummary({
 }: JointAccountSummaryProps) {
   const { colors, spacing } = useTheme();
   const otherName = otherLabel;
-
-  const jointSeeds = seeds.filter((s) => s.payment_source === 'joint');
-  const jointTransferSeeds = jointSeeds.filter((s) => (s as Seed & { uses_joint_account?: boolean }).uses_joint_account === true);
-  const jointOwnAccountSeeds = jointSeeds.filter((s) => (s as Seed & { uses_joint_account?: boolean }).uses_joint_account !== true);
-
-  const jointTotal = jointTransferSeeds.reduce((sum, s) => sum + Number(s.amount), 0);
-  const userJointTransfer = jointTransferSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_me?: number }).amount_me ?? 0), 0);
-  const partnerJointTransfer = jointTransferSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_partner?: number }).amount_partner ?? 0), 0);
-
-  const userMeTotal = seeds.filter((s) => s.payment_source === 'me').reduce((sum, s) => sum + Number(s.amount), 0);
-  const userJointOwnAccount = jointOwnAccountSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_me?: number }).amount_me ?? 0), 0);
-  const partnerTotal = seeds.filter((s) => s.payment_source === 'partner').reduce((sum, s) => sum + Number(s.amount), 0);
-  const partnerJointOwnAccount = jointOwnAccountSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_partner?: number }).amount_partner ?? 0), 0);
-
+  const totals = computeJointAccountTotals(seeds);
+  const {
+    jointTotal,
+    userJointTransfer,
+    partnerJointTransfer,
+    userMeTotal,
+    userJointOwnAccount,
+    partnerTotal,
+    partnerJointOwnAccount,
+  } = totals;
   const userTotalSetAside = userMeTotal + userJointOwnAccount;
   const partnerTotalSetAside = partnerTotal + partnerJointOwnAccount;
 

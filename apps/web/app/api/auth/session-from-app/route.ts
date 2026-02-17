@@ -11,19 +11,56 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { randomUUID } from 'crypto';
 
 const CODE_TTL_SECONDS = 120;
-const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+
+function getBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+  );
+}
+
+function parseBearerToken(request: NextRequest): string | null {
+  const authHeader = request.headers.get('authorization');
+  return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+}
+
+function validateSessionPayload(body: { session?: unknown }): { session: object } | { error: string } {
+  const session = body.session;
+  if (!session || typeof session !== 'object' || !('access_token' in session) || !('refresh_token' in session)) {
+    return { error: 'Body must include { session } with access_token and refresh_token' };
+  }
+  return { session: session as object };
+}
+
+async function insertHandoffCode(
+  admin: ReturnType<typeof createAdminClient>,
+  code: string,
+  session: object,
+  expiresAt: Date
+): Promise<{ error?: unknown }> {
+  const { error } = await (admin as unknown as { from: (t: string) => { insert: (row: object) => Promise<{ error?: unknown }> } })
+    .from('auth_handoff')
+    .insert({
+      code,
+      session_payload: JSON.stringify(session),
+      expires_at: expiresAt.toISOString(),
+    });
+  return error != null ? { error } : {};
+}
+
+function buildHandoffUrl(baseUrl: string, code: string, redirectPath: string): string {
+  const base = baseUrl.replace(/\/$/, '');
+  return `${base}/auth/from-app?code=${encodeURIComponent(code)}&returnTo=${encodeURIComponent(redirectPath)}`;
+}
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
+  const token = parseBearerToken(request);
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!BASE_URL) {
+  const baseUrl = getBaseUrl();
+  if (!baseUrl) {
     return NextResponse.json(
       { error: 'NEXT_PUBLIC_APP_URL or VERCEL_URL not set' },
       { status: 500 }
@@ -37,47 +74,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const session = body.session;
-  if (!session || typeof session !== 'object' || !('access_token' in session) || !('refresh_token' in session)) {
-    return NextResponse.json(
-      { error: 'Body must include { session } with access_token and refresh_token' },
-      { status: 400 }
-    );
+  const validated = validateSessionPayload(body);
+  if ('error' in validated) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
   }
+  const { session } = validated;
 
   const supabase = createSupabaseClientFromToken(token);
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const sessionObj = session as { access_token?: string; user?: { id?: string } };
+  const sessionObj = session as { user?: { id?: string } };
   if (sessionObj.user?.id && sessionObj.user.id !== user.id) {
     return NextResponse.json({ error: 'Session user mismatch' }, { status: 400 });
   }
 
   const code = randomUUID();
   const expiresAt = new Date(Date.now() + CODE_TTL_SECONDS * 1000);
-
   const admin = createAdminClient();
-  const { error } = await (admin as any)
-    .from('auth_handoff')
-    .insert({
-      code,
-      session_payload: JSON.stringify(session),
-      expires_at: expiresAt.toISOString(),
-    });
-
-  if (error) {
-    console.error('[session-from-app] insert failed:', error);
+  const insertResult = await insertHandoffCode(admin, code, session, expiresAt);
+  if (insertResult.error) {
+    console.error('[session-from-app] insert failed:', insertResult.error);
     return NextResponse.json({ error: 'Failed to create handoff code' }, { status: 500 });
   }
 
   const redirectPath = request.nextUrl.searchParams.get('path') ?? '/dashboard';
-  const handoffUrl = `${BASE_URL.replace(/\/$/, '')}/auth/from-app?code=${encodeURIComponent(code)}&returnTo=${encodeURIComponent(redirectPath)}`;
-
+  const handoffUrl = buildHandoffUrl(baseUrl, code, redirectPath);
   return NextResponse.json({ url: handoffUrl });
 }

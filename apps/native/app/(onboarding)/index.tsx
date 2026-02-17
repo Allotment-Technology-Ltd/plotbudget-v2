@@ -34,6 +34,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingStatus } from '@/contexts/OnboardingStatusContext';
 import { supabase } from '@/lib/supabase';
+import { createIncomeSourceApi } from '@/lib/income-source-api';
 
 /** Dropdown that matches web Select: tap to open modal, pick one option. */
 function SelectDropdown<T extends string>({
@@ -373,6 +374,44 @@ export default function OnboardingScreen() {
         ...(data.myName?.trim() && { display_name: data.myName.trim() }),
       };
       await supabase.from('users').update(userUpdate as never).eq('id', user.id);
+
+      const householdId = household?.id ?? '';
+      const frequencyRule = data.payCycleType as 'specific_date' | 'last_working_day' | 'every_4_weeks';
+      const dayOfMonth = frequencyRule === 'specific_date' ? (data.payDay ?? 1) : null;
+      const anchorDate = frequencyRule === 'every_4_weeks' && data.anchorDate?.trim() ? data.anchorDate.trim() : null;
+      const canCreateIncomeSources =
+        frequencyRule !== 'every_4_weeks' || anchorDate != null;
+
+      if (householdId && data.myIncome > 0 && canCreateIncomeSources) {
+        const myResult = await createIncomeSourceApi({
+          household_id: householdId,
+          name: 'My salary',
+          amount: data.myIncome,
+          frequency_rule: frequencyRule,
+          day_of_month: dayOfMonth,
+          anchor_date: anchorDate,
+          payment_source: 'me',
+          sort_order: 0,
+        });
+        if ('error' in myResult && __DEV__) {
+          console.warn('[Onboarding] Could not create my income source:', myResult.error);
+        }
+      }
+      if (householdId && data.mode === 'couple' && (data.partnerIncome ?? 0) > 0 && canCreateIncomeSources) {
+        const partnerResult = await createIncomeSourceApi({
+          household_id: householdId,
+          name: 'Partner salary',
+          amount: data.partnerIncome ?? 0,
+          frequency_rule: frequencyRule,
+          day_of_month: dayOfMonth,
+          anchor_date: anchorDate,
+          payment_source: 'partner',
+          sort_order: 1,
+        });
+        if ('error' in partnerResult && __DEV__) {
+          console.warn('[Onboarding] Could not create partner income source:', partnerResult.error);
+        }
+      }
 
       await refetchOnboarding();
       router.replace('/(tabs)/two' as import('expo-router').Href);

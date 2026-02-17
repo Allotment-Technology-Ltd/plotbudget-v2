@@ -16,9 +16,14 @@ function getJointTransfer(seeds: Seed[]) {
   const jointTransferSeeds = seeds.filter(
     (s) => s.payment_source === 'joint' && (s as Seed & { uses_joint_account?: boolean }).uses_joint_account === true
   );
-  const totalJointTransfer = jointTransferSeeds.reduce((sum, s) => sum + Number(s.amount), 0);
-  const userJointTransfer = jointTransferSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_me?: number }).amount_me ?? 0), 0);
-  const partnerJointTransfer = jointTransferSeeds.reduce((sum, s) => sum + Number((s as Seed & { amount_partner?: number }).amount_partner ?? 0), 0);
+  const { totalJointTransfer, userJointTransfer, partnerJointTransfer } = jointTransferSeeds.reduce(
+    (acc, s) => ({
+      totalJointTransfer: acc.totalJointTransfer + Number(s.amount),
+      userJointTransfer: acc.userJointTransfer + Number((s as Seed & { amount_me?: number }).amount_me ?? 0),
+      partnerJointTransfer: acc.partnerJointTransfer + Number((s as Seed & { amount_partner?: number }).amount_partner ?? 0),
+    }),
+    { totalJointTransfer: 0, userJointTransfer: 0, partnerJointTransfer: 0 }
+  );
   return { totalJointTransfer, userJointTransfer, partnerJointTransfer };
 }
 

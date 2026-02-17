@@ -39,32 +39,40 @@ export function FoundingMemberCelebration({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (!userId || typeof userId !== 'string') return;
     const key = `${STORAGE_KEY_PREFIX}${userId}`;
     try {
       const seen = localStorage.getItem(key);
-      if (!seen) {
-        setOpen(true);
+      if (seen === 'true') {
+        setOpen(false);
+        return;
       }
+      setOpen(true);
     } catch {
       setOpen(false);
     }
   }, [userId]);
 
-  const handleClose = (isOpen: boolean) => {
-    if (!isOpen) {
+  const handleDismiss = () => {
+    if (userId && typeof userId === 'string') {
       try {
         localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, 'true');
       } catch {
         // Ignore
       }
     }
-    setOpen(isOpen);
+    setOpen(false);
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) handleDismiss();
+    else setOpen(true);
   };
 
   const endDate = formatEndDate(foundingMemberUntil);
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-w-sm"
         showClose
@@ -104,7 +112,7 @@ export function FoundingMemberCelebration({
           </div>
         </div>
         <Button
-          onClick={() => handleClose(false)}
+          onClick={handleDismiss}
           className="w-full"
           aria-label="Got it"
         >

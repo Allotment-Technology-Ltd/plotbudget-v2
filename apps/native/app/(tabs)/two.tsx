@@ -28,7 +28,7 @@ import { hapticImpact, hapticSuccess } from '@/lib/haptics';
 import { format } from 'date-fns';
 import { formatCurrency, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
-import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
+import { fetchBlueprintData, type BlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
 import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
 import { markPotComplete } from '@/lib/mark-pot-complete';
 import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
@@ -37,6 +37,39 @@ import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft, recomputePa
 
 type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PotStatus = 'active' | 'complete' | 'paused';
+
+/** Repair stale allocations: recompute when total_allocated is missing/zero or doesn't match sum of seed amounts. Returns refetched result if recomputed, else original. */
+async function repairStaleAllocations(result: BlueprintData): Promise<BlueprintData> {
+  const pc = result.paycycle as { total_allocated?: number } | null;
+  const storedTotal = pc?.total_allocated != null ? Number(pc.total_allocated) : null;
+  const sumFromSeeds = result.seeds.reduce((s, seed) => s + Number(seed.amount), 0);
+  const totalMismatch =
+    result.paycycle &&
+    result.seeds.length > 0 &&
+    (storedTotal == null || storedTotal === 0 || Math.abs(storedTotal - sumFromSeeds) > 0.01);
+  if (!totalMismatch) return result;
+  const recomputed = await recomputePaycycleAllocations(result.paycycle!.id);
+  if ('success' in recomputed) {
+    return fetchBlueprintData({ selectedCycleId: result.paycycle!.id });
+  }
+  return result;
+}
+
+/** If active paycycle, try mark-overdue then refetch. Returns refetched data or null on skip/failure. */
+async function tryOverdueRefetch(
+  paycycleId: string,
+  selectedCycleId: string | null | undefined
+): Promise<BlueprintData | null> {
+  try {
+    const overdueResult = await markOverdueSeedsPaid(paycycleId);
+    if ('success' in overdueResult) {
+      return fetchBlueprintData({ selectedCycleId: selectedCycleId ?? undefined });
+    }
+  } catch (err) {
+    if (__DEV__) console.warn('[Blueprint] markOverdueSeedsPaid failed (showing blueprint anyway):', err);
+  }
+  return null;
+}
 
 export default function BlueprintScreen() {
   const { colors, spacing, borderRadius } = useTheme();
@@ -83,74 +116,24 @@ export default function BlueprintScreen() {
     const idToLoad = cycleId !== undefined ? cycleId : selectedCycleIdRef.current;
     try {
       let result = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
-      // Repair stale allocations: recompute when total_allocated is missing/zero or doesn't match sum of seed amounts.
-      const pc = result.paycycle as { total_allocated?: number } | null;
-      const storedTotal = pc?.total_allocated != null ? Number(pc.total_allocated) : null;
-      const sumFromSeeds = result.seeds.reduce((s, seed) => s + Number(seed.amount), 0);
-      const totalMismatch =
-        result.paycycle &&
-        result.seeds.length > 0 &&
-        (storedTotal == null ||
-          storedTotal === 0 ||
-          Math.abs(storedTotal - sumFromSeeds) > 0.01);
-      if (totalMismatch) {
-        const recomputed = await recomputePaycycleAllocations(result.paycycle!.id);
-        if ('success' in recomputed) {
-          result = await fetchBlueprintData({ selectedCycleId: result.paycycle!.id });
-        }
+      result = await repairStaleAllocations(result);
+      if (result.paycycle?.status === 'active') {
+        const refetched = await tryOverdueRefetch(result.paycycle.id, idToLoad ?? undefined);
+        if (refetched) result = refetched;
       }
-      const paycycle = result.paycycle;
-      if (paycycle?.status === 'active') {
-        try {
-          const overdueResult = await markOverdueSeedsPaid(paycycle.id);
-          if ('success' in overdueResult) {
-            const refetch = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
-            setData({
-              household: refetch.household,
-              paycycle: refetch.paycycle,
-              seeds: refetch.seeds,
-              pots: refetch.pots,
-              repayments: refetch.repayments,
-              incomeSources: refetch.incomeSources,
-              isPartner: refetch.isPartner,
-              allPaycycles: refetch.allPaycycles,
-              activePaycycleId: refetch.activePaycycleId,
-              hasDraftCycle: refetch.hasDraftCycle,
-            });
-            setSelectedCycleId(refetch.paycycle?.id ?? null);
-            return;
-          }
-        } catch (err) {
-          if (__DEV__) console.warn('[Blueprint] markOverdueSeedsPaid failed (showing blueprint anyway):', err);
-        }
-        setData({
-          household: result.household,
-          paycycle: result.paycycle,
-          seeds: result.seeds,
-          pots: result.pots,
-          repayments: result.repayments,
-          incomeSources: result.incomeSources,
-          isPartner: result.isPartner,
-          allPaycycles: result.allPaycycles,
-          activePaycycleId: result.activePaycycleId,
-          hasDraftCycle: result.hasDraftCycle,
-        });
-        setSelectedCycleId(result.paycycle?.id ?? null);
-      } else {
-        setData({
-          household: result.household,
-          paycycle: result.paycycle,
-          seeds: result.seeds,
-          pots: result.pots,
-          repayments: result.repayments,
-          incomeSources: result.incomeSources,
-          isPartner: result.isPartner,
-          allPaycycles: result.allPaycycles,
-          activePaycycleId: result.activePaycycleId,
-          hasDraftCycle: result.hasDraftCycle,
-        });
-        setSelectedCycleId(result.paycycle?.id ?? null);
-      }
+      setData({
+        household: result.household,
+        paycycle: result.paycycle,
+        seeds: result.seeds,
+        pots: result.pots,
+        repayments: result.repayments,
+        incomeSources: result.incomeSources,
+        isPartner: result.isPartner,
+        allPaycycles: result.allPaycycles,
+        activePaycycleId: result.activePaycycleId,
+        hasDraftCycle: result.hasDraftCycle,
+      });
+      setSelectedCycleId(result.paycycle?.id ?? null);
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to load Blueprint'));
     } finally {
