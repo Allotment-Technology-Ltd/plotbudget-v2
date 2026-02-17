@@ -9,8 +9,8 @@ export type LastLoginMethod = 'google' | 'apple' | 'email' | 'magic_link';
 export function getLastLoginMethod(): LastLoginMethod | null {
   if (typeof window === 'undefined') return null;
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    if (v === 'google' || v === 'apple' || v === 'email' || v === 'magic_link') return v;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'google' || stored === 'apple' || stored === 'email' || stored === 'magic_link') return stored;
     return null;
   } catch {
     return null;

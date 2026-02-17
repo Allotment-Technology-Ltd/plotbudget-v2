@@ -34,6 +34,7 @@ export default async function DashboardPage() {
   const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
+  const supabase = await getCachedSupabase();
   const isPartner = !owned && !!partnerOf;
   const partnerHouseholdId = partnerOf?.id ?? null;
   let householdId: string;
@@ -44,7 +45,6 @@ export default async function DashboardPage() {
     currentPaycycleId = profile.current_paycycle_id;
   } else if (isPartner && partnerHouseholdId) {
     householdId = partnerHouseholdId;
-    const supabase = await getCachedSupabase();
     const { data: activeCycle } = (await supabase
       .from('paycycles')
       .select('id')
@@ -56,8 +56,6 @@ export default async function DashboardPage() {
   } else {
     redirect('/onboarding');
   }
-
-  const supabase = await getCachedSupabase();
 
   // Parallel fetch: household + owner display name, and all household-scoped data
   const householdPromise = supabase
@@ -130,7 +128,7 @@ export default async function DashboardPage() {
       .single();
     currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
     if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
-      await markOverdueSeedsPaid(currentPaycycleId);
+      await markOverdueSeedsPaid(currentPaycycleId, undefined, { skipRevalidate: true });
     }
     const { data: seedsData } = await supabase
       .from('seeds')

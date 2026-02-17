@@ -2,6 +2,12 @@ import { cache } from 'react';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
 
+/**
+ * React's cache() is request-scoped: it is invalidated for each server request.
+ * Results are never shared across requests, so auth/profile data cannot leak between users.
+ * @see https://react.dev/reference/react/cache
+ */
+
 /** Request-scoped Supabase client. Deduplicated per RSC request so layout + page share one client. */
 export const getCachedSupabase = cache(createServerSupabaseClient);
 
@@ -19,6 +25,7 @@ type PartnerHousehold = { id: string; partner_name: string | null } | null;
 /**
  * Auth + profile + household ownership for dashboard in one deduplicated call.
  * Layout and all dashboard pages can call this; only the first call in a request runs the fetches.
+ * Cache is request-scoped (React cache()); no cross-request sharing of auth data.
  */
 export const getCachedDashboardAuth = cache(async (): Promise<{
   user: User | null;

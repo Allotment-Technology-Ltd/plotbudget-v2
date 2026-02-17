@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AuthCardBrand, AuthMinimalHeader } from '@/components/auth/auth-brand-header';
@@ -26,74 +26,97 @@ function isPartnerInviteRedirect(redirect: string | null): boolean {
   }
 }
 
-/**
- * Linear-style signup hub: one card with choices only.
- * Google first (prominent), then Apple, then "Sign up with email" → /signup/email.
- * When gated or region-restricted, show SignupGatedView or RegionRestrictedView.
- */
-export function SignupHubClient() {
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect');
-  const { signupGated, waitlistUrl, googleLoginEnabled, appleLoginEnabled } =
-    useAuthFeatureFlags();
-  const [regionAllowed, setRegionAllowed] = useState<boolean | null>(null);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+export type SignupView = 'gated' | 'region-restricted' | 'signup';
 
-  const allowSignupForPartnerInvite = isPartnerInviteRedirect(redirectTo);
-  const showGated = signupGated && !allowSignupForPartnerInvite;
-  const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
-  const emailUrl = `/signup/email${redirectQuery}`;
+/**
+ * Encapsulates signup access gating: region check and whether to show gated vs region-restricted vs main signup.
+ */
+function useSignupAccess(redirectTo: string | null, signupGated: boolean): SignupView {
+  const allowPartnerInvite = isPartnerInviteRedirect(redirectTo);
+  const showGated = signupGated && !allowPartnerInvite;
+  const [regionAllowed, setRegionAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
     getSignupRegionAllowed().then(({ allowed }) => setRegionAllowed(allowed));
   }, []);
 
-  const handleOAuth = async (provider: 'google' | 'apple') => {
-    if (oauthLoading) return;
-    setOauthLoading(provider);
-    try {
-      if (redirectTo?.startsWith('/')) {
-        setRedirectAfterAuthCookie(redirectTo);
-      }
-      const supabase = createClient();
-      const redirectToUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: redirectToUrl },
-      });
-      if (error) {
+  if (showGated) return 'gated';
+  if (regionAllowed === false && !allowPartnerInvite) return 'region-restricted';
+  return 'signup';
+}
+
+/**
+ * Encapsulates OAuth sign-in flow and loading state for signup hub.
+ */
+function useSignupOAuth(redirectTo: string | null) {
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+
+  const handleOAuth = useCallback(
+    async (provider: 'google' | 'apple') => {
+      if (oauthLoading) return;
+      setOauthLoading(provider);
+      try {
+        if (redirectTo?.startsWith('/')) {
+          setRedirectAfterAuthCookie(redirectTo);
+        }
+        const supabase = createClient();
+        const redirectToUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`;
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: redirectToUrl },
+        });
+        if (error) throw error;
+      } finally {
         setOauthLoading(null);
-        throw error;
       }
-    } catch {
-      setOauthLoading(null);
-    }
-  };
+    },
+    [oauthLoading, redirectTo]
+  );
 
-  if (showGated) {
-    return (
-      <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
-        <DeletedAccountToast />
-        <AuthCardBrand tagline="The 20-minute payday ritual" />
-        <div className="border-t border-border/50 pt-5 mt-5">
-          <SignupGatedView waitlistUrl={waitlistUrl} />
-        </div>
+  return { handleOAuth, oauthLoading };
+}
+
+function SignupGatedCard({ waitlistUrl }: { waitlistUrl: string | null }) {
+  return (
+    <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
+      <DeletedAccountToast />
+      <AuthCardBrand tagline="The 20-minute payday ritual" />
+      <div className="border-t border-border/50 pt-5 mt-5">
+        <SignupGatedView waitlistUrl={waitlistUrl} />
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  if (regionAllowed === false && !allowSignupForPartnerInvite) {
-    return (
-      <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
-        <DeletedAccountToast />
-        <AuthCardBrand tagline="The 20-minute payday ritual" />
-        <div className="border-t border-border/50 pt-5 mt-5">
-          <RegionRestrictedView />
-        </div>
+function SignupRegionRestrictedCard() {
+  return (
+    <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
+      <DeletedAccountToast />
+      <AuthCardBrand tagline="The 20-minute payday ritual" />
+      <div className="border-t border-border/50 pt-5 mt-5">
+        <RegionRestrictedView />
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+interface SignupHubFormProps {
+  handleOAuth: (provider: 'google' | 'apple') => void;
+  oauthLoading: 'google' | 'apple' | null;
+  emailUrl: string;
+  redirectQuery: string;
+  googleLoginEnabled: boolean;
+  appleLoginEnabled: boolean;
+}
+
+function SignupHubForm({
+  handleOAuth,
+  oauthLoading,
+  emailUrl,
+  redirectQuery,
+  googleLoginEnabled,
+  appleLoginEnabled,
+}: SignupHubFormProps) {
   return (
     <div className="flex flex-col items-center text-center w-full" data-testid="signup-page">
       <DeletedAccountToast />
@@ -177,5 +200,41 @@ export function SignupHubClient() {
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Linear-style signup hub: one card with choices only.
+ * Google first (prominent), then Apple, then "Sign up with email" → /signup/email.
+ * When gated or region-restricted, show SignupGatedView or RegionRestrictedView.
+ */
+export function SignupHubClient() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
+  const { signupGated, waitlistUrl, googleLoginEnabled, appleLoginEnabled } =
+    useAuthFeatureFlags();
+
+  const view = useSignupAccess(redirectTo, signupGated);
+  const { handleOAuth, oauthLoading } = useSignupOAuth(redirectTo);
+
+  const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
+  const emailUrl = `/signup/email${redirectQuery}`;
+
+  if (view === 'gated') {
+    return <SignupGatedCard waitlistUrl={waitlistUrl} />;
+  }
+  if (view === 'region-restricted') {
+    return <SignupRegionRestrictedCard />;
+  }
+
+  return (
+    <SignupHubForm
+      handleOAuth={handleOAuth}
+      oauthLoading={oauthLoading}
+      emailUrl={emailUrl}
+      redirectQuery={redirectQuery}
+      googleLoginEnabled={googleLoginEnabled}
+      appleLoginEnabled={appleLoginEnabled}
+    />
   );
 }

@@ -1,17 +1,18 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useNavigationProgress } from '@/components/navigation/navigation-progress-context';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/dashboard/blueprint', label: 'Blueprint' },
 ];
 
+/**
+ * Uses plain <a> for nav links so they work reliably in Safari PWA on Mac,
+ * where client-side Link navigation can fail to be recognized as a link.
+ */
 export function DashboardNav() {
   const pathname = usePathname();
-  const { setNavigating } = useNavigationProgress();
 
   return (
     <nav className="flex gap-6" aria-label="Main navigation">
@@ -37,15 +38,14 @@ export function DashboardNav() {
             {item.label}
           </a>
         ) : (
-          <Link
+          <a
             key={item.href}
             href={item.href}
             className={linkClassName}
             aria-current={isActive ? 'page' : undefined}
-            onClick={() => setNavigating(true)}
           >
             {item.label}
-          </Link>
+          </a>
         );
       })}
     </nav>

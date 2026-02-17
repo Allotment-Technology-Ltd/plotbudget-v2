@@ -75,13 +75,10 @@ export function PaydayCompleteClient({
   return (
     <div className="content-wrapper section-padding max-w-2xl mx-auto">
       <div className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/10 to-primary/5 p-6 md:p-8 space-y-6 shadow-lg shadow-primary/5">
-        <div className="text-center space-y-2">
-          <h1 className="font-heading text-2xl md:text-3xl uppercase tracking-wider text-foreground">
-            Payday complete
+        <div className="text-center">
+          <h1 className="font-heading text-xl md:text-2xl uppercase tracking-wider text-foreground">
+            Start your next cycle
           </h1>
-          <p className="text-muted-foreground">
-            Your last cycle is closed. Time to start the next one.
-          </p>
         </div>
 
         {hasDraft ? (

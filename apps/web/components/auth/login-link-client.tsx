@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +17,59 @@ import { marketingUrl } from '@/lib/marketing-url';
 import { ChevronLeft } from 'lucide-react';
 
 /**
+ * Encapsulates magic-link submission: validation, allowlist check, redirect cookie,
+ * Supabase signInWithOtp, and last-login persistence.
+ */
+function useMagicLinkSubmit(redirectTo: string | null) {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const trimmed = email.trim();
+      if (!trimmed) {
+        setError('Please enter your email address');
+        return;
+      }
+      setError(null);
+      setLoading(true);
+      try {
+        const allowed = await checkEmailAllowed(trimmed);
+        if (!allowed) {
+          setError(ALLOWLIST_ERROR_MESSAGE);
+          return;
+        }
+        if (redirectTo?.startsWith('/')) {
+          setRedirectAfterAuthCookie(redirectTo);
+        }
+        const supabase = createClient();
+        const redirectToUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`;
+        const { error: err } = await supabase.auth.signInWithOtp({
+          email: trimmed,
+          options: { emailRedirectTo: redirectToUrl },
+        });
+        if (err) {
+          setError(err.message);
+          return;
+        }
+        setLastLoginMethod('magic_link');
+        setSent(true);
+      } catch {
+        setError('Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, redirectTo]
+  );
+
+  return { email, setEmail, handleSubmit, loading, error, sent };
+}
+
+/**
  * Dedicated "Email me a sign-in link" screen: single email field.
  * Back link to /login. Success state on same page.
  */
@@ -25,47 +78,8 @@ export function LoginLinkClient() {
   const redirectTo = searchParams.get('redirect');
   const redirectQuery = redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : '';
 
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError('Please enter your email address');
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const allowed = await checkEmailAllowed(trimmed);
-      if (!allowed) {
-        setError(ALLOWLIST_ERROR_MESSAGE);
-        return;
-      }
-      if (redirectTo?.startsWith('/')) {
-        setRedirectAfterAuthCookie(redirectTo);
-      }
-      const supabase = createClient();
-      const redirectToUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`;
-      const { error: err } = await supabase.auth.signInWithOtp({
-        email: trimmed,
-        options: { emailRedirectTo: redirectToUrl },
-      });
-      if (err) {
-        setError(err.message);
-        return;
-      }
-      setLastLoginMethod('magic_link');
-      setSent(true);
-    } catch {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { email, setEmail, handleSubmit, loading, error, sent } =
+    useMagicLinkSubmit(redirectTo);
 
   return (
     <div className="flex flex-col items-center text-center w-full">

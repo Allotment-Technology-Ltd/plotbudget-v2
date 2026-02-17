@@ -63,7 +63,7 @@ export function NewCycleCelebration({ open, onClose }: NewCycleCelebrationProps)
                   New cycle started!
                 </h2>
                 <p className="text-muted-foreground">
-                  Plan your month. You’ve got this.
+                  Your last cycle is closed. Plan your month — you’ve got this.
                 </p>
               </div>
 

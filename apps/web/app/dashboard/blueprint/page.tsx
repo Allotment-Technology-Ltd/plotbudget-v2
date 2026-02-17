@@ -35,6 +35,7 @@ export default async function BlueprintPage({
   const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
+  const supabase = await getCachedSupabase();
   const isPartner = !owned && !!partnerOf;
   const partnerHouseholdId = partnerOf?.id ?? null;
   let householdId: string;
@@ -45,7 +46,6 @@ export default async function BlueprintPage({
     currentPaycycleId = profile.current_paycycle_id;
   } else if (isPartner && partnerHouseholdId) {
     householdId = partnerHouseholdId;
-    const supabase = await getCachedSupabase();
     const { data: activeCycle } = (await supabase
       .from('paycycles')
       .select('id')
@@ -60,8 +60,6 @@ export default async function BlueprintPage({
 
   const targetCycleId = params.cycle || currentPaycycleId;
   if (!targetCycleId) redirect('/onboarding');
-
-  const supabase = await getCachedSupabase();
 
   const [
     householdRes,
@@ -99,7 +97,7 @@ export default async function BlueprintPage({
   const paycycle = paycycleData;
   const paycycleRow = paycycle as { id: string; status: string };
   if (paycycleRow.status === 'active') {
-    await markOverdueSeedsPaid(paycycleRow.id);
+    await markOverdueSeedsPaid(paycycleRow.id, undefined, { skipRevalidate: true });
   }
 
   const seeds = (seedsRes.data ?? []) as SeedRow[];

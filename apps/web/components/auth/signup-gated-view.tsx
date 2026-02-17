@@ -3,7 +3,7 @@
 import Link from 'next/link';
 
 interface SignupGatedViewProps {
-  waitlistUrl: string;
+  waitlistUrl: string | null;
 }
 
 /**
@@ -23,7 +23,7 @@ export function SignupGatedView({ waitlistUrl }: SignupGatedViewProps) {
 
       <div className="flex flex-col gap-3">
         <a
-          href={waitlistUrl}
+          href={waitlistUrl ?? '#'}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary inline-flex items-center justify-center rounded-md px-6 py-3 w-full font-heading text-cta uppercase tracking-widest"

@@ -48,8 +48,8 @@ export default async function PotForecastPage({
         .eq('is_recurring', true)
         .maybeSingle(),
     ]);
-    const { data: pc } = paycycleRes as { data: PayCycle | null };
-    paycycle = pc ?? null;
+    const { data: paycycleData } = paycycleRes as { data: PayCycle | null };
+    paycycle = paycycleData ?? null;
     const { data: seed } = seedRes as { data: Seed | null };
     linkedSeed = seed ?? null;
   }

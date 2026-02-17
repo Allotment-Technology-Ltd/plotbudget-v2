@@ -459,10 +459,14 @@ export async function deleteSeed(
   }
 }
 
+/** Options for markOverdueSeedsPaid. Use skipRevalidate: true when calling during RSC render to avoid "revalidatePath during render" error. */
+export type MarkOverdueSeedsPaidOptions = { skipRevalidate?: boolean };
+
 /** Mark seeds (need, want, savings, repay) with due_date in the past as paid. Call when loading blueprint/dashboard for active cycle. Returns count of seeds marked. */
 export async function markOverdueSeedsPaid(
   paycycleId: string,
-  client?: SupabaseClient<Database>
+  client?: SupabaseClient<Database>,
+  options?: MarkOverdueSeedsPaidOptions
 ): Promise<number> {
   const supabase = client ?? (await createServerSupabaseClient());
   const today = new Date().toISOString().slice(0, 10);
@@ -492,8 +496,10 @@ export async function markOverdueSeedsPaid(
   }
 
   await updatePaycycleAllocations(paycycleId);
-  revalidatePath('/dashboard/blueprint');
-  revalidatePath('/dashboard');
+  if (!options?.skipRevalidate) {
+    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard');
+  }
   return overdue.length;
 }
 
