@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const navLinkClass = 'font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors block w-full text-left py-3';
 
 /**
  * Navbar — Sticky navigation with frosted glass backdrop.
@@ -7,12 +10,14 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Features:
  *  - Hide-on-scroll-down / show-on-scroll-up (reduces distraction per Hick's Law)
  *  - Theme toggle (sun/moon)
- *  - Responsive: CTA text shortens on mobile
+ *  - Mobile: hamburger menu reveals Pricing, Changelog, Log in
  */
-export default function Navbar({ theme, onToggleTheme, pricingEnabled = false }) {
+export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, appUrl = 'https://app.plotbudget.com' }) {
+  const { pathname } = useLocation();
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [atTop, setAtTop] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleScroll = useCallback(() => {
     const currentY = window.scrollY;
@@ -33,9 +38,17 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
   }, [handleScroll]);
 
   const scrollToPricing = () => {
+    setMenuOpen(false);
     const el = document.getElementById('pricing');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onEscape = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, [menuOpen]);
 
   return (
     <motion.nav
@@ -56,9 +69,10 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
       `}
     >
       {/* Logo */}
-      <a
-        href="#"
+      <Link
+        to="/"
         onClick={(e) => {
+          if (window.location.pathname !== '/') return;
           e.preventDefault();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
@@ -66,28 +80,58 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
         aria-label="PLOT — return to top"
       >
         PLOT
-      </a>
+      </Link>
 
-      {/* Right side: Pricing + Log in + theme toggle */}
+      {/* Right side: desktop links + hamburger (mobile) + theme toggle */}
       <div className="flex items-center gap-4">
-        {/* Pricing — scrolls to pricing section when pricing is enabled */}
+        {/* Desktop: Pricing, Changelog, Log in — hidden on small screens */}
         {pricingEnabled && (
-          <button
-            onClick={scrollToPricing}
-            className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors hidden sm:inline"
-            aria-label="View pricing"
-          >
-            Pricing
-          </button>
+          pathname === '/' ? (
+            <button
+              onClick={scrollToPricing}
+              className={`${navLinkClass} hidden sm:inline`}
+              aria-label="View pricing"
+            >
+              Pricing
+            </button>
+          ) : (
+            <Link
+              to="/#pricing"
+              className={`${navLinkClass} hidden sm:inline`}
+            >
+              Pricing
+            </Link>
+          )
         )}
-        {/* Log in */}
+        <Link
+          to="/changelog"
+          className={`${navLinkClass} hidden sm:inline`}
+        >
+          Changelog
+        </Link>
         <a
-          href={`${import.meta.env.VITE_APP_URL || 'https://app.plotbudget.com'}/login`}
-          className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent transition-colors"
+          href={`${appUrl}/login`}
+          className={`${navLinkClass} hidden sm:inline`}
           aria-label="Log in to PLOT"
         >
           Log in
         </a>
+
+        {/* Mobile: hamburger — visible only below sm */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          className="sm:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 border border-plot-border text-plot-muted hover:text-plot-accent hover:border-plot-border-accent transition-all"
+          aria-expanded={menuOpen}
+          aria-controls="nav-menu"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          style={{ borderRadius: 0 }}
+        >
+          <span className={`w-4 h-0.5 bg-current transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+          <span className={`w-4 h-0.5 bg-current transition-all duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`w-4 h-0.5 bg-current transition-all duration-200 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+        </button>
+
         {/* Theme Toggle */}
         <button
           onClick={onToggleTheme}
@@ -139,6 +183,58 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false })
           </AnimatePresence>
         </button>
       </div>
+
+      {/* Mobile menu panel — slides down below navbar */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              id="nav-menu"
+              role="dialog"
+              aria-label="Navigation menu"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed left-0 right-0 top-16 z-40 overflow-hidden border-b border-plot-border bg-plot-bg/98 backdrop-blur-xl sm:hidden"
+            >
+              <nav className="px-6 py-4 flex flex-col gap-0" aria-label="Mobile navigation">
+                {pricingEnabled && (
+                  pathname === '/' ? (
+                    <button onClick={scrollToPricing} className={navLinkClass}>
+                      Pricing
+                    </button>
+                  ) : (
+                    <Link to="/#pricing" onClick={() => setMenuOpen(false)} className={navLinkClass}>
+                      Pricing
+                    </Link>
+                  )
+                )}
+                <Link to="/changelog" onClick={() => setMenuOpen(false)} className={navLinkClass}>
+                  Changelog
+                </Link>
+                <a
+                  href={`${appUrl}/login`}
+                  onClick={() => setMenuOpen(false)}
+                  className={navLinkClass}
+                >
+                  Log in
+                </a>
+              </nav>
+            </motion.div>
+            <motion.button
+              type="button"
+              tabIndex={-1}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 top-16 z-30 bg-plot-text/10 sm:hidden"
+              aria-label="Close menu"
+            />
+          </>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }

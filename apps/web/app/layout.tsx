@@ -7,6 +7,7 @@ import { ThemeProvider } from '../components/providers/theme-provider';
 import { PostHogProvider } from '../components/providers/posthog-provider';
 import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
 import { CookieBanner } from '../components/cookie-banner';
+import { NavigationProgressProvider } from '../components/navigation/navigation-progress-context';
 import './globals.css';
 
 const inter = Inter({
@@ -108,7 +109,9 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <main id="main-content">{children}</main>
+              <NavigationProgressProvider>
+                <main id="main-content">{children}</main>
+              </NavigationProgressProvider>
               <Toaster position="top-right" />
             </ThemeProvider>
           </PostHogProvider>

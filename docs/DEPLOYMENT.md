@@ -109,6 +109,12 @@ Pushes to the linked branch (e.g. `main`) trigger an automatic deploy. After cha
 - Sign up / log in and confirm Supabase auth works (redirect back to the app).
 - Run through onboarding and blueprint flows to confirm DB and RLS work.
 
+## Releases and the public changelog
+
+Pushes to `main` can run **semantic-release** (if configured in CI), which updates the root `CHANGELOG.md` from commit messages. The **user-facing** changelog on the marketing site ("What's new") comes from **`apps/marketing/content/changelog.md`**, which is copied at build time.
+
+**When you release:** Update `apps/marketing/content/changelog.md` with a user-friendly entry for the new version, written in plain language and following **[CHANGELOG-UX-GUIDE.md](./CHANGELOG-UX-GUIDE.md)**. That keeps the public page clear and avoids heavy sanitization. The guide covers structure, tone, and what to include or omit.
+
 ## Troubleshooting
 
 - **Build fails with “module not found” for `@repo/ui` or `@repo/logic`**  

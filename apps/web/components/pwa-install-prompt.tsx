@@ -24,6 +24,16 @@ function getCanShowInstallPrompt(): boolean {
   return 'BeforeInstallPromptEvent' in window || getIsIOS();
 }
 
+function getInstallPromptMessage(isIOS: boolean, hasDeferredPrompt: boolean): string {
+  if (isIOS) {
+    return 'Tap the Share button and then "Add to Home Screen" to open PLOT from your home screen.';
+  }
+  if (hasDeferredPrompt) {
+    return 'Install PLOT for a quicker launch and an app-like experience.';
+  }
+  return "Tap your browser's 3 dots (⋮) → Add to Home screen → Install to add PLOT to your phone.";
+}
+
 export function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -78,9 +88,7 @@ export function PwaInstallPrompt() {
       <div className="space-y-1">
         <p className="text-sm font-medium text-foreground">Use PLOT as an app</p>
         <p className="text-sm text-muted-foreground">
-          {isIOS
-            ? 'Tap the Share button and then "Add to Home Screen" to open PLOT from your home screen.'
-            : 'Install PLOT for a quicker launch and an app-like experience.'}
+          {getInstallPromptMessage(isIOS, deferredPrompt !== null)}
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">

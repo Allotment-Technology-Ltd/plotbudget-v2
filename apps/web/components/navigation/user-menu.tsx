@@ -25,6 +25,7 @@ import {
 import { signOut, leavePartnerSession } from '@/lib/actions/auth-actions';
 
 import { getAvatarInitials } from '@/lib/utils/avatar-initials';
+import { useNavigationProgress } from '@/components/navigation/navigation-progress-context';
 
 interface UserMenuProps {
   user: {
@@ -40,6 +41,7 @@ interface UserMenuProps {
 export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { paymentUiVisible } = useAuthFeatureFlags();
+  const { setNavigating } = useNavigationProgress();
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -139,6 +141,7 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
             href="/dashboard/settings"
             className="flex items-center focus:bg-primary/10 focus:text-primary"
             data-testid="user-menu-settings"
+            onClick={() => setNavigating(true)}
           >
             <Settings className="mr-2 h-4 w-4" aria-hidden />
             Settings
@@ -153,6 +156,7 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
               href="/pricing"
               className="flex items-center focus:bg-primary/10 focus:text-primary"
               data-testid="user-menu-pricing"
+              onClick={() => setNavigating(true)}
             >
               <CreditCard className="mr-2 h-4 w-4" aria-hidden />
               Pricing
@@ -168,6 +172,7 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
               href="/dev/trial-testing"
               className="flex items-center focus:bg-primary/10 focus:text-primary"
               data-testid="user-menu-trial-testing"
+              onClick={() => setNavigating(true)}
             >
               <FlaskConical className="mr-2 h-4 w-4" aria-hidden />
               Dev: Trial Testing
@@ -225,6 +230,7 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
             href="/dashboard/feedback"
             className="flex items-center focus:bg-primary/10 focus:text-primary"
             data-testid="user-menu-feedback"
+            onClick={() => setNavigating(true)}
           >
             <MessageSquare className="mr-2 h-4 w-4" aria-hidden />
             Feedback & bugs

@@ -29,25 +29,42 @@ For local MailerLite testing, copy `.env.example` to `.env` in `apps/marketing/`
 plot-marketing/
 ├── api/
 │   └── subscribe.js          # Vercel serverless function (MailerLite proxy)
+├── content/
+│   └── changelog.md           # Changelog source (prebuild → public/changelog.md)
 ├── public/
 │   ├── favicon.svg            # PLOT # brand mark
+│   ├── changelog.md           # Built from content/changelog.md at prebuild
+│   ├── privacy.html           # Static legal page
+│   ├── terms.html            # Static legal page
 │   └── screenshots/           # App screenshots for phone mockups
-│       ├── dashboard-dark.png
-│       ├── dashboard-light.png
-│       ├── blueprint-dark.png  (optional)
-│       ├── blueprint-light.png (optional)
-│       ├── ritual-dark.png     (optional)
-│       └── ritual-light.png    (optional)
 ├── src/
-│   ├── main.jsx               # React entry (HelmetProvider)
+│   ├── main.jsx               # React entry: Router + Layout + routes
 │   ├── index.css              # Tailwind + CSS variables + custom styles
-│   ├── App.jsx                # All sections + animation orchestration
+│   ├── lib/
+│   │   ├── config.js          # APP_URL, PRICING_ENABLED from env
+│   │   └── animationUtils.js  # Shared Framer Motion variants
 │   ├── hooks/
-│   │   └── useTheme.js        # Dark/light theme management
-│   └── components/
-│       ├── SEO.jsx            # Dynamic meta tags + Schema.org
-│       ├── Navbar.jsx         # Sticky nav + theme toggle
-│       └── MailerLiteForm.jsx # Email form with state machine
+│   │   └── useTheme.js       # Dark/light theme management
+│   ├── components/
+│   │   ├── Layout.jsx         # Shared layout: Navbar + <Outlet /> + Footer + CookieConsent
+│   │   ├── SEO.jsx            # Dynamic meta tags + Schema.org
+│   │   ├── Navbar.jsx         # Sticky nav + theme toggle + Changelog link
+│   │   ├── Footer.jsx
+│   │   ├── CookieConsent.jsx
+│   │   └── MailerLiteForm.jsx # Email form with state machine
+│   ├── pages/
+│   │   ├── HomePage.jsx       # Landing: composes all sections
+│   │   └── ChangelogPage.jsx  # Renders content from public/changelog.md
+│   └── sections/              # Landing sections (used by HomePage)
+│       ├── Hero.jsx
+│       ├── SocialProofStrip.jsx
+│       ├── ProblemSection.jsx
+│       ├── SolutionSection.jsx
+│       ├── AppShowcase.jsx
+│       ├── FeaturesSection.jsx
+│       ├── PricingSection.jsx
+│       ├── FAQSection.jsx
+│       └── FinalCTA.jsx
 ├── tailwind.config.js         # Custom breakpoints, colors, typography
 ├── vite.config.js             # Build config
 ├── postcss.config.js
@@ -55,6 +72,25 @@ plot-marketing/
 ├── .env.example
 └── index.html                 # Entry HTML with FOUC prevention
 ```
+
+### Routes and layout
+
+All marketing routes render inside a **shared layout** (Navbar, main content, Footer, CookieConsent). Routes are defined in **`src/main.jsx`** using React Router nested routes:
+
+- **`/`** — Home (landing: Hero, Social proof, Problem, Solution, App Showcase, Features, Pricing, FAQ, Final CTA).
+- **`/changelog`** — Changelog page (loads Markdown from `public/changelog.md`).
+- **`/privacy`**, **`/terms`** — Served as static HTML from `public/privacy.html` and `public/terms.html` (no React route).
+
+**Adding a new page**
+
+1. Create a page component (e.g. `src/pages/KnowledgeHub.jsx`).
+2. In `src/main.jsx`, add a child route under the layout:
+   ```jsx
+   <Route path="knowledge" element={<KnowledgeHub />} />
+   ```
+3. Add a nav link in `Navbar.jsx` and/or `Footer.jsx` if you want it in the global nav.
+
+New pages automatically get the same layout (Navbar, Footer, CookieConsent).
 
 ### Key Design Decisions
 
@@ -67,6 +103,10 @@ plot-marketing/
 | `prefers-reduced-motion` respected | All animations disabled globally for users who request it. |
 | 0px border-radius everywhere | Enforces the terminal/cyberpunk aesthetic from the PLOT app. |
 
+### Changelog ("What's new" page)
+
+The public changelog at `/changelog` is built from **`content/changelog.md`** (copied to `public/changelog.md` at prebuild). Write entries in plain, user-facing language per the repo’s **[docs/CHANGELOG-UX-GUIDE.md](../../docs/CHANGELOG-UX-GUIDE.md)** ChangelogPage fetches at runtime. For a future knowledge hub: use `content/knowledge/` and a route that fetches by slug.
+
 ---
 
 ## Adding Your Screenshots
@@ -77,7 +117,7 @@ plot-marketing/
    - `dashboard-dark.png` — Main dashboard, dark theme
    - `dashboard-light.png` — Main dashboard, light theme
 4. The phone mockups in the App Showcase section reference these paths
-5. For additional pairs (Blueprint, Ritual), uncomment the optional block in `App.jsx` → `AppShowcase`
+5. For additional pairs (Blueprint, Ritual), uncomment the optional block in `src/sections/AppShowcase.jsx`
 
 ---
 
