@@ -1,6 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GetTheAppTab } from './get-the-app-tab';
 import { HouseholdTab } from './household-tab';
 import { IncomeSourcesTab } from './income-sources-tab';
 import { PrivacyTab } from './privacy-tab';
@@ -74,8 +75,8 @@ export function SettingsView({
   portalError = false,
 }: SettingsViewProps) {
   const validTabs = pricingEnabled
-    ? ['profile', 'household', 'income', 'privacy', 'subscription']
-    : ['profile', 'household', 'income', 'privacy'];
+    ? ['profile', 'household', 'income', 'app', 'privacy', 'subscription']
+    : ['profile', 'household', 'income', 'app', 'privacy'];
   const defaultTab =
     initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
 
@@ -103,6 +104,7 @@ export function SettingsView({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="household">Household</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
+          <TabsTrigger value="app">Get the app</TabsTrigger>
           {pricingEnabled && <TabsTrigger value="subscription">Subscription</TabsTrigger>}
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
         </TabsList>
@@ -140,6 +142,15 @@ export function SettingsView({
             ownerLabel={ownerLabel}
             partnerLabel={partnerLabel}
             currency={household.currency}
+          />
+        </TabsContent>
+        <TabsContent value="app" className="space-y-6 mt-6">
+          <GetTheAppTab
+            household={{
+              is_couple: household.is_couple,
+              partner_invite_status: household.partner_invite_status,
+            }}
+            isPartner={isPartner}
           />
         </TabsContent>
         {pricingEnabled && (
