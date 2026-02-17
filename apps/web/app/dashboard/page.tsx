@@ -135,7 +135,7 @@ export default async function DashboardPage() {
     .eq('household_id', householdId)
     .eq('status', 'completed')
     .order('start_date', { ascending: false })
-    .limit(3);
+    .limit(6);
   historicalCycles = historical ?? [];
 
   const { data: draftCycle } = await supabase

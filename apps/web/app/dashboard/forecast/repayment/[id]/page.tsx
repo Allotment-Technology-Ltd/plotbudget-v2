@@ -90,6 +90,14 @@ export default async function RepaymentForecastPage({
       >
         ← Back to Dashboard
       </Link>
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl font-semibold uppercase tracking-wider text-foreground">
+          Repayment forecast
+        </h1>
+        <p className="text-muted-foreground">
+          See when you&apos;ll clear this debt based on how much you pay each cycle.
+        </p>
+      </div>
       <RepaymentForecastClient
         repayment={repayment}
         household={household}

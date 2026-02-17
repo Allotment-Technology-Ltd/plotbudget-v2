@@ -1,18 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { HeroMetrics } from './hero-metrics';
 import { IncomeThisCycle } from './income-this-cycle';
 import { QuickActions } from './quick-actions';
-import { FinancialHealthCard } from './financial-health-card';
-import { CategoryDonutChart } from './category-donut-chart';
-import { SavingsDebtProgress } from './savings-debt-progress';
+import { SavingsProgressCards } from './savings-progress-cards';
+import { RepaymentProgressCards } from './repayment-progress-cards';
 import { CoupleContributions } from './couple-contributions';
 import { UpcomingBills } from './upcoming-bills';
 import { RecentActivity } from './recent-activity';
 import { SpendingTrends } from './spending-trends';
+import { DebtTrendChart } from './debt-trend-chart';
 import { FoundingMemberCelebration } from './founding-member-celebration';
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import Link from 'next/link';
@@ -80,7 +80,6 @@ export function DashboardClient({
   foundingMemberUntil,
 }: DashboardClientProps) {
   const otherLabel = isPartner ? ownerLabel : partnerLabel;
-  const [, setSelectedCategory] = useState<string | null>(null);
   const { setNavigating } = useNavigationProgress();
 
   const isFoundingMember =
@@ -173,23 +172,95 @@ export function DashboardClient({
           partnerLabel={partnerLabel}
         />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <UpcomingBills seeds={seeds} currency={household.currency} />
+          <RecentActivity
+            seeds={seeds}
+            pots={pots}
+            repayments={repayments}
+            currency={household.currency}
+          />
+        </div>
+
         <QuickActions
           household={household}
           paycycle={currentPaycycle}
           hasDraftCycle={hasDraftCycle}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <FinancialHealthCard
-              paycycle={currentPaycycle}
-              household={household}
-              seeds={seeds}
-            />
+        <SpendingTrends
+          currentCycle={currentPaycycle}
+          historicalCycles={historicalCycles}
+          household={household}
+        />
 
-            <SavingsDebtProgress pots={pots} repayments={repayments} currency={household.currency} />
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              {pots.length > 0 ? (
+                <div className="bg-card rounded-lg p-6 border border-border">
+                  <SavingsProgressCards pots={pots} currency={household.currency} />
+                </div>
+              ) : (
+                <div className="bg-card rounded-lg p-6 border border-border">
+                  <h2 className="font-heading text-xl uppercase tracking-wider mb-4">Savings goals</h2>
+                  <p className="text-muted-foreground text-sm mb-4">No savings goals yet. Add them in Blueprint.</p>
+                  <Link href="/dashboard/blueprint" onClick={() => setNavigating(true)} className="text-primary font-heading text-sm uppercase tracking-wider hover:underline">
+                    Manage Blueprint
+                  </Link>
+                </div>
+              )}
+            </motion.div>
 
-            {household.is_couple && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="space-y-6"
+            >
+              {repayments.length > 0 ? (
+                <div className="bg-card rounded-lg p-6 border border-border">
+                  <RepaymentProgressCards repayments={repayments} currency={household.currency} />
+                </div>
+              ) : (
+                <div className="bg-card rounded-lg p-6 border border-border">
+                  <h2 className="font-heading text-xl uppercase tracking-wider mb-4">Debt progress</h2>
+                  <p className="text-muted-foreground text-sm mb-4">No debts yet. Add them in Blueprint.</p>
+                  <Link href="/dashboard/blueprint" onClick={() => setNavigating(true)} className="text-primary font-heading text-sm uppercase tracking-wider hover:underline">
+                    Manage Blueprint
+                  </Link>
+                </div>
+              )}
+              <DebtTrendChart
+                currentCycle={currentPaycycle}
+                historicalCycles={historicalCycles}
+                repayments={repayments}
+                seeds={seeds}
+                householdConfig={
+                  household
+                    ? {
+                        pay_cycle_type: household.pay_cycle_type,
+                        pay_day: household.pay_day,
+                        anchor_date: household.pay_cycle_anchor,
+                      }
+                    : null
+                }
+                currency={household.currency}
+              />
+            </motion.div>
+          </div>
+
+          {household.is_couple && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
               <CoupleContributions
                 household={household}
                 paycycle={currentPaycycle}
@@ -197,32 +268,9 @@ export function DashboardClient({
                 isPartner={isPartner}
                 otherLabel={otherLabel}
               />
-            )}
-          </div>
-
-          <div className="space-y-6">
-            <CategoryDonutChart
-              paycycle={currentPaycycle}
-              household={household}
-              onCategorySelect={setSelectedCategory}
-            />
-
-            <UpcomingBills seeds={seeds} currency={household.currency} />
-
-            <RecentActivity
-              seeds={seeds}
-              pots={pots}
-              repayments={repayments}
-              currency={household.currency}
-            />
-          </div>
+            </motion.div>
+          )}
         </div>
-
-        <SpendingTrends
-          currentCycle={currentPaycycle}
-          historicalCycles={historicalCycles}
-          household={household}
-        />
       </main>
     </div>
   );

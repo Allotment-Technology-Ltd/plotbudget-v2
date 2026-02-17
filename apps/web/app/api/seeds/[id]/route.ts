@@ -93,6 +93,12 @@ export async function PATCH(
     if (repayment.status === 'active' || repayment.status === 'paid' || repayment.status === 'paused') {
       input.repayment.status = repayment.status;
     }
+    if (repayment.interest_rate !== undefined) {
+      input.repayment.interest_rate =
+        typeof repayment.interest_rate === 'number' && repayment.interest_rate >= 0
+          ? repayment.interest_rate
+          : null;
+    }
   }
 
   const result = await updateSeed(seedId, input, supabase);

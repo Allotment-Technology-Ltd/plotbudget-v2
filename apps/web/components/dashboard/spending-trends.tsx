@@ -2,8 +2,19 @@
 
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from 'recharts';
 import type { Household, PayCycle } from '@repo/supabase';
-import { formatCurrency } from '@/lib/utils/currency';
+import { formatCurrency, currencySymbol } from '@/lib/utils/currency';
+import { formatBudgetAdherenceDiff } from '@/lib/utils/budget-adherence';
 
 type HistoricalCycle = Pick<
   PayCycle,
@@ -34,10 +45,10 @@ interface SpendingTrendsProps {
 }
 
 const CATEGORIES = [
-  { key: 'needs' as const, label: 'Needs', allocKeys: ['alloc_needs_me', 'alloc_needs_partner', 'alloc_needs_joint'] as const },
-  { key: 'wants' as const, label: 'Wants', allocKeys: ['alloc_wants_me', 'alloc_wants_partner', 'alloc_wants_joint'] as const },
-  { key: 'savings' as const, label: 'Savings', allocKeys: ['alloc_savings_me', 'alloc_savings_partner', 'alloc_savings_joint'] as const },
-  { key: 'repay' as const, label: 'Repay', allocKeys: ['alloc_repay_me', 'alloc_repay_partner', 'alloc_repay_joint'] as const },
+  { key: 'needs' as const, label: 'Needs', allocKeys: ['alloc_needs_me', 'alloc_needs_partner', 'alloc_needs_joint'] as const, color: '#8DA399' },
+  { key: 'wants' as const, label: 'Wants', allocKeys: ['alloc_wants_me', 'alloc_wants_partner', 'alloc_wants_joint'] as const, color: '#C78D75' },
+  { key: 'savings' as const, label: 'Savings', allocKeys: ['alloc_savings_me', 'alloc_savings_partner', 'alloc_savings_joint'] as const, color: '#6EC97C' },
+  { key: 'repay' as const, label: 'Repay', allocKeys: ['alloc_repay_me', 'alloc_repay_partner', 'alloc_repay_joint'] as const, color: '#EF5350' },
 ] as const;
 
 const PERCENT_KEYS: Record<(typeof CATEGORIES)[number]['key'], keyof Household> = {
@@ -57,19 +68,6 @@ function getAllocated(cycle: HistoricalCycle | PayCycle, allocKeys: readonly str
   return sum;
 }
 
-function getBudgeted(totalIncome: number, percent: number): number {
-  if (totalIncome <= 0 || !Number.isFinite(percent)) return 0;
-  return (totalIncome * percent) / 100;
-}
-
-/** 0–80% green, 80–100% amber, >100% red */
-function adherenceColor(pctUsed: number): string {
-  if (!Number.isFinite(pctUsed) || pctUsed <= 0) return 'bg-muted';
-  if (pctUsed <= 80) return 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300';
-  if (pctUsed <= 100) return 'bg-amber-500/20 text-amber-800 dark:text-amber-300';
-  return 'bg-red-500/20 text-red-800 dark:text-red-300';
-}
-
 function buildHeatmapData(
   current: PayCycle,
   historical: HistoricalCycle[],
@@ -84,10 +82,13 @@ function buildHeatmapData(
     const cycleLabel =
       c.name ||
       `${format(new Date(c.start_date), 'MMM d')} – ${format(new Date(c.end_date), 'MMM d')}`;
+    const totalAllocated = c.total_allocated ?? 0;
     const totalIncome = c.total_income ?? 0;
+    /** Use total allocated as budget base so "of budget" = adherence to target proportion of what you've allocated. */
+    const budgetBase = totalAllocated > 0 ? totalAllocated : totalIncome;
     const categories = CATEGORIES.map((cat) => {
       const percent = (household[PERCENT_KEYS[cat.key]] as number) ?? 0;
-      const budgeted = getBudgeted(totalIncome, percent);
+      const budgeted = budgetBase > 0 && Number.isFinite(percent) ? (budgetBase * percent) / 100 : 0;
       const allocated = getAllocated(c, cat.allocKeys);
       const pctUsed = budgeted > 0 ? (allocated / budgeted) * 100 : 0;
       return {
@@ -102,6 +103,26 @@ function buildHeatmapData(
   });
 }
 
+/** Build chart data for stacked bar: one bar per cycle, segments = category amounts. */
+function buildStackedBarData(
+  heatmapData: ReturnType<typeof buildHeatmapData>
+): { cycleLabel: string; needs: number; wants: number; savings: number; repay: number; categories: typeof heatmapData[0]['categories'] }[] {
+  return heatmapData.map((row) => {
+    const needs = row.categories.find((c) => c.key === 'needs')?.allocated ?? 0;
+    const wants = row.categories.find((c) => c.key === 'wants')?.allocated ?? 0;
+    const savings = row.categories.find((c) => c.key === 'savings')?.allocated ?? 0;
+    const repay = row.categories.find((c) => c.key === 'repay')?.allocated ?? 0;
+    return {
+      cycleLabel: row.cycleLabel,
+      needs,
+      wants,
+      savings,
+      repay,
+      categories: row.categories,
+    };
+  });
+}
+
 export function SpendingTrends({
   currentCycle,
   historicalCycles,
@@ -109,24 +130,35 @@ export function SpendingTrends({
 }: SpendingTrendsProps) {
   const currency = (household.currency as 'GBP' | 'USD' | 'EUR') ?? 'GBP';
   const data = buildHeatmapData(currentCycle, historicalCycles, household);
+  const stackedData = buildStackedBarData(data);
+  const totalAllocated = currentCycle.total_allocated ?? 0;
+  const totalIncome = currentCycle.total_income ?? 0;
+  const hasAllocation = data.some((row) =>
+    row.categories.some((c) => c.allocated > 0)
+  );
 
-  if (data.length < 2) {
-    return (
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-lg p-6 border border-border"
-        aria-label="Spending trends"
-      >
-        <h2 className="font-heading text-xl uppercase tracking-wider mb-6">
-          Budget Adherence
-        </h2>
-        <p className="text-muted-foreground text-sm py-8 text-center">
-          Complete more pay cycles to see budget adherence across Needs, Wants, Savings, and Repay.
-        </p>
-      </motion.section>
-    );
-  }
+  /** Current cycle summary: allocation, actual %, and diff vs target. */
+  const currentRow = data[data.length - 1];
+  const totalForCurrent = currentRow
+    ? currentRow.categories.reduce((s, c) => s + c.allocated, 0)
+    : 0;
+  const summaryItems =
+    currentRow && totalForCurrent > 0
+      ? currentRow.categories
+          .filter((c) => c.allocated > 0)
+          .map((cat) => {
+            const actualPct = Math.round((cat.allocated / totalForCurrent) * 100);
+            const targetPct = (household[PERCENT_KEYS[cat.key as keyof typeof PERCENT_KEYS]] as number) ?? 0;
+            const diffText = formatBudgetAdherenceDiff(actualPct, targetPct);
+            return {
+              key: cat.key,
+              label: cat.label,
+              allocated: cat.allocated,
+              actualPct,
+              diffText,
+            };
+          })
+      : [];
 
   return (
     <motion.section
@@ -139,51 +171,112 @@ export function SpendingTrends({
       <h2 className="font-heading text-xl uppercase tracking-wider mb-2">
         Budget Adherence
       </h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        % of budget used per category. Green = on track, amber = near limit, red = over budget.
+      <p className="text-sm text-muted-foreground mb-4">
+        Actual allocation vs your target split. Bars show amount per pay cycle.
       </p>
 
-      <div className="overflow-x-auto">
-        <table
-          className="w-full border-collapse text-sm"
-          role="grid"
-          aria-label="Budget adherence by cycle and category"
-        >
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Category</th>
-              {data.map((row) => (
-                <th key={row.cycleId} className="text-center py-2 px-2 font-medium text-foreground min-w-[100px]">
-                  {row.cycleLabel}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {CATEGORIES.map((cat) => (
-              <tr key={cat.key} className="border-b border-border/50 last:border-b-0">
-                <td className="py-2 pr-4 font-medium text-foreground">{cat.label}</td>
-                {data.map((row) => {
-                  const cell = row.categories.find((c) => c.key === cat.key);
-                  if (!cell) return <td key={row.cycleId} />;
-                  const colorClass = adherenceColor(cell.pctUsed);
-                  const pctText = cell.budgeted > 0 ? `${Math.round(cell.pctUsed)}%` : '–';
-                  return (
-                    <td key={row.cycleId} className="py-2 px-2 text-center">
-                      <span
-                        className={`inline-block rounded px-2 py-1 min-w-[3rem] ${colorClass}`}
-                        title={`${cell.label}: ${formatCurrency(cell.allocated, currency)} / ${formatCurrency(cell.budgeted, currency)} (${pctText})`}
-                      >
-                        {pctText}
-                      </span>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {summaryItems.length > 0 && (
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 space-y-2 mb-6" role="region" aria-label="Current cycle budget adherence">
+          {summaryItems.map((item) => (
+            <p key={item.key} className="text-sm">
+              <span className="font-medium">{item.label}</span>
+              {' '}
+              <span className="text-foreground">{formatCurrency(item.allocated, currency)} ({item.actualPct}%)</span>
+              {item.diffText && (
+                <span className="text-muted-foreground">
+                  . {item.diffText}
+                </span>
+              )}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {hasAllocation && stackedData.length > 0 ? (
+        <>
+          <div className="h-72 w-full" aria-label="Budget adherence stacked bar chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={stackedData}
+                margin={{ top: 8, right: 8, left: 0, bottom: 24 }}
+                role="img"
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
+                <XAxis
+                  dataKey="cycleLabel"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval={stackedData.length > 8 ? Math.floor(stackedData.length / 8) : 0}
+                />
+                <YAxis
+                  tickFormatter={(v) => `${currencySymbol(currency)}${v}`}
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={60}
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgb(var(--muted) / 0.3)' }}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length || !label) return null;
+                    const point = payload[0]?.payload as (typeof stackedData)[0];
+                    const total = (point?.needs ?? 0) + (point?.wants ?? 0) + (point?.savings ?? 0) + (point?.repay ?? 0);
+                    return (
+                      <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg text-sm">
+                        <p className="font-medium mb-2">{label}</p>
+                        <div className="space-y-1">
+                          {point?.categories
+                            .filter((cell) => cell.allocated > 0)
+                            .map((cell) => {
+                              const actualPct = total > 0 ? Math.round((cell.allocated / total) * 100) : 0;
+                              const targetPct = (household[PERCENT_KEYS[cell.key as keyof typeof PERCENT_KEYS]] as number) ?? 0;
+                              const diffText = formatBudgetAdherenceDiff(actualPct, targetPct);
+                              return (
+                                <div key={cell.key} className="flex justify-between gap-4">
+                                  <span>{cell.label}:</span>
+                                  <span>
+                                    {formatCurrency(cell.allocated, currency)} ({actualPct}%)
+                                    {diffText != null && (
+                                      <span className="text-muted-foreground">. {diffText}</span>
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 11 }}
+                  formatter={(value) => CATEGORIES.find((c) => c.key === value)?.label ?? value}
+                />
+                {CATEGORIES.map((cat) => (
+                  <Bar
+                    key={cat.key}
+                    dataKey={cat.key}
+                    stackId="budget"
+                    fill={cat.color}
+                    radius={0}
+                    name={cat.key}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {totalIncome > 0 && totalAllocated > totalIncome && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-4">
+              Total allocated ({formatCurrency(totalAllocated, currency)}) exceeds income ({formatCurrency(totalIncome, currency)}).
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="text-muted-foreground text-sm py-8 text-center">
+          Add expenses in Blueprint to see your allocation by category. Each completed pay cycle adds a new bar.
+        </p>
+      )}
     </motion.section>
   );
 }

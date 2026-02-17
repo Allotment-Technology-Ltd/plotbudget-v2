@@ -91,6 +91,14 @@ export default async function PotForecastPage({
       >
         ← Back to Dashboard
       </Link>
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl font-semibold uppercase tracking-wider text-foreground">
+          Savings forecast
+        </h1>
+        <p className="text-muted-foreground">
+          See when you&apos;ll reach your goal based on how much you save each pay cycle.
+        </p>
+      </div>
       <PotForecastClient
         pot={pot}
         household={household}

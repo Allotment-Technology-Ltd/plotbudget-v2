@@ -38,6 +38,7 @@ export interface CreateSeedInput {
     current_balance: number;
     target_date: string | null;
     status: 'active' | 'paid' | 'paused';
+    interest_rate?: number | null;
   };
 }
 
@@ -61,6 +62,7 @@ export interface UpdateSeedInput {
     current_balance?: number;
     target_date?: string | null;
     status?: 'active' | 'paid' | 'paused';
+    interest_rate?: number | null;
   };
 }
 
@@ -255,6 +257,7 @@ export async function createSeed(
           current_balance: data.repayment.current_balance,
           target_date: data.repayment.target_date,
           status: data.repayment.status,
+          interest_rate: data.repayment.interest_rate ?? null,
         })
         .select('id')
         .single();
@@ -373,6 +376,7 @@ export async function updateSeed(
       if (data.repayment.current_balance !== undefined) repayUpdate.current_balance = data.repayment.current_balance;
       if (data.repayment.target_date !== undefined) repayUpdate.target_date = data.repayment.target_date;
       if (data.repayment.status !== undefined) repayUpdate.status = data.repayment.status;
+      if (data.repayment.interest_rate !== undefined) repayUpdate.interest_rate = data.repayment.interest_rate;
       if (Object.keys(repayUpdate).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from('repayments') as any).update(repayUpdate).eq('id', seed.linked_repayment_id);

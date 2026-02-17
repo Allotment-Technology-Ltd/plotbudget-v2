@@ -26,7 +26,6 @@ import {
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 import { fetchDashboardData } from '@/lib/dashboard-data';
 import { markSeedPaid } from '@/lib/mark-seed-paid';
-import { markPotComplete } from '@/lib/mark-pot-complete';
 import { SeedFormModal } from '@/components/SeedFormModal';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { hapticImpact, hapticSuccess } from '@/lib/haptics';
@@ -99,118 +98,6 @@ function MetricCard({
   );
 }
 
-/* ---------- Financial health score ---------- */
-
-function calculateHealthScore(
-  paycycle: PayCycle,
-  household: Household,
-  seeds: Seed[]
-): { score: number; insights: { text: string; type: 'good' | 'warning' | 'info' }[] } {
-  let score = 100;
-  const insights: { text: string; type: 'good' | 'warning' | 'info' }[] = [];
-  const categories = ['needs', 'wants', 'savings', 'repay'] as const;
-  let overCount = 0;
-
-  categories.forEach((cat) => {
-    const target =
-      paycycle.total_income * ((household[`${cat}_percent`] as number) / 100);
-    const allocated =
-      (paycycle[`alloc_${cat}_me`] as number) +
-      (paycycle[`alloc_${cat}_partner`] as number) +
-      (paycycle[`alloc_${cat}_joint`] as number);
-    if (allocated > target) {
-      score -= 15;
-      overCount++;
-    }
-  });
-
-  if (overCount > 0) {
-    insights.push({ text: `Over budget in ${overCount} ${overCount === 1 ? 'category' : 'categories'}`, type: 'warning' });
-  } else {
-    insights.push({ text: 'On budget in all categories', type: 'good' });
-  }
-
-  const unpaid = seeds.filter((s) => !s.is_paid);
-  if (unpaid.length > 0) {
-    insights.push({ text: `${unpaid.length} ${unpaid.length === 1 ? 'bill' : 'bills'} unpaid`, type: 'info' });
-  } else {
-    score += 10;
-    insights.push({ text: 'All bills paid', type: 'good' });
-  }
-
-  const savingsSeeds = seeds.filter((s) => s.type === 'savings');
-  if (savingsSeeds.length > 0) {
-    insights.push({ text: `${savingsSeeds.length} savings ${savingsSeeds.length === 1 ? 'goal' : 'goals'} active`, type: 'good' });
-  }
-
-  return { score: Math.max(0, Math.min(100, score)), insights };
-}
-
-function getScoreLabel(s: number, colors: import('@repo/design-tokens/native').ColorPalette) {
-  if (s >= 90) return { text: 'Excellent!', color: colors.accentPrimary };
-  if (s >= 75) return { text: 'Good', color: colors.accentPrimary };
-  if (s >= 60) return { text: 'Fair', color: colors.warning };
-  return { text: 'Needs Attention', color: colors.error };
-}
-
-function FinancialHealthSection({
-  paycycle,
-  household,
-  seeds,
-  colors,
-  spacing,
-  borderRadius,
-}: {
-  paycycle: PayCycle;
-  household: Household;
-  seeds: Seed[];
-  colors: import('@repo/design-tokens/native').ColorPalette;
-  spacing: typeof import('@repo/design-tokens/native').spacing;
-  borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
-}) {
-  const { score, insights } = calculateHealthScore(paycycle, household, seeds);
-  const scoreLabel = getScoreLabel(score, colors);
-  const barColor = score >= 75 ? colors.accentPrimary : score >= 60 ? colors.warning : colors.error;
-
-  const insightIcon = (type: 'good' | 'warning' | 'info'): { name: React.ComponentProps<typeof FontAwesome>['name']; color: string } => {
-    if (type === 'good') return { name: 'check-circle', color: colors.accentPrimary };
-    if (type === 'warning') return { name: 'exclamation-circle', color: colors.warning };
-    return { name: 'line-chart', color: colors.textSecondary };
-  };
-
-  return (
-    <Card variant="default" padding="md">
-      <Text variant="sub-sm" style={{ marginBottom: spacing.md }}>Financial Health</Text>
-      <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
-        <Text variant="display-sm" style={{ color: scoreLabel.color }}>{score}</Text>
-        <Text variant="body-sm" color="secondary">out of 100</Text>
-        <Text variant="body-sm" style={{ color: scoreLabel.color, marginTop: spacing.xs }}>{scoreLabel.text}</Text>
-      </View>
-      <View
-        style={{
-          height: 10,
-          backgroundColor: colors.borderSubtle,
-          borderRadius: borderRadius.full,
-          overflow: 'hidden',
-          marginBottom: spacing.md,
-        }}>
-        <View style={{ height: '100%', width: `${score}%`, backgroundColor: barColor, borderRadius: borderRadius.full }} />
-      </View>
-      <View style={{ gap: spacing.sm }}>
-        {insights.map((insight, i) => {
-          const icon = insightIcon(insight.type);
-          return (
-            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <FontAwesome name={icon.name} size={14} color={icon.color} />
-              <Text variant="body-sm" color="secondary">{insight.text}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </Card>
-  );
-}
-
 /* ---------- Savings & debt progress ---------- */
 
 function SavingsDebtSection({
@@ -220,9 +107,8 @@ function SavingsDebtSection({
   spacing,
   borderRadius,
   pots,
-  optimisticPotStatus,
-  onMarkPotComplete,
   onPotPress,
+  onRepaymentPress,
 }: {
   repayments: Repayment[];
   currency: CurrencyCode;
@@ -230,9 +116,8 @@ function SavingsDebtSection({
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
   pots: Pot[];
-  optimisticPotStatus: Record<string, PotStatus>;
-  onMarkPotComplete: (potId: string, status: 'complete' | 'active') => void;
   onPotPress: (potId: string) => void;
+  onRepaymentPress: (repaymentId: string) => void;
 }) {
   if (repayments.length === 0 && pots.length === 0) return null;
 
@@ -241,33 +126,15 @@ function SavingsDebtSection({
       <Text variant="sub-sm" style={{ marginBottom: spacing.md }}>Savings & Debt</Text>
       <View style={{ gap: spacing.md }}>
         {pots.map((pot) => {
-          const effectiveStatus = (optimisticPotStatus[pot.id] ?? pot.status) as PotStatus;
+          const potStatus = (pot.status ?? 'active') as PotStatus;
           const progress = pot.target_amount > 0 ? Math.min(100, (pot.current_amount / pot.target_amount) * 100) : 0;
-          const statusLabel = effectiveStatus === 'complete' ? 'Accomplished' : effectiveStatus === 'paused' ? 'Paused' : 'Saving';
-          const canToggle = effectiveStatus === 'active' || effectiveStatus === 'complete' || effectiveStatus === 'paused';
-          const nextStatus = effectiveStatus === 'complete' ? 'active' : 'complete';
+          const statusLabel = potStatus === 'complete' ? 'Accomplished' : potStatus === 'paused' ? 'Paused' : 'Saving';
           return (
             <Pressable key={pot.id} onPress={() => onPotPress(pot.id)}>
               <View style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, padding: spacing.md }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1, minWidth: 0 }}>
-                      <BodyText style={{ fontSize: 18 }}>{pot.icon || '🏖️'}</BodyText>
-                      <LabelText numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{pot.name}</LabelText>
-                    </View>
-                    {canToggle && (
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          hapticImpact('light');
-                          onMarkPotComplete(pot.id, nextStatus as 'complete' | 'active');
-                        }}
-                        hitSlop={8}
-                      >
-                        <Text variant="label-sm" style={{ color: colors.accentPrimary }}>
-                          {effectiveStatus === 'complete' ? 'Active' : 'Done'}
-                        </Text>
-                      </Pressable>
-                    )}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+                    <BodyText style={{ fontSize: 18 }}>{pot.icon || '🏖️'}</BodyText>
+                    <LabelText numberOfLines={1} style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm }}>{pot.name}</LabelText>
                   </View>
                   <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
                     {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}{pot.target_amount.toFixed(2)}
@@ -285,19 +152,21 @@ function SavingsDebtSection({
           const progress = rep.starting_balance > 0 ? Math.min(100, (paid / rep.starting_balance) * 100) : 0;
           const statusLabel = rep.status === 'paid' ? 'Cleared' : rep.status === 'paused' ? 'Paused' : 'Clearing';
           return (
-            <View key={rep.id} style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, padding: spacing.md }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-                <FontAwesome name="credit-card" size={14} color={colors.textSecondary} />
-                <LabelText numberOfLines={1}>{rep.name}</LabelText>
+            <Pressable key={rep.id} onPress={() => onRepaymentPress(rep.id)}>
+              <View style={{ borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: borderRadius.md, padding: spacing.md }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+                  <FontAwesome name="credit-card" size={14} color={colors.textSecondary} />
+                  <LabelText numberOfLines={1}>{rep.name}</LabelText>
+                </View>
+                <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
+                  {currencySymbol(currency)}{rep.current_balance.toFixed(2)} / {currencySymbol(currency)}{rep.starting_balance.toFixed(2)}
+                </Text>
+                <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden', marginBottom: spacing.xs }}>
+                  <View style={{ height: '100%', width: `${progress}%`, backgroundColor: colors.warning, borderRadius: borderRadius.full }} />
+                </View>
+                <Text variant="label-sm" color="secondary">{progress.toFixed(0)}% — {statusLabel}</Text>
               </View>
-              <Text variant="body-sm" color="secondary" style={{ marginBottom: spacing.sm }}>
-                {currencySymbol(currency)}{rep.current_balance.toFixed(2)} / {currencySymbol(currency)}{rep.starting_balance.toFixed(2)}
-              </Text>
-              <View style={{ height: 8, backgroundColor: colors.borderSubtle, borderRadius: borderRadius.full, overflow: 'hidden', marginBottom: spacing.xs }}>
-                <View style={{ height: '100%', width: `${progress}%`, backgroundColor: colors.warning, borderRadius: borderRadius.full }} />
-              </View>
-              <Text variant="label-sm" color="secondary">{progress.toFixed(0)}% — {statusLabel}</Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
@@ -488,7 +357,6 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [optimisticPaidIds, setOptimisticPaidIds] = useState<Set<string>>(new Set());
-  const [optimisticPotStatus, setOptimisticPotStatus] = useState<Record<string, PotStatus>>({});
   const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -538,31 +406,6 @@ export default function DashboardScreen() {
       }
     },
     [loadData]
-  );
-
-  const handleMarkPotComplete = useCallback(
-    async (potId: string, status: 'complete' | 'active') => {
-      const pot = data?.pots.find((p) => p.id === potId);
-      const prevStatus = (pot?.status ?? 'active') as PotStatus;
-      setOptimisticPotStatus((s) => ({ ...s, [potId]: status }));
-      const result = await markPotComplete(potId, status);
-      if ('success' in result) {
-        if (status === 'complete') {
-          hapticSuccess();
-          setShowSuccess(true);
-        }
-        await loadData();
-        setOptimisticPotStatus((s) => {
-          const next = { ...s };
-          delete next[potId];
-          return next;
-        });
-      } else {
-        setOptimisticPotStatus((s) => ({ ...s, [potId]: prevStatus }));
-        Alert.alert('Couldn’t update pot', result.error ?? 'Something went wrong. Try again.');
-      }
-    },
-    [data?.pots, loadData]
   );
 
   if (loading && !data) {
@@ -653,7 +496,7 @@ export default function DashboardScreen() {
       status: (allocatedPercent > 100 ? 'danger' : allocatedPercent > 90 ? 'warning' : 'good') as StatusKey,
     },
     {
-      label: 'Left to spend',
+      label: 'Left to pay',
       value: formatCurrency(totalRemaining, currency),
       subtext: `${remainingPercent.toFixed(0)}% of income left this cycle`,
       percentage: remainingPercent,
@@ -706,18 +549,6 @@ export default function DashboardScreen() {
             ))}
           </View>
 
-          {/* Financial health */}
-          <View style={{ marginTop: spacing.lg }}>
-            <FinancialHealthSection
-              paycycle={data.currentPaycycle}
-              household={data.household}
-              seeds={data.seeds}
-              colors={colors}
-              spacing={spacing}
-              borderRadius={borderRadius}
-            />
-          </View>
-
           {/* Category breakdown */}
           <View style={{ marginTop: spacing.lg }}>
             <CategoryBreakdownSection
@@ -758,11 +589,13 @@ export default function DashboardScreen() {
                 spacing={spacing}
                 borderRadius={borderRadius}
                 pots={data.pots}
-                optimisticPotStatus={optimisticPotStatus}
-                onMarkPotComplete={handleMarkPotComplete}
                 onPotPress={(id) => {
                   hapticImpact('light');
                   router.push(`/pot-detail/${id}` as import('expo-router').Href);
+                }}
+                onRepaymentPress={(id) => {
+                  hapticImpact('light');
+                  router.push(`/repayment-detail/${id}` as import('expo-router').Href);
                 }}
               />
             </View>

@@ -120,14 +120,8 @@ export function RecentActivity({
           Recent Activity
         </h2>
         <p className="text-muted-foreground text-sm py-6">
-          No recent activity. Add your first expense in Blueprint.
+          No recent activity.
         </p>
-        <Link
-          href="/dashboard/blueprint"
-          className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
-        >
-          Add expense
-        </Link>
       </motion.section>
     );
   }

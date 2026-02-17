@@ -1,5 +1,7 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@repo/supabase';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { updateSeed, createSeed } from '@/lib/actions/seed-actions';
@@ -10,13 +12,15 @@ type PaymentSource = 'me' | 'partner' | 'joint';
 /**
  * Lock in an amount for a pot (savings) or repayment (debt).
  * Finds or creates the recurring seed in the active or draft cycle linked to the pot/repayment.
+ * Pass optional supabase client for API routes (e.g. token-based auth from native).
  */
 export async function lockInForecastAmount(
   potId: string | null,
   repaymentId: string | null,
   amount: number,
   name: string,
-  type: 'savings' | 'repay'
+  type: 'savings' | 'repay',
+  supabaseClient?: SupabaseClient<Database>
 ): Promise<{ success?: boolean; error?: string }> {
   if (amount <= 0) return { error: 'Amount must be positive' };
   if (!potId && !repaymentId) return { error: 'Must specify pot or repayment' };
@@ -24,7 +28,7 @@ export async function lockInForecastAmount(
     return { error: 'Pot required for savings, repayment required for repay' };
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = supabaseClient ?? (await createServerSupabaseClient());
   const {
     data: { user },
   } = await supabase.auth.getUser();

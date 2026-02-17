@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -8,14 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ForecastChart } from './forecast-chart';
 import { ForecastDisclaimer } from './forecast-disclaimer';
+import { ForecastLockedInfo } from './forecast-locked-info';
 import { lockInForecastAmount } from '@/lib/actions/forecast-actions';
+import { updateRepayment } from '@/lib/actions/repayment-actions';
 import {
   projectRepaymentOverTime,
+  projectSavingsOverTimeFixedCycles,
   endDateFromCycles,
   cyclesToClearFromAmount,
+  getCycleEndDateForTarget,
+  totalRepaymentCost,
 } from '@/lib/utils/forecast-projection';
 import { suggestedRepaymentAmount } from '@/lib/utils/suggested-amount';
-import { currencySymbol, formatCurrency } from '@/lib/utils/currency';
+import { currencySymbol, formatCurrency, parseIncome } from '@/lib/utils/currency';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { CreditCard } from 'lucide-react';
 import type { Household, Repayment, PayCycle, Seed } from '@repo/supabase';
@@ -47,10 +53,70 @@ export function RepaymentForecastClient({
   );
 
   const cycleStart = paycycle?.start_date ?? new Date().toISOString().slice(0, 10);
-  const currentBalance = Number(repayment.current_balance);
-  const startingBalance = Number(repayment.starting_balance);
   const targetDateFromRep = repayment.target_date ?? null;
-  const interestRate = repayment.interest_rate != null ? Number(repayment.interest_rate) : null;
+
+  const [currentBalanceStr, setCurrentBalanceStr] = useState(String(repayment.current_balance ?? 0));
+  const [startingBalanceStr, setStartingBalanceStr] = useState(String(repayment.starting_balance ?? 0));
+  useEffect(() => {
+    setCurrentBalanceStr(String(repayment.current_balance ?? 0));
+    setStartingBalanceStr(String(repayment.starting_balance ?? 0));
+  }, [repayment.current_balance, repayment.starting_balance]);
+
+  const parsedCurrent = parseIncome(currentBalanceStr);
+  const parsedStarting = parseIncome(startingBalanceStr);
+  const currentBalance = Number.isFinite(parsedCurrent) && parsedCurrent >= 0 ? parsedCurrent : Number(repayment.current_balance ?? 0);
+  const startingBalance = Number.isFinite(parsedStarting) && parsedStarting > 0 ? parsedStarting : Number(repayment.starting_balance ?? 0);
+
+  const handleSaveRepaymentAmounts = async () => {
+    const newCurrent = Number.isFinite(parsedCurrent) && parsedCurrent >= 0 ? parsedCurrent : null;
+    const newStarting = Number.isFinite(parsedStarting) && parsedStarting > 0 ? parsedStarting : null;
+    const serverCurrent = Number(repayment.current_balance ?? 0);
+    const serverStarting = Number(repayment.starting_balance ?? 0);
+    const currentChanged = newCurrent !== null && newCurrent !== serverCurrent;
+    const startingChanged = newStarting !== null && newStarting !== serverStarting;
+    if (!currentChanged && !startingChanged) return;
+    const updates: { current_balance?: number; starting_balance?: number } = {};
+    if (currentChanged) updates.current_balance = newCurrent!;
+    if (startingChanged) updates.starting_balance = newStarting!;
+    const result = await updateRepayment(repayment.id, updates);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Amounts updated');
+    router.refresh();
+  };
+  const [interestRateStr, setInterestRateStr] = useState(
+    repayment.interest_rate != null ? String(repayment.interest_rate) : ''
+  );
+  useEffect(() => {
+    setInterestRateStr(
+      repayment.interest_rate != null ? String(repayment.interest_rate) : ''
+    );
+  }, [repayment.interest_rate]);
+  const parsedInterest = parseFloat(interestRateStr);
+  const interestRate =
+    Number.isFinite(parsedInterest) && parsedInterest >= 0
+      ? parsedInterest
+      : repayment.interest_rate != null
+        ? Number(repayment.interest_rate)
+        : null;
+
+  const handleSaveInterestRate = async () => {
+    const val =
+      Number.isFinite(parsedInterest) && parsedInterest >= 0 ? parsedInterest : null;
+    const serverVal = repayment.interest_rate != null ? Number(repayment.interest_rate) : null;
+    if (val === serverVal) return;
+    const result = await updateRepayment(repayment.id, {
+      interest_rate: val,
+    });
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Interest rate updated');
+    router.refresh();
+  };
 
   const suggestedAmount = useMemo(() => {
     if (!targetDateFromRep) return null;
@@ -67,7 +133,14 @@ export function RepaymentForecastClient({
   const [amountStr, setAmountStr] = useState(
     linkedSeed ? String(linkedSeed.amount) : suggestedAmount != null ? String(suggestedAmount) : ''
   );
-  const [includeInterest, setIncludeInterest] = useState(false);
+  const hasInterest = repayment.interest_rate != null && Number(repayment.interest_rate) > 0;
+
+  useEffect(() => {
+    if (linkedSeed && Number(linkedSeed.amount) > 0) {
+      setAmountStr(String(linkedSeed.amount));
+    }
+  }, [linkedSeed?.id, linkedSeed?.amount]);
+  const [includeInterest, setIncludeInterest] = useState(hasInterest);
   const [isLocking, setIsLocking] = useState(false);
 
   const amount = parseFloat(amountStr) || 0;
@@ -83,9 +156,52 @@ export function RepaymentForecastClient({
     );
   }, [currentBalance, amount, cycleStart, config, includeInterest, interestRate]);
 
+  const projectionSuggested = useMemo(() => {
+    if (!targetDate || !suggestedAmount || suggestedAmount <= 0 || currentBalance <= 0) return [];
+    return projectRepaymentOverTime(
+      currentBalance,
+      suggestedAmount,
+      cycleStart,
+      config,
+      { includeInterest, interestRateAnnualPercent: interestRate }
+    );
+  }, [currentBalance, suggestedAmount, targetDate, cycleStart, config, includeInterest, interestRate]);
+
+  const projectionFallback = useMemo(() => {
+    if (projection.length > 0 || projectionSuggested.length > 0) return [];
+    if (currentBalance <= 0) return [];
+    return projectSavingsOverTimeFixedCycles(
+      currentBalance,
+      0,
+      cycleStart,
+      config,
+      12
+    );
+  }, [currentBalance, cycleStart, config, projection, projectionSuggested]);
+
+  const targetDateLabel = useMemo(() => {
+    if (!targetDate) return null;
+    const cycleEnd = getCycleEndDateForTarget(cycleStart, targetDate, config);
+    return format(new Date(cycleEnd), 'MMM yyyy');
+  }, [targetDate, cycleStart, config]);
+
   const cyclesToClear = amount > 0 ? cyclesToClearFromAmount(currentBalance, amount) : 0;
   const payoffDate =
     cyclesToClear > 0 ? endDateFromCycles(cycleStart, cyclesToClear - 1, config) : null;
+
+  const costWithUserAmount = useMemo(() => {
+    if (amount <= 0 || currentBalance <= 0) return null;
+    return totalRepaymentCost(currentBalance, amount, cycleStart, config, {
+      interestRateAnnualPercent: interestRate,
+    });
+  }, [currentBalance, amount, cycleStart, config, interestRate]);
+
+  const costWithSuggestedAmount = useMemo(() => {
+    if (!suggestedAmount || suggestedAmount <= 0 || currentBalance <= 0) return null;
+    return totalRepaymentCost(currentBalance, suggestedAmount, cycleStart, config, {
+      interestRateAnnualPercent: interestRate,
+    });
+  }, [currentBalance, suggestedAmount, cycleStart, config, interestRate]);
 
   const handleLockIn = async () => {
     if (amount <= 0) {
@@ -121,9 +237,30 @@ export function RepaymentForecastClient({
           <CreditCard className="w-6 h-6 text-repay" aria-hidden />
           <h1 className="font-heading text-xl uppercase tracking-wider">{repayment.name}</h1>
         </div>
-        <p className="text-muted-foreground mb-2">
-          {symbol}{currentBalance.toFixed(2)} / {symbol}{startingBalance.toFixed(2)} remaining
-        </p>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="repayment-current" className="text-xs text-muted-foreground">Current balance ({symbol})</Label>
+            <Input
+              id="repayment-current"
+              type="text"
+              inputMode="decimal"
+              value={currentBalanceStr}
+              onChange={(e) => setCurrentBalanceStr(e.target.value.replace(/[^0-9.]/g, ''))}
+              onBlur={handleSaveRepaymentAmounts}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="repayment-starting" className="text-xs text-muted-foreground">Starting balance ({symbol})</Label>
+            <Input
+              id="repayment-starting"
+              type="text"
+              inputMode="decimal"
+              value={startingBalanceStr}
+              onChange={(e) => setStartingBalanceStr(e.target.value.replace(/[^0-9.]/g, ''))}
+              onBlur={handleSaveRepaymentAmounts}
+            />
+          </div>
+        </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden mb-6">
           <div
             className="h-full bg-repay rounded-full transition-all"
@@ -131,9 +268,13 @@ export function RepaymentForecastClient({
           />
         </div>
 
+        <p className="text-sm text-muted-foreground mb-5">
+          Set a target payoff date to get a suggested amount, or enter an amount to see when you’ll clear the debt.
+        </p>
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="target-date">Target payoff date</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="target-date" className="text-xs text-muted-foreground">Target payoff date</Label>
             <Input
               id="target-date"
               type="date"
@@ -141,8 +282,8 @@ export function RepaymentForecastClient({
               onChange={(e) => setTargetDate(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount per cycle ({symbol})</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="amount" className="text-xs text-muted-foreground">Amount per cycle ({symbol})</Label>
             <div className="flex gap-2">
               <Input
                 id="amount"
@@ -156,7 +297,7 @@ export function RepaymentForecastClient({
                 <Button
                   type="button"
                   variant="outline"
-                  className="px-3 py-1.5 text-xs"
+                  className="px-3 py-1.5 text-xs shrink-0"
                   onClick={() => setAmountStr(suggestedAmount.toFixed(2))}
                 >
                   Use suggested
@@ -166,6 +307,24 @@ export function RepaymentForecastClient({
           </div>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2 mt-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="repayment-interest" className="text-xs text-muted-foreground">
+              Interest rate (% p.a.)
+            </Label>
+            <Input
+              id="repayment-interest"
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={interestRateStr}
+              onChange={(e) =>
+                setInterestRateStr(e.target.value.replace(/[^0-9.]/g, ''))
+              }
+              onBlur={handleSaveInterestRate}
+            />
+          </div>
+        </div>
         {interestRate != null && interestRate > 0 && (
           <div className="flex items-center gap-2 mt-4">
             <input
@@ -181,20 +340,111 @@ export function RepaymentForecastClient({
           </div>
         )}
 
-        {amount > 0 && currentBalance > 0 && (
-          <p className="text-sm text-muted-foreground mt-4">
-            Paying {formatCurrency(amount, currency)} per cycle → cleared in {cyclesToClear} cycle
-            {cyclesToClear !== 1 ? 's' : ''}
-            {payoffDate ? ` (by ${new Date(payoffDate).toLocaleDateString()})` : ''}
-          </p>
-        )}
+        {/* Projection summaries: outcome and interest comparison */}
+        <div className="mt-6 space-y-4">
+          <h2 className="font-heading text-sm uppercase tracking-wider text-foreground">
+            Outcome summary
+          </h2>
+          <div
+            className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2"
+            role="region"
+            aria-label="Forecast outcome"
+          >
+          {targetDate && suggestedAmount != null && (
+            <p className="text-sm">
+              <span className="text-muted-foreground">To clear by </span>
+              <span className="font-semibold">
+                {new Date(targetDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+              </span>
+              <span className="text-muted-foreground">: pay </span>
+              <span className="font-semibold text-repay">
+                {formatCurrency(suggestedAmount, currency)}
+              </span>
+              <span className="text-muted-foreground"> per cycle</span>
+            </p>
+          )}
+          {amount > 0 && currentBalance > 0 && payoffDate && (
+            <p className="text-sm">
+              <span className="text-muted-foreground">At </span>
+              <span className="font-semibold">{formatCurrency(amount, currency)}</span>
+              <span className="text-muted-foreground"> per cycle: cleared by </span>
+              <span className="font-semibold text-repay">
+                {new Date(payoffDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+              </span>
+            </p>
+          )}
+          {!targetDate && (amount <= 0 || currentBalance <= 0) && (
+            <p className="text-sm text-muted-foreground">
+              Set a target date or amount to see the outcome.
+            </p>
+          )}
+          </div>
+
+          {interestRate != null &&
+          interestRate > 0 &&
+          costWithUserAmount &&
+          costWithSuggestedAmount &&
+          amount > 0 &&
+          suggestedAmount != null &&
+          amount !== suggestedAmount && (
+            <div
+              className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2"
+              role="region"
+              aria-label="Interest comparison"
+            >
+              <p className="text-sm font-medium">Total paid with interest</p>
+              <p className="text-sm text-muted-foreground">
+                At {formatCurrency(amount, currency)}/cycle: {formatCurrency(costWithUserAmount.totalPaid, currency)}{' '}
+                over {costWithUserAmount.cycles} cycle{costWithUserAmount.cycles !== 1 ? 's' : ''}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                At {formatCurrency(suggestedAmount, currency)}/cycle: {formatCurrency(costWithSuggestedAmount.totalPaid, currency)}{' '}
+                over {costWithSuggestedAmount.cycles} cycle{costWithSuggestedAmount.cycles !== 1 ? 's' : ''}
+              </p>
+              <p className="text-sm font-semibold">
+                {costWithUserAmount.totalPaid < costWithSuggestedAmount.totalPaid ? (
+                  <>
+                    Overpaying saves {formatCurrency(costWithSuggestedAmount.totalPaid - costWithUserAmount.totalPaid, currency)}{' '}
+                    in interest
+                  </>
+                ) : (
+                  <>
+                    Paying less adds {formatCurrency(costWithUserAmount.totalPaid - costWithSuggestedAmount.totalPaid, currency)}{' '}
+                    in interest
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="mt-6">
           <h2 className="font-heading text-sm uppercase tracking-wider mb-4">Projection</h2>
-          <ForecastChart data={projection} type="repay" currency={currency} />
+          <ForecastChart
+            data={
+              projection.length > 0
+                ? projection
+                : projectionSuggested.length > 0
+                  ? projectionSuggested
+                  : projectionFallback
+            }
+            type="repay"
+            currency={currency}
+            dataSuggested={
+              projection.length > 0 && projectionSuggested.length > 0 ? projectionSuggested : null
+            }
+            targetDateLabel={targetDate ? targetDateLabel ?? undefined : undefined}
+          />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <ForecastLockedInfo
+          linkedSeed={linkedSeed}
+          currency={currency}
+          type="repay"
+          className="mt-6"
+        />
+
+        <div className="mt-4 flex flex-wrap gap-3">
           <Button
             onClick={handleLockIn}
             disabled={amount <= 0 || isLocking}
@@ -204,7 +454,15 @@ export function RepaymentForecastClient({
               ? 'Locking in…'
               : `Lock in ${formatCurrency(amount || 0, currency)} per cycle`}
           </Button>
-          <Link href="/dashboard/blueprint">
+          <Link
+            href={
+              paycycle && linkedSeed
+                ? `/dashboard/blueprint?cycle=${paycycle.id}&edit=${linkedSeed.id}`
+                : paycycle
+                  ? `/dashboard/blueprint?cycle=${paycycle.id}&editRepayment=${repayment.id}`
+                  : '/dashboard/blueprint'
+            }
+          >
             <Button variant="outline" type="button">
               Edit in Blueprint
             </Button>

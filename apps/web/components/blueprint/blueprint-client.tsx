@@ -53,6 +53,10 @@ interface BlueprintClientProps {
   userInitials?: string;
   /** When set, open the edit dialog for this seed (e.g. from dashboard recent activity). */
   initialEditSeedId?: string | null;
+  /** When set, open Add savings with this pot pre-selected (e.g. from forecast when no linked seed). */
+  initialEditPotId?: string | null;
+  /** When set, open Add repay with this repayment pre-selected (e.g. from forecast when no linked seed). */
+  initialEditRepaymentId?: string | null;
   /** When true, show "New cycle started!" celebration once (e.g. after creating next cycle). */
   initialNewCycleCelebration?: boolean;
   /** Income events in this cycle (for display). */
@@ -79,6 +83,8 @@ export function BlueprintClient({
   userAvatarUrl,
   userInitials = '?',
   initialEditSeedId = null,
+  initialEditPotId = null,
+  initialEditRepaymentId = null,
   initialNewCycleCelebration = false,
   incomeEvents = [],
   isPartner = false,
@@ -156,14 +162,28 @@ export function BlueprintClient({
   const [isSwitchingCycle, setIsSwitchingCycle] = useState(false);
 
   useEffect(() => {
-    if (!initialEditSeedId || seeds.length === 0) return;
-    const seed = seeds.find((s) => s.id === initialEditSeedId);
-    if (seed) {
-      setEditingSeed(seed);
-      setSelectedCategory(seed.type);
-      setIsAddSeedOpen(true);
+    if (initialEditSeedId && seeds.length > 0) {
+      const seed = seeds.find((s) => s.id === initialEditSeedId);
+      if (seed) {
+        setEditingSeed(seed);
+        setSelectedCategory(seed.type);
+        setIsAddSeedOpen(true);
+        return;
+      }
     }
-  }, [initialEditSeedId, seeds]);
+    if (initialEditPotId && pots.some((p) => p.id === initialEditPotId)) {
+      setEditingSeed(null);
+      setSelectedCategory('savings');
+      setIsAddSeedOpen(true);
+      return;
+    }
+    if (initialEditRepaymentId && repayments.some((r) => r.id === initialEditRepaymentId)) {
+      setEditingSeed(null);
+      setSelectedCategory('repay');
+      setIsAddSeedOpen(true);
+      return;
+    }
+  }, [initialEditSeedId, initialEditPotId, initialEditRepaymentId, seeds, pots, repayments]);
 
   const handleNewCycleCelebrationClose = () => {
     setShowNewCycleCelebration(false);
@@ -641,10 +661,17 @@ export function BlueprintClient({
         paycycle={paycycle}
         pots={pots}
         repayments={repayments}
+        initialLinkPotId={
+          initialEditPotId && !editingSeed ? initialEditPotId : undefined
+        }
+        initialLinkRepaymentId={
+          initialEditRepaymentId && !editingSeed ? initialEditRepaymentId : undefined
+        }
         onSuccess={() => {
           setIsAddSeedOpen(false);
           setEditingSeed(null);
           setSelectedCategory(null);
+          router.replace(`/dashboard/blueprint?cycle=${paycycle.id}`, { scroll: false });
           router.refresh();
         }}
         isPartner={isPartner}

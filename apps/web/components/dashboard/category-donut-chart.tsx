@@ -133,6 +133,18 @@ export function CategoryDonutChart({
             formatter={(value: number | undefined) =>
               value != null ? `${currencySymbol(currency)}${Number(value).toFixed(2)}` : `${currencySymbol(currency)}0.00`
             }
+            contentStyle={{
+              backgroundColor: 'rgb(var(--popover))',
+              color: 'rgb(var(--popover-foreground))',
+              border: '1px solid rgb(var(--popover-foreground) / 0.2)',
+              borderRadius: 'var(--radius)',
+              padding: '8px 12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              fontSize: '14px',
+            }}
+            itemStyle={{
+              color: 'rgb(var(--popover-foreground))',
+            }}
           />
           <Legend
             verticalAlign="bottom"

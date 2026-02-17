@@ -43,16 +43,16 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
           : 'good') as StatusKey,
     },
     {
-      label: 'Left to spend',
+      label: 'Left to pay',
       value: formatCurrency(totalRemaining, currency),
       subtext: `${remainingPercent.toFixed(0)}% of income left this cycle`,
       percentage: remainingPercent,
       status: (remainingPercent < 10 ? 'warning' : 'good') as StatusKey,
     },
     {
-      label: 'Days Left',
+      label: cycleNotStarted ? 'Starts in' : 'Days Left',
       value: cycleNotStarted
-        ? `Starts in ${daysUntilStart} days`
+        ? `${daysUntilStart} days`
         : `${daysRemaining} days`,
       subtext: cycleNotStarted
         ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
@@ -81,7 +81,7 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="bg-card rounded-lg p-6 border border-border hover:border-primary/30 transition-colors duration-200 min-w-0 overflow-hidden"
+            className="bg-card rounded-lg p-6 border border-border min-w-0 overflow-hidden"
             role="article"
             aria-label={`${metric.label}: ${metric.value}`}
           >

@@ -27,7 +27,13 @@ type UserProfile = Pick<
 export default async function BlueprintPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cycle?: string; edit?: string; newCycle?: string }>;
+  searchParams: Promise<{
+    cycle?: string;
+    edit?: string;
+    editPot?: string;
+    editRepayment?: string;
+    newCycle?: string;
+  }>;
 }) {
   const params = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -133,6 +139,8 @@ export default async function BlueprintPage({
   const activePaycycle = allPaycycles.find((p) => p.status === 'active');
   const hasDraftCycle = allPaycycles.some((p) => p.status === 'draft');
   const editSeedId = params.edit ?? null;
+  const editPotId = params.editPot ?? null;
+  const editRepaymentId = params.editRepayment ?? null;
   const userEmail = user.email ?? '';
   const userInitials = getAvatarInitials(profile?.display_name ?? null, userEmail);
   const showNewCycleCelebration = params.newCycle != null;
@@ -170,6 +178,8 @@ export default async function BlueprintPage({
       userAvatarUrl={profile?.avatar_url ?? null}
       userInitials={userInitials}
       initialEditSeedId={editSeedId}
+      initialEditPotId={editPotId}
+      initialEditRepaymentId={editRepaymentId}
       initialNewCycleCelebration={showNewCycleCelebration}
       incomeEvents={incomeEvents}
       isPartner={isPartner}

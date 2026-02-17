@@ -12,12 +12,13 @@ import {
 import { usePotDetailData } from '@/lib/use-pot-detail-data';
 import { usePotDetailToggle } from '@/lib/use-pot-detail-toggle';
 import { PotDetailCard } from '@/components/PotDetailCard';
+import { PotForecastSection } from '@/components/PotForecastSection';
 
 export default function PotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, spacing } = useTheme();
-  const { pot, currency, loading, reload, setPot } = usePotDetailData(id);
+  const { pot, currency, loading, reload, setPot, household, paycycle, linkedSeed } = usePotDetailData(id);
   const { toggling, handleToggleComplete } = usePotDetailToggle(pot, setPot, reload);
 
   const handleBack = () => {
@@ -71,6 +72,17 @@ export default function PotDetailScreen() {
             toggling={toggling}
             onToggleComplete={handleToggleComplete}
           />
+
+          {household && paycycle && (
+            <PotForecastSection
+              pot={pot}
+              household={household}
+              paycycle={paycycle}
+              linkedSeed={linkedSeed}
+              currency={currency}
+              onLockInSuccess={reload}
+            />
+          )}
         </Section>
       </Container>
     </ScrollView>
