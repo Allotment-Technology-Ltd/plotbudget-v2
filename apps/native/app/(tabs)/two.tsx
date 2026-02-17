@@ -17,7 +17,11 @@ import { DeleteSeedConfirmModal } from '@/components/DeleteSeedConfirmModal';
 import { IncomeManageModal } from '@/components/IncomeManageModal';
 import { CyclePickerSheet } from '@/components/CyclePickerSheet';
 import { PotCard } from '@/components/PotCard';
+import { CategoryRatioSheet } from '@/components/CategoryRatioSheet';
 import { BlueprintCategorySection } from '@/components/BlueprintCategorySection';
+import { BlueprintHowItWorks } from '@/components/BlueprintHowItWorks';
+import { RitualTransferSummary } from '@/components/RitualTransferSummary';
+import { JointAccountSummary } from '@/components/JointAccountSummary';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { hapticImpact, hapticSuccess } from '@/lib/haptics';
@@ -25,13 +29,13 @@ import { format } from 'date-fns';
 import { formatCurrency, type CurrencyCode } from '@repo/logic';
 import type { Seed, Pot, PayCycle, Household, Repayment } from '@repo/supabase';
 import { fetchBlueprintData, type IncomeSource as BlueprintIncomeSource, type PaycycleOption } from '@/lib/blueprint-data';
-import { markPotComplete } from '@/lib/mark-pot-complete';
+import { repairStaleAllocations, tryOverdueRefetch } from '@/lib/blueprint-load-helpers';
+import { CATEGORY_GRID, computeCategoryTotalsFromSeeds, type SeedType } from '@/lib/blueprint-categories';
 import { markSeedPaid, unmarkSeedPaid, type Payer } from '@/lib/mark-seed-paid';
-import { markOverdueSeedsPaid } from '@/lib/mark-overdue-seeds';
+import { markPotComplete } from '@/lib/mark-pot-complete';
 import { deleteSeedApi } from '@/lib/seed-api';
 import { createNextPaycycle, closeRitual, unlockRitual, resyncDraft } from '@/lib/paycycle-api';
 
-type SeedType = 'need' | 'want' | 'savings' | 'repay';
 type PotStatus = 'active' | 'complete' | 'paused';
 
 export default function BlueprintScreen() {
@@ -65,71 +69,38 @@ export default function BlueprintScreen() {
   const [optimisticPaidPartnerIds, setOptimisticPaidPartnerIds] = useState<Set<string>>(new Set());
   const [optimisticUnpaidMeIds, setOptimisticUnpaidMeIds] = useState<Set<string>>(new Set());
   const [optimisticUnpaidPartnerIds, setOptimisticUnpaidPartnerIds] = useState<Set<string>>(new Set());
-  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
   const [formCategory, setFormCategory] = useState<SeedType | null>(null);
   const [editingSeed, setEditingSeed] = useState<Seed | null>(null);
   const [seedToDelete, setSeedToDelete] = useState<Seed | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [ratioSheetVisible, setRatioSheetVisible] = useState(false);
+  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, PotStatus>>({});
 
   const loadData = useCallback(async (cycleId?: string | null) => {
     setError(null);
     const idToLoad = cycleId !== undefined ? cycleId : selectedCycleIdRef.current;
     try {
-      const result = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
-      const paycycle = result.paycycle;
-      if (paycycle?.status === 'active') {
-        try {
-          const overdueResult = await markOverdueSeedsPaid(paycycle.id);
-          if ('success' in overdueResult) {
-            const refetch = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
-            setData({
-              household: refetch.household,
-              paycycle: refetch.paycycle,
-              seeds: refetch.seeds,
-              pots: refetch.pots,
-              repayments: refetch.repayments,
-              incomeSources: refetch.incomeSources,
-              isPartner: refetch.isPartner,
-              allPaycycles: refetch.allPaycycles,
-              activePaycycleId: refetch.activePaycycleId,
-              hasDraftCycle: refetch.hasDraftCycle,
-            });
-            setSelectedCycleId(refetch.paycycle?.id ?? null);
-            return;
-          }
-        } catch (err) {
-          if (__DEV__) console.warn('[Blueprint] markOverdueSeedsPaid failed (showing blueprint anyway):', err);
-        }
-        setData({
-          household: result.household,
-          paycycle: result.paycycle,
-          seeds: result.seeds,
-          pots: result.pots,
-          repayments: result.repayments,
-          incomeSources: result.incomeSources,
-          isPartner: result.isPartner,
-          allPaycycles: result.allPaycycles,
-          activePaycycleId: result.activePaycycleId,
-          hasDraftCycle: result.hasDraftCycle,
-        });
-        setSelectedCycleId(result.paycycle?.id ?? null);
-      } else {
-        setData({
-          household: result.household,
-          paycycle: result.paycycle,
-          seeds: result.seeds,
-          pots: result.pots,
-          repayments: result.repayments,
-          incomeSources: result.incomeSources,
-          isPartner: result.isPartner,
-          allPaycycles: result.allPaycycles,
-          activePaycycleId: result.activePaycycleId,
-          hasDraftCycle: result.hasDraftCycle,
-        });
-        setSelectedCycleId(result.paycycle?.id ?? null);
+      let result = await fetchBlueprintData({ selectedCycleId: idToLoad ?? undefined });
+      result = await repairStaleAllocations(result);
+      if (result.paycycle?.status === 'active') {
+        const refetched = await tryOverdueRefetch(result.paycycle.id, idToLoad ?? undefined);
+        if (refetched) result = refetched;
       }
+      setData({
+        household: result.household,
+        paycycle: result.paycycle,
+        seeds: result.seeds,
+        pots: result.pots,
+        repayments: result.repayments,
+        incomeSources: result.incomeSources,
+        isPartner: result.isPartner,
+        allPaycycles: result.allPaycycles,
+        activePaycycleId: result.activePaycycleId,
+        hasDraftCycle: result.hasDraftCycle,
+      });
+      setSelectedCycleId(result.paycycle?.id ?? null);
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to load Blueprint'));
     } finally {
@@ -228,6 +199,11 @@ export default function BlueprintScreen() {
         },
         {} as Record<SeedType, Seed[]>
       ),
+    [displaySeeds]
+  );
+
+  const categoryTotalsFromSeeds = useMemo(
+    () => computeCategoryTotalsFromSeeds(displaySeeds, CATEGORY_GRID),
     [displaySeeds]
   );
 
@@ -415,6 +391,16 @@ export default function BlueprintScreen() {
     [data?.seeds, data?.household, loadData]
   );
 
+  // When delete confirm opens, close the Edit sheet if it was open for this seed (so only one dialog shows)
+  useEffect(() => {
+    if (seedToDelete && editingSeed?.id === seedToDelete.id) {
+      setFormCategory(null);
+      setEditingSeed(null);
+    }
+    // Intentionally depend on ids only so we don't re-run when the seed object reference changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- seedToDelete object identity changes every time; we only care about id
+  }, [seedToDelete?.id, editingSeed?.id]);
+
   const handleDeleteSeed = useCallback(async () => {
     if (!seedToDelete) return;
     setIsDeleting(true);
@@ -422,7 +408,11 @@ export default function BlueprintScreen() {
     setIsDeleting(false);
     if ('success' in result) {
       setSeedToDelete(null);
+      setFormCategory(null);
+      setEditingSeed(null);
       await loadData();
+    } else {
+      Alert.alert('Couldn’t delete', result.error ?? 'Something went wrong. Try again.');
     }
   }, [seedToDelete, loadData]);
 
@@ -558,15 +548,9 @@ export default function BlueprintScreen() {
       Alert.alert('Couldn’t unlock', result.error ?? 'Try again.');
     }
   };
+  // Use server paycycle totals only (same as web). Allocations are updated by API on seed create/update/delete.
   const totalAllocated = Number(paycycle?.total_allocated ?? 0);
   const allocationDifference = totalIncome - totalAllocated;
-
-  const CATEGORY_GRID = [
-    { key: 'needs' as const, label: 'Needs', percentKey: 'needs_percent' as const, allocKey: 'alloc_needs' as const, remKey: 'rem_needs' as const },
-    { key: 'wants' as const, label: 'Wants', percentKey: 'wants_percent' as const, allocKey: 'alloc_wants' as const, remKey: 'rem_wants' as const },
-    { key: 'savings' as const, label: 'Savings', percentKey: 'savings_percent' as const, allocKey: 'alloc_savings' as const, remKey: 'rem_savings' as const },
-    { key: 'repay' as const, label: 'Repay', percentKey: 'repay_percent' as const, allocKey: 'alloc_repay' as const, remKey: 'rem_repay' as const },
-  ] as const;
 
   return (
     <>
@@ -712,6 +696,22 @@ export default function BlueprintScreen() {
                   </Card>
                 )}
 
+                {/* How the Blueprint works (same as web, active only) */}
+                {isRitualMode && (
+                  <BlueprintHowItWorks isCouple={!!(data.household as { is_couple?: boolean })?.is_couple} />
+                )}
+
+                {/* Payday Transfers (same as web: active + couple) */}
+                {isRitualMode && (data.household as { is_couple?: boolean })?.is_couple && (
+                  <RitualTransferSummary
+                    seeds={displaySeeds}
+                    currency={currency}
+                    isPartner={data.isPartner}
+                    otherLabel={otherLabel}
+                    userInitials="?"
+                  />
+                )}
+
                 {/* Total allocated */}
                 <Card variant="default" padding="md" style={{ marginBottom: spacing.lg }}>
                   <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>Total allocated</LabelText>
@@ -753,39 +753,60 @@ export default function BlueprintScreen() {
                   </Text>
                 </Card>
 
-                {/* Category summary grid */}
+                {/* Category summary grid + Edit split */}
                 {paycycle && (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
-                    {CATEGORY_GRID.map((cat) => {
-                      const percent = household[cat.percentKey] ?? 50;
-                      const target = totalIncome * (percent / 100);
-                      const allocMe = Number(paycycle[`${cat.allocKey}_me`]) || 0;
-                      const allocPartner = Number(paycycle[`${cat.allocKey}_partner`]) || 0;
-                      const allocJoint = Number(paycycle[`${cat.allocKey}_joint`]) || 0;
-                      const allocated = allocMe + allocPartner + allocJoint;
-                      const remMe = Number(paycycle[`${cat.remKey}_me`]) || 0;
-                      const remPartner = Number(paycycle[`${cat.remKey}_partner`]) || 0;
-                      const remJoint = Number(paycycle[`${cat.remKey}_joint`]) || 0;
-                      const remaining = remMe + remPartner + remJoint;
-                      const catProgress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
-                      const isOver = target > 0 && allocated > target;
-                      return (
-                        <View key={cat.key} style={{ flex: 1, minWidth: '45%', maxWidth: '48%' }}>
-                          <Card variant="default" padding="md" style={{ borderWidth: 1, borderColor: isOver ? colors.warning + '80' : colors.borderSubtle }}>
-                            <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>{cat.label}</LabelText>
-                            <Text variant="sub-sm" style={{ marginBottom: 2 }}>{formatCurrency(allocated, currency)}</Text>
-                            <Text variant="label-sm" color="secondary" style={{ marginBottom: spacing.xs }}>
-                              of {formatCurrency(target, currency)} ({percent}%){isOver ? ' — Over' : ''}
-                            </Text>
-                            <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.borderSubtle, overflow: 'hidden', marginBottom: spacing.xs }}>
-                              <View style={{ height: '100%', width: `${catProgress}%`, backgroundColor: isOver ? colors.warning : colors.accentPrimary, borderRadius: 3 }} />
-                            </View>
-                            <Text variant="label-sm" color="secondary">{formatCurrency(remaining, currency)} remaining</Text>
-                          </Card>
-                        </View>
-                      );
-                    })}
+                  <View style={{ marginBottom: spacing.lg }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <Text variant="sub-sm" color="secondary">Category allocation</Text>
+                      <Pressable
+                        onPress={() => { hapticImpact('light'); setRatioSheetVisible(true); }}
+                        hitSlop={8}
+                        style={{ paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}>
+                        <Text variant="label-sm" style={{ color: colors.accentPrimary }}>Edit split</Text>
+                      </Pressable>
+                    </View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                      {CATEGORY_GRID.map((cat) => {
+                        const percent = household[cat.percentKey] ?? 50;
+                        const target = totalIncome * (percent / 100);
+                        const fromSeeds = categoryTotalsFromSeeds[cat.key];
+                        const allocated = fromSeeds?.allocated ?? 0;
+                        const remaining = fromSeeds?.remaining ?? 0;
+                        const catProgress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
+                        const isOver = target > 0 && allocated > target;
+                        return (
+                          <View key={cat.key} style={{ flex: 1, minWidth: '45%', maxWidth: '48%' }}>
+                            <Card variant="default" padding="md" style={{ borderWidth: 1, borderColor: isOver ? colors.warning + '80' : colors.borderSubtle }}>
+                              <LabelText color="secondary" style={{ marginBottom: spacing.sm }}>{cat.label}</LabelText>
+                              <View style={{ alignSelf: 'flex-start' }}>
+                                <Text variant="sub-sm" numberOfLines={1} style={{ marginBottom: 2 }}>{formatCurrency(allocated, currency)}</Text>
+                              </View>
+                              <Text variant="label-sm" color="secondary" numberOfLines={2} style={{ marginBottom: spacing.xs }}>
+                                of {formatCurrency(target, currency)} ({percent}%){isOver ? ' — Over' : ''}
+                              </Text>
+                              <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.borderSubtle, overflow: 'hidden', marginBottom: spacing.xs }}>
+                                <View style={{ height: '100%', width: `${catProgress}%`, backgroundColor: isOver ? colors.warning : colors.accentPrimary, borderRadius: 3 }} />
+                              </View>
+                              <View style={{ alignSelf: 'flex-start' }}>
+                                <Text variant="label-sm" color="secondary" numberOfLines={1}>{formatCurrency(remaining, currency)} remaining</Text>
+                              </View>
+                            </Card>
+                          </View>
+                        );
+                      })}
+                    </View>
                   </View>
+                )}
+
+                {/* Joint Account & Personal Set-Aside (same as web: couple + not active) */}
+                {(data.household as { is_couple?: boolean })?.is_couple && !isRitualMode && (
+                  <JointAccountSummary
+                    seeds={displaySeeds}
+                    currency={currency}
+                    isPartner={data.isPartner}
+                    otherLabel={otherLabel}
+                    userInitials="?"
+                  />
                 )}
 
                 {/* Seed sections */}
@@ -821,6 +842,7 @@ export default function BlueprintScreen() {
                     ))}
                   </Card>
                 )}
+
               </>
             )}
           </Section>
@@ -878,6 +900,18 @@ export default function BlueprintScreen() {
         selectedPaycycleId={data?.paycycle?.id ?? null}
         onSelect={handleCycleSelect}
       />
+
+      {data?.household && (
+        <CategoryRatioSheet
+          visible={ratioSheetVisible}
+          onClose={() => setRatioSheetVisible(false)}
+          onSuccess={() => {
+            loadData();
+            setRatioSheetVisible(false);
+          }}
+          household={data.household as Household & { needs_percent?: number; wants_percent?: number; savings_percent?: number; repay_percent?: number }}
+        />
+      )}
     </>
   );
 }

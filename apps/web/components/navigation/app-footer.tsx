@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { marketingUrl } from '@/lib/marketing-url';
 import { useCookieConsentOptional } from '@/components/providers/cookie-consent-context';
 
@@ -19,6 +20,12 @@ export function AppFooter() {
         >
           Help
         </a>
+        <Link
+          href="/dashboard/feedback"
+          className="font-heading uppercase tracking-wider hover:text-foreground transition-colors"
+        >
+          Feedback & bugs
+        </Link>
         <a
           href={marketingUrl('/privacy')}
           target="_blank"

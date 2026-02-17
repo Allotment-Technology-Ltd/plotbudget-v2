@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, CreditCard, FlaskConical } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, MessageSquare, CreditCard, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -217,6 +217,19 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer transition-colors duration-200"
+        >
+          <Link
+            href="/dashboard/feedback"
+            className="flex items-center focus:bg-primary/10 focus:text-primary"
+            data-testid="user-menu-feedback"
+          >
+            <MessageSquare className="mr-2 h-4 w-4" aria-hidden />
+            Feedback & bugs
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           asChild
           className="cursor-pointer transition-colors duration-200"
