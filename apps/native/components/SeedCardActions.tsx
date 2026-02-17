@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { hapticImpact } from '@/lib/haptics';
 import { Text, useTheme } from '@repo/native-ui';
 import type { Payer } from '@/lib/mark-seed-paid';
@@ -64,11 +65,9 @@ export function SeedCardActions({
           />
         ))}
       {canEditOrDelete && (
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
+        <TouchableOpacity
+          onPress={handleDelete}
+          activeOpacity={0.7}
           style={{
             paddingHorizontal: spacing.sm,
             paddingVertical: spacing.xs,
@@ -77,7 +76,7 @@ export function SeedCardActions({
             borderColor: colors.error,
           }}>
           <Text variant="label-sm" style={{ color: colors.error }}>Delete</Text>
-        </Pressable>
+        </TouchableOpacity>
       )}
     </View>
   );

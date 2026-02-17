@@ -61,3 +61,10 @@ export async function resyncDraft(
     body: JSON.stringify({ activePaycycleId }),
   });
 }
+
+/** Recompute paycycle total_allocated and alloc_* / rem_* from seeds. Use when cycle has seeds but totals are 0 (stale). */
+export async function recomputePaycycleAllocations(
+  paycycleId: string
+): Promise<{ success: true } | { error: string }> {
+  return authFetch(`/api/paycycles/${paycycleId}/recompute-allocations`, { method: 'POST' });
+}

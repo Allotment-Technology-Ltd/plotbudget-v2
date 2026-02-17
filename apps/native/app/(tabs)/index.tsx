@@ -214,27 +214,27 @@ function FinancialHealthSection({
 /* ---------- Savings & debt progress ---------- */
 
 function SavingsDebtSection({
-  pots,
   repayments,
   currency,
   colors,
   spacing,
   borderRadius,
+  pots,
   optimisticPotStatus,
   onMarkPotComplete,
   onPotPress,
 }: {
-  pots: Pot[];
   repayments: Repayment[];
   currency: CurrencyCode;
   colors: import('@repo/design-tokens/native').ColorPalette;
   spacing: typeof import('@repo/design-tokens/native').spacing;
   borderRadius: typeof import('@repo/design-tokens/native').borderRadius;
+  pots: Pot[];
   optimisticPotStatus: Record<string, PotStatus>;
   onMarkPotComplete: (potId: string, status: 'complete' | 'active') => void;
   onPotPress: (potId: string) => void;
 }) {
-  if (pots.length === 0 && repayments.length === 0) return null;
+  if (repayments.length === 0 && pots.length === 0) return null;
 
   return (
     <Card variant="default" padding="md">
@@ -748,22 +748,22 @@ export default function DashboardScreen() {
             />
           </View>
 
-          {/* Savings & debt */}
-          {(data.pots.length > 0 || data.repayments.length > 0) && (
+          {/* Savings & debt (repayments only; pots are managed via Blueprint savings seeds) */}
+          {data.repayments.length > 0 && (
             <View style={{ marginTop: spacing.lg }}>
               <SavingsDebtSection
-                pots={data.pots}
                 repayments={data.repayments}
                 currency={currency}
                 colors={colors}
                 spacing={spacing}
                 borderRadius={borderRadius}
+                pots={data.pots}
                 optimisticPotStatus={optimisticPotStatus}
                 onMarkPotComplete={handleMarkPotComplete}
                 onPotPress={(id) => {
-                hapticImpact('light');
-                router.push(`/pot-detail/${id}` as import('expo-router').Href);
-              }}
+                  hapticImpact('light');
+                  router.push(`/pot-detail/${id}` as import('expo-router').Href);
+                }}
               />
             </View>
           )}

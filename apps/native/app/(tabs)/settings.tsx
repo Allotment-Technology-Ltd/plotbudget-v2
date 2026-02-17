@@ -18,10 +18,17 @@ import { usePushPreferences } from '@/contexts/PushPreferencesContext';
 import { useThemePreference, type ThemePreference } from '@/contexts/ThemePreferenceContext';
 import { updatePushPreferences } from '@/lib/push-preferences-api';
 import { unregisterPushToken } from '@/lib/unregister-push-token';
+import { getSessionHandoffUrl } from '@/lib/session-handoff';
 import { SettingsLinkRow } from '@/components/SettingsLinkRow';
 import { SettingsSectionHeader } from '@/components/SettingsSectionHeader';
 
 const APP_URL = process.env.EXPO_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://app.plotbudget.com';
+
+/** Open web path in browser; uses session handoff when possible so user stays logged in. */
+async function openWebWithSession(path: string) {
+  const url = (await getSessionHandoffUrl(path)) ?? `${APP_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  await WebBrowser.openBrowserAsync(url);
+}
 const HELP_EMAIL = 'mailto:hello@plotbudget.com';
 
 /** Minimum touch target: 48dp/pt (Material 48dp, Apple 44pt). */
@@ -261,14 +268,14 @@ export default function SettingsScreen() {
             <SettingsLinkRow
               label="Manage account"
               sublabel={email}
-              onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/dashboard/settings`)}
+              onPress={() => openWebWithSession('/dashboard/settings')}
               isLastInSection={false}
               noHorizontalPadding
             />
             <SettingsLinkRow
               label="Export my data"
               sublabel="Download CSV from web"
-              onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/dashboard/settings?tab=privacy`)}
+              onPress={() => openWebWithSession('/dashboard/settings?tab=privacy')}
               isLastInSection
               noHorizontalPadding
             />
@@ -288,7 +295,7 @@ export default function SettingsScreen() {
             <SettingsLinkRow
               label="Pricing"
               sublabel="Plans & support PLOT"
-              onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/pricing`)}
+              onPress={() => openWebWithSession('/pricing')}
               isLastInSection
               noHorizontalPadding
             />
@@ -316,7 +323,7 @@ export default function SettingsScreen() {
           <Button
             variant="destructive"
             size="md"
-            onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/dashboard/settings?tab=privacy`)}
+            onPress={() => openWebWithSession('/dashboard/settings?tab=privacy')}
             style={{ minHeight: MIN_TOUCH_TARGET }}>
             Delete my account
           </Button>

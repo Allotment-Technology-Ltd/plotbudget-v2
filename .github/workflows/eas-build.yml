@@ -1,0 +1,39 @@
+# EAS Build: Android production AAB for Play Store (internal track).
+# Manual only for now (mobile still in development). Enable push to main when ready.
+# Requires EXPO_TOKEN in repo secrets. See docs/PLOT-93-phase-2-plan.md Phase 3 (PLOT-109).
+name: EAS Build (Android)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eas-build-android:
+    name: EAS Build Android (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@eae0cfeb286e66ffb5155f1a79b90583a127a68b # v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8.2.1
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android (production)
+        working-directory: apps/native
+        run: eas build --platform android --profile production --non-interactive
