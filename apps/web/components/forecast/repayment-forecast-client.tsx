@@ -10,7 +10,7 @@ import { ForecastChart } from './forecast-chart';
 import { ForecastDisclaimer } from './forecast-disclaimer';
 import { ForecastLockedInfo } from './forecast-locked-info';
 import { lockInForecastAmount } from '@/lib/actions/forecast-actions';
-import { updateRepayment } from '@/lib/actions/repayment-actions';
+import { updateRepayment, deleteRepayment } from '@/lib/actions/repayment-actions';
 import {
   projectRepaymentOverTime,
   projectSavingsOverTimeFixedCycles,
@@ -24,6 +24,16 @@ import { currencySymbol, formatCurrency, parseIncome } from '@/lib/utils/currenc
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { CreditCard } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Household, Repayment, PayCycle, Seed } from '@repo/supabase';
 
 interface RepaymentForecastClientProps {
@@ -79,7 +89,7 @@ export function RepaymentForecastClient({
     if (currentChanged) updates.current_balance = newCurrent!;
     if (startingChanged) updates.starting_balance = newStarting!;
     const result = await updateRepayment(repayment.id, updates);
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error);
       return;
     }
@@ -110,7 +120,7 @@ export function RepaymentForecastClient({
     const result = await updateRepayment(repayment.id, {
       interest_rate: val,
     });
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error);
       return;
     }
@@ -119,6 +129,8 @@ export function RepaymentForecastClient({
   };
 
   const [targetDate, setTargetDate] = useState(targetDateFromRep ?? '');
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const suggestedAmount = useMemo(() => {
     if (!targetDate) return null;
@@ -217,7 +229,7 @@ export function RepaymentForecastClient({
       'repay'
     );
     setIsLocking(false);
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error);
       return;
     }
@@ -230,12 +242,35 @@ export function RepaymentForecastClient({
       ? Math.min(100, ((startingBalance - currentBalance) / startingBalance) * 100)
       : 0;
 
+  const handleRemoveDebt = async () => {
+    setIsRemoving(true);
+    const result = await deleteRepayment(repayment.id);
+    setIsRemoving(false);
+    setShowRemoveConfirm(false);
+    if ('error' in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Debt removed');
+    router.push('/dashboard');
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <CreditCard className="w-6 h-6 text-repay" aria-hidden />
-          <h1 className="font-heading text-xl uppercase tracking-wider">{repayment.name}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <CreditCard className="w-6 h-6 shrink-0 text-repay" aria-hidden />
+            <h1 className="font-heading text-xl uppercase tracking-wider truncate">{repayment.name}</h1>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive shrink-0 text-sm"
+            onClick={() => setShowRemoveConfirm(true)}
+          >
+            Remove debt
+          </Button>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-1.5">
@@ -471,6 +506,30 @@ export function RepaymentForecastClient({
 
         <ForecastDisclaimer includeInterest={includeInterest} className="mt-6" />
       </div>
+
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove debt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove &quot;{repayment.name}&quot; and unlink it from any bills in your blueprint. You can add a new debt anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleRemoveDebt();
+              }}
+              disabled={isRemoving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRemoving ? 'Removing…' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

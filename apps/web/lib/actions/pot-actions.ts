@@ -118,6 +118,51 @@ export async function markPotComplete(
   return { success: true };
 }
 
+/**
+ * Delete a pot (savings goal). Seeds linked to this pot will have linked_pot_id set to null (DB ON DELETE SET NULL).
+ * Caller must belong to the pot's household (owner or partner).
+ */
+export async function deletePot(
+  potId: string,
+  client?: SupabaseClient<Database>
+): Promise<{ success: true } | { error: string }> {
+  const supabase = client ?? (await createServerSupabaseClient());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+
+  const { data: potData, error: potError } = await supabase
+    .from('pots')
+    .select('household_id')
+    .eq('id', potId)
+    .single();
+
+  if (potError || !potData) {
+    return { error: 'Pot not found' };
+  }
+
+  const pot = potData as { household_id: string };
+  const { data: profile } = (await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user?.id ?? '')
+    .maybeSingle()) as { data: { household_id: string | null } | null };
+
+  const ownHousehold = profile?.household_id === pot.household_id;
+  const partnerHousehold = isPartner && partnerHouseholdId === pot.household_id;
+  if (!ownHousehold && !partnerHousehold) {
+    return { error: 'Pot not found' };
+  }
+
+  const { error: deleteError } = await (supabase.from('pots') as any).delete().eq('id', potId);
+  if (deleteError) return { error: deleteError.message };
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
 export async function getPots(householdId: string): Promise<PotRow[]> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase

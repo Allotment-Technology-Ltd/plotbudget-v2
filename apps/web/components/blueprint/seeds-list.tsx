@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { SeedCard } from './seed-card';
 import type { Database } from '@repo/supabase';
 
@@ -90,15 +91,23 @@ export function SeedsList({
   const singularLabel = singularLabels[category];
   const totalSeeds = seeds.length;
   const paidSeeds = seeds.filter((s) => s.is_paid).length;
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <section
-      className="bg-card rounded-lg p-6 border border-border"
+      className="bg-card rounded-lg border border-border overflow-hidden"
       aria-labelledby={`seeds-${category}-heading`}
-      aria-describedby={`seeds-${category}-subtitle`}
+      aria-describedby={expanded ? `seeds-${category}-subtitle` : undefined}
+      data-testid={`blueprint-section-${category}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 pb-4 sm:pb-5">
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="flex min-w-0 flex-1 items-start gap-2 text-left hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded"
+          aria-expanded={expanded}
+          aria-controls={`seeds-${category}-content`}
+        >
           <h2
             id={`seeds-${category}-heading`}
             className="font-heading text-xl uppercase tracking-wider text-foreground break-words"
@@ -107,18 +116,28 @@ export function SeedsList({
           </h2>
           {isRitualMode && totalSeeds > 0 && (
             <span
-              className="text-sm text-muted-foreground"
+              className="text-sm text-muted-foreground shrink-0"
               aria-label={`${paidSeeds} of ${totalSeeds} paid in ${categoryLabel}`}
             >
               {paidSeeds}/{totalSeeds} paid
             </span>
           )}
-        </div>
+          <span className="shrink-0 text-muted-foreground mt-0.5" aria-hidden>
+            {expanded ? (
+              <ChevronUp className="w-5 h-5" />
+            ) : (
+              <ChevronDown className="w-5 h-5" />
+            )}
+          </span>
+        </button>
         {!isCycleLocked && (
           <Button
             variant="outline"
-            className="px-4 py-2 text-sm shrink-0"
-            onClick={onAdd}
+            className="px-4 py-2 text-sm shrink-0 self-start sm:self-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
             data-testid={
               category === 'need'
                 ? 'add-seed-button'
@@ -134,63 +153,72 @@ export function SeedsList({
           </Button>
         )}
       </div>
-      <p className="text-sm text-muted-foreground mb-4" id={`seeds-${category}-subtitle`}>
-        {categorySubtitles[category]}
-      </p>
 
-      {seeds.length === 0 ? (
-        <div
-          className="text-center py-12 text-muted-foreground"
-          role="status"
-          aria-live="polite"
-          {...(category === 'need'
-            ? { 'data-testid': 'blueprint-empty-state' as const }
-            : {})}
-        >
-          <p className="text-sm">No {categoryLabel.toLowerCase()} added yet.</p>
-          <p className="text-xs mt-1">
-            Click &quot;Add {singularLabel}&quot; to get started.
+      <div
+        id={`seeds-${category}-content`}
+        hidden={!expanded}
+        className="border-t border-border"
+      >
+        <div className="p-4 pt-5 sm:p-6 sm:pt-6">
+          <p className="text-sm text-muted-foreground mb-4" id={`seeds-${category}-subtitle`}>
+            {categorySubtitles[category]}
           </p>
+
+          {seeds.length === 0 ? (
+            <div
+              className="text-center py-12 text-muted-foreground"
+              role="status"
+              aria-live="polite"
+              {...(category === 'need'
+                ? { 'data-testid': 'blueprint-empty-state' as const }
+                : {})}
+            >
+              <p className="text-sm">No {categoryLabel.toLowerCase()} added yet.</p>
+              <p className="text-xs mt-1">
+                Click &quot;Add {singularLabel}&quot; to get started.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-3" aria-label={`${categoryLabel} expenses`}>
+              {seeds.map((seed) => {
+                const linkedPot = seed.linked_pot_id
+                  ? pots.find((p) => p.id === seed.linked_pot_id)
+                  : null;
+                const linkedRepayment = seed.linked_repayment_id
+                  ? repayments.find((r) => r.id === seed.linked_repayment_id)
+                  : null;
+                return (
+                  <li key={seed.id}>
+                    <SeedCard
+                      seed={seed}
+                      household={household}
+                      linkedPot={linkedPot ?? undefined}
+                      linkedRepayment={linkedRepayment ?? undefined}
+                      statusLabel={
+                        linkedPot
+                          ? POT_STATUS_LABELS[linkedPot.status]
+                          : linkedRepayment
+                            ? REPAYMENT_STATUS_LABELS[linkedRepayment.status]
+                            : undefined
+                      }
+                      onEdit={() => onEdit(seed)}
+                      onDelete={() => onDelete(seed)}
+                      isRitualMode={isRitualMode}
+                      isCycleLocked={isCycleLocked}
+                      onMarkPaid={onMarkPaid}
+                      onUnmarkPaid={onUnmarkPaid}
+                      isPartner={isPartner}
+                      otherLabel={otherLabel}
+                      ownerLabel={ownerLabel}
+                      partnerLabel={partnerLabel}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
-      ) : (
-        <ul className="space-y-3" aria-label={`${categoryLabel} expenses`}>
-          {seeds.map((seed) => {
-            const linkedPot = seed.linked_pot_id
-              ? pots.find((p) => p.id === seed.linked_pot_id)
-              : null;
-            const linkedRepayment = seed.linked_repayment_id
-              ? repayments.find((r) => r.id === seed.linked_repayment_id)
-              : null;
-            return (
-              <li key={seed.id}>
-                <SeedCard
-                  seed={seed}
-                  household={household}
-                  linkedPot={linkedPot ?? undefined}
-                  linkedRepayment={linkedRepayment ?? undefined}
-                  statusLabel={
-                    linkedPot
-                      ? POT_STATUS_LABELS[linkedPot.status]
-                      : linkedRepayment
-                        ? REPAYMENT_STATUS_LABELS[linkedRepayment.status]
-                        : undefined
-                  }
-                  onEdit={() => onEdit(seed)}
-                  onDelete={() => onDelete(seed)}
-                  isRitualMode={isRitualMode}
-                  isCycleLocked={isCycleLocked}
-                  onMarkPaid={onMarkPaid}
-                  onUnmarkPaid={onUnmarkPaid}
-                  isPartner={isPartner}
-                  otherLabel={otherLabel}
-                  ownerLabel={ownerLabel}
-                  partnerLabel={partnerLabel}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      </div>
     </section>
   );
 }

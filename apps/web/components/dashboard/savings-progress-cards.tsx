@@ -10,25 +10,30 @@ type PotStatus = 'active' | 'complete' | 'paused';
 interface SavingsProgressCardsProps {
   pots: Pot[];
   currency?: 'GBP' | 'USD' | 'EUR';
+  /** When true, omit the title row (used when section provides its own header) */
+  hideTitle?: boolean;
 }
 
 export function SavingsProgressCards({
   pots,
   currency = 'GBP',
+  hideTitle = false,
 }: SavingsProgressCardsProps) {
   if (pots.length === 0) return null;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-xl uppercase tracking-wider">Savings goals</h2>
-        <Link
-          href="/dashboard/blueprint"
-          className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
-        >
-          Manage
-        </Link>
-      </div>
+      {!hideTitle && (
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-xl uppercase tracking-wider">Savings goals</h2>
+          <Link
+            href="/dashboard/blueprint"
+            className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+          >
+            Manage
+          </Link>
+        </div>
+      )}
       <div className="space-y-4">
         {pots.map((pot, index) => {
           const potStatus = (pot.status ?? 'active') as PotStatus;

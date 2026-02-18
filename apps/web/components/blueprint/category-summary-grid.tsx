@@ -8,16 +8,33 @@ import type { Database } from '@repo/supabase';
 type Paycycle = Database['public']['Tables']['paycycles']['Row'];
 type Household = Database['public']['Tables']['households']['Row'];
 
+export type BlueprintCategoryKey = 'need' | 'want' | 'savings' | 'repay';
+
 interface CategorySummaryGridProps {
   paycycle: Paycycle;
   household: Household;
   onEditRatios?: () => void;
+  /** When set, category cards act as multi-select filters; empty = show all sections. */
+  selectedFilters?: BlueprintCategoryKey[];
+  onFilterChange?: (filters: BlueprintCategoryKey[]) => void;
 }
+
+/** Border colour when selected — same 2px border, category colour (Tailwind needs full names for purge). */
+const selectedBorderByType: Record<
+  'needs' | 'wants' | 'savings' | 'repay',
+  string
+> = {
+  needs: 'border-needs',
+  wants: 'border-wants',
+  savings: 'border-savings',
+  repay: 'border-repay',
+};
 
 const categories = [
   {
     name: 'Needs',
     type: 'needs' as const,
+    filterValue: 'need' as const,
     percentKey: 'needs_percent' as const,
     color: 'bg-needs',
     colorSubtle: 'bg-needs-subtle',
@@ -25,6 +42,7 @@ const categories = [
   {
     name: 'Wants',
     type: 'wants' as const,
+    filterValue: 'want' as const,
     percentKey: 'wants_percent' as const,
     color: 'bg-wants',
     colorSubtle: 'bg-wants-subtle',
@@ -32,6 +50,7 @@ const categories = [
   {
     name: 'Savings',
     type: 'savings' as const,
+    filterValue: 'savings' as const,
     percentKey: 'savings_percent' as const,
     color: 'bg-savings',
     colorSubtle: 'bg-savings-subtle',
@@ -39,6 +58,7 @@ const categories = [
   {
     name: 'Repay',
     type: 'repay' as const,
+    filterValue: 'repay' as const,
     percentKey: 'repay_percent' as const,
     color: 'bg-repay',
     colorSubtle: 'bg-repay-subtle',
@@ -49,9 +69,21 @@ export function CategorySummaryGrid({
   paycycle,
   household,
   onEditRatios,
+  selectedFilters = [],
+  onFilterChange,
 }: CategorySummaryGridProps) {
   const totalIncome = Number(paycycle.total_income);
   const currency = household.currency || 'GBP';
+  const isFilterable = typeof onFilterChange === 'function';
+  const selectedSet = new Set(selectedFilters);
+
+  const handleCardClick = (filterValue: BlueprintCategoryKey) => {
+    if (!onFilterChange) return;
+    const next = selectedSet.has(filterValue)
+      ? selectedFilters.filter((f) => f !== filterValue)
+      : [...selectedFilters, filterValue];
+    onFilterChange(next);
+  };
 
   return (
     <div role="region" aria-label="Category budget summary">
@@ -71,82 +103,114 @@ export function CategorySummaryGrid({
           </Button>
         )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {categories.map((cat) => {
-        const percent = household[cat.percentKey] ?? 50;
-        const target = totalIncome * (percent / 100);
-        const allocated =
-          Number(paycycle[`alloc_${cat.type}_me`]) +
-          Number(paycycle[`alloc_${cat.type}_partner`]) +
-          Number(paycycle[`alloc_${cat.type}_joint`]);
-        const remaining =
-          Number(paycycle[`rem_${cat.type}_me`]) +
-          Number(paycycle[`rem_${cat.type}_partner`]) +
-          Number(paycycle[`rem_${cat.type}_joint`]);
-        const progress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
-        const isOverAllocated = target > 0 && allocated > target;
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        role={isFilterable ? 'group' : undefined}
+        aria-label={isFilterable ? 'Filter blueprint by category (select one or more)' : undefined}
+      >
+        {categories.map((cat) => {
+          const percent = household[cat.percentKey] ?? 50;
+          const target = totalIncome * (percent / 100);
+          const allocated =
+            Number(paycycle[`alloc_${cat.type}_me`]) +
+            Number(paycycle[`alloc_${cat.type}_partner`]) +
+            Number(paycycle[`alloc_${cat.type}_joint`]);
+          const remaining =
+            Number(paycycle[`rem_${cat.type}_me`]) +
+            Number(paycycle[`rem_${cat.type}_partner`]) +
+            Number(paycycle[`rem_${cat.type}_joint`]);
+          const progress = target > 0 ? Math.min((allocated / target) * 100, 100) : 0;
+          const isOverAllocated = target > 0 && allocated > target;
+          const isSelected = isFilterable && selectedSet.has(cat.filterValue);
 
-        return (
-          <div
-            key={cat.type}
-            className={`bg-card rounded-lg p-6 border flex flex-col ${isOverAllocated ? 'border-warning/50' : 'border-border'}`}
-            aria-labelledby={`category-${cat.type}-label`}
-          >
-            <div className="flex items-center gap-2 mb-3 shrink-0">
-              <div
-                className={`w-3 h-3 rounded-full ${cat.color}`}
-                aria-hidden
-              />
-              <h2
-                id={`category-${cat.type}-label`}
-                className="font-heading text-sm uppercase tracking-wider text-foreground"
-              >
-                {cat.name}
-              </h2>
-            </div>
-
-            <div className="flex flex-col flex-1 min-h-0">
-              <div className="min-h-[4rem] shrink-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-display text-foreground">
-                    {currencySymbol(currency)}{allocated.toFixed(2)}
-                  </p>
-                  {isOverAllocated && (
-                    <AlertTriangle
-                      className="h-5 w-5 shrink-0 text-warning"
-                      aria-label="Over allocated"
-                    />
-                  )}
-                </div>
-                <p
-                  className={`text-sm ${isOverAllocated ? 'text-warning' : 'text-muted-foreground'}`}
+          const cardContent = (
+            <>
+              <div className="flex items-center gap-2 mb-3 shrink-0">
+                <div
+                  className={`w-3 h-3 rounded-full ${cat.color}`}
+                  aria-hidden
+                />
+                <h2
+                  id={`category-${cat.type}-label`}
+                  className="font-heading text-sm uppercase tracking-wider text-foreground"
                 >
-                  of {currencySymbol(currency)}{target.toFixed(2)} ({percent}%)
-                  {isOverAllocated && ' — Over budget'}
+                  {cat.name}
+                </h2>
+              </div>
+
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="min-h-[4rem] shrink-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-display text-foreground">
+                      {currencySymbol(currency)}{allocated.toFixed(2)}
+                    </p>
+                    {isOverAllocated && (
+                      <AlertTriangle
+                        className="h-5 w-5 shrink-0 text-warning"
+                        aria-label="Over allocated"
+                      />
+                    )}
+                  </div>
+                  <p
+                    className={`text-sm ${isOverAllocated ? 'text-warning' : 'text-muted-foreground'}`}
+                  >
+                    of {currencySymbol(currency)}{target.toFixed(2)} ({percent}%)
+                    {isOverAllocated && ' — Over budget'}
+                  </p>
+                </div>
+
+                <div
+                  className="h-2 bg-muted rounded-full overflow-hidden mt-2 shrink-0"
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${cat.name} allocation progress`}
+                >
+                  <div
+                    className={`h-full ${cat.color} transition-all`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-2 shrink-0">
+                  {currencySymbol(currency)}{remaining.toFixed(2)} remaining
                 </p>
               </div>
+            </>
+          );
 
-              <div
-                className="h-2 bg-muted rounded-full overflow-hidden mt-2 shrink-0"
-                role="progressbar"
-                aria-valuenow={progress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${cat.name} allocation progress`}
+          const borderColor =
+            isFilterable && isSelected
+              ? selectedBorderByType[cat.type]
+              : 'border-muted-foreground/50';
+
+          if (isFilterable) {
+            return (
+              <button
+                key={cat.type}
+                type="button"
+                role="checkbox"
+                aria-checked={isSelected}
+                aria-labelledby={`category-${cat.type}-label`}
+                onClick={() => handleCardClick(cat.filterValue)}
+                className={`bg-card rounded-lg p-6 border-2 flex flex-col text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${borderColor} hover:border-foreground`}
               >
-                <div
-                  className={`h-full ${cat.color} transition-all`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+                {cardContent}
+              </button>
+            );
+          }
 
-              <p className="text-xs text-muted-foreground mt-2 shrink-0">
-                {currencySymbol(currency)}{remaining.toFixed(2)} remaining
-              </p>
+          return (
+            <div
+              key={cat.type}
+              className={`bg-card rounded-lg p-6 border-2 flex flex-col border-muted-foreground/50`}
+              aria-labelledby={`category-${cat.type}-label`}
+            >
+              {cardContent}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
     </div>
   );

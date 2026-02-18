@@ -1,6 +1,8 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getPartnerContext } from '@/lib/partner-context';
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@repo/supabase';
 
@@ -74,6 +76,51 @@ export async function updateRepayment(
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update repayment' };
   }
+}
+
+/**
+ * Delete a repayment (debt). Seeds linked to this repayment will have linked_repayment_id set to null (DB ON DELETE SET NULL).
+ * Caller must belong to the repayment's household (owner or partner).
+ */
+export async function deleteRepayment(
+  repaymentId: string,
+  client?: SupabaseClient<Database>
+): Promise<{ success: true } | { error: string }> {
+  const supabase = client ?? (await createServerSupabaseClient());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { householdId: partnerHouseholdId, isPartner } = await getPartnerContext(supabase, user?.id ?? null);
+  if (!user && !isPartner) return { error: 'Not authenticated' };
+
+  const { data: repayData, error: repayError } = await supabase
+    .from('repayments')
+    .select('household_id')
+    .eq('id', repaymentId)
+    .single();
+
+  if (repayError || !repayData) {
+    return { error: 'Repayment not found' };
+  }
+
+  const repayment = repayData as { household_id: string };
+  const { data: profile } = (await supabase
+    .from('users')
+    .select('household_id')
+    .eq('id', user?.id ?? '')
+    .maybeSingle()) as { data: { household_id: string | null } | null };
+
+  const ownHousehold = profile?.household_id === repayment.household_id;
+  const partnerHousehold = isPartner && partnerHouseholdId === repayment.household_id;
+  if (!ownHousehold && !partnerHousehold) {
+    return { error: 'Repayment not found' };
+  }
+
+  const { error: deleteError } = await (supabase.from('repayments') as any).delete().eq('id', repaymentId);
+  if (deleteError) return { error: deleteError.message };
+  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard');
+  return { success: true };
 }
 
 export async function getRepayments(

@@ -10,7 +10,7 @@ import { ForecastChart } from './forecast-chart';
 import { ForecastDisclaimer } from './forecast-disclaimer';
 import { ForecastLockedInfo } from './forecast-locked-info';
 import { lockInForecastAmount } from '@/lib/actions/forecast-actions';
-import { updatePot } from '@/lib/actions/pot-actions';
+import { updatePot, deletePot } from '@/lib/actions/pot-actions';
 import {
   projectSavingsOverTime,
   projectSavingsOverTimeFixedCycles,
@@ -22,6 +22,16 @@ import { suggestedSavingsAmount, countPayCyclesUntil } from '@/lib/utils/suggest
 import { currencySymbol, formatCurrency, parseIncome } from '@/lib/utils/currency';
 import { format, addMonths } from 'date-fns';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Household, Pot, PayCycle, Seed } from '@repo/supabase';
 
 interface PotForecastClientProps {
@@ -76,7 +86,7 @@ export function PotForecastClient({
     if (currentChanged) updates.current_amount = newCurrent!;
     if (targetChanged) updates.target_amount = newTarget!;
     const result = await updatePot(pot.id, updates);
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error);
       return;
     }
@@ -104,6 +114,8 @@ export function PotForecastClient({
   const [amountStr, setAmountStr] = useState(
     linkedSeed ? String(linkedSeed.amount) : suggestedAmount != null ? String(suggestedAmount) : ''
   );
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const defaultDateFrom = cycleStart;
   const defaultDateTo = format(addMonths(new Date(cycleStart), 12), 'yyyy-MM-dd');
   const [projectDateFrom, setProjectDateFrom] = useState(defaultDateFrom);
@@ -192,7 +204,7 @@ export function PotForecastClient({
     setIsLocking(true);
     const result = await lockInForecastAmount(pot.id, null, amount, pot.name, 'savings');
     setIsLocking(false);
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error);
       return;
     }
@@ -202,14 +214,37 @@ export function PotForecastClient({
 
   const progress = targetAmount > 0 ? Math.min(100, (currentAmount / targetAmount) * 100) : 0;
 
+  const handleRemoveGoal = async () => {
+    setIsRemoving(true);
+    const result = await deletePot(pot.id);
+    setIsRemoving(false);
+    setShowRemoveConfirm(false);
+    if ('error' in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Savings goal removed');
+    router.push('/dashboard');
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl" aria-hidden>
-            {pot.icon || '🏖️'}
-          </span>
-          <h1 className="font-heading text-xl uppercase tracking-wider">{pot.name}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-2xl shrink-0" aria-hidden>
+              {pot.icon || '🏖️'}
+            </span>
+            <h1 className="font-heading text-xl uppercase tracking-wider truncate">{pot.name}</h1>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive shrink-0 text-sm"
+            onClick={() => setShowRemoveConfirm(true)}
+          >
+            Remove savings goal
+          </Button>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-1.5">
@@ -478,6 +513,30 @@ export function PotForecastClient({
 
         <ForecastDisclaimer className="mt-6" />
       </div>
+
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove savings goal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove &quot;{pot.name}&quot; and unlink it from any bills in your blueprint. You can add a new savings goal anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleRemoveGoal();
+              }}
+              disabled={isRemoving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRemoving ? 'Removing…' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

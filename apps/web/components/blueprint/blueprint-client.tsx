@@ -1,9 +1,13 @@
 'use client';
 
+import { useState, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { IncomeThisCycle } from '@/components/dashboard/income-this-cycle';
 import { BlueprintHeader } from './blueprint-header';
-import { CategorySummaryGrid } from './category-summary-grid';
+import {
+  CategorySummaryGrid,
+  type BlueprintCategoryKey,
+} from './category-summary-grid';
 import { TotalAllocatedSummary } from './total-allocated-summary';
 import { CategoryRatioDialog } from './category-ratio-dialog';
 import { JointAccountSummary } from './joint-account-summary';
@@ -82,6 +86,29 @@ export function BlueprintClient({
 }: BlueprintClientProps) {
   const router = useRouter();
   const otherLabel = isPartner ? ownerLabel : partnerLabel;
+  const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<
+    BlueprintCategoryKey[]
+  >([]);
+  const [displayedCategoryFilters, setDisplayedCategoryFilters] = useState<
+    BlueprintCategoryKey[]
+  >([]);
+  const handleFilterChange = (next: BlueprintCategoryKey[]) => {
+    setSelectedCategoryFilters(next);
+    startTransition(() => setDisplayedCategoryFilters(next));
+  };
+  const isSectionReady = (key: BlueprintCategoryKey) =>
+    displayedCategoryFilters.length === 0 ||
+    displayedCategoryFilters.includes(key);
+  const CATEGORY_ORDER: BlueprintCategoryKey[] = [
+    'need',
+    'want',
+    'savings',
+    'repay',
+  ];
+  const requestedKeys: BlueprintCategoryKey[] =
+    selectedCategoryFilters.length === 0
+      ? CATEGORY_ORDER
+      : CATEGORY_ORDER.filter((k) => selectedCategoryFilters.includes(k));
 
   const { displaySeeds, handleMarkPaid, handleUnmarkPaid } =
     useBlueprintOptimisticPaid(seeds, household);
@@ -278,6 +305,8 @@ export function BlueprintClient({
             paycycle={paycycle}
             household={household}
             onEditRatios={() => setIsRatioDialogOpen(true)}
+            selectedFilters={selectedCategoryFilters}
+            onFilterChange={handleFilterChange}
           />
 
           {household.is_couple && !isActiveCycle && (
@@ -292,82 +321,62 @@ export function BlueprintClient({
           )}
 
           <div className="space-y-8">
-            <SeedsList
-              category="need"
-              seeds={needSeeds}
-              household={household}
-              paycycle={paycycle}
-              pots={pots}
-              repayments={repayments}
-              isRitualMode={isActiveCycle}
-              isCycleLocked={isCycleLocked}
-              onAdd={() => handleAddSeed('need')}
-              onEdit={handleEditSeed}
-              onDelete={handleDeleteClick}
-              onMarkPaid={markPaid}
-              onUnmarkPaid={unmarkPaid}
-              isPartner={isPartner}
-              otherLabel={otherLabel}
-              ownerLabel={ownerLabel}
-              partnerLabel={partnerLabel}
-            />
-            <SeedsList
-              category="want"
-              seeds={wantSeeds}
-              household={household}
-              paycycle={paycycle}
-              pots={pots}
-              repayments={repayments}
-              isRitualMode={isActiveCycle}
-              isCycleLocked={isCycleLocked}
-              onAdd={() => handleAddSeed('want')}
-              onEdit={handleEditSeed}
-              onDelete={handleDeleteClick}
-              onMarkPaid={markPaid}
-              onUnmarkPaid={unmarkPaid}
-              isPartner={isPartner}
-              otherLabel={otherLabel}
-              ownerLabel={ownerLabel}
-              partnerLabel={partnerLabel}
-            />
-            <SeedsList
-              category="savings"
-              seeds={savingsSeeds}
-              household={household}
-              paycycle={paycycle}
-              pots={pots}
-              repayments={repayments}
-              isRitualMode={isActiveCycle}
-              isCycleLocked={isCycleLocked}
-              onAdd={() => handleAddSeed('savings')}
-              onEdit={handleEditSeed}
-              onDelete={handleDeleteClick}
-              onMarkPaid={markPaid}
-              onUnmarkPaid={unmarkPaid}
-              isPartner={isPartner}
-              otherLabel={otherLabel}
-              ownerLabel={ownerLabel}
-              partnerLabel={partnerLabel}
-            />
-            <SeedsList
-              category="repay"
-              seeds={repaySeeds}
-              household={household}
-              paycycle={paycycle}
-              pots={pots}
-              repayments={repayments}
-              isRitualMode={isActiveCycle}
-              isCycleLocked={isCycleLocked}
-              onAdd={() => handleAddSeed('repay')}
-              onEdit={handleEditSeed}
-              onDelete={handleDeleteClick}
-              onMarkPaid={markPaid}
-              onUnmarkPaid={unmarkPaid}
-              isPartner={isPartner}
-              otherLabel={otherLabel}
-              ownerLabel={ownerLabel}
-              partnerLabel={partnerLabel}
-            />
+            {requestedKeys.map((key) => {
+              const ready = isSectionReady(key);
+              const sectionLabel =
+                key === 'need'
+                  ? 'Needs'
+                  : key === 'want'
+                    ? 'Wants'
+                    : key === 'savings'
+                      ? 'Savings'
+                      : 'Repayments';
+              if (!ready) {
+                return (
+                  <div
+                    key={key}
+                    className="bg-card rounded-lg border border-border p-8 flex items-center justify-center min-h-[120px]"
+                    role="status"
+                    aria-live="polite"
+                    data-testid={`blueprint-section-loading-${key}`}
+                  >
+                    <p className="text-sm text-muted-foreground">
+                      Loading {sectionLabel}…
+                    </p>
+                  </div>
+                );
+              }
+              const seeds =
+                key === 'need'
+                  ? needSeeds
+                  : key === 'want'
+                    ? wantSeeds
+                    : key === 'savings'
+                      ? savingsSeeds
+                      : repaySeeds;
+              return (
+                <SeedsList
+                  key={key}
+                  category={key}
+                  seeds={seeds}
+                  household={household}
+                  paycycle={paycycle}
+                  pots={pots}
+                  repayments={repayments}
+                  isRitualMode={isActiveCycle}
+                  isCycleLocked={isCycleLocked}
+                  onAdd={() => handleAddSeed(key)}
+                  onEdit={handleEditSeed}
+                  onDelete={handleDeleteClick}
+                  onMarkPaid={markPaid}
+                  onUnmarkPaid={unmarkPaid}
+                  isPartner={isPartner}
+                  otherLabel={otherLabel}
+                  ownerLabel={ownerLabel}
+                  partnerLabel={partnerLabel}
+                />
+              );
+            })}
           </div>
         </div>
       </main>
