@@ -59,6 +59,8 @@ export interface UpdateSeedInput {
     status?: 'active' | 'complete' | 'paused';
   };
   repayment?: {
+    /** Required when creating a repayment on update (user added optional debt info after creation). */
+    starting_balance?: number;
     current_balance?: number;
     target_date?: string | null;
     status?: 'active' | 'paid' | 'paused';
@@ -303,9 +305,13 @@ export async function createSeed(
       created_by_owner: createdByOwner,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('seeds') as any).insert(insertData);
+    const { data: inserted, error } = await (supabase.from('seeds') as any)
+      .insert(insertData)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!inserted) return { error: 'Seed create did not persist. Please try again.' };
 
     await updatePaycycleAllocations(data.paycycle_id);
     revalidatePath('/dashboard/blueprint');
@@ -327,7 +333,7 @@ export async function updateSeed(
 
     const { data: seed } = (await supabase
       .from('seeds')
-      .select('household_id, paycycle_id, amount, payment_source, split_ratio, linked_pot_id, linked_repayment_id')
+      .select('household_id, paycycle_id, amount, payment_source, split_ratio, linked_pot_id, linked_repayment_id, type, name')
       .eq('id', seedId)
       .single()) as {
       data: {
@@ -338,6 +344,8 @@ export async function updateSeed(
         split_ratio: number | null;
         linked_pot_id: string | null;
         linked_repayment_id: string | null;
+        type: string;
+        name: string;
       } | null;
     };
 
@@ -359,7 +367,53 @@ export async function updateSeed(
       }
     }
 
-    if (data.pot && seed.linked_pot_id) {
+    let linkedPotId: string | null = seed.linked_pot_id;
+    let linkedRepaymentId: string | null = seed.linked_repayment_id;
+
+    // User added optional pot details on edit (seed had no linked pot at creation).
+    if (seed.type === 'savings' && data.pot && !seed.linked_pot_id) {
+      const currentAmount = data.pot.current_amount ?? seed.amount ?? 0;
+      const targetAmount = data.pot.target_amount ?? seed.amount ?? 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: newPot, error: potErr } = await (supabase.from('pots') as any)
+        .insert({
+          household_id: seed.household_id,
+          name: data.name ?? seed.name,
+          current_amount: currentAmount,
+          target_amount: targetAmount,
+          target_date: data.pot.target_date ?? null,
+          status: data.pot.status ?? 'active',
+        })
+        .select('id')
+        .single();
+      if (potErr) return { error: potErr.message };
+      if (!newPot) return { error: 'Pot create did not persist. Please try again.' };
+      linkedPotId = (newPot as { id: string }).id;
+    }
+
+    // User added optional repayment details on edit (seed had no linked repayment at creation).
+    if (seed.type === 'repay' && data.repayment && !seed.linked_repayment_id) {
+      const startingBalance = data.repayment.starting_balance ?? data.repayment.current_balance ?? seed.amount ?? 0;
+      const currentBalance = data.repayment.current_balance ?? data.repayment.starting_balance ?? seed.amount ?? 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: newRepayment, error: repayErr } = await (supabase.from('repayments') as any)
+        .insert({
+          household_id: seed.household_id,
+          name: data.name ?? seed.name,
+          starting_balance: startingBalance,
+          current_balance: currentBalance,
+          target_date: data.repayment.target_date ?? null,
+          status: data.repayment.status ?? 'active',
+          interest_rate: data.repayment.interest_rate ?? null,
+        })
+        .select('id')
+        .single();
+      if (repayErr) return { error: repayErr.message };
+      if (!newRepayment) return { error: 'Repayment create did not persist. Please try again.' };
+      linkedRepaymentId = (newRepayment as { id: string }).id;
+    }
+
+    if (data.pot && linkedPotId) {
       const potUpdate: Record<string, unknown> = {};
       if (data.pot.current_amount !== undefined) potUpdate.current_amount = data.pot.current_amount;
       if (data.pot.target_amount !== undefined) potUpdate.target_amount = data.pot.target_amount;
@@ -367,11 +421,17 @@ export async function updateSeed(
       if (data.pot.status !== undefined) potUpdate.status = data.pot.status;
       if (Object.keys(potUpdate).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('pots') as any).update(potUpdate).eq('id', seed.linked_pot_id);
+        const { data: potUpdated, error: potError } = await (supabase.from('pots') as any)
+          .update(potUpdate)
+          .eq('id', linkedPotId)
+          .select('id')
+          .single();
+        if (potError) return { error: potError.message };
+        if (!potUpdated) return { error: 'Pot update did not persist. Please try again.' };
       }
     }
 
-    if (data.repayment && seed.linked_repayment_id) {
+    if (data.repayment && linkedRepaymentId) {
       const repayUpdate: Record<string, unknown> = {};
       if (data.repayment.current_balance !== undefined) repayUpdate.current_balance = data.repayment.current_balance;
       if (data.repayment.target_date !== undefined) repayUpdate.target_date = data.repayment.target_date;
@@ -379,7 +439,13 @@ export async function updateSeed(
       if (data.repayment.interest_rate !== undefined) repayUpdate.interest_rate = data.repayment.interest_rate;
       if (Object.keys(repayUpdate).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('repayments') as any).update(repayUpdate).eq('id', seed.linked_repayment_id);
+        const { data: repayUpdated, error: repayError } = await (supabase.from('repayments') as any)
+          .update(repayUpdate)
+          .eq('id', linkedRepaymentId)
+          .select('id')
+          .single();
+        if (repayError) return { error: repayError.message };
+        if (!repayUpdated) return { error: 'Repayment update did not persist. Please try again.' };
       }
     }
 
@@ -413,14 +479,19 @@ export async function updateSeed(
     if (data.due_date !== undefined) seedUpdate.due_date = data.due_date;
     if (data.linked_pot_id !== undefined) seedUpdate.linked_pot_id = data.linked_pot_id;
     if (data.linked_repayment_id !== undefined) seedUpdate.linked_repayment_id = data.linked_repayment_id;
+    if (linkedPotId !== seed.linked_pot_id) seedUpdate.linked_pot_id = linkedPotId;
+    if (linkedRepaymentId !== seed.linked_repayment_id) seedUpdate.linked_repayment_id = linkedRepaymentId;
     if (data.uses_joint_account !== undefined) seedUpdate.uses_joint_account = data.uses_joint_account;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('seeds') as any)
+    const { data: seedUpdated, error } = await (supabase.from('seeds') as any)
       .update(seedUpdate)
-      .eq('id', seedId);
+      .eq('id', seedId)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
     await updatePaycycleAllocations(seed.paycycle_id);
     revalidatePath('/dashboard/blueprint');
@@ -446,9 +517,15 @@ export async function deleteSeed(
 
     if (!seed) return { error: 'Seed not found' };
 
-    const { error } = await supabase.from('seeds').delete().eq('id', seedId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deleted, error } = await (supabase.from('seeds') as any)
+      .delete()
+      .eq('id', seedId)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!deleted) return { error: 'Seed delete did not persist. Please try again.' };
 
     await updatePaycycleAllocations(seed.paycycle_id);
     revalidatePath('/dashboard/blueprint');
@@ -485,14 +562,21 @@ export async function markOverdueSeedsPaid(
   const { updateLinkedPotOrRepayment } = await import('@/lib/actions/ritual-actions');
 
   for (const row of overdue as SeedRow[]) {
+    const linkedResult = await updateLinkedPotOrRepayment(row, 'both', true, supabase);
+    if (linkedResult.error) continue; // Skip this seed so we don't leave seed paid but pot/repayment not updated
     const isJoint = row.payment_source === 'joint';
     const updates: Record<string, unknown> = {
       is_paid: true,
       is_paid_me: isJoint || row.payment_source === 'me',
       is_paid_partner: isJoint || row.payment_source === 'partner',
     };
-    await (supabase.from('seeds') as any).update(updates).eq('id', row.id);
-    await updateLinkedPotOrRepayment(row, 'both', true, supabase);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updated } = await (supabase.from('seeds') as any)
+      .update(updates)
+      .eq('id', row.id)
+      .select('id')
+      .single();
+    if (!updated) continue; // Skip revalidate if this seed update didn't persist
   }
 
   await updatePaycycleAllocations(paycycleId);

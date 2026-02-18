@@ -57,10 +57,11 @@ export async function createIncomeSource(
       .single();
 
     if (error) return { error: error.message };
+    if (!row) return { error: 'Income source create did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
     revalidatePath('/dashboard/blueprint');
-    return { incomeSourceId: (row as { id: string })?.id };
+    return { incomeSourceId: (row as { id: string }).id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create income source' };
   }
@@ -88,9 +89,14 @@ export async function updateIncomeSource(
     if (data.is_active !== undefined) update.is_active = data.is_active;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('income_sources') as any).update(update).eq('id', id);
+    const { data: updated, error } = await (supabase.from('income_sources') as any)
+      .update(update)
+      .eq('id', id)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!updated) return { error: 'Income source update did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
     revalidatePath('/dashboard/blueprint');
@@ -107,9 +113,14 @@ export async function deleteIncomeSource(
   try {
     const supabase = client ?? (await createServerSupabaseClient());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('income_sources') as any).delete().eq('id', id);
+    const { data: deleted, error } = await (supabase.from('income_sources') as any)
+      .delete()
+      .eq('id', id)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!deleted) return { error: 'Income source delete did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
     revalidatePath('/dashboard/blueprint');

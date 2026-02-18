@@ -51,19 +51,20 @@ export function SavingsProgressCards({
             <Link
               key={pot.id}
               href={`/dashboard/forecast/pot/${pot.id}`}
-              className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="block min-h-[7.25rem] rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               role="article"
               aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%. View forecast`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-lg shrink-0" aria-hidden>
-                    {pot.icon || '🏖️'}
-                  </span>
-                  <span className="font-heading text-sm uppercase tracking-wider truncate">
-                    {pot.name}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 mb-2 min-h-6">
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center text-base leading-none"
+                  aria-hidden
+                >
+                  {pot.icon || '🏖️'}
+                </span>
+                <span className="font-heading text-sm uppercase tracking-wider truncate min-w-0">
+                  {pot.name}
+                </span>
               </div>
               <p className="text-sm text-muted-foreground mb-2">
                 {currencySymbol(currency)}{pot.current_amount.toFixed(2)} / {currencySymbol(currency)}

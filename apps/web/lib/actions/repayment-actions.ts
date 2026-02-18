@@ -51,8 +51,9 @@ export async function createRepayment(
       .single();
 
     if (error) return { error: error.message };
+    if (!repayment) return { error: 'Repayment create did not persist. Please try again.' };
     revalidatePath('/dashboard/blueprint');
-    return { repaymentId: repayment?.id };
+    return { repaymentId: repayment.id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create repayment' };
   }
@@ -65,11 +66,14 @@ export async function updateRepayment(
   try {
     const supabase = await createServerSupabaseClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('repayments') as any)
+    const { data: updated, error } = await (supabase.from('repayments') as any)
       .update(data)
-      .eq('id', repaymentId);
+      .eq('id', repaymentId)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!updated) return { error: 'Repayment update did not persist. Please try again.' };
     revalidatePath('/dashboard/blueprint');
     revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
     return {};
@@ -116,8 +120,14 @@ export async function deleteRepayment(
     return { error: 'Repayment not found' };
   }
 
-  const { error: deleteError } = await (supabase.from('repayments') as any).delete().eq('id', repaymentId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: deleted, error: deleteError } = await (supabase.from('repayments') as any)
+    .delete()
+    .eq('id', repaymentId)
+    .select('id')
+    .single();
   if (deleteError) return { error: deleteError.message };
+  if (!deleted) return { error: 'Repayment delete did not persist. Please try again.' };
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };

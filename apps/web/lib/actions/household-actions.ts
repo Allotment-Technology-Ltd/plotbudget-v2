@@ -27,16 +27,19 @@ export async function updateHouseholdPercentages(
     const supabase = client ?? (await createServerSupabaseClient());
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('households') as any)
+    const { data: updated, error } = await (supabase.from('households') as any)
       .update({
         needs_percent: data.needs_percent,
         wants_percent: data.wants_percent,
         savings_percent: data.savings_percent,
         repay_percent: data.repay_percent,
       })
-      .eq('id', householdId);
+      .eq('id', householdId)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!updated) return { error: 'Percentages update did not persist. Please try again.' };
 
     if (!client) revalidatePath('/dashboard/blueprint');
     return {};

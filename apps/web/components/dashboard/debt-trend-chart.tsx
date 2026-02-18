@@ -157,11 +157,24 @@ export function DebtTrendChart({
     );
 
     for (let i = 0; i < maxLen; i++) {
+      let label = `Cycle ${i + 1}`;
+      for (const proj of projections) {
+        const pt = proj[i];
+        if (pt?.date) {
+          try {
+            const d = new Date(pt.date);
+            if (!Number.isNaN(d.getTime())) {
+              label = pt.date;
+            }
+            break;
+          } catch {
+            break;
+          }
+        }
+      }
       let totalPaidSoFar = 0;
       const point: (typeof projectedPoints)[0] = {
-        label: projections[0]?.[i]
-          ? format(new Date(projections[0]![i]!.date), 'MMM yyyy')
-          : `Cycle ${i + 1}`,
+        label,
         cumulativeRepaid: 0,
         isProjected: true,
       };
@@ -321,6 +334,17 @@ export function DebtTrendChart({
               axisLine={false}
               scale="point"
               interval={chartData.length > 6 ? Math.floor(chartData.length / 6) : 0}
+              tickFormatter={(value) => {
+                if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                  try {
+                    const d = new Date(value);
+                    if (!Number.isNaN(d.getTime())) return format(d, 'MMM yyyy');
+                  } catch {
+                    return value;
+                  }
+                }
+                return value;
+              }}
             />
             <YAxis
               tickFormatter={(v) => `${symbol}${v}`}
