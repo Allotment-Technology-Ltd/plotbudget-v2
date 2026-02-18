@@ -81,6 +81,9 @@ export async function PATCH(
   if (body.repayment && typeof body.repayment === 'object') {
     const repayment = body.repayment as Record<string, unknown>;
     input.repayment = {};
+    if (typeof repayment.starting_balance === 'number') {
+      input.repayment.starting_balance = repayment.starting_balance;
+    }
     if (typeof repayment.current_balance === 'number') {
       input.repayment.current_balance = repayment.current_balance;
     }

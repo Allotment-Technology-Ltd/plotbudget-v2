@@ -50,13 +50,13 @@ export function RepaymentProgressCards({
             <Link
               key={rep.id}
               href={`/dashboard/forecast/repayment/${rep.id}`}
-              className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="block min-h-[7.25rem] rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               role="article"
               aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}. View forecast`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <CreditCard className="w-4 h-4 text-repay" aria-hidden />
-                <span className="font-heading text-sm uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-2 min-h-6">
+                <CreditCard className="h-6 w-6 shrink-0 text-repay" aria-hidden />
+                <span className="font-heading text-sm uppercase tracking-wider truncate min-w-0">
                   {rep.name}
                 </span>
               </div>

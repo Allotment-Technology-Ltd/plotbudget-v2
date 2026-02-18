@@ -38,10 +38,18 @@ export async function updateUserProfile(displayName: string) {
   const validatedName = displayNameSchema.parse(displayName.trim());
 
   const payload: UsersUpdate = { display_name: validatedName };
-  const { error } = await supabase.from('users').update(payload as never).eq('id', user.id);
+  const { data: updated, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', user.id)
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error('Failed to update profile');
+  }
+  if (!updated) {
+    throw new Error('Profile update did not persist. Please try again.');
   }
 
   revalidatePath('/dashboard/settings');
@@ -72,10 +80,18 @@ export async function updateHouseholdName(householdId: string, name: string) {
   }
 
   const namePayload: HouseholdsUpdate = { name: validatedName };
-  const { error } = await supabase.from('households').update(namePayload as never).eq('id', householdId);
+  const { data: updated, error } = await supabase
+    .from('households')
+    .update(namePayload as never)
+    .eq('id', householdId)
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error('Failed to update household');
+  }
+  if (!updated) {
+    throw new Error('Household update did not persist. Please try again.');
   }
 
   revalidatePath('/dashboard/settings');
@@ -116,13 +132,18 @@ export async function updatePartnerName(householdId: string, partnerName: string
   const householdPayload: HouseholdsUpdate = {
     partner_name: validatedName,
   };
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('households')
     .update(householdPayload as never)
-    .eq('id', householdId);
+    .eq('id', householdId)
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error('Failed to update household');
+  }
+  if (!updated) {
+    throw new Error('Household update did not persist. Please try again.');
   }
 
   revalidatePath('/dashboard/settings');
@@ -154,13 +175,18 @@ export async function updateMyPartnerName(householdId: string, partnerName: stri
   }
 
   const householdPayload: HouseholdsUpdate = { partner_name: validatedName };
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('households')
     .update(householdPayload as never)
-    .eq('id', householdId);
+    .eq('id', householdId)
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error('Failed to update your name');
+  }
+  if (!updated) {
+    throw new Error('Name update did not persist. Please try again.');
   }
 
   revalidatePath('/dashboard/settings');
@@ -210,10 +236,18 @@ export async function updatePartnerDetails(
     partner_income: validatedIncome,
     total_monthly_income: totalMonthlyIncome,
   };
-  const { error: householdError } = await supabase.from('households').update(householdPayload as never).eq('id', householdId);
+  const { data: householdUpdated, error: householdError } = await supabase
+    .from('households')
+    .update(householdPayload as never)
+    .eq('id', householdId)
+    .select('id')
+    .single();
 
   if (householdError) {
     throw new Error('Failed to update household');
+  }
+  if (!householdUpdated) {
+    throw new Error('Household update did not persist. Please try again.');
   }
 
   const { data: activePaycycle } = await supabase
@@ -229,7 +263,16 @@ export async function updatePartnerDetails(
       snapshot_partner_income: validatedIncome,
       total_income: totalMonthlyIncome,
     };
-    await supabase.from('paycycles').update(paycyclePayload as never).eq('id', paycycle.id);
+    const { data: paycycleUpdated, error: paycycleError } = await supabase
+      .from('paycycles')
+      .update(paycyclePayload as never)
+      .eq('id', paycycle.id)
+      .select('id')
+      .single();
+    if (paycycleError || !paycycleUpdated) {
+      // Household already updated; log but don't throw to avoid partial-failure UX
+      console.error('Paycycle snapshot update did not persist:', paycycleError?.message ?? 'no rows');
+    }
   }
 
   revalidatePath('/dashboard/settings');
@@ -262,10 +305,18 @@ export async function updateHouseholdCurrency(householdId: string, currency: str
   }
 
   const currencyPayload: HouseholdsUpdate = { currency: validatedCurrency };
-  const { error } = await supabase.from('households').update(currencyPayload as never).eq('id', householdId);
+  const { data: updated, error } = await supabase
+    .from('households')
+    .update(currencyPayload as never)
+    .eq('id', householdId)
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error('Failed to update currency');
+  }
+  if (!updated) {
+    throw new Error('Currency update did not persist. Please try again.');
   }
 
   revalidatePath('/dashboard/settings');

@@ -35,16 +35,17 @@ function getPaidAmount(seed: SeedRow, payer: Payer): number {
  * Mark paid: savings += amount, repay -= amount.
  * Unmark paid: savings -= amount, repay += amount.
  * Exported for use by markOverdueSeedsPaid in seed-actions.
+ * Returns error if the update did not persist so callers can avoid marking the seed paid.
  */
 export async function updateLinkedPotOrRepayment(
   seed: SeedRow,
   payer: Payer,
   markingPaid: boolean,
   client?: SupabaseClient<Database>
-): Promise<void> {
+): Promise<{ error?: string }> {
   const supabase = client ?? (await createServerSupabaseClient());
   const amount = getPaidAmount(seed, payer);
-  if (amount <= 0) return;
+  if (amount <= 0) return {};
 
   if (seed.type === 'savings' && seed.linked_pot_id) {
     const { data: pot } = await supabase
@@ -52,12 +53,17 @@ export async function updateLinkedPotOrRepayment(
       .select('current_amount')
       .eq('id', seed.linked_pot_id)
       .single();
-    if (!pot) return;
+    if (!pot) return { error: 'Linked pot not found' };
     const current = Number((pot as { current_amount: number }).current_amount ?? 0);
     const next = markingPaid ? current + amount : Math.max(0, current - amount);
-    await (supabase.from('pots') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updated, error } = await (supabase.from('pots') as any)
       .update({ current_amount: next, updated_at: new Date().toISOString() })
-      .eq('id', seed.linked_pot_id);
+      .eq('id', seed.linked_pot_id)
+      .select('id')
+      .single();
+    if (error) return { error: error.message };
+    if (!updated) return { error: 'Pot update did not persist. Please try again.' };
   }
 
   if (seed.type === 'repay' && seed.linked_repayment_id) {
@@ -66,13 +72,20 @@ export async function updateLinkedPotOrRepayment(
       .select('current_balance')
       .eq('id', seed.linked_repayment_id)
       .single();
-    if (!repayment) return;
+    if (!repayment) return { error: 'Linked repayment not found' };
     const current = Number((repayment as { current_balance: number }).current_balance ?? 0);
     const next = markingPaid ? Math.max(0, current - amount) : current + amount;
-    await (supabase.from('repayments') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updated, error } = await (supabase.from('repayments') as any)
       .update({ current_balance: next, updated_at: new Date().toISOString() })
-      .eq('id', seed.linked_repayment_id);
+      .eq('id', seed.linked_repayment_id)
+      .select('id')
+      .single();
+    if (error) return { error: error.message };
+    if (!updated) return { error: 'Repayment update did not persist. Please try again.' };
   }
+
+  return {};
 }
 
 /**
@@ -227,6 +240,10 @@ export async function markSeedPaid(
     return { error: 'Seed not found' };
   }
 
+  // Update linked pot/repayment first so we don't mark seed paid if that fails
+  const linkedResult = await updateLinkedPotOrRepayment(seed, payer, true, supabase);
+  if (linkedResult.error) return { error: linkedResult.error };
+
   const updates: SeedUpdate = {};
 
   if (payer === 'both' || seed.payment_source !== 'joint') {
@@ -245,16 +262,19 @@ export async function markSeedPaid(
     }
   }
 
-  const { error: updateError } = await (supabase.from('seeds') as any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: seedUpdated, error: updateError } = await (supabase.from('seeds') as any)
     .update(updates)
-    .eq('id', seedId);
+    .eq('id', seedId)
+    .select('id')
+    .single();
 
   if (updateError) {
     return { error: (updateError as { message: string }).message };
   }
+  if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
   await updatePaycycleRemaining(seed, payer);
-  await updateLinkedPotOrRepayment(seed, payer, true, supabase);
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
@@ -291,6 +311,10 @@ export async function unmarkSeedPaid(
     return { error: 'Seed not found' };
   }
 
+  // Update linked pot/repayment first so we don't unmark seed if that fails
+  const linkedResult = await updateLinkedPotOrRepayment(seed, payer, false, supabase);
+  if (linkedResult.error) return { error: linkedResult.error };
+
   const updates: SeedUpdate = {};
 
   if (payer === 'both' || seed.payment_source !== 'joint') {
@@ -305,16 +329,19 @@ export async function unmarkSeedPaid(
     updates.is_paid = false;
   }
 
-  const { error: updateError } = await (supabase.from('seeds') as any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: seedUpdated, error: updateError } = await (supabase.from('seeds') as any)
     .update(updates)
-    .eq('id', seedId);
+    .eq('id', seedId)
+    .select('id')
+    .single();
 
   if (updateError) {
     return { error: (updateError as { message: string }).message };
   }
+  if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
   await incrementPaycycleRemaining(seed, payer);
-  await updateLinkedPotOrRepayment(seed, payer, false, supabase);
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
@@ -353,11 +380,15 @@ export async function closeRitual(
   const partnerHousehold = isPartner && partnerHouseholdId === paycycle.household_id;
   if (!ownHousehold && !partnerHousehold) return { error: 'Paycycle not found' };
 
-  const { error } = await (supabase.from('paycycles') as any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: updated, error } = await (supabase.from('paycycles') as any)
     .update({ ritual_closed_at: new Date().toISOString() })
-    .eq('id', paycycleId);
+    .eq('id', paycycleId)
+    .select('id')
+    .single();
 
   if (error) return { error: (error as { message: string }).message };
+  if (!updated) return { error: 'Ritual close did not persist. Please try again.' };
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
@@ -396,11 +427,15 @@ export async function unlockRitual(
   const partnerHousehold = isPartner && partnerHouseholdId === paycycle.household_id;
   if (!ownHousehold && !partnerHousehold) return { error: 'Paycycle not found' };
 
-  const { error } = await (supabase.from('paycycles') as any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: updated, error } = await (supabase.from('paycycles') as any)
     .update({ ritual_closed_at: null })
-    .eq('id', paycycleId);
+    .eq('id', paycycleId)
+    .select('id')
+    .single();
 
   if (error) return { error: (error as { message: string }).message };
+  if (!updated) return { error: 'Ritual unlock did not persist. Please try again.' };
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
@@ -465,10 +500,14 @@ async function activateDraftOrCreateNext(
 ): Promise<{ newActiveId: string } | { error: string }> {
   const now = new Date().toISOString();
   if (draftCycle) {
-    const { error: activateErr } = await (supabase.from('paycycles') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: activated, error: activateErr } = await (supabase.from('paycycles') as any)
       .update({ status: 'active', updated_at: now })
-      .eq('id', draftCycle.id);
+      .eq('id', draftCycle.id)
+      .select('id')
+      .single();
     if (activateErr) return { error: (activateErr as { message: string }).message };
+    if (!activated) return { error: 'Cycle activation did not persist. Please try again.' };
     return { newActiveId: draftCycle.id };
   }
   const { createNextPaycycleCore } = await import(
@@ -490,14 +529,18 @@ async function completeActiveAndSetMembersCurrent(
   householdId: string
 ): Promise<{ error?: string }> {
   const now = new Date().toISOString();
-  const { error: completeErr } = await (supabase.from('paycycles') as any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: completed, error: completeErr } = await (supabase.from('paycycles') as any)
     .update({
       status: 'completed',
       ritual_closed_at: now,
       updated_at: now,
     })
-    .eq('id', activeCycleId);
+    .eq('id', activeCycleId)
+    .select('id')
+    .single();
   if (completeErr) return { error: (completeErr as { message: string }).message };
+  if (!completed) return { error: 'Cycle completion did not persist. Please try again.' };
 
   const { data: members } = await supabase
     .from('users')

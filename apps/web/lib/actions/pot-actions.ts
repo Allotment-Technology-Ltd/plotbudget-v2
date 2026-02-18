@@ -48,8 +48,9 @@ export async function createPot(
       .single();
 
     if (error) return { error: error.message };
+    if (!pot) return { error: 'Pot create did not persist. Please try again.' };
     revalidatePath('/dashboard/blueprint');
-    return { potId: pot?.id };
+    return { potId: pot.id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create pot' };
   }
@@ -63,9 +64,14 @@ export async function updatePot(
   try {
     const supabase = client ?? (await createServerSupabaseClient());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('pots') as any).update(data).eq('id', potId);
+    const { data: updated, error } = await (supabase.from('pots') as any)
+      .update(data)
+      .eq('id', potId)
+      .select('id')
+      .single();
 
     if (error) return { error: error.message };
+    if (!updated) return { error: 'Pot update did not persist. Please try again.' };
     revalidatePath('/dashboard/blueprint');
     revalidatePath('/dashboard');
     return {};
@@ -156,8 +162,14 @@ export async function deletePot(
     return { error: 'Pot not found' };
   }
 
-  const { error: deleteError } = await (supabase.from('pots') as any).delete().eq('id', potId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: deleted, error: deleteError } = await (supabase.from('pots') as any)
+    .delete()
+    .eq('id', potId)
+    .select('id')
+    .single();
   if (deleteError) return { error: deleteError.message };
+  if (!deleted) return { error: 'Pot delete did not persist. Please try again.' };
   revalidatePath('/dashboard/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
