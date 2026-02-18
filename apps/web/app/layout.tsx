@@ -8,6 +8,7 @@ import { PostHogProvider } from '../components/providers/posthog-provider';
 import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
 import { CookieBanner } from '../components/cookie-banner';
 import { NavigationProgressProvider } from '../components/navigation/navigation-progress-context';
+import { PwaSplashScreen } from '../components/pwa/pwa-splash-screen';
 import './globals.css';
 
 const inter = Inter({
@@ -98,6 +99,7 @@ export default function RootLayout({
     >
       <head />
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <PwaSplashScreen />
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
