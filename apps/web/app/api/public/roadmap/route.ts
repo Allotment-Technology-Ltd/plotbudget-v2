@@ -1,6 +1,6 @@
 /**
  * Public API: roadmap features for marketing site and app.
- * Returns features ordered by status and display_order.
+ * Returns features ordered by display_order (single source of truth for position).
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('roadmap_features')
-      .select('id, title, description, module_key, icon_name, status, display_order, key_features, estimated_timeline')
-      .order('status', { ascending: true })
+      .select('id, title, description, module_key, icon_name, status, display_order, key_features')
       .order('display_order', { ascending: true });
 
     if (error) {
@@ -49,7 +48,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ features: data ?? [] }, { headers });
+    const responseHeaders = { ...headers, 'Cache-Control': 'public, max-age=30, stale-while-revalidate=60' };
+    return NextResponse.json({ features: data ?? [] }, { headers: responseHeaders });
   } catch (e) {
     console.error('roadmap API:', e);
     return NextResponse.json(

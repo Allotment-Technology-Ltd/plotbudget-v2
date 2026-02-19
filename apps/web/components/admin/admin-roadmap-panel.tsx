@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
 import { ExternalLink, Pencil, Trash2, Plus } from 'lucide-react';
@@ -160,7 +160,6 @@ export function AdminRoadmapPanel({ initialData, initialError }: Props) {
                   <p className="mt-0.5 text-sm text-muted-foreground">{f.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {f.module_key} · {f.status} · order {f.display_order}
-                    {f.estimated_timeline ? ` · ${f.estimated_timeline}` : ''}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -234,13 +233,25 @@ function RoadmapFeatureForm({
 }) {
   const d = defaultValues as Partial<RoadmapFeature>;
   const keyFeaturesStr = Array.isArray(d.key_features) ? d.key_features.join('\n') : '';
+  const submittedRef = useRef(false);
+
+  const wrappedAction = useCallback(
+    (formData: FormData) => {
+      submittedRef.current = true;
+      return action(formData);
+    },
+    [action]
+  );
 
   useEffect(() => {
-    if (state?.success) onSuccess();
+    if (state?.success && submittedRef.current) {
+      onSuccess();
+      submittedRef.current = false;
+    }
   }, [state?.success, onSuccess]);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={wrappedAction} className="space-y-4">
       {featureId != null && <input type="hidden" name="id" value={featureId} />}
       <p className="font-heading text-sm uppercase tracking-wider text-foreground">{title}</p>
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
@@ -296,10 +307,6 @@ function RoadmapFeatureForm({
             min={0}
             defaultValue={d.display_order ?? 0}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="roadmap-estimated_timeline">Estimated timeline (e.g. Q1 2026)</Label>
-          <Input id="roadmap-estimated_timeline" name="estimated_timeline" defaultValue={d.estimated_timeline ?? ''} />
         </div>
       </div>
       <div className="space-y-2">

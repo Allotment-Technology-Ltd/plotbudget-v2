@@ -8,7 +8,6 @@ import { z } from 'zod';
 
 type RoadmapFeatureRow = Database['public']['Tables']['roadmap_features']['Row'];
 type RoadmapInsert = Database['public']['Tables']['roadmap_features']['Insert'];
-type RoadmapUpdate = Database['public']['Tables']['roadmap_features']['Update'];
 
 const statusSchema = z.enum(['now', 'next', 'later', 'shipped']);
 
@@ -20,7 +19,7 @@ const createSchema = z.object({
   status: statusSchema,
   display_order: z.number().int().min(0),
   key_features: z.array(z.string()),
-  estimated_timeline: z.string().nullable(),
+  estimated_timeline: z.string().nullable().optional(),
 });
 
 const updateSchema = createSchema.partial();
@@ -41,7 +40,6 @@ export async function getRoadmapFeaturesAdmin(): Promise<{
     const { data, error } = await supabase
       .from('roadmap_features')
       .select('*')
-      .order('status', { ascending: true })
       .order('display_order', { ascending: true });
     if (error) return { data: null, error: error.message };
     return { data: (data ?? null) as RoadmapFeatureRow[] | null, error: null };
@@ -62,19 +60,17 @@ export async function createRoadmapFeature(_prev: unknown, formData: FormData): 
     status: formData.get('status'),
     display_order: Number(formData.get('display_order')),
     key_features: parseKeyFeatures(formData.get('key_features')),
-    estimated_timeline: (formData.get('estimated_timeline') as string) || null,
+    estimated_timeline: null,
   });
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const payload: RoadmapInsert = parsed.data;
-    const table = supabase.from('roadmap_features') as unknown as {
-      insert(values: RoadmapInsert): PromiseLike<{ error: { message: string } | null }>;
-    };
-    const { error } = await table.insert(payload);
+    const payload: RoadmapInsert = { ...parsed.data, estimated_timeline: null };
+    // Supabase client types resolve to 'never' for this table; cast to satisfy typecheck (runtime is correct)
+    const { error } = await supabase.from('roadmap_features').insert(payload as never);
     if (error) return { error: error.message };
     revalidatePath('/admin/roadmap');
-    revalidatePath('/roadmap');
+    revalidatePath('/roadmap', 'layout');
     return { success: true };
   } catch (e) {
     console.error('admin roadmap createRoadmapFeature:', e);
@@ -96,20 +92,18 @@ export async function updateRoadmapFeature(_prev: unknown, formData: FormData): 
     status: formData.get('status') ?? undefined,
     display_order: formData.get('display_order') != null ? Number(formData.get('display_order')) : undefined,
     key_features: keyFeaturesRaw != null ? parseKeyFeatures(keyFeaturesRaw) : undefined,
-    estimated_timeline: formData.has('estimated_timeline') ? ((formData.get('estimated_timeline') as string) || null) : undefined,
   };
   const parsed = updateSchema.safeParse(raw);
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const payload: RoadmapUpdate = parsed.data;
-    const table = supabase.from('roadmap_features') as unknown as {
-      update(values: RoadmapUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
-    };
-    const { error } = await table.update(payload).eq('id', id);
+    const { error } = await supabase
+      .from('roadmap_features')
+      .update(parsed.data as never)
+      .eq('id', id);
     if (error) return { error: error.message };
     revalidatePath('/admin/roadmap');
-    revalidatePath('/roadmap');
+    revalidatePath('/roadmap', 'layout');
     return { success: true };
   } catch (e) {
     console.error('admin roadmap updateRoadmapFeature:', e);
@@ -125,7 +119,7 @@ export async function deleteRoadmapFeature(id: string): Promise<{ error?: string
     const { error } = await supabase.from('roadmap_features').delete().eq('id', id);
     if (error) return { error: error.message };
     revalidatePath('/admin/roadmap');
-    revalidatePath('/roadmap');
+    revalidatePath('/roadmap', 'layout');
     return {};
   } catch (e) {
     console.error('admin roadmap deleteRoadmapFeature:', e);
@@ -139,15 +133,18 @@ export async function updateRoadmapOrder(orderedIds: string[]): Promise<{ error?
   if (!Array.isArray(orderedIds) || orderedIds.length === 0) return {};
   try {
     const supabase = createAdminClient();
-    const table = supabase.from('roadmap_features') as unknown as {
-      update(values: RoadmapUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
-    };
     for (let i = 0; i < orderedIds.length; i++) {
-      const { error } = await table.update({ display_order: i }).eq('id', orderedIds[i]);
-      if (error) return { error: error.message };
+      const { error } = await supabase
+        .from('roadmap_features')
+        .update({ display_order: i } as never)
+        .eq('id', orderedIds[i]);
+      if (error) {
+        console.error('admin roadmap updateRoadmapOrder row:', orderedIds[i], error);
+        return { error: error.message };
+      }
     }
     revalidatePath('/admin/roadmap');
-    revalidatePath('/roadmap');
+    revalidatePath('/roadmap', 'layout');
     return {};
   } catch (e) {
     console.error('admin roadmap updateRoadmapOrder:', e);
