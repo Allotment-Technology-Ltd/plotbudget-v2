@@ -4,7 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
+import { allowTrialTestingOrAdmin } from '@/lib/auth/admin-gate';
 import { createNextPaycycleCore } from '@/lib/paycycle/create-next-paycycle-core';
 
 const TRIAL_TEST_EMAILS = [
@@ -24,7 +24,7 @@ export type TrialStateAction =
   | 'reset-email-flags';
 
 export async function POST(req: Request) {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

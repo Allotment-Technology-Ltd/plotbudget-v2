@@ -33,6 +33,7 @@ export type Database = {
           trial_ended_email_sent: boolean;
           grace_period_reminder_sent: boolean;
           founding_member_ending_soon_email_sent: boolean;
+          is_admin: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -59,6 +60,7 @@ export type Database = {
           trial_ended_email_sent?: boolean;
           grace_period_reminder_sent?: boolean;
           founding_member_ending_soon_email_sent?: boolean;
+          is_admin?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -85,6 +87,7 @@ export type Database = {
           trial_ended_email_sent?: boolean;
           grace_period_reminder_sent?: boolean;
           founding_member_ending_soon_email_sent?: boolean;
+          is_admin?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -593,6 +596,99 @@ export type Database = {
           updated_at?: string;
         };
       };
+      roadmap_features: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          module_key: string;
+          icon_name: string;
+          status: 'now' | 'next' | 'later' | 'shipped';
+          display_order: number;
+          key_features: string[];
+          estimated_timeline: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description: string;
+          module_key: string;
+          icon_name: string;
+          status: 'now' | 'next' | 'later' | 'shipped';
+          display_order?: number;
+          key_features?: string[];
+          estimated_timeline?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string;
+          module_key?: string;
+          icon_name?: string;
+          status?: 'now' | 'next' | 'later' | 'shipped';
+          display_order?: number;
+          key_features?: string[];
+          estimated_timeline?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      roadmap_votes: {
+        Row: {
+          id: string;
+          feature_id: string;
+          household_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          feature_id: string;
+          household_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          feature_id?: string;
+          household_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+      };
+      changelog_entries: {
+        Row: {
+          id: string;
+          version: string;
+          released_at: string;
+          content: string;
+          display_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          version: string;
+          released_at?: string;
+          content?: string;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          version?: string;
+          released_at?: string;
+          content?: string;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Enums: {
       subscription_tier: 'free' | 'pro';
@@ -622,3 +718,6 @@ export type Seed = Tables<'seeds'>;
 export type Pot = Tables<'pots'>;
 export type Repayment = Tables<'repayments'>;
 export type PushToken = Tables<'push_tokens'>;
+export type RoadmapFeature = Tables<'roadmap_features'>;
+export type RoadmapVote = Tables<'roadmap_votes'>;
+export type ChangelogEntry = Tables<'changelog_entries'>;

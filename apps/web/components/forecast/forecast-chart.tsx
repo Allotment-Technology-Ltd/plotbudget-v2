@@ -14,6 +14,7 @@ import {
   Legend,
 } from 'recharts';
 import { format } from 'date-fns';
+import { useIsNarrowScreen } from '@/hooks/use-is-narrow-screen';
 import { currencySymbol } from '@/lib/utils/currency';
 import type { ProjectionPoint } from '@/lib/utils/forecast-projection';
 
@@ -51,6 +52,7 @@ export function ForecastChart({
   const color = type === 'savings' ? SAVINGS_COLOR : REPAY_COLOR;
   const symbol = currencySymbol(currency);
   const hasTwoLines = dataSuggested != null && dataSuggested.length > 0;
+  const isNarrow = useIsNarrowScreen();
 
   const chartData: ChartDataPoint[] = data.map((p) => ({
     ...p,
@@ -98,6 +100,13 @@ export function ForecastChart({
     );
   }
 
+  const xAxisInterval =
+    isNarrow && chartData.length > 4
+      ? Math.floor(chartData.length / 4)
+      : chartData.length > 18
+        ? Math.floor(chartData.length / 12)
+        : 0;
+
   return (
     <div className="h-64 w-full" aria-label={`${type} projection chart`}>
       <ResponsiveContainer width="100%" height="100%">
@@ -124,7 +133,7 @@ export function ForecastChart({
             tickLine={false}
             axisLine={false}
             scale="point"
-            interval={chartData.length > 18 ? Math.floor(chartData.length / 12) : 0}
+            interval={xAxisInterval}
             tickFormatter={(value) => format(new Date(value), 'MMM yyyy')}
           />
           <YAxis

@@ -4,7 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
+import { allowTrialTestingOrAdmin } from '@/lib/auth/admin-gate';
 import {
   sendTrialMilestoneEmail,
   sendTrialEndingSoonEmail,
@@ -28,7 +28,7 @@ export type SendForUserTemplate =
   | 'grace-reminder';
 
 export async function POST(req: Request) {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

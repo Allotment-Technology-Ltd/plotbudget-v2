@@ -29,7 +29,7 @@
 OG title and description are set in `apps/marketing/index.html` and `SEO.jsx`:
 
 - **Title:** PLOT — Budgeting for Households | Privacy-First Payday Ritual
-- **Description:** The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access. Free for the first 50 users.
+- **Description:** The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access. Free for the first 100 users.
 
 ---
 

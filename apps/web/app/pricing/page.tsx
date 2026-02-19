@@ -144,7 +144,7 @@ export default async function PricingPage() {
                     Founding Member
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    You have 6 months of Premium access free until {founderDate}. Thanks for being here from the start — your support for PLOT means everything.
+                    You have 12 months of Premium access free until {founderDate}. Thanks for being here from the start — your support for PLOT means everything.
                   </p>
                 </div>
               );

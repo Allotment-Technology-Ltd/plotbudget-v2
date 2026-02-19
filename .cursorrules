@@ -86,3 +86,130 @@ Before you give me code, run this mental check:
 - **Source of truth:** `main` should match `origin/main`. When the user asks to sync or wrap up, run `git fetch origin --prune`, then `git checkout main && git pull origin main` from the plotbudget repo root, then return to their branch and report branch status.
 - **Workflow:** Feature branch → commit → push branch → PR to main. Do not push to main unless explicitly asked.
 - See `.cursor/rules/ci-cd-and-branch-sync.mdc` and `branch-before-implement.mdc` for full steps.
+
+# PLOT Development Principles
+
+Every feature, every line of code, every UX decision must align with these principles:
+
+## A. SISYPHEAN REALISM
+- Don't pretend automation eliminates household work
+- Design for ritual and rhythm, not elimination
+- Accept that bills, chores, meals are repetitive
+- Make repetition bearable, not invisible
+
+**Code implication:**
+- Recurring tasks/bills should be explicit, not hidden
+- Rituals should have clear entry/exit points
+- No "magic" automation that obscures what's happening
+
+---
+
+## B. LABOR EQUITY
+- One person should never be the "household manager"
+- All household work should be visible and trackable
+- Distribute mental load through shared systems
+
+**Code implication:**
+- No "admin" or "owner" roles that concentrate power
+- Fairness tracking in Tasks module (who does what)
+- Both partners see everything by default (no hidden views)
+- Audit trails for who added/completed what
+
+
+---
+
+## D. USER AUTONOMY
+- Software assists; users decide
+- No AI "optimization" or predictive manipulation
+- Users understand what the system is doing
+
+**Code implication:**
+- No black-box AI recommendations
+- All calculations shown (don't just show result, show formula)
+- Users can override any system suggestion
+- No "nudges" or dark patterns
+
+---
+
+## E. CONSTRAINT AS KINDNESS
+- One or two great ways to do each thing
+- Opinionated workflows, not infinite customization
+- Simple systems beat complex ones
+
+**Code implication:**
+- Resist feature bloat (each feature must solve real pain)
+- Default settings should work for 80% of users
+- Advanced options hidden behind "Advanced" toggle
+- If adding configuration, question whether feature is needed at all
+
+---
+
+## F. TIME RESPECT
+- 15 minutes at payday, 10 minutes on Sunday
+- Don't optimize for engagement or daily active users
+- Tools should disappear when not needed
+
+**Code implication:**
+- No gamification (streaks, badges, points)
+- No pushy notifications (only essential: "payday tomorrow")
+- Fast load times (no loading spinners)
+- Offline-capable where possible (mobile)
+- Instant feedback (optimistic UI updates)
+
+---
+
+## G. REALITY OVER ASPIRATION
+- Don't sell transformation or life optimization
+- Acknowledge household work is boring but necessary
+- Honest about what software can/can't do
+
+**Code implication:**
+- Copy should be straightforward, not motivational
+- No "achievement unlocked" language
+- Error messages honest, not cutesy
+- Onboarding sets realistic expectations
+
+---
+
+## H. BUILT WITH USERS
+- Founding members influence roadmap
+- Partner feedback integrated from day one
+- Products emerge from conversation, not isolation
+
+**Code implication:**
+- Feature flags for beta testing with founding members
+- In-app feedback mechanism (not just support email)
+- Changelogs visible and honest
+- Decision rationale documented (why we built X)
+
+---
+
+## Decision Framework
+
+When evaluating a feature request or design decision:
+
+1. Does it align with our principles?
+2. Does it solve real pain for real users?
+3. Does it respect user time and autonomy?
+4. Does it maintain simplicity?
+5. Does it preserve privacy?
+
+If no to any → don't build it.
+
+---
+
+## Anti-Patterns to Avoid
+
+❌ Engagement optimization (notifications, streaks, daily goals)
+❌ Dark patterns (hidden costs, confusing cancellation)
+❌ Surveillance features (bank connections, transaction scraping)
+❌ AI black boxes (unexplained recommendations)
+❌ Complexity creep (too many configuration options)
+❌ Hierarchy enforcement (admin roles that concentrate power)
+❌ Aspiration marketing ("transform your life!")
+❌ Feature cloning (copying competitors without purpose)
+
+---
+
+If in doubt: **Would this feature make Adam's household's life better?**
+If no → don't build it.

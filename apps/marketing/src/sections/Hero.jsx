@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { fadeUp } from '../lib/animationUtils';
 import { APP_URL } from '../lib/config';
-import MailerLiteForm from '../components/MailerLiteForm';
 
 function TerminalHeadline({ text }) {
   const [displayedChars, setDisplayedChars] = useState(0);
@@ -111,9 +110,9 @@ export default function Hero() {
           initial="hidden"
           animate="visible"
           custom={0.9}
-          className="font-heading text-label-sm md:text-label uppercase tracking-wider text-plot-accent"
+          className="font-heading text-label-sm md:text-label uppercase tracking-wider text-plot-accent-text"
         >
-          Free for the first 50 users — sign up to claim your spot.
+          Free for the first 100 users — sign up to claim your spot.
         </motion.p>
         <motion.div
           variants={fadeUp}
@@ -129,8 +128,6 @@ export default function Hero() {
           >
             Get the app
           </a>
-          <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
-          <MailerLiteForm variant="hero" id="hero-form" />
         </motion.div>
 
         <motion.p

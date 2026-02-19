@@ -111,7 +111,7 @@ export default function CookieConsent() {
               <button
                 type="button"
                 onClick={() => setCustomiseOpen((v) => !v)}
-                className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent py-2 px-4 transition-colors"
+                className="font-heading text-label-sm uppercase tracking-wider text-plot-muted hover:text-plot-accent-text py-2 px-4 transition-colors"
               >
                 {customiseOpen ? 'Hide customise' : 'Customise'}
               </button>

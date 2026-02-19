@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getCachedDashboardAuth, getPaydayCompleteRequired } from '@/lib/auth/server-auth-cache';
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { redirect } from 'next/navigation';
@@ -17,7 +18,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  const { user, profile, owned, partnerOf, isAdmin } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
   const householdId = profile?.household_id ?? partnerOf?.id ?? null;
@@ -41,9 +42,24 @@ export default async function DashboardLayout({
         <div className="content-wrapper flex h-16 items-center justify-between">
           <Link
             href="/dashboard"
-            className="font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="flex items-center gap-2.5 font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            aria-label="PLOT dashboard"
           >
-            PLOT
+            <Image
+              src="/favicon-light.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="hidden dark:block shrink-0"
+            />
+            <Image
+              src="/favicon-dark.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="dark:hidden shrink-0"
+            />
+            <span>PLOT</span>
           </Link>
           <DashboardHeaderNavClient
             userMenuProps={{
@@ -55,6 +71,7 @@ export default async function DashboardLayout({
               },
               isPartner,
               trialTestingDashboardVisible,
+              isAdmin: isAdmin ?? false,
             }}
           />
         </div>

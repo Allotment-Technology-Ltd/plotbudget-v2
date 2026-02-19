@@ -88,7 +88,7 @@ export function FoundingMemberCelebration({
         </DialogHeader>
         <div className="space-y-3 text-center">
           <p className="text-sm text-muted-foreground">
-            You have 6 months of Premium access free until {endDate}. Thanks for
+            You have 12 months of Premium access free until {endDate}. Thanks for
             being here from the start.
           </p>
           <div

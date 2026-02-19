@@ -17,7 +17,7 @@ export interface SettingsViewProps {
     avatarUrl?: string | null;
     /** Human-readable sign-in method labels (e.g. "Google", "Email & password") for display in Profile. */
     signInMethodLabels?: string[];
-    /** Founding Member: Premium free until this date. First 50 users. */
+    /** Founding Member: Premium free until this date. First 100 users. */
     foundingMemberUntil?: string | null;
     /** Trial cycles completed (trial = first 2). */
     trialCyclesCompleted?: number;

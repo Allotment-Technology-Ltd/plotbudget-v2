@@ -105,7 +105,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
               transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.1 }}
               className="
                 w-14 h-14 mx-auto flex items-center justify-center
-                border-2 border-plot-accent text-plot-accent
+                border-2 border-plot-accent text-plot-accent-text
               "
               style={{ borderRadius: 0 }}
               aria-hidden="true"
@@ -117,7 +117,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
               </svg>
             </motion.div>
 
-            <p className="font-heading text-sub-sm md:text-sub uppercase tracking-wider text-plot-accent">
+            <p className="font-heading text-sub-sm md:text-sub uppercase tracking-wider text-plot-accent-text">
               You're on the list.
             </p>
             <p className="font-body text-base text-plot-muted">
@@ -249,7 +249,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
             </p>
             <button
               onClick={resetForm}
-              className="font-heading text-label-sm text-plot-muted underline hover:text-plot-accent transition-colors uppercase tracking-wider"
+              className="font-heading text-label-sm text-plot-muted underline hover:text-plot-accent-text transition-colors uppercase tracking-wider"
               aria-label="Dismiss error and try again"
             >
               Retry

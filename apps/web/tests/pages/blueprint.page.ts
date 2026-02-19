@@ -144,7 +144,7 @@ export class BlueprintPage {
     recurring: boolean;
   }) {
     await this.addSeedButton.click();
-    // Dialog may take a moment to open (animation/portal); allow time for it to be visible
+    // Wait for the seed form (not generic dialog) so we don't match Server Error or time out on animation
     await expect(this.seedNameInput).toBeVisible({ timeout: 15_000 });
     await this.seedNameInput.fill(params.name);
     await this.seedAmountInput.fill(params.amount.toString());

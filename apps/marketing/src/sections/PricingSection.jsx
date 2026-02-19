@@ -74,11 +74,11 @@ export default function PricingSection() {
             variants={staggerItem}
             className="rounded-lg border border-plot-accent/30 bg-plot-accent/5 px-4 py-3 text-center max-w-xl mx-auto"
           >
-            <p className="font-heading text-label-sm uppercase tracking-wider text-plot-accent">
-              Launch offer: first 50 users get 6 months of Premium free
+            <p className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text">
+              Launch offer: first 100 users get 12 months of Premium free
             </p>
             <p className="mt-1 text-sm text-plot-muted">
-              Sign up now to lock in Founding Member status — unlimited pots for 6 months, on us.
+              Sign up now to lock in Founding Member status — unlimited pots for 12 months, on us.
             </p>
           </motion.div>
         </motion.div>
@@ -101,7 +101,7 @@ export default function PricingSection() {
               `}
             >
               {tier.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-plot-accent px-3 py-0.5 text-xs font-medium text-[#111] tracking-wider">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-plot-accent px-3 py-0.5 text-xs font-medium text-on-accent tracking-wider">
                   Most flexible
                 </div>
               )}
@@ -111,7 +111,7 @@ export default function PricingSection() {
                 </h3>
                 <p className="mt-1 text-sm text-plot-muted">{tier.tagline}</p>
                 {tier.price && (
-                  <p className="mt-3 font-heading text-2xl text-plot-accent tracking-wide">
+                  <p className="mt-3 font-heading text-2xl text-plot-accent-text tracking-wide">
                     {tier.price}
                   </p>
                 )}
@@ -124,7 +124,7 @@ export default function PricingSection() {
                 {tier.limits.map((limit) => (
                   <li key={limit} className="flex items-start gap-2 text-sm">
                     <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-plot-accent"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-plot-accent-text"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"

@@ -6,7 +6,7 @@ This doc lists what to do **in the Polar dashboard** and **in the app** so Polar
 
 ## What’s already done
 
-- Pricing page (app + marketing), feature flag `pricing-enabled`, currency (GBP/USD/EUR), region restriction, Founding Member (first 50) in DB.
+- Pricing page (app + marketing), feature flag `pricing-enabled`, currency (GBP/USD/EUR), region restriction, Founding Member (first 100, 12 months) in DB.
 - **Not yet done:** Polar SDK, checkout route, webhook, `subscriptions` table, and (optionally) limit enforcement.
 
 ---

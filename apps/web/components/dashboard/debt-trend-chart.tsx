@@ -12,6 +12,7 @@ import {
   Legend,
   ComposedChart,
 } from 'recharts';
+import { useIsNarrowScreen } from '@/hooks/use-is-narrow-screen';
 import { currencySymbol, formatCurrency } from '@/lib/utils/currency';
 import { projectRepaymentOverTime } from '@/lib/utils/forecast-projection';
 import type { PayCycleConfig } from '@/lib/utils/forecast-projection';
@@ -194,6 +195,7 @@ export function DebtTrendChart({
   const hasHistoricalData = cycles.length >= 2;
   const hasProjectedData = projectedPoints.length > 0;
   const showChart = hasDebts && (hasHistoricalData || hasProjectedData);
+  const isNarrow = useIsNarrowScreen();
 
   if (!showChart) {
     return (
@@ -288,6 +290,13 @@ export function DebtTrendChart({
     }
   }
 
+  const xAxisInterval =
+    isNarrow && chartData.length > 4
+      ? Math.floor(chartData.length / 4)
+      : chartData.length > 6
+        ? Math.floor(chartData.length / 6)
+        : 0;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -333,7 +342,7 @@ export function DebtTrendChart({
               tickLine={false}
               axisLine={false}
               scale="point"
-              interval={chartData.length > 6 ? Math.floor(chartData.length / 6) : 0}
+              interval={xAxisInterval}
               tickFormatter={(value) => {
                 if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
                   try {

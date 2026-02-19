@@ -4,7 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
+import { allowTrialTestingOrAdmin } from '@/lib/auth/admin-gate';
 
 const TRIAL_TEST_EMAILS = [
   'trial-milestone@plotbudget.test',
@@ -30,7 +30,7 @@ export type TrialUserSummary = {
 };
 
 export async function GET() {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

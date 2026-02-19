@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/render';
 import React from 'react';
-import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
+import { allowTrialTestingOrAdmin } from '@/lib/auth/admin-gate';
 import { sendEmail, isEmailConfigured } from '@/lib/email/resend';
 
 export type TrialEmailTemplate =
@@ -73,7 +73,7 @@ const SAMPLE_PROPS: Record<
 
 /** GET: return app email config status for the trial-testing UI. */
 export async function GET() {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   const configured = isEmailConfigured();
@@ -86,7 +86,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

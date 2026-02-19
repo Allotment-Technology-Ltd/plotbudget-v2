@@ -29,12 +29,7 @@ describe('GET /api/public/founding-spots', () => {
 
   it('returns spotsLeft, limit, showCountdown with CORS headers', async () => {
     mockNot.mockResolvedValue({
-      data: [
-        { id: 'u1', household_id: 'h1' },
-        { id: 'u2', household_id: 'h1' },
-        { id: 'u3', household_id: 'h2' },
-        ...Array.from({ length: 16 }, (_, i) => ({ id: `u${i + 4}`, household_id: `h${i + 3}` })),
-      ],
+      data: Array.from({ length: 20 }, (_, i) => ({ id: `h${i + 1}` })),
       error: null,
     });
 
@@ -47,22 +42,19 @@ describe('GET /api/public/founding-spots', () => {
     expect(res.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
     expect(json).toMatchObject({
       spotsLeft: expect.any(Number),
-      limit: 50,
+      limit: 100,
       showCountdown: true,
     });
     expect(json.spotsLeft).toBeGreaterThanOrEqual(0);
-    expect(json.spotsLeft).toBeLessThanOrEqual(50);
-    expect(mockFrom).toHaveBeenCalledWith('users');
-    expect(mockSelect).toHaveBeenCalledWith('id, household_id');
+    expect(json.spotsLeft).toBeLessThanOrEqual(100);
+    expect(mockFrom).toHaveBeenCalledWith('households');
+    expect(mockSelect).toHaveBeenCalledWith('id');
     expect(mockNot).toHaveBeenCalledWith('founding_member_until', 'is', null);
   });
 
   it('showCountdown is false when founder households < 17', async () => {
     mockNot.mockResolvedValue({
-      data: [
-        { id: 'u1', household_id: 'h1' },
-        { id: 'u2', household_id: 'h2' },
-      ],
+      data: [{ id: 'h1' }, { id: 'h2' }],
       error: null,
     });
 
@@ -73,8 +65,8 @@ describe('GET /api/public/founding-spots', () => {
 
     expect(res.status).toBe(200);
     expect(json.showCountdown).toBe(false);
-    expect(json.spotsLeft).toBe(48);
-    expect(json.limit).toBe(50);
+    expect(json.spotsLeft).toBe(98);
+    expect(json.limit).toBe(100);
   });
 
   it('returns 500 when Supabase errors', async () => {

@@ -9,7 +9,16 @@ import { test, expect } from '@playwright/test';
 import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
 
+/** Session key used by PwaSplashScreen; when set, the PLOT draw animation is skipped. */
+const PLOT_SPLASH_SESSION_KEY = 'plot-splash-shown';
+
 test.describe('Visual regression', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript((key: string) => {
+      sessionStorage.setItem(key, '1');
+    }, PLOT_SPLASH_SESSION_KEY);
+  });
+
   test.describe('unauthenticated', () => {
     test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT });
     test('login page matches snapshot', async ({ page }) => {

@@ -12,6 +12,7 @@ import {
   AreaChart,
   Legend,
 } from 'recharts';
+import { useIsNarrowScreen } from '@/hooks/use-is-narrow-screen';
 import { currencySymbol, formatCurrency } from '@/lib/utils/currency';
 import type { PayCycle } from '@repo/supabase';
 
@@ -49,6 +50,7 @@ export function SavingsTrendChart({
 }: SavingsTrendChartProps) {
   const gradientId = useId();
   const symbol = currencySymbol(currency);
+  const isNarrow = useIsNarrowScreen();
   const cycles = [...historicalCycles].reverse();
   if (currentCycle) cycles.push(currentCycle as HistoricalCycle);
 
@@ -72,6 +74,12 @@ export function SavingsTrendChart({
   ];
 
   const hasData = chartData.length > 0 && chartData.some((d) => d.amount > 0);
+  const xAxisInterval =
+    isNarrow && chartData.length > 4
+      ? Math.floor(chartData.length / 4)
+      : chartData.length > 7
+        ? Math.floor(chartData.length / 6)
+        : 0;
 
   if (!hasData) {
     return (
@@ -119,7 +127,7 @@ export function SavingsTrendChart({
               tickLine={false}
               axisLine={false}
               scale="point"
-              interval={chartData.length > 7 ? Math.floor(chartData.length / 6) : 0}
+              interval={xAxisInterval}
               tickFormatter={(value) =>
                 value === '__origin' ? '' : (chartData.find((d) => d.cycleId === value)?.label ?? '')
               }

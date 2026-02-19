@@ -29,11 +29,9 @@ For local MailerLite testing, copy `.env.example` to `.env` in `apps/marketing/`
 plot-marketing/
 ├── api/
 │   └── subscribe.js          # Vercel serverless function (MailerLite proxy)
-├── content/
-│   └── changelog.md           # Changelog source (prebuild → public/changelog.md)
 ├── public/
 │   ├── favicon.svg            # PLOT # brand mark
-│   ├── changelog.md           # Built from content/changelog.md at prebuild
+│   ├── changelog.md           # Copied from repo root CHANGELOG.md at prebuild (single source of truth)
 │   ├── privacy.html           # Static legal page
 │   ├── terms.html            # Static legal page
 │   └── screenshots/           # App screenshots for phone mockups
@@ -48,13 +46,13 @@ plot-marketing/
 │   ├── components/
 │   │   ├── Layout.jsx         # Shared layout: Navbar + <Outlet /> + Footer + CookieConsent
 │   │   ├── SEO.jsx            # Dynamic meta tags + Schema.org
-│   │   ├── Navbar.jsx         # Sticky nav + theme toggle + Changelog link
+│   │   ├── Navbar.jsx         # Sticky nav + theme toggle (Changelog is footer-only)
 │   │   ├── Footer.jsx
 │   │   ├── CookieConsent.jsx
 │   │   └── MailerLiteForm.jsx # Email form with state machine
 │   ├── pages/
 │   │   ├── HomePage.jsx       # Landing: composes all sections
-│   │   └── ChangelogPage.jsx  # Renders content from public/changelog.md
+│   │   └── ChangelogPage.jsx  # Renders root CHANGELOG.md (via public/changelog.md), sanitized for display
 │   └── sections/              # Landing sections (used by HomePage)
 │       ├── Hero.jsx
 │       ├── SocialProofStrip.jsx

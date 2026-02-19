@@ -20,7 +20,7 @@ export interface SubscriptionTabProps {
   } | null;
   householdId: string;
   userId: string;
-  /** Founding Member: Premium free until this date. First 50 users. */
+  /** Founding Member: Premium free until this date. First 100 users. */
   foundingMemberUntil?: string | null;
   /** Trial cycles completed (trial = first 2). */
   trialCyclesCompleted?: number;
@@ -128,7 +128,7 @@ export function SubscriptionTab({
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 mb-4">
               <p className="font-heading text-sm uppercase tracking-wider text-primary">Founding Member</p>
               <p className="text-sm text-muted-foreground mt-1">
-                You have 6 months of Premium access free until {formatDate(foundingMemberUntil)}.
+                You have 12 months of Premium access free until {formatDate(foundingMemberUntil)}.
               </p>
               <p className="text-sm font-medium text-foreground mt-2">
                 Your household has unlimited pots and no limits on bills or wants.

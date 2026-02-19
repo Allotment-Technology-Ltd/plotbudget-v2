@@ -66,7 +66,7 @@ export default function SolutionSection() {
                 <span
                   className="
                     font-display text-5xl md:text-7xl font-bold
-                    text-plot-accent opacity-20
+                    text-plot-accent-text opacity-20
                     select-none shrink-0
                     leading-none
                   "
