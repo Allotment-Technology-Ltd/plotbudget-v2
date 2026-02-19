@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.4.0...v1.5.0) (2026-02-18)
+
+
+### Features
+
+* payoff chart month/year labels, dashboard cards, action persistence ([#74](https://github.com/adamboon1984-arch/plotbudget-v2/issues/74)) ([0e696e2](https://github.com/adamboon1984-arch/plotbudget-v2/commit/0e696e2cf483a250990fc96d49fd9ded0bc41bcd))
+
 # [1.4.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.3.0...v1.4.0) (2026-02-16)
 
 
