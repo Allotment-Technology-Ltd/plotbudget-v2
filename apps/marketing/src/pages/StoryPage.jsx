@@ -40,7 +40,7 @@ const beats = [
     label: '03',
     headline: 'Then came the pub conversation.',
     paragraphs: [
-      'One night, a colleague mentioned she was \'the household chancellor.\' Everyone around the table nodded. Someone said: \'I thought that was just me.\'',
+      'One night, a colleague mentioned he was \'the household chancellor.\' Everyone around the table nodded. Someone said: \'I thought that was just me.\'',
       'That\'s when I realised this isn\'t a personal problem. It\'s universal.',
       'Couples don\'t need better spreadsheets. They need a way to plan together, without one person becoming the gatekeeper.',
     ],
