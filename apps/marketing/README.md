@@ -186,6 +186,11 @@ Vercel automatically:
 - Provisions SSL for your custom domain
 - Deploys to a global CDN
 
+### Console and deployment notes
+
+- **Video 404s** (`/videos/dashboard-dark.webm`, etc.): The App Showcase can show looping videos; if the files are not in `public/videos/`, the browser will request them and get 404. The UI falls back to the static preview. To add videos, see **docs/MARKETING-APP-VIDEO.md**.
+- **Vercel Web Analytics**: The app loads `/_vercel/insights/script.js` when analytics consent is given. If you see a 404 or "enable Web Analytics", turn on **Web Analytics** for the marketing Vercel project (Dashboard → Project → Analytics) and redeploy.
+
 ---
 
 ## Theme System
