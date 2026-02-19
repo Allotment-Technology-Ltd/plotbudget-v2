@@ -16,7 +16,6 @@ export type RoadmapFeatureWithVotes = {
   status: 'now' | 'next' | 'later' | 'shipped';
   display_order: number;
   key_features: string[];
-  estimated_timeline: string | null;
   vote_count: number;
   user_has_voted: boolean;
 };
@@ -34,8 +33,7 @@ export async function getRoadmapFeaturesWithVotes(): Promise<{
 
     const { data: featuresData, error: featuresError } = await supabase
       .from('roadmap_features')
-      .select('id, title, description, module_key, icon_name, status, display_order, key_features, estimated_timeline')
-      .order('status', { ascending: true })
+      .select('id, title, description, module_key, icon_name, status, display_order, key_features')
       .order('display_order', { ascending: true });
 
     if (featuresError) {
@@ -43,7 +41,7 @@ export async function getRoadmapFeaturesWithVotes(): Promise<{
       return { features: [], error: featuresError.message };
     }
 
-    const features = (featuresData ?? []) as Pick<RoadmapFeature, 'id' | 'title' | 'description' | 'module_key' | 'icon_name' | 'status' | 'display_order' | 'key_features' | 'estimated_timeline'>[];
+    const features = (featuresData ?? []) as Pick<RoadmapFeature, 'id' | 'title' | 'description' | 'module_key' | 'icon_name' | 'status' | 'display_order' | 'key_features'>[];
     const featureIds = features.map((f) => f.id);
 
     const { data: voteCounts, error: countsError } = await supabase
@@ -94,9 +92,8 @@ export async function getRoadmapFeaturesWithVotes(): Promise<{
       module_key: f.module_key,
       icon_name: f.icon_name,
       status: f.status as 'now' | 'next' | 'later' | 'shipped',
-      display_order: f.display_order,
+      display_order: Number(f.display_order),
       key_features: f.key_features ?? [],
-      estimated_timeline: f.estimated_timeline ?? null,
       vote_count: countByFeature[f.id] ?? 0,
       user_has_voted: userVotedIds.has(f.id),
     }));

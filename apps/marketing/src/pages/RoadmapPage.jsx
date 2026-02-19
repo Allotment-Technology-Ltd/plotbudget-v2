@@ -296,17 +296,18 @@ const roadmap = {
 
 function mapApiFeaturesToRoadmap(features) {
   if (!Array.isArray(features) || features.length === 0) return null;
+  const sorted = [...features].sort((a, b) => Number(b.display_order ?? 0) - Number(a.display_order ?? 0));
   const byStatus = { now: [], next: [], later: [] };
   const statusToBucket = { now: 'now', shipped: 'now', next: 'next', later: 'later' };
   const statusLabel = { now: 'Live in Beta', next: 'In Development', later: 'Planned', shipped: 'Live in Beta' };
-  for (const f of features) {
+  for (const f of sorted) {
     const bucket = statusToBucket[f.status] || 'later';
     byStatus[bucket].push({
       id: f.module_key || f.id,
       name: f.title,
       iconKey: f.icon_name,
       description: f.description,
-      status: f.estimated_timeline || statusLabel[f.status] || 'Planned',
+      status: statusLabel[f.status] || 'Planned',
       features: f.key_features || [],
       note: null,
     });

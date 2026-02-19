@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getThemeCookie, setThemeCookie } from '../lib/theme-cookie';
 
 /**
  * useTheme — Custom hook for managing PLOT's dual-mode theme.
  *
  * Behaviour:
- *  1. On first load, checks localStorage for a saved preference.
- *  2. Falls back to the user's OS preference (prefers-color-scheme).
- *  3. Defaults to 'light' if neither is available.
- *  4. Persists the user's choice to localStorage on every toggle.
- *  5. Listens for OS-level theme changes and follows them
- *     ONLY if the user hasn't manually overridden.
- *  6. Adds/removes the .dark class on <html> (used by Tailwind + CSS vars).
+ *  1. On first load, checks shared cookie (plot-theme) then localStorage, then OS preference.
+ *  2. Cookie is used so theme persists from marketing → app and app → marketing (same domain).
+ *  3. Persists the user's choice to cookie + localStorage on every toggle.
+ *  4. Listens for OS-level theme changes ONLY if the user hasn't manually overridden (cookie or localStorage).
+ *  5. Adds/removes the .dark class on <html> (used by Tailwind + CSS vars).
  *
  * Returns:
  *  - theme:  'light' | 'dark'
@@ -21,6 +20,9 @@ export function useTheme() {
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'light';
 
+    const fromCookie = getThemeCookie();
+    if (fromCookie) return fromCookie;
+
     const saved = localStorage.getItem('plot-theme');
     if (saved === 'dark' || saved === 'light') return saved;
 
@@ -29,7 +31,7 @@ export function useTheme() {
       : 'light';
   });
 
-  // Sync the .dark class on <html> whenever theme changes
+  // Sync the .dark class on <html> and persist to cookie + localStorage whenever theme changes
   useEffect(() => {
     const root = document.documentElement;
 
@@ -39,6 +41,7 @@ export function useTheme() {
       root.classList.remove('dark');
     }
 
+    setThemeCookie(theme);
     localStorage.setItem('plot-theme', theme);
   }, [theme]);
 
@@ -47,8 +50,7 @@ export function useTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handler = (e) => {
-      const userOverride = localStorage.getItem('plot-theme');
-      // Only follow system if user hasn't explicitly chosen
+      const userOverride = getThemeCookie() || localStorage.getItem('plot-theme');
       if (!userOverride) {
         setTheme(e.matches ? 'dark' : 'light');
       }

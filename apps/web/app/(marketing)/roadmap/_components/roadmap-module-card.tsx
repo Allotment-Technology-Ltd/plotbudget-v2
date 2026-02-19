@@ -81,9 +81,9 @@ export function RoadmapModuleCard({ feature, isAuthenticated, canVote }: Roadmap
         <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
           <span
             className={`min-w-0 max-w-full truncate rounded-md border px-2 py-1 font-heading text-xs uppercase tracking-wider ${statusStyle}`}
-            title={feature.estimated_timeline ?? feature.status}
+            title={feature.status}
           >
-            {feature.estimated_timeline ?? feature.status}
+            {feature.status}
           </span>
           <button
             type="button"

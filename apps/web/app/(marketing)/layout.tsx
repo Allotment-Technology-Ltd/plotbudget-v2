@@ -62,14 +62,14 @@ export default async function MarketingLayout({
               alt=""
               width={28}
               height={28}
-              className="hidden dark:block shrink-0"
+              className="dark:hidden shrink-0"
             />
             <Image
               src="/favicon-dark.svg"
               alt=""
               width={28}
               height={28}
-              className="dark:hidden shrink-0"
+              className="hidden dark:block shrink-0"
             />
             <span>PLOT</span>
           </Link>

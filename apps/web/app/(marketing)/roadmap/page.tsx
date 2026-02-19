@@ -63,10 +63,10 @@ async function RoadmapPageInner() {
   }
 
   const byStatus = {
-    now: features.filter((f) => f.status === 'now'),
-    next: features.filter((f) => f.status === 'next'),
-    later: features.filter((f) => f.status === 'later'),
-    shipped: features.filter((f) => f.status === 'shipped'),
+    now: features.filter((f) => f.status === 'now').sort((a, b) => Number(b.display_order) - Number(a.display_order)),
+    next: features.filter((f) => f.status === 'next').sort((a, b) => Number(b.display_order) - Number(a.display_order)),
+    later: features.filter((f) => f.status === 'later').sort((a, b) => Number(b.display_order) - Number(a.display_order)),
+    shipped: features.filter((f) => f.status === 'shipped').sort((a, b) => Number(b.display_order) - Number(a.display_order)),
   };
 
   return (
@@ -154,9 +154,7 @@ async function RoadmapPageInner() {
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
                 <ul className="space-y-4" role="list">
-                  {list
-                    .sort((a, b) => a.display_order - b.display_order)
-                    .map((feature) => (
+                  {list.map((feature) => (
                       <li key={feature.id}>
                         <RoadmapModuleCard
                           feature={feature}
