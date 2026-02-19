@@ -175,7 +175,7 @@ jobs:
           SUPABASE_PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROD_PROJECT_REF }}
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
         run: pnpm test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: playwright-report-localhost
