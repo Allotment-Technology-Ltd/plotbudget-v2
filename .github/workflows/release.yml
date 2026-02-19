@@ -1,5 +1,7 @@
 # Release: on push to main, apply production migrations then run semantic-release (version + changelog).
 # Requires: SUPABASE_PROD_DATABASE_URL (full Postgres URI). Vercel deploys main automatically.
+# The marketing site changelog at /changelog is built from root CHANGELOG.md (prebuild copies it);
+# so each merge to main that produces a release updates the public changelog on the next marketing deploy.
 name: Release
 
 on:

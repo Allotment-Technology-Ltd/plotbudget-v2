@@ -29,11 +29,9 @@ For local MailerLite testing, copy `.env.example` to `.env` in `apps/marketing/`
 plot-marketing/
 ├── api/
 │   └── subscribe.js          # Vercel serverless function (MailerLite proxy)
-├── content/
-│   └── changelog.md           # Changelog source (prebuild → public/changelog.md)
 ├── public/
 │   ├── favicon.svg            # PLOT # brand mark
-│   ├── changelog.md           # Built from content/changelog.md at prebuild
+│   ├── changelog.md           # Copied from repo root CHANGELOG.md at prebuild (single source of truth)
 │   ├── privacy.html           # Static legal page
 │   ├── terms.html            # Static legal page
 │   └── screenshots/           # App screenshots for phone mockups
@@ -48,13 +46,13 @@ plot-marketing/
 │   ├── components/
 │   │   ├── Layout.jsx         # Shared layout: Navbar + <Outlet /> + Footer + CookieConsent
 │   │   ├── SEO.jsx            # Dynamic meta tags + Schema.org
-│   │   ├── Navbar.jsx         # Sticky nav + theme toggle + Changelog link
+│   │   ├── Navbar.jsx         # Sticky nav + theme toggle (Changelog is footer-only)
 │   │   ├── Footer.jsx
 │   │   ├── CookieConsent.jsx
 │   │   └── MailerLiteForm.jsx # Email form with state machine
 │   ├── pages/
 │   │   ├── HomePage.jsx       # Landing: composes all sections
-│   │   └── ChangelogPage.jsx  # Renders content from public/changelog.md
+│   │   └── ChangelogPage.jsx  # Renders root CHANGELOG.md (via public/changelog.md), sanitized for display
 │   └── sections/              # Landing sections (used by HomePage)
 │       ├── Hero.jsx
 │       ├── SocialProofStrip.jsx
@@ -187,6 +185,11 @@ Vercel automatically:
 - Routes `/api/subscribe` to the serverless function
 - Provisions SSL for your custom domain
 - Deploys to a global CDN
+
+### Console and deployment notes
+
+- **Video 404s** (`/videos/dashboard-dark.webm`, etc.): The App Showcase can show looping videos; if the files are not in `public/videos/`, the browser will request them and get 404. The UI falls back to the static preview. To add videos, see **docs/MARKETING-APP-VIDEO.md**.
+- **Vercel Web Analytics**: The app loads `/_vercel/insights/script.js` when analytics consent is given. If you see a 404 or "enable Web Analytics", turn on **Web Analytics** for the marketing Vercel project (Dashboard → Project → Analytics) and redeploy.
 
 ---
 

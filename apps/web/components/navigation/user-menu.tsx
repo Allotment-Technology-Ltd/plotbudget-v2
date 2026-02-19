@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, MessageSquare, CreditCard, FlaskConical } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, Monitor, HelpCircle, MessageSquare, CreditCard, FlaskConical, Shield, Map } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -36,9 +36,10 @@ interface UserMenuProps {
   };
   isPartner?: boolean;
   trialTestingDashboardVisible?: boolean;
+  isAdmin?: boolean;
 }
 
-export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible = false }: UserMenuProps) {
+export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible = false, isAdmin = false }: UserMenuProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { paymentUiVisible } = useAuthFeatureFlags();
   const { setNavigating } = useNavigationProgress();
@@ -147,6 +148,20 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
             Settings
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer transition-colors duration-200"
+        >
+          <Link
+            href="/roadmap"
+            className="flex items-center focus:bg-primary/10 focus:text-primary"
+            data-testid="user-menu-roadmap"
+            onClick={() => setNavigating(true)}
+          >
+            <Map className="mr-2 h-4 w-4" aria-hidden />
+            Roadmap
+          </Link>
+        </DropdownMenuItem>
         {paymentUiVisible && (
           <DropdownMenuItem
             asChild
@@ -163,7 +178,23 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
             </Link>
           </DropdownMenuItem>
         )}
-        {trialTestingDashboardVisible && (
+        {isAdmin && (
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer transition-colors duration-200"
+          >
+            <Link
+              href="/admin"
+              className="flex items-center focus:bg-primary/10 focus:text-primary"
+              data-testid="user-menu-admin"
+              onClick={() => setNavigating(true)}
+            >
+              <Shield className="mr-2 h-4 w-4" aria-hidden />
+              Admin
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {trialTestingDashboardVisible && !isAdmin && (
           <DropdownMenuItem
             asChild
             className="cursor-pointer transition-colors duration-200"

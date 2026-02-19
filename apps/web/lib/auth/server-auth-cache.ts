@@ -17,6 +17,7 @@ type DashboardProfile = {
   household_id: string | null;
   current_paycycle_id: string | null;
   has_completed_onboarding: boolean;
+  is_admin: boolean;
 } | null;
 
 type OwnedHousehold = { id: string } | null;
@@ -32,19 +33,20 @@ export const getCachedDashboardAuth = cache(async (): Promise<{
   profile: DashboardProfile;
   owned: OwnedHousehold;
   partnerOf: PartnerHousehold;
+  isAdmin: boolean;
 }> => {
   const supabase = await getCachedSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { user: null, profile: null, owned: null, partnerOf: null };
+    return { user: null, profile: null, owned: null, partnerOf: null, isAdmin: false };
   }
 
   const [profileRes, ownedRes, partnerOfRes] = await Promise.all([
     supabase
       .from('users')
-      .select('display_name, avatar_url, household_id, current_paycycle_id, has_completed_onboarding')
+      .select('display_name, avatar_url, household_id, current_paycycle_id, has_completed_onboarding, is_admin')
       .eq('id', user.id)
       .single(),
     supabase.from('households').select('id').eq('owner_id', user.id).maybeSingle(),
@@ -58,31 +60,30 @@ export const getCachedDashboardAuth = cache(async (): Promise<{
   const profile = profileRes.data as DashboardProfile;
   const owned = ownedRes.data as OwnedHousehold;
   const partnerOf = partnerOfRes.data as PartnerHousehold;
+  const isAdmin = (profile?.is_admin === true);
 
-  return { user, profile, owned, partnerOf };
+  return { user, profile, owned, partnerOf, isAdmin };
 });
 
 /**
- * True when the household has an active pay cycle that has "finished" — either the user
- * closed the ritual (ritual_closed_at set) or the cycle's end_date is in the past.
- * Used to redirect to the payday-complete ritual so the user can go through it even if
- * they didn't log in on payday.
+ * True when the household's active pay cycle has ended (end_date is in the past).
+ * Used to redirect to the payday-complete ritual so the user can start the new cycle.
+ * Closing the cycle (ritual_closed_at) only locks the current cycle; the new cycle
+ * does not begin until the current cycle's end_date has passed.
  */
 export const getPaydayCompleteRequired = cache(async (householdId: string): Promise<boolean> => {
   const supabase = await getCachedSupabase();
   const { data } = await supabase
     .from('paycycles')
-    .select('id, end_date, ritual_closed_at')
+    .select('id, end_date')
     .eq('household_id', householdId)
     .eq('status', 'active')
     .maybeSingle();
 
   if (!data) return false;
-  const row = data as { id: string; end_date: string; ritual_closed_at: string | null };
+  const row = data as { id: string; end_date: string };
   const today = new Date().toISOString().slice(0, 10);
-  const ritualClosed = row.ritual_closed_at != null;
-  const endDateInPast = row.end_date < today;
-  return ritualClosed || endDateInPast;
+  return row.end_date < today;
 });
 
 export type { DashboardProfile, OwnedHousehold, PartnerHousehold };

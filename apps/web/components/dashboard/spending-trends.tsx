@@ -12,6 +12,7 @@ import {
   Legend,
   CartesianGrid,
 } from 'recharts';
+import { useIsNarrowScreen } from '@/hooks/use-is-narrow-screen';
 import type { Household, PayCycle } from '@repo/supabase';
 import { formatCurrency, currencySymbol } from '@/lib/utils/currency';
 import { formatBudgetAdherenceDiff } from '@/lib/utils/budget-adherence';
@@ -129,8 +130,15 @@ export function SpendingTrends({
   household,
 }: SpendingTrendsProps) {
   const currency = (household.currency as 'GBP' | 'USD' | 'EUR') ?? 'GBP';
+  const isNarrow = useIsNarrowScreen();
   const data = buildHeatmapData(currentCycle, historicalCycles, household);
   const stackedData = buildStackedBarData(data);
+  const xAxisInterval =
+    isNarrow && stackedData.length > 4
+      ? Math.floor(stackedData.length / 4)
+      : stackedData.length > 8
+        ? Math.floor(stackedData.length / 8)
+        : 0;
   const totalAllocated = currentCycle.total_allocated ?? 0;
   const totalIncome = currentCycle.total_income ?? 0;
   const hasAllocation = data.some((row) =>
@@ -207,7 +215,7 @@ export function SpendingTrends({
                   tick={{ fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
-                  interval={stackedData.length > 8 ? Math.floor(stackedData.length / 8) : 0}
+                  interval={xAxisInterval}
                 />
                 <YAxis
                   tickFormatter={(v) => `${currencySymbol(currency)}${v}`}

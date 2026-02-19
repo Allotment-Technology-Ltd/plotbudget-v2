@@ -29,7 +29,7 @@ type CronUserWithHousehold = CronUserRow & {
   households: { founding_member_until: string | null } | null;
 };
 
-import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
+import { allowTrialTestingOrAdmin } from '@/lib/auth/admin-gate';
 import {
   sendTrialMilestoneEmail,
   sendTrialEndingSoonEmail,
@@ -51,7 +51,7 @@ const FREE_POT_LIMIT = 2;
 const FREE_REPAYMENT_LIMIT = 2;
 
 export async function POST(req: Request) {
-  if (!isTrialTestingDashboardAllowed()) {
+  if (!(await allowTrialTestingOrAdmin())) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

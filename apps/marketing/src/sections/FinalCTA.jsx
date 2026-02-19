@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '../lib/animationUtils';
 import { APP_URL } from '../lib/config';
-import MailerLiteForm from '../components/MailerLiteForm';
 
 export default function FinalCTA() {
   return (
@@ -26,7 +25,7 @@ export default function FinalCTA() {
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow"
           >
-            Free for the first 50 users. Sign up now to start plotting your budget.
+            Free for the first 100 users. Sign up now to start plotting your budget.
           </motion.p>
 
           <motion.div variants={staggerItem} className="w-full flex flex-col items-center gap-4 mt-2">
@@ -37,8 +36,6 @@ export default function FinalCTA() {
             >
               Get the app
             </a>
-            <p className="font-body text-sm text-plot-muted">Or get product updates by email</p>
-            <MailerLiteForm variant="footer" id="footer-form" />
           </motion.div>
         </motion.div>
       </div>

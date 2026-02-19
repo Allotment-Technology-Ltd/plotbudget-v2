@@ -10,7 +10,7 @@
 
 ### Features
 
-* **native:** Phase 2b Native Feel — bottom sheets, micro-interaction… ([#65](https://github.com/adamboon1984-arch/plotbudget-v2/issues/65)) ([257e991](https://github.com/adamboon1984-arch/plotbudget-v2/commit/257e99189e0db15781d9f4d16a5bf86c655f9f04))
+* **native:** Phase 2b Native Feel (in development) — bottom sheets, micro-interactions, and a more native experience for when the mobile app launches ([#65](https://github.com/adamboon1984-arch/plotbudget-v2/issues/65)) ([257e991](https://github.com/adamboon1984-arch/plotbudget-v2/commit/257e99189e0db15781d9f4d16a5bf86c655f9f04))
 
 # [1.3.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.2.0...v1.3.0) (2026-02-15)
 

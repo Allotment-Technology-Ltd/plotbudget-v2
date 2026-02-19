@@ -2,15 +2,13 @@
  * Public API: founding member spots left for marketing site countdown.
  * Only intended for consumption by the marketing site (plotbudget.com).
  *
- * Returns spotsLeft (0–50) and showCountdown: true only when at least 17
- * households have a founder (user with founding_member_until set).
+ * Returns spotsLeft (0–100) and showCountdown: true only when at least 17
+ * households have founder status (founding_member_until set).
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-type FounderRow = { id: string; household_id: string | null };
-
-const FOUNDING_LIMIT = 50;
+const FOUNDING_LIMIT = 100;
 const SHOW_COUNTDOWN_MIN_FOUNDER_HOUSEHOLDS = 17;
 
 const ALLOWED_ORIGINS = [
@@ -46,8 +44,8 @@ export async function GET(request: NextRequest) {
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
-      .from('users')
-      .select('id, household_id')
+      .from('households')
+      .select('id')
       .not('founding_member_until', 'is', null);
 
     if (error) {
@@ -58,15 +56,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const founders: FounderRow[] = (data ?? []) as FounderRow[];
-    const founderCount = founders.length;
-    const founderHouseholdIds = new Set(
-      founders
-        .map((u) => u.household_id)
-        .filter((id): id is string => id != null)
-    );
-    const founderHouseholdCount = founderHouseholdIds.size;
-    const spotsLeft = Math.max(0, FOUNDING_LIMIT - founderCount);
+    const founderHouseholdCount = (data ?? []).length;
+    const spotsLeft = Math.max(0, FOUNDING_LIMIT - founderHouseholdCount);
     const showCountdown =
       founderHouseholdCount >= SHOW_COUNTDOWN_MIN_FOUNDER_HOUSEHOLDS;
 

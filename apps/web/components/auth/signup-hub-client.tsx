@@ -173,16 +173,13 @@ function SignupHubForm({
               {oauthLoading === 'apple' ? 'Loading...' : 'Continue with Apple'}
             </Button>
           )}
-          <Link href={emailUrl}>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-center uppercase"
-              data-testid="signup-with-email"
-            >
-              <Mail className="mr-2 h-4 w-4" aria-hidden />
-              Continue with email
-            </Button>
+          <Link
+            href={emailUrl}
+            data-testid="signup-with-email"
+            className="inline-flex w-full items-center justify-center rounded-md border border-input bg-transparent px-6 py-3 font-heading text-cta uppercase tracking-widest transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Mail className="mr-2 h-4 w-4" aria-hidden />
+            Continue with email
           </Link>
         </div>
 

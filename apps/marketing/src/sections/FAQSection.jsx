@@ -5,7 +5,7 @@ import { staggerContainer, staggerItem } from '../lib/animationUtils';
 const faqs = [
   {
     q: 'How does PLOT pricing work?',
-    a: 'PLOT starts with a free trial for your first two pay cycles. The first 50 users get 6 months of Premium free as Founding Members — sign up early to lock it in.',
+    a: 'PLOT starts with a free trial for your first two pay cycles. The first 100 users get 12 months of Premium free as Founding Members — sign up early to lock it in.',
   },
   {
     q: 'Do I need to connect my bank account?',
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: 'When does it launch?',
-    a: 'The app is live now. The first 50 users get free access — sign up to claim your spot.',
+    a: 'The app is live now. The first 100 users get free access — sign up to claim your spot.',
   },
 ];
 
@@ -78,7 +78,7 @@ export default function FAQSection() {
                     font-heading text-base md:text-lg
                     text-plot-text uppercase tracking-wider
                     pr-4
-                    group-hover:text-plot-accent transition-colors
+                    group-hover:text-plot-accent-text transition-colors
                   ">
                     {faq.q}
                   </span>
@@ -87,7 +87,7 @@ export default function FAQSection() {
                     animate={{ rotate: openIndex === i ? 45 : 0 }}
                     transition={{ duration: 0.2 }}
                     className="
-                      text-plot-accent text-2xl font-light
+                      text-plot-accent-text text-2xl font-light
                       shrink-0 leading-none select-none
                     "
                     aria-hidden="true"

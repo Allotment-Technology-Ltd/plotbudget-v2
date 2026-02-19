@@ -83,6 +83,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
     const blueprintPage = new BlueprintPage(page);
     await blueprintPage.goto();
     await blueprintPage.addSeedButton.click();
+    await expect(blueprintPage.seedNameInput).toBeVisible({ timeout: 15_000 });
 
     // Amount input strips minus; use 0 to trigger "Amount must be greater than 0"
     await blueprintPage.seedNameInput.fill('Invalid Seed');

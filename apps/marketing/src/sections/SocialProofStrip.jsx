@@ -12,7 +12,7 @@ export default function SocialProofStrip() {
     >
       <p className="
         text-center font-heading text-label-sm md:text-label
-        uppercase tracking-[0.15em] text-plot-accent
+        uppercase tracking-[0.15em] text-plot-accent-text
         content-wrapper
       ">
         Built for couples who budget with spreadsheets — and for anyone who wants to plan their household finances, with or without a partner.

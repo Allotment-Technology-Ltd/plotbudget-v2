@@ -56,6 +56,29 @@ export const logo = {
   margin: '20px 0',
 } as const;
 
+/** Container for logo image + wordmark (flex row) */
+export const logoContainer = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  margin: '20px 0',
+} as const;
+
+export const logoImage = {
+  display: 'block',
+  width: 40,
+  height: 40,
+} as const;
+
+export const logoText = {
+  fontSize: '22px',
+  fontWeight: 'bold' as const,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.2em',
+  color: colors.text,
+  margin: 0,
+} as const;
+
 export const h1 = {
   color: colors.text,
   fontSize: '24px',
@@ -94,12 +117,15 @@ export const link = {
   textDecoration: 'underline' as const,
 } as const;
 
+/** Primary CTA: matches marketing site .btn-primary (accent green, uppercase, terminal feel) */
 export const button = {
-  backgroundColor: colors.text,
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '16px',
+  backgroundColor: colors.accent,
+  borderRadius: '0',
+  color: '#111111',
+  fontSize: '14px',
   fontWeight: 'bold' as const,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.2em',
   textDecoration: 'none' as const,
   textAlign: 'center' as const,
   display: 'block' as const,
@@ -107,13 +133,16 @@ export const button = {
   margin: '24px 0',
 } as const;
 
+/** Secondary: outline style matching marketing .btn-ghost */
 export const buttonSecondary = {
   backgroundColor: '#fff',
-  borderRadius: '6px',
-  border: `1px solid ${colors.text}`,
-  color: colors.text,
-  fontSize: '16px',
+  borderRadius: '0',
+  border: `2px solid ${colors.accent}`,
+  color: colors.accent,
+  fontSize: '14px',
   fontWeight: 'bold' as const,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.2em',
   textDecoration: 'none' as const,
   textAlign: 'center' as const,
   display: 'block' as const,

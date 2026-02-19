@@ -43,6 +43,7 @@ export default {
           text:      'var(--text-primary)',
           muted:     'var(--text-secondary)',
           accent:    'var(--accent-primary)',
+          'accent-text': 'var(--accent-text)',
           glow:      'var(--accent-glow)',
           border:    'var(--border-subtle)',
           'border-accent': 'var(--border-accent)',

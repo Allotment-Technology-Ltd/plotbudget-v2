@@ -63,7 +63,7 @@ Optional for a full picture:
 | Scenario | Steps | What to check |
 |----------|--------|----------------|
 | New Premium (sandbox) | Checkout in sandbox with test card; pass `household_id` in metadata | Webhook delivery 200; `subscriptions` row for that household, `current_tier = 'pro'` |
-| Founding Member | Use a user in first 50 (or backfilled `founding_member_until`) | Effective tier is Premium without a row in `subscriptions` (if you implement tier helper) |
+| Founding Member | Use a user in first 100 (or backfilled `founding_member_until` on household) | Effective tier is Premium without a row in `subscriptions` (if you implement tier helper) |
 | Trial / Free | New household, no checkout | Effective tier Trial then Free after 2 pay cycles; limits match tier (when limit logic exists) |
 | Cancel / revoke | Cancel subscription in Polar (end-of-period or immediate) | `subscription.updated` (and related events); `subscriptions.status` updated |
 

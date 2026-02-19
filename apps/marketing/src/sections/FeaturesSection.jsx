@@ -37,7 +37,7 @@ const features = [
       </svg>
     ),
     title: 'One ritual. Done.',
-    body: '15 minutes on payday. That\'s it. No daily expense tracking. No receipt scanning. Just one focused monthly ritual.',
+    body: '20 minutes on payday. That\'s it. No daily expense tracking. No receipt scanning. Just one focused monthly ritual.',
   },
   {
     icon: (
@@ -93,7 +93,7 @@ export default function FeaturesSection() {
                 variants={staggerItem}
                 className="card group hover:border-plot-border-accent hover:shadow-glow-sm transition-all duration-300"
               >
-                <div className="text-plot-accent mb-4" aria-hidden="true">
+                <div className="text-plot-accent-text mb-4" aria-hidden="true">
                   {f.icon}
                 </div>
                 <h3 className="
