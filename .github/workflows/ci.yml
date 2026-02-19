@@ -38,7 +38,25 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - name: Dependency audit
-        run: pnpm audit --audit-level=high
+        run: |
+          for i in 1 2 3; do
+            pnpm audit --audit-level=high 2>&1 | tee /tmp/audit.log
+            exit_code=${PIPESTATUS[0]}
+            if [ "$exit_code" -eq 0 ]; then
+              exit 0
+            fi
+            if grep -qE '500|Internal Server Error|ERR_PNPM_AUDIT_BAD_RESPONSE' /tmp/audit.log; then
+              echo "::warning::Audit failed due to registry error (attempt $i/3). Retrying in 30s..."
+              if [ "$i" -lt 3 ]; then
+                sleep 30
+              else
+                echo "::warning::Skipping audit after 3 attempts due to registry errors."
+                exit 0
+              fi
+            else
+              exit $exit_code
+            fi
+          done
 
   # Aikido (dependency/SAST/IaC) runs via the Aikido PR checks app; do not add the
   # AikidoSec/github-actions-workflow action or you get 422 "repository already protected".
