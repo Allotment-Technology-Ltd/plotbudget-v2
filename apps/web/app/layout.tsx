@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '../components/providers/theme-provider';
+import { ThemeSync } from '../components/providers/theme-sync';
 import { PostHogProvider } from '../components/providers/posthog-provider';
 import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
 import { CookieBanner } from '../components/cookie-banner';
@@ -110,7 +111,9 @@ export default function RootLayout({
               defaultTheme="system"
               enableSystem
               disableTransitionOnChange
+              storageKey="plot-theme"
             >
+              <ThemeSync />
               <NavigationProgressProvider>
                 <main id="main-content">{children}</main>
               </NavigationProgressProvider>
