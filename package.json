@@ -22,7 +22,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "prepare": "husky",
     "code-review": "node scripts/code-review.mjs",
-    "create-polar-products": "pnpm --filter @repo/web run create-polar-products"
+    "create-polar-products": "pnpm --filter @repo/web run create-polar-products",
+    "check-updates": "bash scripts/check-updates.sh"
   },
   "lint-staged": {
     "*": "bash -c 'pnpm lint && pnpm type-check'"

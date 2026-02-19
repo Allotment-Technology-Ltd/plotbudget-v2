@@ -82,7 +82,7 @@ export function RitualTransferSummary({
               </Text>
             </View>
             <BodyText color="secondary">
-              You: {formatCurrency(myJoint, currency)} • {otherName}: {formatCurrency(theirJoint, currency)}
+              YOU: {formatCurrency(myJoint, currency)} • {otherName}: {formatCurrency(theirJoint, currency)}
             </BodyText>
           </View>
         )}

@@ -157,7 +157,7 @@ export function SeedCard({
                     aria-label={`Mark ${seed.name} - your portion as paid`}
                     data-testid={`seed-paid-me-${seedSlug}`}
                   />
-                  <span className="text-muted-foreground">You</span>
+                  <span className="text-muted-foreground">YOU</span>
                 </label>
                 <label className="flex items-center gap-1.5 text-xs cursor-pointer whitespace-nowrap">
                   <input
@@ -287,15 +287,15 @@ export function SeedCard({
             {seed.is_paid_me && seed.is_paid_partner
               ? 'both'
               : seed.is_paid_me && !seed.is_paid_partner
-                ? (isPartner ? otherName : 'You')
+                ? (isPartner ? otherName : 'YOU')
                 : !seed.is_paid_me && seed.is_paid_partner
-                  ? (isPartner ? 'You' : otherName)
+                  ? (isPartner ? 'YOU' : otherName)
                   : '—'}
           </p>
         )}
         {seed.payment_source === 'joint' && (
           <p className="text-xs sm:text-sm text-muted-foreground">
-            You: {currencySymbol(currency)}{(isPartner ? Number(seed.amount_partner) : Number(seed.amount_me)).toFixed(2)} · {otherName}: {currencySymbol(currency)}
+            YOU: {currencySymbol(currency)}{(isPartner ? Number(seed.amount_partner) : Number(seed.amount_me)).toFixed(2)} · {otherName}: {currencySymbol(currency)}
             {(isPartner ? Number(seed.amount_me) : Number(seed.amount_partner)).toFixed(2)}
           </p>
         )}

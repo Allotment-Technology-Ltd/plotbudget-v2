@@ -672,7 +672,7 @@ export default function OnboardingScreen() {
                       justifyContent: 'space-between',
                       marginTop: spacing.xs,
                     }}>
-                    <BodyText style={{ fontSize: 14 }}>You: {jointRatio}%</BodyText>
+                    <BodyText style={{ fontSize: 14 }}>YOU: {jointRatio}%</BodyText>
                     <BodyText style={{ fontSize: 14 }}>Partner: {100 - jointRatio}%</BodyText>
                   </View>
                 </View>

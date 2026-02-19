@@ -49,14 +49,15 @@ const FREQUENCY_LABELS: Record<FrequencyRule, string> = {
   every_4_weeks: 'Every 4 weeks',
 };
 
-/** Labels for payment source (couple households use owner/partner names). */
+/** Labels for payment source. Current user is shown as "YOU"; other person uses owner/partner label. */
 function getPaymentSourceLabels(
   ownerLabel: string,
-  partnerLabel: string
+  partnerLabel: string,
+  isPartner: boolean
 ): Record<PaymentSource, string> {
   return {
-    me: ownerLabel,
-    partner: partnerLabel,
+    me: isPartner ? ownerLabel : 'YOU',
+    partner: isPartner ? 'YOU' : partnerLabel,
     joint: 'JOINT',
   };
 }
@@ -336,9 +337,9 @@ export function IncomeSourcesTab({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {(Object.keys(getPaymentSourceLabels(ownerLabel, partnerLabel)) as PaymentSource[]).map((k) => (
+                          {(Object.keys(getPaymentSourceLabels(ownerLabel, partnerLabel, isPartner)) as PaymentSource[]).map((k) => (
                             <SelectItem key={k} value={k}>
-                              {getPaymentSourceLabels(ownerLabel, partnerLabel)[k]}
+                              {getPaymentSourceLabels(ownerLabel, partnerLabel, isPartner)[k]}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -395,7 +396,7 @@ export function IncomeSourcesTab({
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     {currencySymbol(currency)}{Number(source.amount).toLocaleString('en-GB')} · {frequencySubline(source)} ·{' '}
-                    {getPaymentSourceLabels(ownerLabel, partnerLabel)[source.payment_source]}
+                    {getPaymentSourceLabels(ownerLabel, partnerLabel, isPartner)[source.payment_source]}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">

@@ -100,7 +100,7 @@ export function JointAccountSummary({
               <Text variant="headline-sm" numberOfLines={1} style={{ marginBottom: spacing.xs }}>{formatCurrency(jointTotal, currency)}</Text>
             </View>
             <BodyText color="secondary">
-              You: {formatCurrency(myTransfer, currency)} • {otherName}: {formatCurrency(theirTransfer, currency)}
+              YOU: {formatCurrency(myTransfer, currency)} • {otherName}: {formatCurrency(theirTransfer, currency)}
             </BodyText>
           </View>
         )}

@@ -104,7 +104,7 @@ export function CategorySummaryGrid({
         )}
       </div>
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
         role={isFilterable ? 'group' : undefined}
         aria-label={isFilterable ? 'Filter blueprint by category (select one or more)' : undefined}
       >
@@ -125,42 +125,47 @@ export function CategorySummaryGrid({
 
           const cardContent = (
             <>
-              <div className="flex items-center gap-2 mb-3 shrink-0">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3 shrink-0 min-w-0">
                 <div
-                  className={`w-3 h-3 rounded-full ${cat.color}`}
+                  className={`w-3 h-3 rounded-full shrink-0 ${cat.color}`}
                   aria-hidden
                 />
                 <h2
                   id={`category-${cat.type}-label`}
-                  className="font-heading text-sm uppercase tracking-wider text-foreground"
+                  className="font-heading text-sm uppercase tracking-wider text-foreground truncate"
                 >
                   {cat.name}
                 </h2>
               </div>
 
-              <div className="flex flex-col flex-1 min-h-0">
-                <div className="min-h-[4rem] shrink-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-display text-foreground">
+              <div className="flex flex-col flex-1 min-w-0 min-h-0">
+                <div className="min-h-[3.5rem] sm:min-h-[4rem] shrink-0 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-xl sm:text-2xl font-display text-foreground min-w-0 truncate">
                       {currencySymbol(currency)}{allocated.toFixed(2)}
                     </p>
                     {isOverAllocated && (
                       <AlertTriangle
-                        className="h-5 w-5 shrink-0 text-warning"
+                        className="h-5 w-5 shrink-0 text-warning flex-shrink-0"
                         aria-label="Over allocated"
                       />
                     )}
                   </div>
                   <p
-                    className={`text-sm ${isOverAllocated ? 'text-warning' : 'text-muted-foreground'}`}
+                    className={`text-xs sm:text-sm break-words min-w-0 ${isOverAllocated ? 'text-warning' : 'text-muted-foreground'}`}
                   >
                     of {currencySymbol(currency)}{target.toFixed(2)} ({percent}%)
-                    {isOverAllocated && ' — Over budget'}
+                    {isOverAllocated && (
+                      <>
+                        {' '}
+                        <span className="block sm:inline">— Over budget</span>
+                      </>
+                    )}
                   </p>
                 </div>
 
                 <div
-                  className="h-2 bg-muted rounded-full overflow-hidden mt-2 shrink-0"
+                  className="h-2 bg-muted rounded-full overflow-hidden mt-2 shrink-0 min-w-0"
                   role="progressbar"
                   aria-valuenow={progress}
                   aria-valuemin={0}
@@ -173,7 +178,7 @@ export function CategorySummaryGrid({
                   />
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-2 shrink-0">
+                <p className="text-xs text-muted-foreground mt-2 shrink-0 min-w-0 break-words">
                   {currencySymbol(currency)}{remaining.toFixed(2)} remaining
                 </p>
               </div>
@@ -185,6 +190,9 @@ export function CategorySummaryGrid({
               ? selectedBorderByType[cat.type]
               : 'border-muted-foreground/50';
 
+          const cardBaseClass = 'bg-card rounded-lg p-4 sm:p-6 border-2 flex flex-col text-left min-w-0 overflow-hidden';
+          const cardInteractiveClass = `transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${borderColor} hover:border-foreground`;
+
           if (isFilterable) {
             return (
               <button
@@ -194,7 +202,7 @@ export function CategorySummaryGrid({
                 aria-checked={isSelected}
                 aria-labelledby={`category-${cat.type}-label`}
                 onClick={() => handleCardClick(cat.filterValue)}
-                className={`bg-card rounded-lg p-6 border-2 flex flex-col text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${borderColor} hover:border-foreground`}
+                className={`${cardBaseClass} ${cardInteractiveClass}`}
               >
                 {cardContent}
               </button>
@@ -204,7 +212,7 @@ export function CategorySummaryGrid({
           return (
             <div
               key={cat.type}
-              className={`bg-card rounded-lg p-6 border-2 flex flex-col border-muted-foreground/50`}
+              className={`${cardBaseClass} border-muted-foreground/50`}
               aria-labelledby={`category-${cat.type}-label`}
             >
               {cardContent}

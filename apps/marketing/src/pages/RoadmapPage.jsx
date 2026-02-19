@@ -71,33 +71,34 @@ function ModuleCard({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-left p-6 md:p-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-inset"
+        className="w-full text-left p-4 sm:p-6 md:p-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-inset"
         aria-expanded={expanded}
         aria-controls={`module-detail-${id}`}
         id={`module-heading-${id}`}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 flex items-start gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0 flex-1 flex items-start gap-3 sm:gap-4">
             <span
-              className="flex h-12 w-12 shrink-0 items-center justify-center border border-plot-border-accent text-plot-accent-text"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center border border-plot-border-accent text-plot-accent-text"
               aria-hidden="true"
             >
-              {Icon ? <Icon className="h-6 w-6" strokeWidth={1.5} /> : null}
+              {Icon ? <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.5} /> : null}
             </span>
             <div className="min-w-0">
-              <h3 className="font-heading text-sub-sm md:text-sub font-bold uppercase tracking-wider text-plot-text">
+              <h3 className="font-heading text-sub-sm md:text-sub font-bold uppercase tracking-wider text-plot-text break-words">
                 {name}
               </h3>
               <p className="font-body text-plot-muted text-sm mt-1">{description}</p>
             </div>
           </div>
-          <div className="shrink-0 w-[12rem] flex items-center justify-end gap-2">
+          <div className="flex items-center justify-between sm:justify-end gap-2 min-w-0 sm:w-[12rem]">
             <span
-              className={`font-heading text-label-sm uppercase tracking-wider border px-2 py-1 text-center min-w-[10rem] ${statusStyles[status] ?? statusStyles.Planned}`}
+              className={`font-heading text-xs sm:text-label-sm uppercase tracking-wider border px-2 py-1 text-center min-w-0 max-w-full truncate ${statusStyles[status] ?? statusStyles.Planned}`}
+              title={status}
             >
               {status}
             </span>
-            <span className="text-plot-muted" aria-hidden="true">
+            <span className="text-plot-muted shrink-0" aria-hidden="true">
               {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </span>
           </div>
@@ -123,7 +124,7 @@ function ModuleCard({
             }}
             className="border-t border-plot-border"
           >
-            <div className="px-6 pb-6 pt-2 md:px-8 md:pb-8 md:pt-4">
+            <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 md:px-8 md:pb-8 md:pt-4">
               <p className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text mb-3">
                 Key features
               </p>

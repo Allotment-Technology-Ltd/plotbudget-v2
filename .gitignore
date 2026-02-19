@@ -75,5 +75,9 @@ supabase/.temp/
 .cache/
 codebase-audit.md
 
+# Local Python venvs (e.g. for scripts/crop-showcase-to-border.py)
+.venv/
+.venv-crop/
+
 # Cursor IDE (local plans, rules, skills – do not track)
 .cursor/
