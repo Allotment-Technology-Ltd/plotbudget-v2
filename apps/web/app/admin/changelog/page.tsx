@@ -9,5 +9,10 @@ export const metadata: Metadata = {
 
 export default async function AdminChangelogPage() {
   const { data, error } = await getChangelogEntriesAdmin();
-  return <AdminChangelogPanel initialData={data} initialError={error} />;
+  return (
+    <AdminChangelogPanel
+      initialData={data ?? null}
+      initialError={error ?? null}
+    />
+  );
 }

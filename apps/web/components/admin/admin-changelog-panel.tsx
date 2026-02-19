@@ -16,11 +16,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 type Props = {
-  initialData: ChangelogEntry[] | null;
-  initialError: string | null;
+  initialData?: ChangelogEntry[] | null;
+  initialError?: string | null;
 };
 
-export function AdminChangelogPanel({ initialData, initialError }: Props) {
+export function AdminChangelogPanel({ initialData = null, initialError = null }: Props) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
