@@ -19,6 +19,7 @@ export default function Footer({ pricingEnabled = false, appUrl = DEFAULT_APP_UR
 
   const aboutLinks = [
     { label: 'Principles', href: '/principles' },
+    { label: 'Features', href: '/features' },
     { label: 'Story', href: '/story' },
     { label: 'Roadmap', href: '/roadmap' },
     { label: 'Changelog', href: '/changelog' },

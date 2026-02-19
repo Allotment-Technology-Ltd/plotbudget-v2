@@ -911,12 +911,12 @@ export function SeedDialog({
                       >
                     <RadioGroupItem
                       value="me"
-                      label={ownerLabel}
+                      label={isPartner ? ownerLabel : 'YOU'}
                       data-testid="seed-source-me"
                     />
                     <RadioGroupItem
                       value="partner"
-                      label={partnerLabel}
+                      label={isPartner ? 'YOU' : partnerLabel}
                       data-testid="seed-source-partner"
                     />
                     <RadioGroupItem
@@ -935,7 +935,7 @@ export function SeedDialog({
               <div className="space-y-3">
                 <Label>Split Ratio</Label>
                 <p className="text-sm text-muted-foreground">
-                  {ownerLabel}: {splitRatio}% / {partnerLabel}: {100 - splitRatio}%
+                  {isPartner ? ownerLabel : 'YOU'}: {splitRatio}% / {isPartner ? 'YOU' : partnerLabel}: {100 - splitRatio}%
                 </p>
                 <Controller
                   name="split_ratio"
@@ -953,7 +953,7 @@ export function SeedDialog({
                 />
                 {previewSplit && amount > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    {ownerLabel}: {formatCurrency(previewSplit.me, currency)} • {partnerLabel}: {formatCurrency(previewSplit.partner, currency)}
+                    {isPartner ? ownerLabel : 'YOU'}: {formatCurrency(previewSplit.me, currency)} • {isPartner ? 'YOU' : partnerLabel}: {formatCurrency(previewSplit.partner, currency)}
                   </p>
                 )}
               </div>

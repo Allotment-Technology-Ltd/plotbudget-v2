@@ -110,7 +110,7 @@ export function RitualTransferSummary({
               {currencySymbol(currency)}{totalJointTransfer.toFixed(2)}
             </p>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>You: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)}</p>
+              <p>YOU: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)}</p>
               <p>{otherName}: {currencySymbol(currency)}{(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}</p>
             </div>
           </div>

@@ -318,6 +318,13 @@
   object-fit: cover;
 }
 
+/* Short frame for screenshots: fixed height, crop from bottom (e.g. hide Financial health / How the blueprint works) */
+.phone-screen--short img {
+  height: 400px;
+  object-fit: cover;
+  object-position: top center;
+}
+
 .phone-screen-video {
   min-height: 512px;
   object-position: top center;
@@ -331,4 +338,103 @@
   .phone-screen::before {
     height: 48px;
   }
+}
+
+/* ========================================================
+   9. DESKTOP & TABLET MOCKUP FRAMES
+   For "Phone, tablet, desktop" showcase on homepage
+   ======================================================== */
+
+.device-frame-desktop {
+  background: var(--plot-surface);
+  border: 1px solid var(--plot-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.device-frame-desktop__chrome {
+  height: 32px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--plot-elevated);
+  border-bottom: 1px solid var(--plot-border);
+}
+
+.device-frame-desktop__chrome-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.device-frame-desktop__chrome-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--plot-muted);
+}
+
+.device-frame-desktop__chrome-dots span:nth-child(1) { background: #ed6a5e; }
+.device-frame-desktop__chrome-dots span:nth-child(2) { background: #f5bf4f; }
+.device-frame-desktop__chrome-dots span:nth-child(3) { background: #62c554; }
+
+.device-frame-desktop__chrome-url {
+  flex: 1;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--plot-muted);
+  background: var(--plot-bg);
+  border: 1px solid var(--plot-border);
+  text-align: center;
+}
+
+/* Desktop: content area has fixed aspect (16:10) so the frame never stretches the image */
+.device-frame-desktop__content {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--plot-bg);
+}
+
+.device-frame-desktop__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top center;
+  display: block;
+}
+
+.device-frame-tablet {
+  background: #000;
+  padding: 10px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+/* Tablet: screen has fixed aspect (4:3) so the frame never stretches the image */
+.device-frame-tablet__screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.device-frame-tablet__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top center;
+  display: block;
 }

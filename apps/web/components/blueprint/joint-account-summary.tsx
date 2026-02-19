@@ -95,7 +95,7 @@ export function JointAccountSummary({
                 {currencySymbol(currency)}{jointTotal.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                You: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)} • {otherName}: {currencySymbol(currency)}
+                YOU: {currencySymbol(currency)}{(isPartner ? partnerJointTransfer : userJointTransfer).toFixed(2)} • {otherName}: {currencySymbol(currency)}
                 {(isPartner ? userJointTransfer : partnerJointTransfer).toFixed(2)}
               </p>
             </div>

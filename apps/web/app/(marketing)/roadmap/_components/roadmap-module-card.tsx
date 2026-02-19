@@ -70,7 +70,7 @@ export function RoadmapModuleCard({ feature, isAuthenticated, canVote }: Roadmap
           <p className="mt-1 text-sm text-muted-foreground">{feature.description}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-4 border-t border-border px-6 pb-6 pt-4 md:px-8 md:pb-8 md:pt-4">
+      <div className="flex items-center justify-between gap-4 border-t border-border px-6 pb-6 pt-4 md:px-8 md:pb-8 md:pt-4 min-w-0">
         <RoadmapVoteButton
           featureId={feature.id}
           initialCount={feature.vote_count}
@@ -78,9 +78,10 @@ export function RoadmapModuleCard({ feature, isAuthenticated, canVote }: Roadmap
           isAuthenticated={isAuthenticated}
           canVote={canVote}
         />
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
           <span
-            className={`rounded-md border px-2 py-1 font-heading text-xs uppercase tracking-wider ${statusStyle}`}
+            className={`min-w-0 max-w-full truncate rounded-md border px-2 py-1 font-heading text-xs uppercase tracking-wider ${statusStyle}`}
+            title={feature.estimated_timeline ?? feature.status}
           >
             {feature.estimated_timeline ?? feature.status}
           </span>

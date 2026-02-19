@@ -10,6 +10,7 @@ import ChangelogPage from './pages/ChangelogPage';
 import PrinciplesPage from './pages/PrinciplesPage';
 import StoryPage from './pages/StoryPage';
 import RoadmapPage from './pages/RoadmapPage';
+import FeaturesPage from './pages/FeaturesPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import { getStoredConsent } from './components/CookieConsent';
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="principles" element={<PrinciplesPage />} />
             <Route path="story" element={<StoryPage />} />
             <Route path="roadmap" element={<RoadmapPage />} />
+            <Route path="features" element={<FeaturesPage />} />
             <Route path="privacy" element={<PrivacyPage />} />
             <Route path="terms" element={<TermsPage />} />
           </Route>

@@ -120,6 +120,9 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
           <Link to="/principles" className={desktopNavLinkClass}>
             Principles
           </Link>
+          <Link to="/features" className={desktopNavLinkClass}>
+            Features
+          </Link>
           <Link to="/story" className={desktopNavLinkClass}>
             Story
           </Link>
@@ -321,6 +324,9 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
                 )}
                 <Link to="/principles" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Principles
+                </Link>
+                <Link to="/features" onClick={() => setMenuOpen(false)} className={navLinkClass}>
+                  Features
                 </Link>
                 <Link to="/story" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Story

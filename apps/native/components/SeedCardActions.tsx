@@ -47,7 +47,7 @@ export function SeedCardActions({
         (isJoint ? (
           <>
             <SeedCardMarkPaidChip
-              label={`You ${isPaidMe ? '✓' : ''}`}
+              label={`YOU ${isPaidMe ? '✓' : ''}`}
               selected={isPaidMe}
               onPress={() => (isPaidMe ? onUnmarkPaid : onMarkPaid)?.('me')}
             />

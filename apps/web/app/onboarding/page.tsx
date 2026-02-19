@@ -621,7 +621,7 @@ export default function OnboardingPage() {
                           data-testid="split-ratio-me-input"
                         />
                         <div className="flex justify-between text-sm font-body">
-                          <span>You: {field.value}%</span>
+                          <span>YOU: {field.value}%</span>
                           <span>Partner: {100 - field.value}%</span>
                         </div>
                       </div>

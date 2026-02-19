@@ -83,7 +83,7 @@ export function CoupleContributions({
 
       <div className="space-y-4">
         <div className="flex justify-between items-baseline">
-          <span className="text-sm text-muted-foreground">You</span>
+          <span className="text-sm text-muted-foreground">YOU</span>
           <span className="font-display text-lg min-w-0 break-all">
             {currencySymbol(currency)}{youDisplayTotal.toFixed(2)}
           </span>
@@ -106,7 +106,7 @@ export function CoupleContributions({
               {currencySymbol(currency)}{totals.joint.toFixed(2)} total
             </p>
             <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-              <span>You: {currencySymbol(currency)}{youJoint.toFixed(2)}</span>
+              <span>YOU: {currencySymbol(currency)}{youJoint.toFixed(2)}</span>
               <span>{otherLabel}: {currencySymbol(currency)}{otherJoint.toFixed(2)}</span>
             </div>
           </div>
