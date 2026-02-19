@@ -109,7 +109,6 @@ export function AdminChangelogPanel({ initialData = null, initialError = null }:
           action={createAction}
           onSuccess={() => { setShowNew(false); router.refresh(); }}
           onCancel={() => setShowNew(false)}
-          successKey="create"
         />
       )}
 
@@ -125,7 +124,6 @@ export function AdminChangelogPanel({ initialData = null, initialError = null }:
                 action={updateAction}
                 onSuccess={() => { setEditingId(null); router.refresh(); }}
                 onCancel={() => setEditingId(null)}
-                successKey="update"
               />
             ) : (
               <div className="flex items-center justify-between gap-4">
@@ -228,16 +226,14 @@ function ChangelogEntryForm({
   action,
   onSuccess,
   onCancel,
-  successKey,
 }: {
   title: string;
   defaultValues: Partial<ChangelogEntry> | Record<string, never>;
   entryId?: string;
   state: { error?: string; success?: boolean } | undefined;
-  action: (prev: unknown, formData: FormData) => void;
+  action: (formData: FormData) => void | Promise<void>;
   onSuccess: () => void;
   onCancel: () => void;
-  successKey: string;
 }) {
   const d = defaultValues as Partial<ChangelogEntry>;
   const releasedAt = d.released_at

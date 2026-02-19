@@ -6,7 +6,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { config } from 'dotenv';
+import type { Database } from '@repo/supabase';
 import { createAdminClient } from '@repo/supabase';
+
+type ChangelogInsert = Database['public']['Tables']['changelog_entries']['Insert'];
 
 const REPO_ROOT = process.cwd();
 const CHANGELOG_PATH = path.join(REPO_ROOT, 'CHANGELOG.md');
@@ -73,14 +76,17 @@ async function main() {
     process.exit(0);
   }
 
-  const rows = entries.map((e, i) => ({
+  const rows: ChangelogInsert[] = entries.map((e, i) => ({
     version: e.version,
     released_at: e.released_at + 'T00:00:00Z',
     content: e.content,
     display_order: i,
   }));
 
-  const { error } = await supabase.from('changelog_entries').insert(rows);
+  const table = supabase.from('changelog_entries') as unknown as {
+    insert(values: ChangelogInsert[]): PromiseLike<{ error: { message: string } | null }>;
+  };
+  const { error } = await table.insert(rows);
   if (error) {
     console.error('Insert failed:', error);
     process.exit(1);

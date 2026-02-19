@@ -3,8 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { isAdminUser } from '@/lib/auth/admin-gate';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { InsertTables, UpdateTables } from '@repo/supabase';
+import type { Database } from '@repo/supabase';
 import { z } from 'zod';
+
+type RoadmapFeatureRow = Database['public']['Tables']['roadmap_features']['Row'];
+type RoadmapInsert = Database['public']['Tables']['roadmap_features']['Insert'];
+type RoadmapUpdate = Database['public']['Tables']['roadmap_features']['Update'];
 
 const statusSchema = z.enum(['now', 'next', 'later', 'shipped']);
 
@@ -27,7 +31,7 @@ function parseKeyFeatures(value: FormDataEntryValue | null): string[] {
 }
 
 export async function getRoadmapFeaturesAdmin(): Promise<{
-  data: InsertTables<'roadmap_features'>[] | null;
+  data: RoadmapFeatureRow[] | null;
   error: string | null;
 }> {
   const ok = await isAdminUser();
@@ -40,7 +44,7 @@ export async function getRoadmapFeaturesAdmin(): Promise<{
       .order('status', { ascending: true })
       .order('display_order', { ascending: true });
     if (error) return { data: null, error: error.message };
-    return { data: data as InsertTables<'roadmap_features'>[], error: null };
+    return { data: (data ?? null) as RoadmapFeatureRow[] | null, error: null };
   } catch (e) {
     console.error('admin roadmap getRoadmapFeaturesAdmin:', e);
     return { data: null, error: e instanceof Error ? e.message : 'Failed to load' };
@@ -63,7 +67,11 @@ export async function createRoadmapFeature(_prev: unknown, formData: FormData): 
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.from('roadmap_features').insert(parsed.data as InsertTables<'roadmap_features'>);
+    const payload: RoadmapInsert = parsed.data;
+    const table = supabase.from('roadmap_features') as unknown as {
+      insert(values: RoadmapInsert): PromiseLike<{ error: { message: string } | null }>;
+    };
+    const { error } = await table.insert(payload);
     if (error) return { error: error.message };
     revalidatePath('/admin/roadmap');
     revalidatePath('/roadmap');
@@ -94,10 +102,11 @@ export async function updateRoadmapFeature(_prev: unknown, formData: FormData): 
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase
-      .from('roadmap_features')
-      .update(parsed.data as UpdateTables<'roadmap_features'>)
-      .eq('id', id);
+    const payload: RoadmapUpdate = parsed.data;
+    const table = supabase.from('roadmap_features') as unknown as {
+      update(values: RoadmapUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
+    };
+    const { error } = await table.update(payload).eq('id', id);
     if (error) return { error: error.message };
     revalidatePath('/admin/roadmap');
     revalidatePath('/roadmap');
@@ -130,11 +139,11 @@ export async function updateRoadmapOrder(orderedIds: string[]): Promise<{ error?
   if (!Array.isArray(orderedIds) || orderedIds.length === 0) return {};
   try {
     const supabase = createAdminClient();
+    const table = supabase.from('roadmap_features') as unknown as {
+      update(values: RoadmapUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
+    };
     for (let i = 0; i < orderedIds.length; i++) {
-      const { error } = await supabase
-        .from('roadmap_features')
-        .update({ display_order: i })
-        .eq('id', orderedIds[i]);
+      const { error } = await table.update({ display_order: i }).eq('id', orderedIds[i]);
       if (error) return { error: error.message };
     }
     revalidatePath('/admin/roadmap');

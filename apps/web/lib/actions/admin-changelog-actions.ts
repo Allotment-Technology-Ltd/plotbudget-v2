@@ -3,8 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { isAdminUser } from '@/lib/auth/admin-gate';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { InsertTables, UpdateTables } from '@repo/supabase';
+import type { Database } from '@repo/supabase';
 import { z } from 'zod';
+
+type ChangelogEntryRow = Database['public']['Tables']['changelog_entries']['Row'];
+type ChangelogInsert = Database['public']['Tables']['changelog_entries']['Insert'];
+type ChangelogUpdate = Database['public']['Tables']['changelog_entries']['Update'];
 
 const createSchema = z.object({
   version: z.string().min(1),
@@ -16,7 +20,7 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 
 export async function getChangelogEntriesAdmin(): Promise<
-  { data: InsertTables<'changelog_entries'>[] | null; error: string | null }
+  { data: ChangelogEntryRow[] | null; error: string | null }
 > {
   const ok = await isAdminUser();
   if (!ok) return { data: null, error: 'Unauthorized' };
@@ -28,7 +32,7 @@ export async function getChangelogEntriesAdmin(): Promise<
       .order('display_order', { ascending: true })
       .order('released_at', { ascending: false });
     if (error) return { data: null, error: error.message };
-    return { data: data as InsertTables<'changelog_entries'>[], error: null };
+    return { data: (data ?? null) as ChangelogEntryRow[] | null, error: null };
   } catch (e) {
     console.error('admin changelog getChangelogEntriesAdmin:', e);
     return { data: null, error: e instanceof Error ? e.message : 'Failed to load' };
@@ -50,12 +54,16 @@ export async function createChangelogEntry(
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.from('changelog_entries').insert({
+    const payload: ChangelogInsert = {
       version: parsed.data.version,
       released_at: parsed.data.released_at,
       content: parsed.data.content,
       display_order: parsed.data.display_order,
-    } as InsertTables<'changelog_entries'>);
+    };
+    const table = supabase.from('changelog_entries') as unknown as {
+      insert(values: ChangelogInsert): PromiseLike<{ error: { message: string } | null }>;
+    };
+    const { error } = await table.insert(payload);
     if (error) return { error: error.message };
     revalidatePath('/admin/changelog');
     return { success: true };
@@ -80,7 +88,11 @@ export async function updateChangelogEntry(_prev: unknown, formData: FormData): 
   if (!parsed.success) return { error: parsed.error.flatten().formErrors.join(', ') };
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.from('changelog_entries').update(parsed.data as UpdateTables<'changelog_entries'>).eq('id', id);
+    const payload: ChangelogUpdate = parsed.data;
+    const table = supabase.from('changelog_entries') as unknown as {
+      update(values: ChangelogUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
+    };
+    const { error } = await table.update(payload).eq('id', id);
     if (error) return { error: error.message };
     revalidatePath('/admin/changelog');
     return { success: true };
@@ -111,11 +123,11 @@ export async function updateChangelogOrder(orderedIds: string[]): Promise<{ erro
   if (!Array.isArray(orderedIds) || orderedIds.length === 0) return {};
   try {
     const supabase = createAdminClient();
+    const table = supabase.from('changelog_entries') as unknown as {
+      update(values: ChangelogUpdate): { eq(column: string, value: string): PromiseLike<{ error: { message: string } | null }> };
+    };
     for (let i = 0; i < orderedIds.length; i++) {
-      const { error } = await supabase
-        .from('changelog_entries')
-        .update({ display_order: i })
-        .eq('id', orderedIds[i]);
+      const { error } = await table.update({ display_order: i }).eq('id', orderedIds[i]);
       if (error) return { error: error.message };
     }
     revalidatePath('/admin/changelog');

@@ -113,7 +113,6 @@ export function AdminRoadmapPanel({ initialData, initialError }: Props) {
           action={createAction}
           onSuccess={() => { setShowNew(false); router.refresh(); }}
           onCancel={() => setShowNew(false)}
-          successKey="create"
         />
       )}
 
@@ -129,7 +128,6 @@ export function AdminRoadmapPanel({ initialData, initialError }: Props) {
                 action={updateAction}
                 onSuccess={() => { setEditingId(null); router.refresh(); }}
                 onCancel={() => setEditingId(null)}
-                successKey="update"
               />
             ) : (
               <div className="flex items-center justify-between gap-4">
@@ -225,16 +223,14 @@ function RoadmapFeatureForm({
   action,
   onSuccess,
   onCancel,
-  successKey,
 }: {
   title: string;
   defaultValues: Partial<RoadmapFeature> | Record<string, never>;
   featureId: string | null;
   state: { error?: string; success?: boolean } | undefined;
-  action: (prev: unknown, formData: FormData) => void;
+  action: (formData: FormData) => void | Promise<void>;
   onSuccess: () => void;
   onCancel: () => void;
-  successKey: string;
 }) {
   const d = defaultValues as Partial<RoadmapFeature>;
   const keyFeaturesStr = Array.isArray(d.key_features) ? d.key_features.join('\n') : '';
