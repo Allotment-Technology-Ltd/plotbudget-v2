@@ -81,3 +81,6 @@ codebase-audit.md
 
 # Cursor IDE (local plans, rules, skills – do not track)
 .cursor/
+
+# Allow sanity-studio lockfile for reproducible CI (npm ci)
+!sanity-studio/package-lock.json
