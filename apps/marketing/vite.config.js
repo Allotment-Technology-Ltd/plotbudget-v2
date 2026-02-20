@@ -6,6 +6,15 @@ export default defineConfig({
   server: {
     port: 3001,
     open: false,
+    // Proxy Sanity API in dev to avoid CORS (browser only talks to same origin)
+    proxy: {
+      '/sanity-api': {
+        target: 'https://a2vzaekn.api.sanity.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/sanity-api/, ''),
+        secure: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',

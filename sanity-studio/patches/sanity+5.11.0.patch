@@ -1,0 +1,19 @@
+diff --git a/node_modules/sanity/lib/_chunks-es/upgradePackages.js b/node_modules/sanity/lib/_chunks-es/upgradePackages.js
+index 943103e..1e25ee5 100644
+--- a/node_modules/sanity/lib/_chunks-es/upgradePackages.js
++++ b/node_modules/sanity/lib/_chunks-es/upgradePackages.js
+@@ -39,12 +39,13 @@ async function checkRequiredDependencies(context) {
+     };
+   }
+   const isStyledComponentsVersionRangeInCatalog = declaredStyledComponentsVersion.startsWith("catalog:");
++  const isStyledComponentsNpmAlias = declaredStyledComponentsVersion.startsWith("npm:");
+   let minDeclaredStyledComponentsVersion = null;
+   try {
+     minDeclaredStyledComponentsVersion = semver.minVersion(declaredStyledComponentsVersion);
+   } catch {
+   }
+-  if (!minDeclaredStyledComponentsVersion && !isStyledComponentsVersionRangeInCatalog)
++  if (!minDeclaredStyledComponentsVersion && !isStyledComponentsVersionRangeInCatalog && !isStyledComponentsNpmAlias)
+     throw new Error(oneline`
+       Declared dependency \`styled-components\` has an invalid version range:
+       \`${declaredStyledComponentsVersion}\`.
