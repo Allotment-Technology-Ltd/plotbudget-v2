@@ -57,6 +57,13 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'archived',
+      title: 'Archived',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Archived posts are hidden from the blog index but remain viewable by direct link.',
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'blockContent',
@@ -114,10 +121,14 @@ export default defineType({
       title: 'title',
       author: 'author.name',
       media: 'mainImage',
+      archived: 'archived',
     },
     prepare(selection) {
-      const {author} = selection
-      return {...selection, subtitle: author && `by ${author}`}
+      const {author, archived} = selection
+      return {
+        ...selection,
+        subtitle: [author && `by ${author}`, archived ? '(archived)' : null].filter(Boolean).join(' ') || undefined,
+      }
     },
   },
 })

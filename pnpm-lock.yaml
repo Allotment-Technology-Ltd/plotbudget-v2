@@ -10,6 +10,7 @@ overrides:
   tar: '>=7.5.8'
   diff: '>=8.0.3'
   minimatch: '>=10.2.1'
+  styled-components: npm:@sanity/css-in-js@6.2.1
 
 importers:
 

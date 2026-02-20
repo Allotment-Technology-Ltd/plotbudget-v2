@@ -6,7 +6,7 @@ import { getSanityClient } from './sanity';
  */
 export async function getBlogPosts() {
   return getSanityClient().fetch(
-    `*[_type == "post" && !(_id in path("drafts.**"))] | order(publishedAt desc) {
+    `*[_type == "post" && !(_id in path("drafts.**")) && archived != true] | order(publishedAt desc) {
       _id,
       title,
       slug,
