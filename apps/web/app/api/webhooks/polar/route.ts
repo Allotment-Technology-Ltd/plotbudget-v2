@@ -3,6 +3,10 @@ import { validateEvent } from '@polar-sh/sdk/webhooks';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@repo/supabase';
 
+type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert'];
+type SubscriptionRowHousehold = Pick<Database['public']['Tables']['subscriptions']['Row'], 'household_id'>;
+type UserUpdate = Database['public']['Tables']['users']['Update'];
+
 // Webhook handler for Polar subscription events
 // Env required: POLAR_WEBHOOK_SECRET, POLAR_PREMIUM_PRODUCT_ID / POLAR_PREMIUM_PRICE_ID (monthly), POLAR_PREMIUM_ANNUAL_PRODUCT_ID (optional)
 
@@ -120,11 +124,12 @@ export async function POST(req: NextRequest) {
     // If metadata is empty (common for lifecycle events like subscription.canceled),
     // try to look up the existing subscription record by polar_subscription_id.
     if (!householdId) {
-      const { data: existing } = await supabase
+      const { data: subRow } = await supabase
         .from('subscriptions')
         .select('household_id')
         .eq('polar_subscription_id', data.id)
         .maybeSingle();
+      const existing = subRow as SubscriptionRowHousehold | null;
       if (existing?.household_id) {
         householdId = existing.household_id;
       }
@@ -144,7 +149,7 @@ export async function POST(req: NextRequest) {
         }
       : null;
 
-    const payload: Database['public']['Tables']['subscriptions']['Insert'] = {
+    const payload: SubscriptionInsert = {
       polar_subscription_id: data.id,
       household_id: householdId,
       status: normalizeStatus(data.status),
@@ -154,9 +159,9 @@ export async function POST(req: NextRequest) {
       metadata: metadata ?? undefined,
     };
 
-    const { error } = await supabase
-      .from('subscriptions')
-      .upsert(payload, { onConflict: 'polar_subscription_id' });
+    type SubsUpsertResult = Promise<{ error: unknown }>;
+    const subsTable = supabase.from('subscriptions') as unknown as { upsert: (values: SubscriptionInsert, options: { onConflict: string }) => SubsUpsertResult };
+    const { error } = await subsTable.upsert(payload, { onConflict: 'polar_subscription_id' });
 
     if (error) {
       console.error('Webhook upsert failed:', error, { householdId, polarSubId: data.id });
@@ -171,7 +176,7 @@ export async function POST(req: NextRequest) {
       const normalizedUserStatus: Database['public']['Tables']['users']['Update']['subscription_status'] =
         dbStatus === 'trialing' ? 'active' : (['active', 'cancelled', 'past_due'].includes(dbStatus) ? dbStatus : null) as Database['public']['Tables']['users']['Update']['subscription_status'];
 
-      const userUpdate: Database['public']['Tables']['users']['Update'] = {
+      const userUpdate: UserUpdate = {
         subscription_tier: 'pro',
         subscription_status: normalizedUserStatus,
         polar_customer_id: customerId ?? null,
@@ -187,10 +192,8 @@ export async function POST(req: NextRequest) {
         userUpdate.trial_ended_email_sent = true;
       }
 
-      await supabase
-        .from('users')
-        .update(userUpdate)
-        .eq('id', userId);
+      type UsersUpdateChain = { update: (values: UserUpdate) => { eq: (column: string, value: string) => Promise<unknown> } };
+      await (supabase.from('users') as unknown as UsersUpdateChain).update(userUpdate).eq('id', userId);
     }
 
     return NextResponse.json({ received: true });
