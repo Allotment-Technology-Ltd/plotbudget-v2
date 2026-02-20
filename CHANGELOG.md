@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.0...v1.5.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** use npm install for sanity-studio in Release workflow ([ba3da10](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/ba3da101cd6f32c47ec6b95f918ed37747c69fd6))
+
 # [1.5.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.4.0...v1.5.0) (2026-02-18)
 
 
