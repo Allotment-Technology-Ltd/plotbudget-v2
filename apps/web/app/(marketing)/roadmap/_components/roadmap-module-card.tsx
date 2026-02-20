@@ -90,7 +90,7 @@ export function RoadmapModuleCard({ feature, isAuthenticated, canVote }: Roadmap
             onClick={() => setExpanded((e) => !e)}
             aria-expanded={expanded}
             aria-controls={`roadmap-features-${feature.id}`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             {expanded ? (
               <ChevronUp className="h-5 w-5" aria-hidden />

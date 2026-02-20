@@ -29,7 +29,7 @@ export function ForecastDisclaimer({
         </span>
       </p>
       <details className="mt-2">
-        <summary className="cursor-pointer hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded list-none [&::-webkit-details-marker]:hidden">
+        <summary className="cursor-pointer hover:text-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded list-none [&::-webkit-details-marker]:hidden">
           Legal
         </summary>
         <p className="mt-2 pl-4 text-muted-foreground">

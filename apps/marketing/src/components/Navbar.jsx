@@ -86,7 +86,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center gap-2.5 font-display font-bold text-2xl text-plot-accent-text tracking-[0.25em] hover:text-glow transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded"
+            className="flex items-center gap-2.5 font-display font-bold text-2xl text-plot-accent-text tracking-[0.25em] hover:text-glow transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded"
             aria-label="PLOT — return to top"
           >
             <img
@@ -150,7 +150,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
               bg-plot-accent text-on-accent px-5 py-2.5
               hover:shadow-[0_0_20px_var(--accent-glow)] hover:-translate-y-px
               transition-all duration-200 rounded-none
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
+              focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
             "
             aria-label="Sign up for PLOT"
           >
@@ -163,7 +163,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
               shrink-0 w-10 h-10 flex items-center justify-center
               bg-plot-surface border border-plot-border text-plot-muted
               hover:text-plot-accent-text hover:border-plot-border-accent hover:bg-plot-elevated
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)]
+              focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)]
               transition-all duration-200 rounded-none
             "
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -218,7 +218,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="flex items-center gap-2.5 font-display font-bold text-2xl text-plot-accent-text tracking-[0.25em] hover:text-glow transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded"
+          className="flex items-center gap-2.5 font-display font-bold text-2xl text-plot-accent-text tracking-[0.25em] hover:text-glow transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded"
           aria-label="PLOT — return to top"
         >
           <img
@@ -252,7 +252,7 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
             shrink-0 w-10 h-10 flex items-center justify-center
             bg-plot-surface border border-plot-border text-plot-muted
             hover:text-plot-accent-text hover:border-plot-border-accent hover:bg-plot-elevated
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)]
+            focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)]
             transition-all duration-200
           "
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}

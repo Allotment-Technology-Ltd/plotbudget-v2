@@ -116,7 +116,7 @@ export function AuthBrandHeader({ tagline, linkToHome = false }: AuthBrandHeader
     return (
       <Link
         href="https://plotbudget.com"
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg -m-2 p-2"
+        className="block focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg -m-2 p-2"
         aria-label="PLOT - Budget Together"
       >
         {logo}

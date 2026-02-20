@@ -27,7 +27,7 @@ export function RepaymentProgressCards({
           <h2 className="font-heading text-xl uppercase tracking-wider">Debt progress</h2>
           <Link
             href="/dashboard/blueprint"
-            className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Manage
           </Link>
@@ -50,7 +50,7 @@ export function RepaymentProgressCards({
             <Link
               key={rep.id}
               href={`/dashboard/forecast/repayment/${rep.id}`}
-              className="block min-h-[7.25rem] rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="block min-h-[7.25rem] rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               role="article"
               aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}. View forecast`}
             >

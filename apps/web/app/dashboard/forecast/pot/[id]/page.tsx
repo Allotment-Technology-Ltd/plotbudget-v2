@@ -58,7 +58,7 @@ export default async function PotForecastPage({
     <div className="content-wrapper section-padding space-y-6">
       <Link
         href="/dashboard"
-        className="text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+        className="text-sm text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded"
       >
         ← Back to Dashboard
       </Link>

@@ -170,7 +170,7 @@ export function RitualCompletionCelebration({
                 <button
                   ref={closeButtonRef}
                   onClick={onClose}
-                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-emerald-500/60 text-emerald-400 bg-emerald-950/40 hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 transition-colors"
+                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-emerald-500/60 text-emerald-400 bg-emerald-950/40 hover:bg-emerald-500/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-400/50 transition-colors"
                   data-testid="ritual-celebration-close"
                 >
                   Back to Blueprint
@@ -178,7 +178,7 @@ export function RitualCompletionCelebration({
                 <button
                   type="button"
                   onClick={() => (window.location.href = '/dashboard')}
-                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-white/20 text-muted-foreground hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
+                  className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-white/20 text-muted-foreground hover:bg-white/5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
                   data-testid="ritual-celebration-dashboard"
                 >
                   View Dashboard

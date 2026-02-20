@@ -204,7 +204,7 @@ export default function FeaturesPage() {
                 bg-plot-accent text-on-accent px-6 py-3
                 hover:shadow-[0_0_20px_var(--accent-glow)] hover:-translate-y-px
                 transition-all duration-200 rounded-none inline-block
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
+                focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
               "
             >
               Back to home

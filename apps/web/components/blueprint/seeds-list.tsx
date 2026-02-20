@@ -104,7 +104,7 @@ export function SeedsList({
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="flex min-w-0 flex-1 items-start gap-2 text-left hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded"
+          className="flex min-w-0 flex-1 items-start gap-2 text-left hover:opacity-90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded"
           aria-expanded={expanded}
           aria-controls={`seeds-${category}-content`}
         >

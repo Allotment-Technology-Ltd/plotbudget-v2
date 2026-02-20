@@ -42,7 +42,7 @@ export default async function DashboardLayout({
         <div className="content-wrapper flex h-16 items-center justify-between">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2.5 font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="flex items-center gap-2.5 font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
             aria-label="PLOT dashboard"
           >
             <Image

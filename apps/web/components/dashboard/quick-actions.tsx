@@ -72,7 +72,7 @@ export function QuickActions({
             disabled={isLoading}
             aria-busy={isLoading}
             aria-label={`${action.label}: ${action.description}`}
-            className={`${action.color} rounded-lg p-6 transition-all cursor-pointer border border-transparent hover:border-current text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-wait`}
+            className={`${action.color} rounded-lg p-6 transition-all cursor-pointer border border-transparent hover:border-current text-left w-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-wait`}
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-md bg-background/50" aria-hidden>

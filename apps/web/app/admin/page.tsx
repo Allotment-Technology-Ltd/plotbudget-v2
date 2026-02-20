@@ -28,7 +28,7 @@ export default function AdminPage() {
         </p>
         <Link
           href="/admin/emails"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Mail className="h-4 w-4" aria-hidden />
           Open email testing
@@ -45,14 +45,14 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-4">
           <Link
             href="/admin/roadmap"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Map className="h-4 w-4" aria-hidden />
             Edit roadmap
           </Link>
           <Link
             href="/admin/changelog"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <FileText className="h-4 w-4" aria-hidden />
             Edit changelog

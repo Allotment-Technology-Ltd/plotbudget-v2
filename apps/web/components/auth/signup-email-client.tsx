@@ -29,7 +29,7 @@ export function SignupEmailClient() {
       <DeletedAccountToast />
       <Link
         href={`/signup${redirectQuery}`}
-        className="self-start inline-flex items-center text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded mb-4"
+        className="self-start inline-flex items-center text-sm text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded mb-4"
         data-testid="back-to-signup"
       >
         <ChevronLeft className="h-4 w-4 mr-0.5" aria-hidden />

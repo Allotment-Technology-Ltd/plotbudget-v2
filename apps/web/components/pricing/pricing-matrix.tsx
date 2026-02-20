@@ -137,14 +137,14 @@ export function PricingMatrix({ pricingEnabled, isLoggedIn }: PricingMatrixProps
           {hasCtaLink && pricingEnabled && isLoggedIn ? (
             <Link
               href={tier.id === 'premium' ? premiumCtaHref : tier.ctaLink}
-              className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {tier.cta}
             </Link>
           ) : hasCtaLink && pricingEnabled && !isLoggedIn ? (
             <Link
               href="/signup"
-              className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Get started
             </Link>

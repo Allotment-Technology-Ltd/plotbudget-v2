@@ -191,7 +191,7 @@ export function CategorySummaryGrid({
               : 'border-muted-foreground/50';
 
           const cardBaseClass = 'bg-card rounded-lg p-4 sm:p-6 border-2 flex flex-col text-left min-w-0 overflow-hidden';
-          const cardInteractiveClass = `transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${borderColor} hover:border-foreground`;
+          const cardInteractiveClass = `transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${borderColor} hover:border-foreground`;
 
           if (isFilterable) {
             return (
