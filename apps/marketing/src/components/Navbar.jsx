@@ -126,6 +126,9 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
           <Link to="/story" className={desktopNavLinkClass}>
             Story
           </Link>
+          <Link to="/blog" className={desktopNavLinkClass}>
+            Blog
+          </Link>
           <Link to="/roadmap" className={desktopNavLinkClass}>
             Roadmap
           </Link>
@@ -330,6 +333,9 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
                 </Link>
                 <Link to="/story" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Story
+                </Link>
+                <Link to="/blog" onClick={() => setMenuOpen(false)} className={navLinkClass}>
+                  Blog
                 </Link>
                 <Link to="/roadmap" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Roadmap

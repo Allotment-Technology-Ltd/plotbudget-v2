@@ -10,6 +10,9 @@ import ChangelogPage from './pages/ChangelogPage';
 import PrinciplesPage from './pages/PrinciplesPage';
 import StoryPage from './pages/StoryPage';
 import RoadmapPage from './pages/RoadmapPage';
+import BlogIndexPage from './pages/BlogIndexPage';
+import BlogPostPage from './pages/BlogPostPage';
+import TestSanityPage from './pages/TestSanityPage';
 import FeaturesPage from './pages/FeaturesPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
@@ -33,6 +36,9 @@ createRoot(document.getElementById('root')).render(
             <Route path="changelog" element={<ChangelogPage />} />
             <Route path="principles" element={<PrinciplesPage />} />
             <Route path="story" element={<StoryPage />} />
+            <Route path="blog" element={<BlogIndexPage />} />
+            <Route path="blog/:slug" element={<BlogPostPage />} />
+            <Route path="test-sanity" element={<TestSanityPage />} />
             <Route path="roadmap" element={<RoadmapPage />} />
             <Route path="features" element={<FeaturesPage />} />
             <Route path="privacy" element={<PrivacyPage />} />
