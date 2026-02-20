@@ -18,12 +18,7 @@ const nextConfig = {
       config.cache = { type: 'memory' };
     }
     // Suppress the warning if it still appears (e.g. if Next overrides cache or in production).
-    config.ignoreWarnings = [
-      ...(config.ignoreWarnings || []),
-      /Serializing big strings/,
-      // tailwindcss load-config.js uses require(path); webpack can't resolve dynamic requires.
-      /Critical dependency: the request of a dependency is an expression/,
-    ];
+    config.ignoreWarnings = [...(config.ignoreWarnings || []), /Serializing big strings/];
     return config;
   },
   async headers() {

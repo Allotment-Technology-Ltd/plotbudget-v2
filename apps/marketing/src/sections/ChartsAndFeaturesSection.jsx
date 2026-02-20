@@ -95,7 +95,7 @@ export default function ChartsAndFeaturesSection() {
                   group block bg-plot-bg border border-plot-border overflow-hidden
                   transition-all duration-200
                   hover:border-plot-accent/40 hover:shadow-[0_0_24px_var(--accent-glow)]
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-surface
+                  focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-surface
                 "
                 style={{ borderRadius: 0 }}
               >
@@ -127,7 +127,7 @@ export default function ChartsAndFeaturesSection() {
         >
           <Link
             to="/features"
-            className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded-sm"
+            className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 rounded-sm"
           >
             Explore all features →
           </Link>

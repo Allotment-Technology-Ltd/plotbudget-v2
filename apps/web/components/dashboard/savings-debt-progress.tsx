@@ -40,7 +40,7 @@ export function SavingsDebtProgress({
           </p>
           <Link
             href="/dashboard/blueprint"
-            className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Manage Blueprint
           </Link>
@@ -63,7 +63,7 @@ export function SavingsDebtProgress({
         </h2>
         <Link
           href="/dashboard/blueprint"
-          className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+          className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
         >
           Manage
         </Link>
@@ -90,7 +90,7 @@ export function SavingsDebtProgress({
               <Link
                 key={pot.id}
                 href={`/dashboard/forecast/pot/${pot.id}`}
-                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
                 aria-label={`${pot.name}: ${currencySymbol(currency)}${pot.current_amount} of ${currencySymbol(currency)}${pot.target_amount}, ${progress.toFixed(0)}%. View forecast`}
               >
@@ -149,7 +149,7 @@ export function SavingsDebtProgress({
               <Link
                 key={rep.id}
                 href={`/dashboard/forecast/repayment/${rep.id}`}
-                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+                className="block rounded-lg border border-border p-4 bg-background/50 hover:border-muted-foreground/30 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 role="article"
                 aria-label={`${rep.name}: ${currencySymbol(currency)}${rep.current_balance} remaining of ${currencySymbol(currency)}${rep.starting_balance}. View forecast`}
               >

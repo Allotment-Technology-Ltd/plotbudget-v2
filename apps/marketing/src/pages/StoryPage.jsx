@@ -216,7 +216,7 @@ export default function StoryPage() {
             </p>
             <a
               href={APP_URL}
-              className="btn-primary inline-flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
+              className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
               aria-label="Join founding members"
             >
               Join founding members →

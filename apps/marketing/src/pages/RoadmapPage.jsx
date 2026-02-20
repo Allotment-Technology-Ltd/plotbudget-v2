@@ -71,7 +71,7 @@ function ModuleCard({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-left p-4 sm:p-6 md:p-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-inset"
+        className="w-full text-left p-4 sm:p-6 md:p-8 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-inset"
         aria-expanded={expanded}
         aria-controls={`module-detail-${id}`}
         id={`module-heading-${id}`}
@@ -559,7 +559,7 @@ export default function RoadmapPage() {
             <div className="mt-8">
               <a
                 href={APP_URL}
-                className="btn-primary inline-flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
+                className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
                 aria-label="Join founding members"
               >
                 Join founding members →

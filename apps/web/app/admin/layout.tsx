@@ -21,7 +21,7 @@ export default async function AdminLayout({
         <div className="content-wrapper flex h-16 items-center justify-between">
           <Link
             href="/admin"
-            className="font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="font-heading text-xl uppercase tracking-widest text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             PLOT Admin
           </Link>

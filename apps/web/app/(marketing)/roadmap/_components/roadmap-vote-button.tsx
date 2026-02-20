@@ -73,7 +73,7 @@ export function RoadmapVoteButton({
       className={`
         flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2
         font-mono text-lg font-semibold tabular-nums
-        transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+        transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         disabled:opacity-60
         ${
           voted

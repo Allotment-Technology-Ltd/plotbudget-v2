@@ -254,7 +254,7 @@ export function TrialEmailTestingPanel() {
           value={to}
           onChange={(e) => setTo(e.target.value)}
           placeholder="hello@plotbudget.com"
-          className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
         <p className="text-xs text-muted-foreground">
           Used for templates above and for forwarding when sending with real data or
@@ -319,7 +319,7 @@ export function TrialEmailTestingPanel() {
                 id="trial-user-select"
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
               >
                 <option value="">— Choose —</option>
                 {trialUsers.map((u) => (
@@ -383,7 +383,7 @@ export function TrialEmailTestingPanel() {
                     type="date"
                     value={asOfDate}
                     onChange={(e) => setAsOfDate(e.target.value)}
-                    className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
                   />
                   {asOfDate && (
                     <button

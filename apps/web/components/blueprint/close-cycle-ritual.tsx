@@ -44,7 +44,7 @@ export function CloseCycleRitual({
           type="button"
           onClick={handleClose}
           disabled={isCompleting}
-          className="font-heading uppercase tracking-wider text-sm px-5 py-2.5 rounded-full bg-primary text-primary-foreground shadow border-2 border-primary-foreground/20 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none inline-flex items-center gap-2"
+          className="font-heading uppercase tracking-wider text-sm px-5 py-2.5 rounded-full bg-primary text-primary-foreground shadow border-2 border-primary-foreground/20 hover:bg-primary/90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none inline-flex items-center gap-2"
           aria-label="Close cycle"
         >
           <Lock className="w-4 h-4" aria-hidden />

@@ -6,9 +6,9 @@
  * Inline here so marketing deploys without pnpm workspace (Vercel).
  */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+@config '../tailwind.config.js';
 
 /* Theme tokens — aligned with packages/design-tokens */
 :root {

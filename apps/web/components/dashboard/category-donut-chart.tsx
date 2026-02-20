@@ -90,7 +90,7 @@ export function CategoryDonutChart({
           </p>
           <a
             href="/dashboard/blueprint"
-            className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Go to Blueprint
           </a>
@@ -123,7 +123,7 @@ export function CategoryDonutChart({
             dataKey="value"
             nameKey="name"
             onClick={(entry: { key: string }) => onCategorySelect?.(entry.key)}
-            className="cursor-pointer focus:outline-none"
+            className="cursor-pointer focus:outline-hidden"
           >
             {categories.map((entry) => (
               <Cell key={`cell-${entry.key}`} fill={entry.color} />

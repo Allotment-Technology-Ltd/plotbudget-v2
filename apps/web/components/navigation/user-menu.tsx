@@ -91,7 +91,7 @@ export function UserMenu({ user, isPartner = false, trialTestingDashboardVisible
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-primary transition-colors duration-200 hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-primary transition-colors duration-200 hover:bg-primary/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="User menu"
           aria-haspopup="menu"
           data-testid="user-menu-trigger"

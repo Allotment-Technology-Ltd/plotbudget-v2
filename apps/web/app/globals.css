@@ -1,10 +1,205 @@
 /* apps/web/app/globals.css */
 
-@import '@repo/design-tokens/tokens.css';
+@import '@repo/design-tokens/tokens.css' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@import 'tailwindcss';
+
+@config '../tailwind.config.ts';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility section-label {
+  @apply uppercase tracking-widest text-primary;
+  font-family: var(--font-space), monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  letter-spacing: 0.15em;
+}
+
+@utility section-headline {
+  @apply uppercase text-foreground;
+  font-family: var(--font-space), monospace;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+
+  @media (min-width: 810px) {
+    font-size: 3rem;
+    line-height: 1.15;
+  }
+}
+
+@utility terminal-prompt {
+  &::before {
+    content: '>_ ';
+    @apply text-primary;
+  }
+}
+
+@utility card-plot {
+  @apply bg-card p-6 rounded-lg;
+  border: 1px solid rgb(var(--border) / 0.08);
+
+  @media (min-width: 810px) {
+    @apply p-8;
+  }
+}
+
+@utility btn-primary {
+  @apply inline-flex items-center justify-center
+           bg-primary px-6 py-3
+           uppercase
+           text-primary-foreground
+           rounded-md
+           transition-all duration-200;
+  font-family: var(--font-space), monospace;
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.2em;
+
+  &:hover {
+    box-shadow: 0 0 30px rgb(var(--accent-glow) / 0.15);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    @apply outline-hidden ring-2 ring-ring ring-offset-2;
+  }
+}
+
+@utility btn-ghost {
+  @apply inline-flex items-center justify-center
+           px-6 py-3
+           uppercase
+           text-primary
+           bg-transparent rounded-md
+           transition-all duration-200;
+  font-family: var(--font-space), monospace;
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  border: 1px solid rgb(var(--primary) / 0.3);
+
+  &:hover {
+    background-color: rgb(var(--primary) / 0.1);
+  }
+
+  &:focus-visible {
+    @apply outline-hidden ring-2 ring-ring ring-offset-2;
+  }
+}
+
+@utility skip-link {
+  @apply sr-only;
+
+  &:focus {
+    @apply not-sr-only absolute top-4 left-4 z-50 px-4 py-2 bg-primary text-primary-foreground rounded-md outline-hidden ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@utility content-wrapper {
+  @apply w-full mx-auto px-4;
+  max-width: 1200px;
+
+  @media (min-width: 640px) {
+    @apply px-6;
+  }
+
+  @media (min-width: 810px) {
+    @apply px-10;
+  }
+
+  @media (min-width: 1200px) {
+    @apply px-20;
+  }
+}
+
+@utility section-padding {
+  @apply py-16;
+
+  @media (min-width: 810px) {
+    @apply py-20;
+  }
+
+  @media (min-width: 1200px) {
+    @apply py-24;
+  }
+}
+
+@utility cursor-blink {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  background-color: rgb(var(--primary));
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+@utility loading-pulse {
+  /* Loading indicator: gentle pulse in line with onboarding transition aesthetic */
+  animation: loading-pulse 1.2s ease-in-out infinite;
+}
+
+@utility navigation-progress-stripe {
+  /* Navigation progress bar: sliding stripe during route transitions */
+  animation: navigation-progress 0.8s ease-in-out infinite;
+}
+
+@utility skeleton-shimmer {
+  /* Skeleton loading: shimmer sweep so cards clearly indicate loading */
+  background: linear-gradient(
+    90deg,
+    rgb(var(--muted) / 0.6) 0%,
+    rgb(var(--muted) / 1) 40%,
+    rgb(var(--muted) / 1) 60%,
+    rgb(var(--muted) / 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@utility text-glow {
+  text-shadow: 0 0 20px rgb(var(--accent-glow) / 0.4);
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility avatar-pixelated {
+  /* Avatar: keep pixelated look when scaling (no smoothing) */
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
 
 @layer base {
   :root {
@@ -113,11 +308,11 @@
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-hidden ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
   *:focus:not(:focus-visible) {
-    @apply outline-none ring-0;
+    @apply outline-hidden ring-0;
   }
 
   ::selection {
@@ -141,214 +336,22 @@
   }
 }
 
-@layer components {
-  .section-label {
-    @apply uppercase tracking-widest text-primary;
-    font-family: var(--font-space), monospace;
-    font-size: 0.875rem;
-    line-height: 1.4;
-    letter-spacing: 0.15em;
-  }
-
-  .section-headline {
-    @apply uppercase text-foreground;
-    font-family: var(--font-space), monospace;
-    font-size: 1.75rem;
-    line-height: 1.2;
-    letter-spacing: 0.02em;
-  }
-
-  @media (min-width: 810px) {
-    .section-headline {
-      font-size: 3rem;
-      line-height: 1.15;
-    }
-  }
-
-  .terminal-prompt::before {
-    content: '>_ ';
-    @apply text-primary;
-  }
-
-  .card-plot {
-    @apply bg-card p-6 rounded-lg;
-    border: 1px solid rgb(var(--border) / 0.08);
-  }
-
-  @media (min-width: 810px) {
-    .card-plot {
-      @apply p-8;
-    }
-  }
-
-  .btn-primary {
-    @apply inline-flex items-center justify-center
-           bg-primary px-6 py-3
-           uppercase
-           text-primary-foreground
-           rounded-md
-           transition-all duration-200;
-    font-family: var(--font-space), monospace;
-    font-size: 1rem;
-    line-height: 1;
-    letter-spacing: 0.2em;
-  }
-
-  .btn-primary:hover {
-    box-shadow: 0 0 30px rgb(var(--accent-glow) / 0.15);
-    transform: translateY(-2px);
-  }
-
-  .btn-primary:active {
-    transform: translateY(0);
-  }
-
-  .btn-primary:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2;
-  }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center
-           px-6 py-3
-           uppercase
-           text-primary
-           bg-transparent rounded-md
-           transition-all duration-200;
-    font-family: var(--font-space), monospace;
-    font-size: 1rem;
-    line-height: 1;
-    letter-spacing: 0.2em;
-    border: 1px solid rgb(var(--primary) / 0.3);
-  }
-
-  .btn-ghost:hover {
-    background-color: rgb(var(--primary) / 0.1);
-  }
-
-  .btn-ghost:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2;
-  }
-
-  .skip-link {
-    @apply sr-only;
-  }
-
-  .skip-link:focus {
-    @apply not-sr-only absolute top-4 left-4 z-50 px-4 py-2 bg-primary text-primary-foreground rounded-md outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
-}
-
 @layer utilities {
-  .content-wrapper {
-    @apply w-full mx-auto px-4;
-    max-width: 1200px;
-  }
-
-  @media (min-width: 640px) {
-    .content-wrapper {
-      @apply px-6;
-    }
-  }
-
-  @media (min-width: 810px) {
-    .content-wrapper {
-      @apply px-10;
-    }
-  }
-
-  @media (min-width: 1200px) {
-    .content-wrapper {
-      @apply px-20;
-    }
-  }
-
-  .section-padding {
-    @apply py-16;
-  }
-
-  @media (min-width: 810px) {
-    .section-padding {
-      @apply py-20;
-    }
-  }
-
-  @media (min-width: 1200px) {
-    .section-padding {
-      @apply py-24;
-    }
-  }
-
-  .cursor-blink {
-    display: inline-block;
-    width: 0.6em;
-    height: 1.1em;
-    background-color: rgb(var(--primary));
-    vertical-align: text-bottom;
-    margin-left: 2px;
-    animation: blink 1s step-end infinite;
-  }
 
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
-
-  /* Loading indicator: gentle pulse in line with onboarding transition aesthetic */
   @keyframes loading-pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
   }
-
-  .loading-pulse {
-    animation: loading-pulse 1.2s ease-in-out infinite;
-  }
-
-  /* Navigation progress bar: sliding stripe during route transitions */
   @keyframes navigation-progress {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(400%); }
   }
-
-  .navigation-progress-stripe {
-    animation: navigation-progress 0.8s ease-in-out infinite;
-  }
-
-  /* Skeleton loading: shimmer sweep so cards clearly indicate loading */
   @keyframes skeleton-shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
-  }
-
-  .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgb(var(--muted) / 0.6) 0%,
-      rgb(var(--muted) / 1) 40%,
-      rgb(var(--muted) / 1) 60%,
-      rgb(var(--muted) / 0.6) 100%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  }
-
-  .text-glow {
-    text-shadow: 0 0 20px rgb(var(--accent-glow) / 0.4);
-  }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Avatar: keep pixelated look when scaling (no smoothing) */
-  .avatar-pixelated {
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-crisp-edges;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
   }
 }

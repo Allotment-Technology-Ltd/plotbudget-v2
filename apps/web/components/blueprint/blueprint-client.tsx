@@ -226,7 +226,7 @@ export function BlueprintClient({
                 type="button"
                 onClick={handleUnlock}
                 disabled={isUnlocking}
-                className="text-sm font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded disabled:opacity-50"
+                className="text-sm font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded disabled:opacity-50"
               >
                 {isUnlocking ? 'Unlocking…' : 'Unlock (e.g. new bill)'}
               </button>
@@ -243,7 +243,7 @@ export function BlueprintClient({
                 type="button"
                 id="blueprint-how-it-works"
                 onClick={() => setInstructionsExpanded((v) => !v)}
-                className="w-full flex items-center justify-between gap-2 p-4 text-left font-heading text-sm uppercase tracking-wider text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                className="w-full flex items-center justify-between gap-2 p-4 text-left font-heading text-sm uppercase tracking-wider text-foreground hover:bg-muted/30 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 aria-expanded={instructionsExpanded}
                 aria-controls="blueprint-how-it-works-content"
               >

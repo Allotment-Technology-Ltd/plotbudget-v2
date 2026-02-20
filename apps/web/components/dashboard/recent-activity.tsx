@@ -140,7 +140,7 @@ export function RecentActivity({
         </h2>
         <Link
           href="/dashboard/blueprint"
-          className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+          className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
         >
           View All
         </Link>
@@ -191,7 +191,7 @@ export function RecentActivity({
               {editHref ? (
                 <Link
                   href={editHref}
-                  className="flex gap-3 min-w-0 flex-1 rounded-md hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 -m-1 p-1"
+                  className="flex gap-3 min-w-0 flex-1 rounded-md hover:bg-muted/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 -m-1 p-1"
                   aria-label={isSeed ? `Edit ${item.label}` : `View ${item.label} in Blueprint`}
                 >
                   {rowContent}

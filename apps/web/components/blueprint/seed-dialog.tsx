@@ -510,7 +510,7 @@ export function SeedDialog({
         <form
           ref={formScrollRef}
           onSubmit={onSubmit}
-          className="space-y-6 overflow-y-auto min-h-0 flex-1 pl-3 pr-4 focus:outline-none min-w-0 [&_input]:scroll-mt-6 [&_input]:scroll-mb-24 [&_select]:scroll-mt-6 [&_select]:scroll-mb-24 [&_button]:scroll-mt-4 [&_button]:scroll-mb-8"
+          className="space-y-6 overflow-y-auto min-h-0 flex-1 pl-3 pr-4 focus:outline-hidden min-w-0 [&_input]:scroll-mt-6 [&_input]:scroll-mb-24 [&_select]:scroll-mt-6 [&_select]:scroll-mb-24 [&_button]:scroll-mt-4 [&_button]:scroll-mb-8"
           noValidate
         >
           {category && (

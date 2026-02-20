@@ -164,7 +164,7 @@ export default function MailerLiteForm({ variant = 'hero', id = 'hero-form' }) {
                   font-heading text-sm md:text-base text-plot-text
                   placeholder:text-plot-muted/50
                   transition-all duration-200
-                  focus:outline-none focus:ring-0
+                  focus:outline-hidden focus:ring-0
                   disabled:opacity-50 disabled:cursor-not-allowed
                   ${status === STATES.ERROR
                     ? 'border-2 border-red-500'

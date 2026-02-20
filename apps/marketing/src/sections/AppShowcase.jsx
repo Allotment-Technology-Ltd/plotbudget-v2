@@ -117,7 +117,7 @@ export default function AppShowcase() {
               font-heading text-cta-sm uppercase tracking-[0.2em]
               text-plot-accent-text hover:text-plot-accent border-b-2 border-plot-accent hover:border-plot-accent-text
               transition-colors duration-200
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
+              focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
             "
           >
             See all features →

@@ -64,7 +64,7 @@ export function DashboardRepaymentSection({
               <Link
                 href="/dashboard/blueprint"
                 onClick={(e) => e.stopPropagation()}
-                className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+                className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
               >
                 Manage
               </Link>

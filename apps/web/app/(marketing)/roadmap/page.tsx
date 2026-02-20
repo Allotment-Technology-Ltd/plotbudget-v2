@@ -223,7 +223,7 @@ async function RoadmapPageInner() {
             <div className="mt-8">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-heading text-sm uppercase tracking-wider text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-heading text-sm uppercase tracking-wider text-primary-foreground hover:bg-primary/90 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 Join founding members →
               </Link>

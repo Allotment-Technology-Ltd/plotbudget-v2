@@ -25,8 +25,8 @@ export function DashboardNav() {
             : pathname.startsWith(item.href));
         const linkClassName =
           isActive
-            ? 'text-primary font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded'
-            : 'text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded';
+            ? 'text-primary font-medium focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded'
+            : 'text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded';
         return isExternal ? (
           <a
             key={item.href}
