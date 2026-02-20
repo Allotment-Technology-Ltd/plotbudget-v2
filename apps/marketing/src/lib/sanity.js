@@ -10,16 +10,23 @@ export function getSanityClient() {
   if (client) return client;
   const isDev = import.meta.env.DEV;
   const inBrowser = typeof window !== 'undefined';
-  const useProxy = isDev && inBrowser;
+  const useDevProxy = isDev && inBrowser;
+  const useProdProxy = !isDev && inBrowser;
+  const apiHost =
+    useDevProxy
+      ? `${window.location.origin}/sanity-api`
+      : useProdProxy
+        ? `${window.location.origin}/api/sanity`
+        : undefined;
   client = createClient({
     projectId,
     dataset,
     apiVersion: '2024-01-01',
     useCdn: false,
-    ...(useProxy
+    ...(apiHost
       ? {
           useProjectHostname: false,
-          apiHost: `${window.location.origin}/sanity-api`,
+          apiHost,
         }
       : {}),
   });
