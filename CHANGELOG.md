@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.6.0...v1.7.0) (2026-02-20)
+
+
+### Features
+
+* **sanity:** blog archive field + fix Studio dev (styled-components override) ([5de7d8e](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/5de7d8e695bcdbac949e5d437829ad23ce56ba2a))
+
 # [1.6.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.4...v1.6.0) (2026-02-20)
 
 
