@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { PageHeader } from '../components/PageHeader';
 import { APP_URL } from '../lib/config';
 
 const cardStagger = {
@@ -352,45 +353,44 @@ export default function RoadmapPage() {
       </Helmet>
 
       <div className="min-h-screen bg-plot-bg">
-        {/* Hero */}
+        {/* Hero — consistent page header */}
         <section
-          className="content-wrapper section-padding text-center"
+          className="content-wrapper pt-20 md:pt-24 pb-16 md:pb-20 xl:pb-24"
           aria-labelledby="roadmap-title"
         >
-          <motion.div
-            initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
-            animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="max-w-prose mx-auto"
-          >
-            <h1
-              id="roadmap-title"
-              className="font-heading text-display-sm md:text-display-lg font-bold uppercase tracking-[0.08em] text-plot-text mb-6"
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
             >
-              Roadmap
-            </h1>
-            <p className="font-heading text-sub-sm md:text-sub text-plot-muted uppercase tracking-wider mb-6">
-              From budgeting app to household operating system
-            </p>
-            <div className="font-body text-plot-text leading-relaxed space-y-4">
-              <p>
-                PLOT launched with Money (budgeting and the payday ritual). Over the coming year, we&apos;re expanding into a complete household operating system with eight interconnected modules.
-              </p>
-              <p>
-                Each module follows the same philosophy: opinionated ceremonies instead of blank canvases. Simple rituals instead of daily tracking. Built for households, not individuals.
-              </p>
-            </div>
-          </motion.div>
+              <PageHeader
+                title="Roadmap"
+                subtitle="From budgeting app to household operating system."
+                titleId="roadmap-title"
+                variant="left"
+              >
+                <div className="font-body text-plot-text leading-relaxed space-y-4 text-left">
+                  <p>
+                    PLOT launched with Money (budgeting and the payday ritual). Over the coming year, we&apos;re expanding into a complete household operating system with eight interconnected modules.
+                  </p>
+                  <p>
+                    Each module follows the same philosophy: opinionated ceremonies instead of blank canvases. Simple rituals instead of daily tracking. Built for households, not individuals.
+                  </p>
+                </div>
+              </PageHeader>
+            </motion.div>
+          </div>
         </section>
 
-        {/* Interconnection callout */}
-        <section className="content-wrapper px-6 md:px-10 pb-8 md:pb-10" aria-label="Why an operating system">
+        {/* Interconnection callout — same vertical rhythm as timeline (section-padding) for clear hierarchy */}
+        <section className="content-wrapper section-padding section-divider" aria-label="Why an operating system">
           <motion.div
             initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
             whileInView={shouldAnimate ? { opacity: 1, y: 0 } : {}}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
-            className="max-w-3xl mx-auto border-l-4 border-plot-accent bg-plot-surface border border-plot-border p-6 md:p-8"
+            className="max-w-4xl mx-auto border-l-4 border-plot-accent bg-plot-surface border border-plot-border p-6 md:p-8"
           >
             <h2 className="font-heading text-sub-sm md:text-sub font-bold uppercase tracking-wider text-plot-text mb-4">
               Why an Operating System?
@@ -419,7 +419,7 @@ export default function RoadmapPage() {
         </section>
 
         {/* Roadmap timeline */}
-        <section className="content-wrapper section-padding border-t border-plot-border" aria-label="Roadmap timeline">
+        <section className="content-wrapper section-padding section-divider" aria-label="Roadmap timeline">
           <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
             {/* NOW */}
             <div>
@@ -512,7 +512,7 @@ export default function RoadmapPage() {
 
         {/* How we decide */}
         <section
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-labelledby="how-we-decide-title"
         >
           <motion.div
@@ -520,7 +520,7 @@ export default function RoadmapPage() {
             whileInView={shouldAnimate ? { opacity: 1, y: 0 } : {}}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="max-w-prose mx-auto"
+            className="max-w-4xl mx-auto"
           >
             <h2
               id="how-we-decide-title"

@@ -1,5 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { motion, useReducedMotion } from 'framer-motion';
+import { PageHeader } from '../components/PageHeader';
+import { FounderSignOff } from '../components/FounderSignOff';
 import { APP_URL } from '../lib/config';
 
 const storyStagger = {
@@ -92,35 +94,33 @@ export default function StoryPage() {
       </Helmet>
 
       <div className="min-h-screen bg-plot-bg">
-        {/* Hero */}
+        {/* Hero — consistent page header */}
         <section
-          className="content-wrapper section-padding text-center"
+          className="content-wrapper pt-20 md:pt-24 pb-16 md:pb-20 xl:pb-24"
           aria-labelledby="story-title"
         >
-          <motion.div
-            initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
-            animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="max-w-prose mx-auto"
-          >
-            <h1
-              id="story-title"
-              className="font-heading text-display-sm md:text-display-lg font-bold uppercase tracking-[0.08em] text-plot-text mb-6"
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              Why PLOT Exists
-            </h1>
-            <p className="font-body text-sub-sm md:text-sub text-plot-muted leading-relaxed">
-              The story of how a decade of spreadsheet frustration became a household operating system.
-            </p>
-          </motion.div>
+              <PageHeader
+                title="Why PLOT Exists"
+                subtitle="The story of how a decade of spreadsheet frustration became a household operating system."
+                titleId="story-title"
+                variant="left"
+              />
+            </motion.div>
+          </div>
         </section>
 
         {/* Story arc with timeline */}
         <section
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-label="The story"
         >
-          <div className="max-w-prose mx-auto relative">
+          <div className="max-w-4xl mx-auto relative">
             {/* Timeline line */}
             <div
               className="absolute left-4 top-4 bottom-4 w-px bg-plot-border"
@@ -174,28 +174,24 @@ export default function StoryPage() {
 
         {/* Founder signature */}
         <section
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-label="Founder signature"
         >
-          <div className="max-w-prose mx-auto">
+          <div className="max-w-4xl mx-auto">
             <motion.div
               initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
               whileInView={shouldAnimate ? { opacity: 1, y: 0 } : {}}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="font-body text-plot-text space-y-1"
             >
-              <p>— Adam</p>
-              <p className="font-medium">Founder, PLOT</p>
-              <p className="text-plot-muted">Built with my partner since day one</p>
-              <p className="text-label-sm text-plot-muted">February 2026</p>
+              <FounderSignOff date="February 2026" />
             </motion.div>
           </div>
         </section>
 
         {/* CTA */}
         <section
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-labelledby="story-cta-title"
         >
           <motion.div
@@ -203,7 +199,7 @@ export default function StoryPage() {
             whileInView={shouldAnimate ? { opacity: 1, y: 0 } : {}}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="max-w-prose mx-auto text-center"
+            className="max-w-4xl mx-auto text-center"
           >
             <h2
               id="story-cta-title"

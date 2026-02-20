@@ -168,12 +168,25 @@
     @apply py-16 md:py-20 xl:py-24;
   }
 
+  /* Section divider — visible line between hero and content / between content sections */
+  .section-divider {
+    @apply border-t-2 border-plot-border;
+  }
+
   /*
-   * Content page container — matches Privacy/Terms static pages.
-   * Use for Changelog and other long-form content (max 680px, legal-style padding).
+   * Content page container — same max width as Roadmap timeline (max-w-4xl) for consistent
+   * content constraint across all pages. Use for Blog, Changelog, and other long-form content.
    */
   .content-page {
-    @apply w-full max-w-[680px] mx-auto px-6 py-12 md:py-16 pb-24;
+    @apply w-full max-w-4xl mx-auto px-6 py-12 md:py-16 pb-24;
+  }
+
+  /*
+   * Page header section — same max width as Roadmap (max-w-4xl). Same top padding as .content-page
+   * so hero starts at the same distance from the navbar on every page.
+   */
+  .page-header-section {
+    @apply w-full max-w-4xl mx-auto px-6 md:px-10 xl:px-20 pt-12 md:pt-16 pb-16 md:pb-20 xl:pb-24;
   }
 
   /* Terminal cursor blink */

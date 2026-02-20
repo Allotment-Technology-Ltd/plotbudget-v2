@@ -160,7 +160,7 @@ function LoginForm({
       } catch {
         // Don't block redirect if toast fails (e.g. in test env)
       }
-    } catch (error) {
+    } catch {
       form.setError('root', {
         message: 'An unexpected error occurred. Please try again.',
       });
@@ -342,7 +342,7 @@ function SignupForm({
       } catch {
         // Don't block redirect if toast fails (e.g. in test env)
       }
-    } catch (error) {
+    } catch {
       form.setError('root', {
         message: 'An unexpected error occurred. Please try again.',
       });

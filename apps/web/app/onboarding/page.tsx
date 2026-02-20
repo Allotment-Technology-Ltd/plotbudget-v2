@@ -226,7 +226,8 @@ export default function OnboardingPage() {
       // Retry without currency when the project's schema cache doesn't have the column (e.g. E2E DB before migration 20250209120001_household_currency)
       const errMsg = String((householdError as { message?: string })?.message ?? '');
       if (householdError && errMsg.includes('currency') && errMsg.includes('schema cache')) {
-        const { currency: _c, ...insertWithoutCurrency } = householdInsert;
+        const { currency: _dropped, ...insertWithoutCurrency } = householdInsert;
+        void _dropped;
         householdResult = await supabase
           .from('households')
           .insert(insertWithoutCurrency as never)

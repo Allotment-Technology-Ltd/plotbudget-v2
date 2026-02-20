@@ -1,8 +1,13 @@
 # Release: on push to main, apply production migrations, deploy Sanity schema, then run semantic-release (version + changelog).
 # Requires: SUPABASE_PROD_DATABASE_URL (full Postgres URI). Vercel deploys main automatically.
 # Sanity: create a deploy token at https://sanity.io/manage → project → API → Deploy tokens; add as Actions secret SANITY_AUTH_TOKEN.
-# The marketing site changelog at /changelog is built from root CHANGELOG.md (prebuild copies it);
-# so each merge to main that produces a release updates the public changelog on the next marketing deploy.
+# Root CHANGELOG.md is for repo/developer use only. The public "What's new" page is manually maintained in apps/marketing/src/data/publicChangelog.js.
+#
+# --- Branch protection ---
+# semantic-release pushes a release commit and tags to main. If you see "GH013: Repository rule violations"
+# (e.g. "Changes must be made through a pull request" or "required status checks are expected"), allow the
+# workflow to push: Settings → Rules → Rulesets → rule for main → add exception "Allow specified actors to
+# bypass" and add the GitHub Actions bot / GITHUB_TOKEN, or use a PAT with bypass in the release job.
 #
 # --- Trigger strategy (Actions minutes) ---
 # Runs ONLY on: push to main. Does NOT run on push to other branches or on pull_request.

@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     // If metadata is empty (common for lifecycle events like subscription.canceled),
     // try to look up the existing subscription record by polar_subscription_id.
     if (!householdId) {
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await supabase
         .from('subscriptions')
         .select('household_id')
         .eq('polar_subscription_id', data.id)
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       metadata: metadata ?? undefined,
     };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('subscriptions')
       .upsert(payload, { onConflict: 'polar_subscription_id' });
 
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
         userUpdate.trial_ended_email_sent = true;
       }
 
-      await (supabase as any)
+      await supabase
         .from('users')
         .update(userUpdate)
         .eq('id', userId);

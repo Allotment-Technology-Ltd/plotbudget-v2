@@ -13,6 +13,7 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Next.js page signature
 export default function ResetPasswordPage(_props: PageProps) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);

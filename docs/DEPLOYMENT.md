@@ -111,9 +111,11 @@ Pushes to the linked branch (e.g. `main`) trigger an automatic deploy. After cha
 
 ## Releases and the public changelog
 
-Pushes to `main` can run **semantic-release** (if configured in CI), which updates the root `CHANGELOG.md` from commit messages. The **user-facing** changelog on the marketing site ("What's new") comes from **`apps/marketing/content/changelog.md`**, which is copied at build time.
+Pushes to `main` can run **semantic-release** (if configured in CI), which updates the root **`CHANGELOG.md`** from commit messages. That file is for repo/developer use only.
 
-**When you release:** Update `apps/marketing/content/changelog.md` with a user-friendly entry for the new version, written in plain language and following **[CHANGELOG-UX-GUIDE.md](./CHANGELOG-UX-GUIDE.md)**. That keeps the public page clear and avoids heavy sanitization. The guide covers structure, tone, and what to include or omit.
+The **user-facing** changelog on the marketing site ("What's new" at /changelog) is **manually maintained** in **`apps/marketing/src/data/publicChangelog.js`**. It is not built from `CHANGELOG.md`.
+
+**When you release:** Add a user-friendly entry to `publicChangelog.js` for the new version (version, released_at, Markdown content). Use **docs/RELEASES-SUMMARY.md** for a list of releases and what was in them. Follow **[CHANGELOG-UX-GUIDE.md](./CHANGELOG-UX-GUIDE.md)** for structure and tone.
 
 ## Troubleshooting
 

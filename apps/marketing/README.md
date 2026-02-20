@@ -31,7 +31,7 @@ plot-marketing/
 │   └── subscribe.js          # Vercel serverless function (MailerLite proxy)
 ├── public/
 │   ├── favicon.svg            # PLOT # brand mark
-│   ├── changelog.md           # Copied from repo root CHANGELOG.md at prebuild (single source of truth)
+│   ├── (no changelog.md; public changelog is manual in src/data/publicChangelog.js)
 │   ├── privacy.html           # Static legal page
 │   ├── terms.html            # Static legal page
 │   └── screenshots/           # App screenshots for phone mockups
@@ -52,7 +52,7 @@ plot-marketing/
 │   │   └── MailerLiteForm.jsx # Email form with state machine
 │   ├── pages/
 │   │   ├── HomePage.jsx       # Landing: composes all sections
-│   │   └── ChangelogPage.jsx  # Renders root CHANGELOG.md (via public/changelog.md), sanitized for display
+│   │   └── ChangelogPage.jsx  # Renders entries from src/data/publicChangelog.js (manually maintained)
 │   └── sections/              # Landing sections (used by HomePage)
 │       ├── Hero.jsx
 │       ├── SocialProofStrip.jsx
@@ -76,7 +76,7 @@ plot-marketing/
 All marketing routes render inside a **shared layout** (Navbar, main content, Footer, CookieConsent). Routes are defined in **`src/main.jsx`** using React Router nested routes:
 
 - **`/`** — Home (landing: Hero, Social proof, Problem, Solution, App Showcase, Features, Pricing, FAQ, Final CTA).
-- **`/changelog`** — Changelog page (loads Markdown from `public/changelog.md`).
+- **`/changelog`** — Changelog page (loads from `src/data/publicChangelog.js`; manually maintained).
 - **`/privacy`**, **`/terms`** — Served as static HTML from `public/privacy.html` and `public/terms.html` (no React route).
 
 **Adding a new page**

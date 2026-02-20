@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '../components/PageHeader';
 import { staggerContainer, staggerItem } from '../lib/animationUtils';
 
 const FEATURES = [
@@ -114,31 +115,28 @@ export default function FeaturesPage() {
       </Helmet>
 
       <main id="main-content" className="min-h-screen">
-        <div className="content-wrapper section-padding">
-          <motion.header
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl mb-16 md:mb-20"
-          >
-            <motion.p variants={staggerItem} className="section-label">
-              Features
-            </motion.p>
-            <motion.h1
-              variants={staggerItem}
-              className="text-3xl md:text-4xl font-display font-bold text-plot-text tracking-tight"
+        <section
+          className="content-wrapper pt-20 md:pt-24 pb-16 md:pb-20 xl:pb-24"
+          aria-labelledby="features-title"
+        >
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              Every part of the app, in plain sight
-            </motion.h1>
-            <motion.p
-              variants={staggerItem}
-              className="mt-4 text-plot-muted text-lg"
-            >
-              Dashboard, Blueprint, categories, savings goals, and income — each module is built so you see your numbers and stay in control.
-            </motion.p>
-          </motion.header>
+              <PageHeader
+                title="Features"
+                subtitle="Every part of the app, in plain sight. Dashboard, Blueprint, categories, savings goals, and income — each module is built so you see your numbers and stay in control."
+                titleId="features-title"
+                variant="left"
+              />
+            </motion.div>
+          </div>
+        </section>
 
-          <div className="space-y-20 md:space-y-28">
+        <div className="content-wrapper section-padding section-divider">
+          <div className="max-w-4xl mx-auto space-y-20 md:space-y-28">
             {FEATURES.map((feature, i) => (
               <motion.section
                 key={feature.id}
@@ -192,7 +190,7 @@ export default function FeaturesPage() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="mt-20 pt-16 border-t border-plot-border text-center"
+            className="mt-20 pt-16 section-divider text-center"
           >
             <p className="font-heading text-label-sm uppercase tracking-wider text-plot-muted mb-4">
               Ready to try it?

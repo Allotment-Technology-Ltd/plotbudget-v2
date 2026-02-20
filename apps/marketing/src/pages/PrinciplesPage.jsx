@@ -1,5 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { motion, useReducedMotion } from 'framer-motion';
+import { PageHeader } from '../components/PageHeader';
+import { FounderSignOff } from '../components/FounderSignOff';
 import { APP_URL } from '../lib/config';
 
 /**
@@ -111,35 +113,33 @@ export default function PrinciplesPage() {
       </Helmet>
 
       <div className="min-h-screen bg-plot-bg">
-        {/* Hero */}
+        {/* Hero — consistent page header */}
         <section
-          className="content-wrapper section-padding text-center"
+          className="content-wrapper pt-20 md:pt-24 pb-16 md:pb-20 xl:pb-24"
           aria-labelledby="principles-title"
         >
-          <motion.div
-            initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
-            animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="max-w-prose mx-auto"
-          >
-            <h1
-              id="principles-title"
-              className="font-heading text-display-sm md:text-display-lg font-bold uppercase tracking-[0.08em] text-plot-text mb-6"
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              Principles
-            </h1>
-            <p className="font-body text-sub-sm md:text-sub text-plot-muted leading-relaxed">
-              PLOT is built on beliefs about how households should work, how software should serve people, and what makes life liveable.
-            </p>
-          </motion.div>
+              <PageHeader
+                title="Principles"
+                subtitle="PLOT is built on beliefs about how households should work, how software should serve people, and what makes life liveable."
+                titleId="principles-title"
+                variant="left"
+              />
+            </motion.div>
+          </div>
         </section>
 
         {/* Principle cards */}
         <section
-          className="content-wrapper section-padding"
+          className="content-wrapper section-padding section-divider"
           aria-label="Founding principles"
         >
-          <div className="max-w-3xl mx-auto space-y-12 md:space-y-16">
+          <div className="max-w-4xl mx-auto space-y-12 md:space-y-16">
             <motion.div
               variants={shouldAnimate ? cardStagger : {}}
               initial={shouldAnimate ? 'hidden' : false}
@@ -184,10 +184,10 @@ export default function PrinciplesPage() {
         {/* In Practice */}
         <section
           id="in-practice"
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-labelledby="in-practice-title"
         >
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <motion.h2
               id="in-practice-title"
               initial={shouldAnimate ? { opacity: 0, y: 16 } : false}
@@ -228,19 +228,13 @@ export default function PrinciplesPage() {
 
         {/* Footer CTA */}
         <section
-          className="content-wrapper section-padding border-t border-plot-border"
+          className="content-wrapper section-padding section-divider"
           aria-label="Founder and call to action"
         >
-          <div className="max-w-prose mx-auto text-center">
-            <p className="font-body text-plot-muted mb-2">
-              Adam / Founder, PLOT
-            </p>
-            <p className="font-body text-plot-muted mb-2">
-              Built with my partner since day one
-            </p>
-            <p className="font-body text-label-sm text-plot-muted mb-8">
-              February 2026
-            </p>
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="mb-8">
+              <FounderSignOff date="February 2026" />
+            </div>
             <a
               href={APP_URL}
               className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"

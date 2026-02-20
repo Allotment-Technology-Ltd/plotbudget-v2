@@ -152,7 +152,7 @@ export const GET = async (req: NextRequest) => {
   try {
     const polar = new Polar({
       accessToken: process.env.POLAR_ACCESS_TOKEN!,
-      ...(process.env.POLAR_SANDBOX === 'true' ? { server: 'sandbox' as any } : {}),
+      ...(process.env.POLAR_SANDBOX === 'true' ? { server: 'sandbox' as const } : {}),
     });
 
     // Only pass email if it's not a test/reserved domain (.test, .local, .localhost, .invalid)

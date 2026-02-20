@@ -6,12 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "pnpm run prebuild && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "lint": "echo 'No lint configured'",
     "type-check": "echo 'No type-check configured'",
-    "clean": "rm -rf dist .turbo node_modules",
-    "prebuild": "mkdir -p public && cp ../../CHANGELOG.md public/changelog.md"
+    "clean": "rm -rf dist .turbo node_modules"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.2",

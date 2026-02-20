@@ -1,13 +1,34 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { motion, useReducedMotion } from 'framer-motion';
+import { PageHeader } from '../components/PageHeader';
 import { getBlogPosts } from '../lib/blog';
+
+const listStagger = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  },
+};
+
+const listItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: 'easeOut' },
+  },
+};
 
 /**
  * Blog index. Lists all posts from Sanity, newest first.
  * Renders inside Layout (Navbar/Footer from parent route).
  */
 export default function BlogIndexPage() {
+  const reducedMotion = useReducedMotion();
+  const shouldAnimate = !reducedMotion;
+
   const [posts, setPosts] = useState(
     /** @type {Array<{ _id: string; title: string; slug: { current: string }; publishedAt: string; imageUrl: string | null }> | null } */ (null)
   );
@@ -34,13 +55,28 @@ export default function BlogIndexPage() {
           content="Stories and updates from PLOT — the payday ritual for households."
         />
       </Helmet>
-      <div className="content-page min-h-screen bg-plot-bg">
-        <h1 className="font-heading text-2xl md:text-3xl font-bold uppercase tracking-[0.08em] text-plot-text mb-2">
-          Blog
-        </h1>
-        <p className="font-display text-label-sm text-plot-muted tracking-wider mb-12">
-          Stories and updates from the PLOT team.
-        </p>
+      <div className="min-h-screen bg-plot-bg">
+        <section
+          className="content-wrapper pt-20 md:pt-24 pb-16 md:pb-20 xl:pb-24"
+          aria-labelledby="blog-title"
+        >
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            >
+              <PageHeader
+                title="Blog"
+                subtitle="Stories and updates from the PLOT team."
+                titleId="blog-title"
+                variant="left"
+              />
+            </motion.div>
+          </div>
+        </section>
+        <section className="content-wrapper section-padding section-divider">
+          <div className="max-w-4xl mx-auto">
         {error ? (
           <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-4 max-w-prose">
             <p className="font-body font-semibold text-plot-text">Couldn’t load posts</p>
@@ -54,46 +90,53 @@ export default function BlogIndexPage() {
         ) : posts?.length === 0 ? (
           <p className="font-body text-plot-muted">No posts yet. Check back soon.</p>
         ) : (
-          <ul className="space-y-10 list-none p-0 m-0">
+          <motion.ul
+            className="space-y-10 list-none p-0 m-0"
+            variants={shouldAnimate ? listStagger : {}}
+            initial={shouldAnimate ? 'hidden' : false}
+            animate={shouldAnimate ? 'visible' : {}}
+          >
             {posts?.map((post) => {
               const raw = post.slug?.current ?? post._id;
               const slug = typeof raw === 'string' ? raw.replace(/^\/?blog\/?/, '').replace(/^\//, '') || raw : raw;
               return (
-              <li key={post._id}>
-                <article>
-                  <Link
-                    to={`/blog/${slug}`}
-                    className="group block no-underline text-inherit"
-                  >
-                    {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        alt=""
-                        className="w-full aspect-video object-cover rounded-lg mb-4 border border-plot-border"
-                      />
-                    )}
-                    <h2 className="font-heading text-xl md:text-2xl font-bold uppercase tracking-wider text-plot-text group-hover:text-plot-accent-text transition-colors">
-                      {post.title}
-                    </h2>
-                    {post.publishedAt && (
-                      <p className="font-body text-label-sm text-plot-muted mt-1">
-                        {new Date(post.publishedAt).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    )}
-                    <span className="font-body text-plot-accent-text text-label-sm mt-2 inline-block group-hover:underline">
-                      Read more
-                    </span>
-                  </Link>
-                </article>
-              </li>
-            );
+                <motion.li key={post._id} variants={shouldAnimate ? listItem : {}}>
+                  <article>
+                    <Link
+                      to={`/blog/${slug}`}
+                      className="group block no-underline text-inherit"
+                    >
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt=""
+                          className="w-full aspect-video object-cover rounded-lg mb-4 border border-plot-border"
+                        />
+                      )}
+                      <h2 className="font-heading text-xl md:text-2xl font-bold uppercase tracking-wider text-plot-text group-hover:text-plot-accent-text transition-colors">
+                        {post.title}
+                      </h2>
+                      {post.publishedAt && (
+                        <p className="font-body text-label-sm text-plot-muted mt-1">
+                          {new Date(post.publishedAt).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      )}
+                      <span className="font-body text-plot-accent-text text-label-sm mt-2 inline-block group-hover:underline">
+                        Read more
+                      </span>
+                    </Link>
+                  </article>
+                </motion.li>
+              );
             })}
-          </ul>
+          </motion.ul>
         )}
+          </div>
+        </section>
       </div>
     </>
   );
