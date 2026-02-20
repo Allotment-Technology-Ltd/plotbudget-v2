@@ -9,3 +9,13 @@ Now you can do the following things:
 - [Read the blog post about this template](https://www.sanity.io/blog/build-your-own-blog-with-sanity-and-next-js?utm_source=readme)
 - [Join the Sanity community](https://www.sanity.io/community/join?utm_source=readme)
 - [Extend and build plugins](https://www.sanity.io/docs/content-studio/extending?utm_source=readme)
+
+## CI/CD
+
+Schema deployment runs on every push to `main` (see `.github/workflows/release.yml`). To enable it:
+
+1. In [Sanity Manage](https://sanity.io/manage), open your project → **API** → **Deploy tokens**.
+2. Create a deploy token (name it e.g. “GitHub Actions”).
+3. In GitHub: **Settings** → **Secrets and variables** → **Actions** → add secret **`SANITY_AUTH_TOKEN`** with the token value.
+
+The workflow runs: `SANITY_AUTH_TOKEN=<token> npx sanity schema deploy`. For full documentation see [Schema deployment](https://www.sanity.io/docs/apis-and-sdks/schema-deployment).

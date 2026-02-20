@@ -1,5 +1,6 @@
-# Release: on push to main, apply production migrations then run semantic-release (version + changelog).
+# Release: on push to main, apply production migrations, deploy Sanity schema, then run semantic-release (version + changelog).
 # Requires: SUPABASE_PROD_DATABASE_URL (full Postgres URI). Vercel deploys main automatically.
+# Sanity: create a deploy token at https://sanity.io/manage → project → API → Deploy tokens; add as Actions secret SANITY_AUTH_TOKEN.
 # The marketing site changelog at /changelog is built from root CHANGELOG.md (prebuild copies it);
 # so each merge to main that produces a release updates the public changelog on the next marketing deploy.
 name: Release
@@ -30,9 +31,31 @@ jobs:
           supabase migration repair --db-url "$DATABASE_URL" --status reverted 20240206 20250207 || true
           supabase db push --db-url "$DATABASE_URL" --include-all
 
+  sanity-schema:
+    name: Deploy Sanity schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Sanity Studio deps
+        working-directory: sanity-studio
+        run: npm ci
+      - name: Deploy schema
+        working-directory: sanity-studio
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "::error::SANITY_AUTH_TOKEN is not set. Create a deploy token at https://sanity.io/manage (project → API → Deploy tokens) and add it as an Actions secret."
+            exit 1
+          fi
+          npx sanity schema deploy
+
   release:
     name: semantic-release
-    needs: [migrate]
+    needs: [migrate, sanity-schema]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
