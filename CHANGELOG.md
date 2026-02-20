@@ -1,3 +1,17 @@
+# [1.6.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.4...v1.6.0) (2026-02-20)
+
+
+### Bug Fixes
+
+* **release:** use default changelog path to fix semantic-release verifyConditions ([fdb1630](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/fdb1630b0201395cba83e968f43d322234983b64))
+* **web:** polar webhook route TypeScript types for semantic-release ([e58fb70](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/e58fb7095e02775df9aa1ea5b115b8d0079ee9de))
+* **web:** resolve ESLint react-hooks/set-state-in-effect and related rules ([9e92ae2](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/9e92ae2dde2e3ef24573a8dd16b19b0ea73f6c88))
+
+
+### Features
+
+* **marketing:** manual public changelog, hero alignment, section spacing, FounderSignOff ([2c41e35](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/2c41e35b243751b41ee4ec0da122ff2bcb150de7))
+
 ## [1.5.4](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.3...v1.5.4) (2026-02-20)
 
 
