@@ -1,0 +1,11 @@
+# All code in this repo requires review from the repository owner
+* @adamboon1984-arch
+
+# Specific areas (optional but recommended for clarity)
+/apps/web/ @adamboon1984-arch
+/packages/ @adamboon1984-arch
+/migrations/ @adamboon1984-arch
+.github/ @adamboon1984-arch
+
+This file enforces that all pull requests require code owner approval before merge.
+The @ symbol references GitHub usernames. @adamboon1984-arch is the repo owner.

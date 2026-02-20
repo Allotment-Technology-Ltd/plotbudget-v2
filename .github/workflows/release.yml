@@ -3,6 +3,10 @@
 # Sanity: create a deploy token at https://sanity.io/manage → project → API → Deploy tokens; add as Actions secret SANITY_AUTH_TOKEN.
 # The marketing site changelog at /changelog is built from root CHANGELOG.md (prebuild copies it);
 # so each merge to main that produces a release updates the public changelog on the next marketing deploy.
+#
+# --- Trigger strategy (Actions minutes) ---
+# Runs ONLY on: push to main. Does NOT run on push to other branches or on pull_request.
+# Post-merge only: migrations, Sanity schema, and semantic-release (one run per merge to main).
 name: Release
 
 on:

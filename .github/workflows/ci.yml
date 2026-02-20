@@ -7,6 +7,10 @@
 # Mitigation: we never run PR workflow code in a privileged context — every job checks out
 # ref: head.sha and runs the PR branch code; the workflow YAML is from the base branch.
 # See https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#approving-workflows-from-forks
+#
+# --- Trigger strategy (Actions minutes) ---
+# Runs ONLY on: pull_request (targeting main). Does NOT run on push to other branches or on every push.
+# This keeps CI for merge safety while avoiding runs on feature-branch pushes (saves org minutes).
 name: CI
 
 on:
