@@ -1,6 +1,10 @@
 # EAS Build: Android production AAB for Play Store (internal track).
 # Manual only for now (mobile still in development). Enable push to main when ready.
 # Requires EXPO_TOKEN in repo secrets. See docs/PLOT-93-phase-2-plan.md Phase 3 (PLOT-109).
+#
+# --- Trigger strategy (Actions minutes) ---
+# Runs ONLY when manually triggered (workflow_dispatch). No automatic runs on push or PR.
+# Keeps Actions usage to zero until you explicitly run an EAS build.
 name: EAS Build (Android)
 
 on:
