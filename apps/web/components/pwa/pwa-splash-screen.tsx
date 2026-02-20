@@ -26,11 +26,13 @@ export function PwaSplashScreen() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (sessionStorage.getItem(SESSION_KEY) === '1') {
-      setMounted(true);
+      queueMicrotask(() => setMounted(true));
       return;
     }
-    setVisible(true);
-    setMounted(true);
+    queueMicrotask(() => {
+      setVisible(true);
+      setMounted(true);
+    });
   }, []);
 
   useEffect(() => {

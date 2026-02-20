@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCookieConsentOptional } from './cookie-consent-context';
 
 const key =
@@ -14,7 +14,8 @@ const host =
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const consent = useCookieConsentOptional();
-  const initialised = useRef(false);
+  const initDoneRef = useRef(false);
+  const [initialised, setInitialised] = useState(false);
 
   const analyticsAccepted = consent?.consent?.analytics ?? false;
 
@@ -22,19 +23,20 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     if (!key || typeof window === 'undefined') return;
     if (analyticsAccepted) {
       posthog.opt_in_capturing();
+      if (!initDoneRef.current) {
+        initDoneRef.current = true;
+        posthog.init(key, {
+          api_host: host || 'https://eu.posthog.com',
+          person_profiles: 'identified_only',
+        });
+        queueMicrotask(() => setInitialised(true));
+      }
     } else {
       posthog.opt_out_capturing();
     }
   }, [analyticsAccepted]);
 
-  if (key && typeof window !== 'undefined' && analyticsAccepted) {
-    if (!initialised.current) {
-      initialised.current = true;
-      posthog.init(key, {
-        api_host: host || 'https://eu.posthog.com',
-        person_profiles: 'identified_only',
-      });
-    }
+  if (key && typeof window !== 'undefined' && analyticsAccepted && initialised) {
     return <PHProvider client={posthog}>{children}</PHProvider>;
   }
 

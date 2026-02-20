@@ -36,6 +36,13 @@ export function SignupPageClient() {
     getSignupRegionAllowed().then(({ allowed }) => setRegionAllowed(allowed));
   }, []);
 
+  // After email confirmation Supabase sends user to auth/callback; store where to send them next
+  useEffect(() => {
+    if (redirectTo?.startsWith('/')) {
+      setRedirectAfterAuthCookie(redirectTo);
+    }
+  }, [redirectTo]);
+
   if (showGated) {
     return (
       <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">
@@ -59,13 +66,6 @@ export function SignupPageClient() {
       </div>
     );
   }
-
-  // After email confirmation Supabase sends user to auth/callback; store where to send them next
-  useEffect(() => {
-    if (redirectTo?.startsWith('/')) {
-      setRedirectAfterAuthCookie(redirectTo);
-    }
-  }, [redirectTo]);
 
   return (
     <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm" data-testid="signup-page">

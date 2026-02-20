@@ -66,8 +66,10 @@ export function CookieConsentProvider({
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    setConsentState(getStoredConsent());
-    setReady(true);
+    queueMicrotask(() => {
+      setConsentState(getStoredConsent());
+      setReady(true);
+    });
   }, []);
 
   const setConsent = useCallback((c: CookieConsent) => {

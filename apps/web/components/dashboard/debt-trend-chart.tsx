@@ -240,19 +240,22 @@ export function DebtTrendChart({
   let chartData: ChartPoint[] = [];
 
   if (hasHistoricalData) {
-    let cumulative = 0;
-    const historicalData: ChartPoint[] = cycles.map((c) => {
-      const repayAmount = getRepayAmount(c);
-      cumulative += repayAmount;
-      return {
-        cycleId: c.id,
-        label:
-          c.name ||
-          `${format(new Date(c.start_date), 'MMM d')} – ${format(new Date(c.end_date), 'MMM d')}`,
-        repayAmount,
-        cumulativeRepaid: cumulative,
-      };
-    });
+    const historicalData: ChartPoint[] = cycles.reduce<ChartPoint[]>(
+      (acc, c) => {
+        const repayAmount = getRepayAmount(c);
+        const cumulativeRepaid = (acc[acc.length - 1]?.cumulativeRepaid ?? 0) + repayAmount;
+        acc.push({
+          cycleId: c.id,
+          label:
+            c.name ||
+            `${format(new Date(c.start_date), 'MMM d')} – ${format(new Date(c.end_date), 'MMM d')}`,
+          repayAmount,
+          cumulativeRepaid,
+        });
+        return acc;
+      },
+      []
+    );
 
     let remaining = totalCurrentDebt;
     for (let i = historicalData.length - 1; i >= 0; i--) {

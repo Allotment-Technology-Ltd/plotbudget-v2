@@ -43,13 +43,9 @@ export function FoundingMemberCelebration({
     const key = `${STORAGE_KEY_PREFIX}${userId}`;
     try {
       const seen = localStorage.getItem(key);
-      if (seen === 'true') {
-        setOpen(false);
-        return;
-      }
-      setOpen(true);
+      queueMicrotask(() => setOpen(seen !== 'true'));
     } catch {
-      setOpen(false);
+      queueMicrotask(() => setOpen(false));
     }
   }, [userId]);
 

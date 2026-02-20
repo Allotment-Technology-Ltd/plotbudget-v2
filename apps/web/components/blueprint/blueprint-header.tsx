@@ -49,6 +49,7 @@ interface BlueprintHeaderProps {
 
 export function BlueprintHeader({
   paycycle,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future use; required by callers
   household: _household,
   allPaycycles,
   onCycleChange,

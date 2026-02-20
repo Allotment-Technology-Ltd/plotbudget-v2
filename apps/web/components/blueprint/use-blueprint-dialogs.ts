@@ -51,22 +51,28 @@ export function useBlueprintDialogs({
     if (initialEditSeedId && seeds.length > 0) {
       const seed = seeds.find((s) => s.id === initialEditSeedId);
       if (seed) {
-        setEditingSeed(seed);
-        setSelectedCategory(seed.type);
-        setIsAddSeedOpen(true);
+        queueMicrotask(() => {
+          setEditingSeed(seed);
+          setSelectedCategory(seed.type);
+          setIsAddSeedOpen(true);
+        });
         return;
       }
     }
     if (initialEditPotId && pots.some((p) => p.id === initialEditPotId)) {
-      setEditingSeed(null);
-      setSelectedCategory('savings');
-      setIsAddSeedOpen(true);
+      queueMicrotask(() => {
+        setEditingSeed(null);
+        setSelectedCategory('savings');
+        setIsAddSeedOpen(true);
+      });
       return;
     }
     if (initialEditRepaymentId && repayments.some((r) => r.id === initialEditRepaymentId)) {
-      setEditingSeed(null);
-      setSelectedCategory('repay');
-      setIsAddSeedOpen(true);
+      queueMicrotask(() => {
+        setEditingSeed(null);
+        setSelectedCategory('repay');
+        setIsAddSeedOpen(true);
+      });
     }
   }, [
     initialEditSeedId,

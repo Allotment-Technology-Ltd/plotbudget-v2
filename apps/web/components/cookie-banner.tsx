@@ -20,7 +20,9 @@ export function CookieBanner() {
   const shouldShow = ready && (!hasChosen || showBanner);
 
   useEffect(() => {
-    if (consent) setAnalyticsOn(consent.analytics);
+    if (consent && consent.analytics !== analyticsOn) {
+      queueMicrotask(() => setAnalyticsOn(consent.analytics));
+    }
   }, [consent]);
 
   const acceptAll = () => {

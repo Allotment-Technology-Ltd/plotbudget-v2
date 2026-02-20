@@ -68,8 +68,10 @@ export function RepaymentForecastClient({
   const [currentBalanceStr, setCurrentBalanceStr] = useState(String(repayment.current_balance ?? 0));
   const [startingBalanceStr, setStartingBalanceStr] = useState(String(repayment.starting_balance ?? 0));
   useEffect(() => {
-    setCurrentBalanceStr(String(repayment.current_balance ?? 0));
-    setStartingBalanceStr(String(repayment.starting_balance ?? 0));
+    queueMicrotask(() => {
+      setCurrentBalanceStr(String(repayment.current_balance ?? 0));
+      setStartingBalanceStr(String(repayment.starting_balance ?? 0));
+    });
   }, [repayment.current_balance, repayment.starting_balance]);
 
   const parsedCurrent = parseIncome(currentBalanceStr);
@@ -100,8 +102,10 @@ export function RepaymentForecastClient({
     repayment.interest_rate != null ? String(repayment.interest_rate) : ''
   );
   useEffect(() => {
-    setInterestRateStr(
-      repayment.interest_rate != null ? String(repayment.interest_rate) : ''
+    queueMicrotask(() =>
+      setInterestRateStr(
+        repayment.interest_rate != null ? String(repayment.interest_rate) : ''
+      )
     );
   }, [repayment.interest_rate]);
   const parsedInterest = parseFloat(interestRateStr);
@@ -149,7 +153,7 @@ export function RepaymentForecastClient({
 
   useEffect(() => {
     if (linkedSeed && Number(linkedSeed.amount) > 0) {
-      setAmountStr(String(linkedSeed.amount));
+      queueMicrotask(() => setAmountStr(String(linkedSeed.amount)));
     }
   }, [linkedSeed?.id, linkedSeed?.amount]);
   const [includeInterest, setIncludeInterest] = useState(hasInterest);

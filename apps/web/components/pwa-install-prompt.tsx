@@ -47,13 +47,15 @@ export function PwaInstallPrompt() {
     } catch (e) {
       console.warn('[PwaInstallPrompt] sessionStorage read failed (e.g. private mode or quota)', e);
     }
-    setIsIOS(getIsIOS());
+    queueMicrotask(() => {
+      setIsIOS(getIsIOS());
+      setVisible(getCanShowInstallPrompt());
+    });
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as unknown as { prompt: () => Promise<{ outcome: string }> });
     };
     window.addEventListener('beforeinstallprompt', handler);
-    setVisible(getCanShowInstallPrompt());
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 

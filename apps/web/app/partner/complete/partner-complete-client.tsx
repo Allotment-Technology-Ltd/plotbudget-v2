@@ -15,13 +15,10 @@ export function PartnerCompleteClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('t');
-  const [status, setStatus] = useState<'loading' | 'done' | 'error' | 'no-token'>('loading');
+  const [status, setStatus] = useState<'loading' | 'done' | 'error'>('loading');
 
   useEffect(() => {
-    if (!token) {
-      setStatus('no-token');
-      return;
-    }
+    if (!token) return;
 
     let cancelled = false;
 
@@ -55,7 +52,7 @@ export function PartnerCompleteClient() {
     };
   }, [token, router]);
 
-  if (status === 'no-token') {
+  if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center" data-testid="partner-complete-invalid">
         <div className="text-center">

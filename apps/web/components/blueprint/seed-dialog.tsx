@@ -134,6 +134,7 @@ export function SeedDialog({
   initialLinkPotId,
   initialLinkRepaymentId,
   isPartner = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API compatibility
   otherLabel: _otherLabel = 'Partner',
   ownerLabel = 'Account owner',
   partnerLabel = 'Partner',

@@ -66,8 +66,10 @@ export function PotForecastClient({
   const [currentAmountStr, setCurrentAmountStr] = useState(String(pot.current_amount ?? 0));
   const [targetAmountStr, setTargetAmountStr] = useState(String(pot.target_amount ?? 0));
   useEffect(() => {
-    setCurrentAmountStr(String(pot.current_amount ?? 0));
-    setTargetAmountStr(String(pot.target_amount ?? 0));
+    queueMicrotask(() => {
+      setCurrentAmountStr(String(pot.current_amount ?? 0));
+      setTargetAmountStr(String(pot.target_amount ?? 0));
+    });
   }, [pot.current_amount, pot.target_amount]);
   const parsedCurrent = parseIncome(currentAmountStr);
   const parsedTarget = parseIncome(targetAmountStr);

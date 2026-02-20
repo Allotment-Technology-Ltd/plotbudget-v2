@@ -54,19 +54,22 @@ export function SavingsTrendChart({
   const cycles = [...historicalCycles].reverse();
   if (currentCycle) cycles.push(currentCycle as HistoricalCycle);
 
-  let cumulative = 0;
-  const cyclePoints = cycles.map((c) => {
-    const amount = getSavingsAmount(c);
-    cumulative += amount;
-    return {
-      cycleId: c.id,
-      label:
-        c.name ||
-        `${format(new Date(c.start_date), 'MMM d')} – ${format(new Date(c.end_date), 'MMM d')}`,
-      amount,
-      cumulative,
-    };
-  });
+  const cyclePoints = cycles.reduce<Array<{ cycleId: string; label: string; amount: number; cumulative: number }>>(
+    (acc, c) => {
+      const amount = getSavingsAmount(c);
+      const cumulative = (acc[acc.length - 1]?.cumulative ?? 0) + amount;
+      acc.push({
+        cycleId: c.id,
+        label:
+          c.name ||
+          `${format(new Date(c.start_date), 'MMM d')} – ${format(new Date(c.end_date), 'MMM d')}`,
+        amount,
+        cumulative,
+      });
+      return acc;
+    },
+    []
+  );
   // Prepend origin point so Area has ≥2 points (single cycle otherwise renders only a dot)
   const chartData = [
     { cycleId: '__origin', label: '', amount: 0, cumulative: 0 },

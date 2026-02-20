@@ -150,6 +150,7 @@ export function DashboardClient({
   pots,
   repayments,
   historicalCycles,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future use
   hasDraftCycle: _hasDraftCycle,
   incomeEvents = [],
   isPartner = false,

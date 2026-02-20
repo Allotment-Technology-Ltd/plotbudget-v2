@@ -37,14 +37,22 @@ export function CategoryRatioDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setNeeds(household.needs_percent);
-      setWants(household.wants_percent);
-      setSavings(household.savings_percent);
-      setRepay(household.repay_percent);
-      setError(null);
+    if (
+      open &&
+      (household.needs_percent !== needs ||
+        household.wants_percent !== wants ||
+        household.savings_percent !== savings ||
+        household.repay_percent !== repay)
+    ) {
+      queueMicrotask(() => {
+        setNeeds(household.needs_percent);
+        setWants(household.wants_percent);
+        setSavings(household.savings_percent);
+        setRepay(household.repay_percent);
+        setError(null);
+      });
     }
-  }, [open, household]);
+  }, [open, household, needs, wants, savings, repay]);
 
   const total = needs + wants + savings + repay;
 
