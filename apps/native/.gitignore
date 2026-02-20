@@ -33,6 +33,8 @@ yarn-error.*
 # local env files (never commit real keys)
 .env
 .env*.local
+.env.example
+.env*.example
 
 # typescript
 *.tsbuildinfo
