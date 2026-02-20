@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.1...v1.5.2) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** sanity-studio install use npm ci when lockfile present else npm install ([3079f1a](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/3079f1a38fefd8a83897cc78c15871f4022a9dc1))
+
 ## [1.5.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.0...v1.5.1) (2026-02-20)
 
 
