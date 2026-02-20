@@ -289,8 +289,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.1)
       '@polar-sh/sdk':
-        specifier: ^0.43.0
-        version: 0.43.0
+        specifier: ^0.43.1
+        version: 0.43.1
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.0
         version: 1.1.15(@types/react-dom@18.3.7)(@types/react@18.3.27)(react-dom@18.3.1)(react@18.3.1)
@@ -3915,8 +3915,8 @@ packages:
       config-chain: 1.1.13
     dev: true
 
-  /@polar-sh/sdk@0.43.0:
-    resolution: {integrity: sha512-LvbnPAo5h9wAOpq8sgzonip0PtzU2UZydqxUpWeOdHjaBWNgV36dPRY3oQA7XD4EzRsUJhVl3hVc6sp1GnTX8g==}
+  /@polar-sh/sdk@0.43.1:
+    resolution: {integrity: sha512-/JvFqmmj7Bb8HJ+zSbBtwJdESMUY8dQBXUGTpIQSI6dHDFjIGkGfrFGAjC/EOWSx/JIimeBkfXV4o1j7/2QIVg==}
     dependencies:
       standardwebhooks: 1.0.0
       zod: 3.25.76
@@ -16427,6 +16427,14 @@ packages:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
     dependencies:
       safe-buffer: 5.2.1
+
+  /turbo-darwin-64@2.8.10:
+    resolution: {integrity: sha512-A03fXh+B7S8mL3PbdhTd+0UsaGrhfyPkODvzBDpKRY7bbeac4MDFpJ7I+Slf2oSkCEeSvHKR7Z4U71uKRUfX7g==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
 
   /turbo-darwin-64@2.8.10:
     resolution: {integrity: sha512-A03fXh+B7S8mL3PbdhTd+0UsaGrhfyPkODvzBDpKRY7bbeac4MDFpJ7I+Slf2oSkCEeSvHKR7Z4U71uKRUfX7g==}
