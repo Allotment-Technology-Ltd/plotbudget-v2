@@ -1,3 +1,17 @@
+## [1.5.4](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.3...v1.5.4) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** pin pnpm/action-setup to 8.15.4 to match packageManager ([69df3e9](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/69df3e9f01ade969ae977af5a74e1bd01af96408))
+
+## [1.5.3](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.2...v1.5.3) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** use packageManager from package.json for pnpm version ([670df47](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/670df470bb006487f17922710dafe3a8439ba44d))
+
 ## [1.5.2](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.1...v1.5.2) (2026-02-20)
 
 
