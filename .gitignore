@@ -84,3 +84,9 @@ codebase-audit.md
 
 # Allow sanity-studio lockfile for reproducible CI (npm ci)
 !sanity-studio/package-lock.json
+# Secrets that should never be committed (belt-and-suspenders)
+.env.*.key
+*.pem
+*.key
+secrets.json
+credentials.json
