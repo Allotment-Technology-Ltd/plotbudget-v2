@@ -41,13 +41,7 @@ jobs:
           node-version: '20'
       - name: Install Sanity Studio deps
         working-directory: sanity-studio
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            echo "::warning::package-lock.json not found (merge the lockfile commit to main); using npm install"
-            npm install
-          fi
+        run: npm install
       - name: Deploy schema
         working-directory: sanity-studio
         env:
