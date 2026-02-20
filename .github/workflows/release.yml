@@ -69,6 +69,15 @@ jobs:
     needs: [migrate, sanity-schema]
     runs-on: ubuntu-latest
     steps:
+      - name: Debug release token
+        env:
+          RELEASE_GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+        run: |
+          if [ -n "$RELEASE_GITHUB_TOKEN" ]; then
+            echo "RELEASE_GITHUB_TOKEN is set"
+          else
+            echo "RELEASE_GITHUB_TOKEN is not set (workflow will use GITHUB_TOKEN)"
+          fi
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
