@@ -30,6 +30,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -67,6 +69,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -83,6 +87,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -98,6 +104,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -113,6 +121,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -130,6 +140,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -151,6 +163,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -198,6 +212,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v2
+        with:
+          version: 8.15.4
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
