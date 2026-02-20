@@ -78,6 +78,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@react-email/components": "^1.0.8",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@repo/eslint-config": "workspace:*",
     "@types/node": "^20.11.0",
     "@types/pg": "^8.11.0",
