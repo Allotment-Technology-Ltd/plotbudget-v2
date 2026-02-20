@@ -1,3 +1,38 @@
+## [1.5.4](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.3...v1.5.4) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** pin pnpm/action-setup to 8.15.4 to match packageManager ([69df3e9](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/69df3e9f01ade969ae977af5a74e1bd01af96408))
+
+## [1.5.3](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.2...v1.5.3) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** use packageManager from package.json for pnpm version ([670df47](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/670df470bb006487f17922710dafe3a8439ba44d))
+
+## [1.5.2](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.1...v1.5.2) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** sanity-studio install use npm ci when lockfile present else npm install ([3079f1a](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/3079f1a38fefd8a83897cc78c15871f4022a9dc1))
+
+## [1.5.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.0...v1.5.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** use npm install for sanity-studio in Release workflow ([ba3da10](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/ba3da101cd6f32c47ec6b95f918ed37747c69fd6))
+
+# [1.5.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.4.0...v1.5.0) (2026-02-18)
+
+
+### Features
+
+* payoff chart month/year labels, dashboard cards, action persistence ([#74](https://github.com/adamboon1984-arch/plotbudget-v2/issues/74)) ([0e696e2](https://github.com/adamboon1984-arch/plotbudget-v2/commit/0e696e2cf483a250990fc96d49fd9ded0bc41bcd))
+
 # [1.4.0](https://github.com/adamboon1984-arch/plotbudget-v2/compare/v1.3.0...v1.4.0) (2026-02-16)
 
 
