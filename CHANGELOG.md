@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.2...v1.5.3) (2026-02-20)
+
+
+### Bug Fixes
+
+* **ci:** use packageManager from package.json for pnpm version ([670df47](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/670df470bb006487f17922710dafe3a8439ba44d))
+
 ## [1.5.2](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.5.1...v1.5.2) (2026-02-20)
 
 
