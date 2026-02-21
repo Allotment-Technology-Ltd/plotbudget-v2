@@ -90,7 +90,8 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
       await expectElementInViewport(page, 'header');
       const main = page.locator('main').first();
       await expect(main).toBeVisible({ timeout: 5000 });
-      await expectElementInViewport(page, 'main');
+      // main is the scroll container; only assert no horizontal overflow
+      await expectElementInViewport(page, 'main', { horizontalOnly: true });
     });
   });
 });

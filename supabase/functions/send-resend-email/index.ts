@@ -98,29 +98,17 @@ async function sendOne(
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  // #region agent log
-  console.error('[DEBUG] send-resend-email invoked', { method: req.method });
-  // #endregion
   if (req.method !== 'POST') {
     return errResponse('Method not allowed', 405);
   }
 
   const hookSecret = getHookSecret();
   if (!hookSecret || !resend) {
-    // #region agent log
-    console.error('[DEBUG] H4_config_missing', { hasSecret: !!hookSecret, hasResend: !!resend });
-    // #endregion
     return errResponse('SEND_EMAIL_HOOK_SECRET or RESEND_API_KEY not set', 500);
   }
 
   const payload = await req.text();
   const headers = Object.fromEntries(req.headers.entries());
-  // #region agent log
-  console.error('[DEBUG] H0_request', {
-    payloadLength: payload?.length ?? 0,
-    headerKeys: Object.keys(headers).filter((k) => k.toLowerCase().includes('webhook') || k.toLowerCase().includes('signature')),
-  });
-  // #endregion
   const wh = new Webhook(hookSecret);
 
   let user: User;
@@ -131,9 +119,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     user = verified.user;
     email_data = verified.email_data ?? verified.email ?? {};
   } catch (e) {
-    // #region agent log
-    console.error('[DEBUG] H1_webhook_verification_failed', String(e));
-    // #endregion
     return errResponse('Webhook verification failed', 401);
   }
 
@@ -171,16 +156,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
   const userEmailNew = (user as { email_new?: string }).email_new ?? '';
-  // #region agent log
-  if (!userEmail) {
-    console.error('[DEBUG] H2_no_recipient_payload_shape', {
-      verifiedTopKeys: verified ? Object.keys(verified) : [],
-      userKeys: user ? Object.keys(user) : [],
-      emailDataKeys: email_data ? Object.keys(email_data) : [],
-      hypothesisId: 'H2',
-    });
-  }
-  // #endregion
   const oldEmail = email_data.old_email ?? '';
   const oldPhone = email_data.old_phone ?? '';
   const provider = email_data.provider ?? '';
@@ -308,17 +283,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (!to) {
-    // #region agent log
-    console.error('[DEBUG] H2_no_recipient', { actionType });
-    // #endregion
     return errResponse('No recipient email', 400);
   }
 
   const result = await sendOne(to, subject, html);
   if (result.error) {
-    // #region agent log
-    console.error('[DEBUG] H3_resend_error', result.error);
-    // #endregion
     const msg = result.error.message ?? 'Resend API error';
     return errResponse(msg, 502, {
       'X-Resend-Error': msg.slice(0, 200),

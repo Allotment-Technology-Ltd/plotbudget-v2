@@ -144,9 +144,9 @@ export class BlueprintPage {
     recurring: boolean;
   }) {
     await this.addSeedButton.click();
-    // Wait for the seed dialog (dialog containing the form) so we don't match Server Error or time out on portal/animation
+    // Wait for the seed dialog by test id so we don't match Server Error or time out on portal/animation
     const dialogTimeout = process.env.CI ? 15_000 : 10_000;
-    const seedDialog = this.page.getByRole('dialog').filter({ has: this.seedNameInput });
+    const seedDialog = this.page.getByTestId('seed-dialog');
     await expect(seedDialog).toBeVisible({ timeout: dialogTimeout });
     const seedFormTimeout = process.env.CI ? 20_000 : 15_000;
     await expect(this.seedNameInput).toBeVisible({ timeout: seedFormTimeout });
