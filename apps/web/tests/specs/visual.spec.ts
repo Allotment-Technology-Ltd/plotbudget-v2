@@ -8,15 +8,18 @@
 import { test, expect } from '@playwright/test';
 import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
+import { dashboardHomeReadyLocator } from '../utils/dashboard-ready';
 
-/** Session key used by PwaSplashScreen; when set, the PLOT draw animation is skipped. */
-const PLOT_SPLASH_SESSION_KEY = 'plot-splash-shown';
+/** Storage key used by PwaSplashScreen; set in tests to avoid animation flake. */
+const PLOT_SPLASH_STORAGE_KEY = 'plot-pwa-splash-shown-v1';
 
 test.describe('Visual regression', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript((key: string) => {
-      sessionStorage.setItem(key, '1');
-    }, PLOT_SPLASH_SESSION_KEY);
+      localStorage.setItem(key, '1');
+      // Legacy key for backwards compatibility in case older splash logic is active.
+      sessionStorage.setItem('plot-splash-shown', '1');
+    }, PLOT_SPLASH_STORAGE_KEY);
   });
 
   test.describe('unauthenticated', () => {
@@ -46,9 +49,7 @@ test.describe('Visual regression', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(
-        page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-      ).toBeVisible({ timeout: 10000 });
+      await expect(dashboardHomeReadyLocator(page)).toBeVisible({ timeout: 10000 });
       // Higher tolerance on CI: baselines may be from different OS (e.g. macOS) so fonts/layout differ
       await expect(page).toHaveScreenshot('dashboard.png', {
         maxDiffPixelRatio: process.env.CI ? 0.35 : 0.02,

@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import { expectNoHorizontalOverflow, expectElementInViewport } from '../utils/layout-helpers';
 import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
+import { dashboardHomeReadyLocator } from '../utils/dashboard-ready';
 
 test.describe('Mobile layout — no overflow or content off-screen', () => {
   test.describe('unauthenticated', () => {
@@ -32,7 +33,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
+      await expect(dashboardHomeReadyLocator(page)).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);
     });
 
@@ -78,11 +79,11 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
+      await expect(dashboardHomeReadyLocator(page)).toBeVisible({ timeout: 10000 });
       await expectNoHorizontalOverflow(page);
-      const header = page.locator('header .content-wrapper').first();
+      const header = page.locator('header').first();
       await expect(header).toBeVisible();
-      await expectElementInViewport(page, 'header .content-wrapper');
+      await expectElementInViewport(page, 'header');
     });
   });
 });

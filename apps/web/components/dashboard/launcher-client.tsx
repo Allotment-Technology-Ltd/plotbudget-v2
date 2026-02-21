@@ -274,7 +274,7 @@ export function LauncherClient({
   const monthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-8">
+    <div className="flex min-h-screen flex-col bg-background pb-8" data-testid="dashboard-launcher">
       {/* Widgets row — only show enabled modules */}
       {(moduleFlags.calendar || moduleFlags.tasks) && (
         <section className="px-4 pt-4 sm:pt-6" aria-label="Widgets">

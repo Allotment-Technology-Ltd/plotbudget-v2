@@ -49,7 +49,13 @@ export class AuthPage {
 
   async expectRedirectToDashboard() {
     await this.page.waitForURL(/\/dashboard/);
-    await expect(this.page.getByTestId('dashboard-hero')).toBeVisible();
+    await expect(
+      this.page
+        .locator(
+          '[data-testid="dashboard-launcher"], [data-testid="dashboard-hero"], [data-testid="dashboard-no-cycle"]'
+        )
+        .first()
+    ).toBeVisible();
   }
 
   async expectRedirectToOnboarding() {

@@ -2,6 +2,7 @@
 // Dashboard load + settings-in-dashboard tests (same user; logout test removed). Other settings coverage in settings.spec.ts.
 import { test, expect } from '@playwright/test';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
+import { dashboardHomeReadyLocator } from '../utils/dashboard-ready';
 import { TEST_USERS } from '../fixtures/test-data';
 
 test.describe('Dashboard and app shell', () => {
@@ -21,12 +22,11 @@ test.describe('Dashboard and app shell', () => {
         'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users; check db-cleanup and global-setup.'
       );
     }
-    const hero = page.getByTestId('dashboard-hero');
-    const noCycle = page.getByTestId('dashboard-no-cycle');
+    const dashboardReady = dashboardHomeReadyLocator(page);
     const serverError = page.getByRole('dialog', { name: 'Server Error' });
     // Wait for terminal state: either dashboard content or Server Error overlay (fail fast with clear message)
     await Promise.race([
-      expect(hero.or(noCycle)).toBeVisible({ timeout: 15_000 }),
+      expect(dashboardReady).toBeVisible({ timeout: 15_000 }),
       serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
         const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
         throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);

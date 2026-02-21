@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test';
 import { PartnerJoinPage } from '../pages/partner-join.page';
 import { E2E_PARTNER_INVITE_TOKEN } from '../fixtures/test-data';
 import { getPartnerAuthCookie } from '../utils/auth-cookie';
+import { dashboardAnyReadyLocator } from '../utils/dashboard-ready';
 
 test.describe.serial('Partner invite', () => {
 test.describe('Partner invite (unauthenticated)', () => {
@@ -102,10 +103,8 @@ test.describe('Partner invite (authenticated)', () => {
         'Partner landed on payday-complete. ensureBlueprintReady should clear ritual_closed_at for dashboard household (global-setup).'
       );
     }
-    const onDashboard =
-      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
     const onOnboarding = page.getByTestId('onboarding-step-1');
-    await expect(onDashboard.or(onOnboarding)).toBeVisible();
+    await expect(dashboardAnyReadyLocator(page).or(onOnboarding)).toBeVisible();
   });
 });
 }); // end describe.serial
