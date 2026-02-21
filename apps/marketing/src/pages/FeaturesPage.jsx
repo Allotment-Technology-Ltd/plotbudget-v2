@@ -107,10 +107,10 @@ export default function FeaturesPage() {
   return (
     <>
       <Helmet>
-        <title>Features — PLOT | Budgeting for Households</title>
+        <title>Features — PLOT | Household Operating System</title>
         <meta
           name="description"
-          content="Dashboard, Blueprint, forecasts, category allocation, couple contributions, partner access, upcoming bills and recent activity — see how PLOT helps you plan and track your household budget."
+          content="Money module: Dashboard, Blueprint, forecasts, categories, couple contributions, partner access. The household OS starts here — Tasks, Calendar, Meals, and more on the roadmap."
         />
       </Helmet>
 
@@ -127,7 +127,7 @@ export default function FeaturesPage() {
             >
               <PageHeader
                 title="Features"
-                subtitle="Every part of the app, in plain sight. Dashboard, Blueprint, categories, savings goals, and income — each module is built so you see your numbers and stay in control."
+                subtitle="The household OS in plain sight. Money is live: Dashboard, Blueprint, categories, savings, income. More modules (Tasks, Calendar, Meals, Home) are on the roadmap. One system, built so you stay in control."
                 titleId="features-title"
                 variant="left"
               />

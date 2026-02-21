@@ -5,8 +5,8 @@ import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { TEST_USERS } from '../fixtures/test-data';
 
-loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
-loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
+loadEnv({ path: path.resolve(process.cwd(), '.env.local'), quiet: true });
+loadEnv({ path: path.resolve(process.cwd(), '.env.test.local'), quiet: true });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

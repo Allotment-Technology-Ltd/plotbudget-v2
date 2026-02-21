@@ -5,8 +5,9 @@ import { defineConfig, devices } from '@playwright/test';
 import { EMPTY_STORAGE_WITH_CONSENT } from './tests/fixtures/test-data';
 
 // Load env so SUPABASE_SERVICE_ROLE_KEY etc. are available (.env.test.local overrides .env.local)
-loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
-loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
+// quiet: true suppresses dotenv runtime logs in test output
+loadEnv({ path: path.resolve(process.cwd(), '.env.local'), quiet: true });
+loadEnv({ path: path.resolve(process.cwd(), '.env.test.local'), quiet: true });
 
 // When Playwright starts the web server, always hit it at localhost. When SKIP_WEBSERVER=1, use PLAYWRIGHT_TEST_BASE_URL.
 // With SKIP_WEBSERVER=1, start the app with the same env as tests (e.g. .env.local + .env.test.local) so app and E2E use one Supabase project.
@@ -40,7 +41,7 @@ export default defineConfig({
   /* Retry on CI only — 3 retries to absorb flakiness under shared server/DB load */
   retries: process.env.CI ? 3 : 0,
 
-  /* CI: 3 workers to reduce contention on single dev server + Supabase. Local: 4 */
+  /* CI: 3 workers to reduce contention on single dev server + shared Supabase (blueprint/ritual share DB). Local: 4 */
   workers: process.env.CI ? 3 : 4,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

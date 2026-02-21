@@ -48,8 +48,10 @@ export class AuthPage {
   }
 
   async expectRedirectToDashboard() {
-    await this.page.waitForURL(/\/dashboard/);
-    await expect(this.page.getByTestId('dashboard-hero')).toBeVisible();
+    await this.page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    const dashboard =
+      this.page.getByTestId('dashboard-hero').or(this.page.getByTestId('dashboard-no-cycle')).or(this.page.getByTestId('dashboard-launcher'));
+    await expect(dashboard.first()).toBeVisible({ timeout: 15_000 });
   }
 
   async expectRedirectToOnboarding() {

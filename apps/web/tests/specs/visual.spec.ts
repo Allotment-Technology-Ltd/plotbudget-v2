@@ -9,14 +9,14 @@ import { test, expect } from '@playwright/test';
 import { EMPTY_STORAGE_WITH_CONSENT, TEST_USERS } from '../fixtures/test-data';
 import { ensureBlueprintReady } from '../utils/db-cleanup';
 
-/** Session key used by PwaSplashScreen; when set, the PLOT draw animation is skipped. */
-const PLOT_SPLASH_SESSION_KEY = 'plot-splash-shown';
+/** Storage key used by PwaSplashScreen; when set, the splash is skipped. */
+const PLOT_SPLASH_STORAGE_KEY = 'plot-splash-shown';
 
 test.describe('Visual regression', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript((key: string) => {
-      sessionStorage.setItem(key, '1');
-    }, PLOT_SPLASH_SESSION_KEY);
+      localStorage.setItem(key, '1');
+    }, PLOT_SPLASH_STORAGE_KEY);
   });
 
   test.describe('unauthenticated', () => {
@@ -46,9 +46,9 @@ test.describe('Visual regression', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(
-        page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-      ).toBeVisible({ timeout: 10000 });
+      const dashboard =
+        page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
+      await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
       // Higher tolerance on CI: baselines may be from different OS (e.g. macOS) so fonts/layout differ
       await expect(page).toHaveScreenshot('dashboard.png', {
         maxDiffPixelRatio: process.env.CI ? 0.35 : 0.02,
@@ -66,7 +66,7 @@ test.describe('Visual regression', () => {
           'Redirected to /dashboard/money/blueprint instead of settings. Restart dev server and ensure visual user has household (global-setup).'
         );
       }
-      await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId('settings-page').first()).toBeVisible({ timeout: 15000 });
       // Higher tolerance: 0.08 local until snapshots updated after settings UI changes (sign-in methods, no avatar upload)
       await expect(page).toHaveScreenshot('settings.png', {
         maxDiffPixelRatio: process.env.CI ? 0.12 : 0.08,

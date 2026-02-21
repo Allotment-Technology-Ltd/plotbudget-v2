@@ -101,7 +101,7 @@ export default function UseAnywhereSection() {
               id="use-anywhere-headline"
               className="section-headline"
             >
-              Your budget, wherever you are
+              Your household, wherever you are
             </motion.h2>
             <motion.p variants={staggerItem} className="text-plot-muted text-lg leading-relaxed">
               One account. Sign in on your phone, tablet, or computer—at the kitchen table, on the sofa, or at your desk. Use PLOT whenever and wherever it fits your schedule, not the other way around.

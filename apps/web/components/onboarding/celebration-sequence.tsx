@@ -3,32 +3,32 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-/** Hook: respect prefers-reduced-motion for accessibility */
-function useReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    queueMicrotask(() => setPrefersReducedMotion(mediaQuery.matches));
-
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
-
-  return prefersReducedMotion;
-}
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { useCalm } from '@/components/providers/calm-provider';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface CelebrationSequenceProps {
   onComplete?: () => void;
+  /** When set (couple onboarding), show invite step so user can copy link before going to blueprint */
+  partnerInviteUrl?: string | null;
+  partnerName?: string | null;
 }
 
-export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
+export function CelebrationSequence({
+  onComplete,
+  partnerInviteUrl,
+  partnerName,
+}: CelebrationSequenceProps) {
   const [currentLine, setCurrentLine] = useState(0);
   const [showScanLine, setShowScanLine] = useState(false);
+  const [showInviteStep, setShowInviteStep] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   const router = useRouter();
-  const prefersReducedMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion();
+  const { celebrations } = useCalm();
+  const hasPartnerInvite = Boolean(partnerInviteUrl);
+  const skipAnimation = reducedMotion || !celebrations;
 
   const lines = [
     '>_ INITIALIZING PAYCYCLE...',
@@ -36,22 +36,28 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
     '>_ BLUEPRINT READY ✓',
   ];
 
-  // If user prefers reduced motion, skip animation and go straight to Blueprint
+  // Skip animation: go to blueprint or show invite step (couple)
   useEffect(() => {
-    if (prefersReducedMotion) {
+    if (skipAnimation && !hasPartnerInvite) {
       router.push('/dashboard/money/blueprint');
+    } else if (skipAnimation && hasPartnerInvite) {
+      setShowInviteStep(true);
     }
-  }, [prefersReducedMotion, router]);
+  }, [skipAnimation, hasPartnerInvite, router]);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (skipAnimation) return;
 
     const timer1 = setTimeout(() => setCurrentLine(1), 300);
     const timer2 = setTimeout(() => setCurrentLine(2), 900);
     const timer3 = setTimeout(() => setCurrentLine(3), 1500);
     const timer4 = setTimeout(() => setShowScanLine(true), 2000);
     const timer5 = setTimeout(() => {
-      router.push('/dashboard/money/blueprint');
+      if (hasPartnerInvite) {
+        setShowInviteStep(true);
+      } else {
+        router.push('/dashboard/money/blueprint');
+      }
     }, 3300);
 
     return () => {
@@ -61,10 +67,10 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
       clearTimeout(timer4);
       clearTimeout(timer5);
     };
-  }, [prefersReducedMotion, onComplete, router]);
+  }, [skipAnimation, hasPartnerInvite, onComplete, router]);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (skipAnimation && !hasPartnerInvite) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -73,9 +79,9 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [prefersReducedMotion, onComplete, router]);
+  }, [skipAnimation, hasPartnerInvite, onComplete, router]);
 
-  if (prefersReducedMotion) {
+  if (skipAnimation && !hasPartnerInvite) {
     return null;
   }
 
@@ -129,10 +135,58 @@ export function CelebrationSequence({ onComplete }: CelebrationSequenceProps) {
         )}
       </AnimatePresence>
 
-      {/* Hint text */}
-      <p className="absolute bottom-8 text-sm text-muted-foreground">
-        Press Escape to skip
-      </p>
+      {/* Partner invite step: show after animation when couple onboarding */}
+      <AnimatePresence>
+        {showInviteStep && partnerInviteUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="absolute inset-0 z-30 flex items-center justify-center bg-background/90 p-6"
+          >
+            <div className="rounded-lg border border-border bg-card p-6 shadow-elevated max-w-sm w-full space-y-4 text-center">
+              <h2 className="text-lg font-semibold text-foreground">
+                Invite {partnerName || 'your partner'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Copy the link and share it so they can join your household and budget together.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  disabled={copyLoading}
+                  onClick={async () => {
+                    setCopyLoading(true);
+                    try {
+                      await navigator.clipboard.writeText(partnerInviteUrl);
+                      toast.success('Invite link copied');
+                    } catch {
+                      toast.error('Could not copy link');
+                    } finally {
+                      setCopyLoading(false);
+                    }
+                  }}
+                >
+                  {copyLoading ? 'Copied!' : 'Copy invite link'}
+                </Button>
+                <Button
+                  onClick={() => router.push('/dashboard/money/blueprint')}
+                >
+                  Continue to Blueprint
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hint text (hidden when invite step is showing) */}
+      {!showInviteStep && (
+        <p className="absolute bottom-8 text-sm text-muted-foreground">
+          Press Escape to skip
+        </p>
+      )}
     </motion.div>
   );
 }

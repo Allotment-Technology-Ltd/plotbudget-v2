@@ -31,6 +31,7 @@
     "test:e2e:layout": "playwright test --project=mobile-layout",
     "test:e2e:visual": "playwright test --project=visual-desktop --project=visual-mobile",
     "test:e2e:visual:update": "playwright test --project=visual-desktop --project=visual-mobile --update-snapshots",
+    "test:e2e:update-snapshots": "playwright test --update-snapshots",
     "test:e2e:pwyl": "playwright test --project=chromium-pwyl",
     "test:local": "vitest run",
     "audit:test-ids": "tsx scripts/audit-test-ids.ts",

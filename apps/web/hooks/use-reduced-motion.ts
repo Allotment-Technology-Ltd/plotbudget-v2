@@ -1,21 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCalm } from '@/components/providers/calm-provider';
 
 /**
- * Respect prefers-reduced-motion for accessibility (Calm Design Rule 9).
- * Use when rendering motion or animations so we can skip or shorten them.
+ * Respect prefers-reduced-motion (accessibility) and user's Calm setting (Rule 9).
+ * When either system or Settings → Calm "Reduce motion" is on, animations are reduced.
  */
 export function useReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const calm = useCalm();
+  const [systemPrefersReduced, setSystemPrefersReduced] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = () => setPrefersReducedMotion(mq.matches);
+    setSystemPrefersReduced(mq.matches);
+    const handler = () => setSystemPrefersReduced(mq.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  return prefersReducedMotion;
+  return systemPrefersReduced || calm.reduceMotion;
 }

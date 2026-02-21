@@ -23,7 +23,7 @@ test.describe('Settings page', () => {
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
     }
-    const settingsPage = page.getByTestId('settings-page');
+    const settingsPage = page.getByTestId('settings-page').first();
     const serverError = page.getByRole('dialog', { name: 'Server Error' });
     await Promise.race([
       expect(settingsPage).toBeVisible({ timeout: 15_000 }),

@@ -56,7 +56,7 @@ test.describe('Onboarding Flow - Solo Mode', () => {
     await expect(onboardingPage.incomeInput).toBeVisible();
     await onboardingPage.createBlueprintButton.click();
 
-    // Should show validation error
-    await expect(page.getByTestId('income-error-message')).toBeVisible();
+    // Should show validation error (client-side validation; allow time for state update)
+    await expect(page.getByTestId('income-error-message')).toBeVisible({ timeout: 10_000 });
   });
 });

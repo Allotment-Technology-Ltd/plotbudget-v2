@@ -5,17 +5,17 @@ const steps = [
   {
     num: '01',
     title: 'Set your blueprint',
-    body: 'Add your household bills, savings goals, and debt repayments. Allocate them however you like — 50/50, 60/40, or any ratio that works for your household.',
+    body: 'Add your household bills, savings goals, and debt repayments. Allocate them however you like — 50/50, 60/40, or any ratio that works for your household. Money first. Tasks, meals, and everything else follow as modules unlock.',
   },
   {
     num: '02',
     title: 'Run the ritual',
-    body: 'On payday, open PLOT. Review your allocations. Check off bills. Adjust anything that\'s changed. 20 minutes, done.',
+    body: 'Every payday, both of you open PLOT. Review the plan together. 20 minutes. Done.',
   },
   {
     num: '03',
     title: 'Live your month',
-    body: 'Your needs are covered. Your savings are growing. Your debt is shrinking. You can see exactly where things stand — without a single awkward conversation about money.',
+    body: 'Your household is organised. Neither of you is managing it alone. Get on with your life.',
   },
 ];
 
@@ -34,7 +34,7 @@ export default function SolutionSection() {
           className="space-y-10"
         >
           <motion.p variants={staggerItem} className="section-label">
-            The Solution
+            THE SOLUTION
           </motion.p>
 
           <motion.h2
@@ -42,15 +42,14 @@ export default function SolutionSection() {
             id="solution-headline"
             className="section-headline"
           >
-            Your 20-minute payday ritual
+            Household OS — starting with money
           </motion.h2>
 
           <motion.p
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow"
           >
-            Once a month, on payday, sit down. Allocate your income.
-            Move on with your life. PLOT handles the rest.
+            Money is live now. Tasks, Calendar, Meals, Holidays, Vault, and Home Maintenance ship by end of March 2026. One system, built over time.
           </motion.p>
 
           <div className="space-y-12 md:space-y-16 pt-4">

@@ -501,6 +501,7 @@ export function SeedDialog({
         showClose={true}
         className="max-w-md max-h-[85dvh] sm:max-h-[90vh] flex flex-col gap-4 overflow-hidden"
         aria-describedby={undefined}
+        data-testid="seed-dialog"
       >
         <DialogHeader className="shrink-0">
           <DialogTitle>

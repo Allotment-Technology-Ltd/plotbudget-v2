@@ -4,16 +4,16 @@ import { AuthPage } from '../pages/auth.page';
 import { setAuthState } from '../utils/test-auth';
 import { TEST_USERS, EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
 
-/** Session key used by PwaSplashScreen; when set, the PLOT draw animation is skipped in tests. */
-const PLOT_SPLASH_SESSION_KEY = 'plot-splash-shown';
+/** Storage key used by PwaSplashScreen; when set, the splash is skipped in tests. */
+const PLOT_SPLASH_STORAGE_KEY = 'plot-splash-shown';
 
 test.describe('Authentication Flow', () => {
   test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT }); // No auth state
 
   test.beforeEach(async ({ page }) => {
     await page.addInitScript((key: string) => {
-      sessionStorage.setItem(key, '1');
-    }, PLOT_SPLASH_SESSION_KEY);
+      localStorage.setItem(key, '1');
+    }, PLOT_SPLASH_STORAGE_KEY);
   });
 
   test('login form renders and accepts input', async ({ page }) => {
@@ -35,9 +35,9 @@ test.describe('Authentication Flow', () => {
         'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users (global-setup).'
       );
     }
-    await expect(
-      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-    ).toBeVisible({ timeout: 15_000 });
+    const dashboard =
+      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
+    await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
   });
 
   // TODO: Un-skip when login form submit is reliably handled (form currently triggers native submit)

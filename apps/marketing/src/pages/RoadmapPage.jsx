@@ -560,9 +560,9 @@ export default function RoadmapPage() {
               <a
                 href={APP_URL}
                 className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
-                aria-label="Join founding members"
+                aria-label="Join as a founding household"
               >
-                Join founding members →
+                Join as a founding household →
               </a>
             </div>
           </motion.div>

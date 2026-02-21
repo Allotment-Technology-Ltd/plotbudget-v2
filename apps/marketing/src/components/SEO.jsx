@@ -11,17 +11,17 @@ import { Helmet } from 'react-helmet-async';
  *  - Canonical URL
  */
 export default function SEO({
-  title = 'PLOT — Budgeting for Households | Privacy-First Payday Ritual',
-  description = 'The 20-minute payday ritual that replaces every awkward money conversation. Plan together without sharing bank access. Free for the first 100 users.',
+  title = 'PLOT — Household Operating System | Privacy by default',
+  description = 'One place for money, tasks, and your home. No bank links. No data harvesting. The household OS — free forever on Pay What You Like. First 100 households get 12 months full access as Founding Members.',
   url = 'https://plotbudget.com',
   ogImage = 'https://plotbudget.com/og-image.png',
-  siteName = 'PLOT Budget',
+  siteName = 'PLOT',
 }) {
   const schemaOrg = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'PLOT Budget',
-    applicationCategory: 'FinanceApplication',
+    name: 'PLOT — Household Operating System',
+    applicationCategory: 'LifestyleApplication',
     operatingSystem: 'Web',
     description,
     offers: {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { useCalm } from '@/components/providers/calm-provider';
 
 interface RitualCompletionCelebrationProps {
   open: boolean;
@@ -25,7 +26,14 @@ export function RitualCompletionCelebration({
 }: RitualCompletionCelebrationProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useReducedMotion();
+  const { celebrations } = useCalm();
   const t = (d: number) => (reducedMotion ? 0 : d);
+
+  useEffect(() => {
+    if (open && !celebrations) {
+      onClose();
+    }
+  }, [open, celebrations, onClose]);
 
   const budgetState: BudgetState = useMemo(() => {
     const allocated = Number(totalAllocated);

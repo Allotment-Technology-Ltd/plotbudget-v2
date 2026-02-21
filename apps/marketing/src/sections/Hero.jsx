@@ -89,10 +89,10 @@ export default function Hero() {
           custom={0}
           className="section-label"
         >
-          Budgeting for households. Privacy by default.
+          The household operating system. Privacy by default.
         </motion.p>
 
-        <TerminalHeadline text="PLOT YOUR FUTURE" />
+        <TerminalHeadline text="YOUR HOUSEHOLD. FINALLY ORGANISED." />
 
         <motion.p
           variants={fadeUp}
@@ -101,8 +101,7 @@ export default function Hero() {
           custom={0.8}
           className="font-body text-lg md:text-xl text-plot-muted max-w-narrow"
         >
-          The 20-minute payday ritual that replaces every awkward money
-          conversation — without sharing bank access.
+          One home. One rhythm. No tracking.
         </motion.p>
 
         <motion.p
@@ -112,7 +111,7 @@ export default function Hero() {
           custom={0.9}
           className="font-heading text-label-sm md:text-label uppercase tracking-wider text-plot-accent-text"
         >
-          Free for the first 100 users — sign up to claim your spot.
+          First 100 households get free access for 12 months.
         </motion.p>
         <motion.div
           variants={fadeUp}
@@ -124,9 +123,9 @@ export default function Hero() {
           <a
             href={APP_URL}
             className="btn-primary text-cta-sm px-8 py-3 font-heading uppercase tracking-widest"
-            aria-label="Get the app"
+            aria-label="Join as a founding household"
           >
-            Get the app
+            Join as a founding household
           </a>
         </motion.div>
 

@@ -39,17 +39,20 @@ export interface ViewportBounds {
 }
 
 /**
- * Asserts that the element identified by selector is fully within the viewport
- * (no part of it clipped or off-screen horizontally or vertically).
+ * Asserts that the element identified by selector is within the viewport.
+ * By default checks both horizontal and vertical (fully within viewport).
+ * Use horizontalOnly: true for scrollable content (e.g. main) where vertical
+ * overflow is expected and the intent is "no horizontal overflow".
  */
 export async function expectElementInViewport(
   page: Page,
   selector: string,
-  options?: { tolerance?: number }
+  options?: { tolerance?: number; horizontalOnly?: boolean }
 ): Promise<void> {
   const tolerance = options?.tolerance ?? TOLERANCE_PX;
+  const horizontalOnly = options?.horizontalOnly ?? false;
   const result = await page.evaluate(
-    ({ sel, tol }) => {
+    ({ sel, tol, horizOnly }) => {
       const el = document.querySelector(sel);
       if (!el) return { found: false, message: `Selector "${sel}" matched no element` };
       const rect = el.getBoundingClientRect();
@@ -59,20 +62,23 @@ export async function expectElementInViewport(
       const rightOk = rect.right <= vw + tol;
       const topOk = rect.top >= -tol;
       const bottomOk = rect.bottom <= vh + tol;
+      const inViewport = horizOnly
+        ? leftOk && rightOk
+        : leftOk && rightOk && topOk && bottomOk;
       return {
         found: true,
-        inViewport: leftOk && rightOk && topOk && bottomOk,
+        inViewport,
         rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height },
         viewport: { width: vw, height: vh },
         violations: [
           !leftOk && 'element extends past left edge',
           !rightOk && 'element extends past right edge',
-          !topOk && 'element extends past top edge',
-          !bottomOk && 'element extends past bottom edge',
+          !horizOnly && !topOk && 'element extends past top edge',
+          !horizOnly && !bottomOk && 'element extends past bottom edge',
         ].filter(Boolean) as string[],
       };
     },
-    { sel: selector, tol: tolerance }
+    { sel: selector, tol: tolerance, horizOnly: horizontalOnly }
   );
   if (!result.found) {
     throw new Error(result.message);

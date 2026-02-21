@@ -25,6 +25,11 @@ import {
   calculateCycleEndDate,
 } from '@/lib/utils/pay-cycle-dates';
 import { currencySymbol, parseIncome } from '@/lib/utils/currency';
+import { createIncomeSource } from '@/lib/actions/income-source-actions';
+import {
+  createPartnerInviteLink,
+  sendPartnerInviteToEmail,
+} from '@/app/actions/partner-invite';
 
 const onboardingSchema = z
   .object({
@@ -48,6 +53,11 @@ const onboardingSchema = z
       })
       .pipe(z.number().min(0).optional()),
     partnerName: z.string().optional(),
+    partnerEmail: z
+      .string()
+      .optional()
+      .transform((s) => (typeof s === 'string' && s.trim() ? s.trim().toLowerCase() : undefined))
+      .pipe(z.string().email('Enter a valid email').optional()),
     payCycleType: z.enum([
       'specific_date',
       'last_working_day',
@@ -173,6 +183,8 @@ const IncomeInput = React.forwardRef<
 export default function OnboardingPage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [partnerInviteUrl, setPartnerInviteUrl] = useState<string | null>(null);
+  const [partnerNameForInvite, setPartnerNameForInvite] = useState<string | null>(null);
 
   const form = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema) as Resolver<OnboardingFormData>,
@@ -183,6 +195,7 @@ export default function OnboardingPage() {
       myIncome: undefined,
       partnerIncome: undefined,
       partnerName: '',
+      partnerEmail: '',
       payCycleType: 'specific_date',
       payDay: undefined,
       anchorDate: '',
@@ -239,6 +252,7 @@ export default function OnboardingPage() {
 
       const householdInsert: Database['public']['Tables']['households']['Insert'] = {
         owner_id: user.id,
+        name: 'My Household',
         is_couple: data.mode === 'couple',
         partner_name: data.partnerName ?? null,
         partner_income: data.partnerIncome ?? 0,
@@ -367,6 +381,58 @@ export default function OnboardingPage() {
           .update(userUpdate as never)
           .eq('id', user.id)
       );
+
+      // Create income_sources so Settings → Income shows them (same as native app)
+      const frequencyRule = data.payCycleType as 'specific_date' | 'last_working_day' | 'every_4_weeks';
+      const dayOfMonth = frequencyRule === 'specific_date' ? (data.payDay ?? 1) : null;
+      const anchorDate =
+        frequencyRule === 'every_4_weeks' && data.anchorDate?.trim()
+          ? data.anchorDate.trim()
+          : null;
+      if (data.myIncome > 0) {
+        const myResult = await createIncomeSource({
+          household_id: household.id,
+          name: 'My salary',
+          amount: data.myIncome,
+          frequency_rule: frequencyRule,
+          day_of_month: dayOfMonth,
+          anchor_date: anchorDate,
+          payment_source: 'me',
+          sort_order: 0,
+        });
+        if (myResult?.error) {
+          console.warn('[Onboarding] Could not create my income source:', myResult.error);
+        }
+      }
+      if (data.mode === 'couple' && (data.partnerIncome ?? 0) > 0) {
+        const partnerResult = await createIncomeSource({
+          household_id: household.id,
+          name: 'Partner salary',
+          amount: data.partnerIncome ?? 0,
+          frequency_rule: frequencyRule,
+          day_of_month: dayOfMonth,
+          anchor_date: anchorDate,
+          payment_source: 'partner',
+          sort_order: 1,
+        });
+        if (partnerResult?.error) {
+          console.warn('[Onboarding] Could not create partner income source:', partnerResult.error);
+        }
+      }
+
+      // Create partner invite when couple so they can share the link from the start
+      if (data.mode === 'couple') {
+        try {
+          const { url } = await createPartnerInviteLink();
+          setPartnerInviteUrl(url);
+          setPartnerNameForInvite(data.partnerName?.trim() ?? null);
+          if (data.partnerEmail) {
+            await sendPartnerInviteToEmail(data.partnerEmail);
+          }
+        } catch (err) {
+          console.warn('[Onboarding] Could not create partner invite:', err);
+        }
+      }
 
       setShowCelebration(true);
     } catch (err) {
@@ -523,6 +589,38 @@ export default function OnboardingPage() {
                           role="alert"
                         >
                           {form.formState.errors.partnerIncome.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerEmail">
+                        Partner&apos;s email (optional)
+                      </Label>
+                      <Input
+                        id="partnerEmail"
+                        type="email"
+                        placeholder="e.g. alex@example.com"
+                        autoComplete="email"
+                        aria-invalid={!!form.formState.errors.partnerEmail}
+                        aria-describedby={
+                          form.formState.errors.partnerEmail
+                            ? 'partnerEmail-error'
+                            : undefined
+                        }
+                        data-testid="partner-email-input"
+                        {...form.register('partnerEmail')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        We&apos;ll send them an invite to join your household. You can
+                        also copy a link to share later.
+                      </p>
+                      {form.formState.errors.partnerEmail && (
+                        <p
+                          id="partnerEmail-error"
+                          className="text-sm text-destructive"
+                          role="alert"
+                        >
+                          {form.formState.errors.partnerEmail.message}
                         </p>
                       )}
                     </div>
@@ -729,7 +827,11 @@ export default function OnboardingPage() {
 
       <AnimatePresence>
         {showCelebration && (
-          <CelebrationSequence onComplete={() => setShowCelebration(false)} />
+          <CelebrationSequence
+            onComplete={() => setShowCelebration(false)}
+            partnerInviteUrl={partnerInviteUrl}
+            partnerName={partnerNameForInvite}
+          />
         )}
       </AnimatePresence>
     </>

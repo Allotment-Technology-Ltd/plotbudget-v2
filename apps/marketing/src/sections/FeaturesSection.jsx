@@ -11,7 +11,7 @@ const features = [
       </svg>
     ),
     title: 'Privacy by default',
-    body: 'No Open Banking. No data scraping. Your financial data stays on your device and our encrypted servers. Period.',
+    body: 'No bank connections. No transaction data. No behavioural tracking. You enter the numbers. You own everything. We earn from optional Pay What You Like contributions, not your data.',
   },
   {
     icon: (
@@ -25,7 +25,7 @@ const features = [
       </svg>
     ),
     title: 'Built for one or two',
-    body: 'PLOT works for solo use or with a partner. Invite someone to join your household anytime — or not. Designed for shared budgets with individual visibility when you do share. Together, not merged.',
+    body: 'Use PLOT solo or invite your partner. Both of you have full visibility, full control. No one person holds the keys.',
   },
   {
     icon: (
@@ -36,8 +36,8 @@ const features = [
         <polyline points="12 6 12 12 16 14" />
       </svg>
     ),
-    title: 'One ritual. Done.',
-    body: '20 minutes on payday. That\'s it. No daily expense tracking. No receipt scanning. Just one focused monthly ritual.',
+    title: 'Rituals, not routines',
+    body: 'A 20-minute Payday Ritual. A 10-minute Weekly Reset. A monthly Meal Plan. Designed around natural household rhythms — not daily check-ins that steal your attention.',
   },
   {
     icon: (
@@ -56,7 +56,7 @@ const features = [
       </svg>
     ),
     title: 'Your split. Your rules.',
-    body: '50/50? 70/30? Income-proportional? Set your split ratio and PLOT handles the maths on every bill.',
+    body: 'Separate accounts, joint bills, shared goals. PLOT works with how you actually live — not how a financial app thinks you should.',
   },
 ];
 
@@ -72,7 +72,7 @@ export default function FeaturesSection() {
           className="space-y-10"
         >
           <motion.p variants={staggerItem} className="section-label">
-            Why PLOT
+            WHY PLOT
           </motion.p>
 
           <motion.h2
@@ -80,7 +80,7 @@ export default function FeaturesSection() {
             id="features-headline"
             className="section-headline"
           >
-            What makes PLOT different
+            One system for your whole household
           </motion.h2>
 
           <motion.div

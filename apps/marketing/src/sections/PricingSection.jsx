@@ -4,36 +4,53 @@ import { APP_URL, PRICING_ENABLED } from '../lib/config';
 
 const pricingTiers = [
   {
-    id: 'trial',
-    name: 'Trial',
-    tagline: 'Your first 2 pay cycles',
-    description: 'Try the full experience with unlimited bills and wants so you can set up your budget and run your first rituals.',
+    id: 'free',
+    name: 'Free tier',
+    tagline: 'Forever',
+    description: 'Core budgeting and shared finances. No time limit. No card required.',
     limits: [
-      'Unlimited bills & essentials (Needs)',
-      'Unlimited discretionary items (Wants)',
-      '5 savings pots',
-      '5 repayments',
+      'Blueprint & Payday Ritual',
+      'Shared visibility with your household',
+      'Bills, wants, savings, repayments',
+      'Generous limits for real-world use',
     ],
-    cta: 'Included when you start',
+    cta: 'Included for everyone',
     price: null,
     ctaLink: null,
   },
   {
-    id: 'premium',
-    name: 'Premium',
-    tagline: 'Unlimited pots',
-    description: 'No limits. Add as many bills, wants, savings goals, and repayments as you need. One price for the whole household.',
+    id: 'founding',
+    name: 'Founding Member',
+    tagline: 'First 100 households',
+    description: 'Full access to every module, free for 12 months. A thank-you for your early trust.',
     limits: [
-      'Unlimited Needs',
-      'Unlimited Wants',
-      'Unlimited savings pots',
-      'Unlimited repayments',
+      'Everything in Free, plus',
+      'Unlimited pots and full feature set',
+      'All modules as they ship (Tasks, Meals, Holidays, etc.)',
+      'No payment required for 12 months',
     ],
-    cta: 'Start free trial',
-    price: '£4.99/month',
-    priceSecondary: 'or £49.99/year (save 2 months)',
+    cta: 'Join as Founding Member',
+    price: 'Free for 12 months',
+    priceSecondary: null,
     ctaLink: `${APP_URL}/signup`,
     highlighted: true,
+  },
+  {
+    id: 'pwyl',
+    name: 'Pay What You Like',
+    tagline: 'Optional',
+    description: 'After your 2-cycle trial, the free tier is yours for good. PWYL contributions unlock the full suite — holidays, home, meals, and more.',
+    limits: [
+      '2 full Payday Rituals trial, no card',
+      'Then permanent free tier',
+      'Optional contribution unlocks all modules',
+      'You set the amount; no mandatory subscription',
+    ],
+    cta: 'Start with 2-cycle trial',
+    price: null,
+    priceSecondary: null,
+    ctaLink: `${APP_URL}/signup`,
+    highlighted: false,
   },
 ];
 
@@ -68,19 +85,8 @@ export default function PricingSection() {
             variants={staggerItem}
             className="font-body text-lg text-plot-muted max-w-narrow mx-auto text-center"
           >
-            Start with a free trial. Upgrade to Premium when you want unlimited pots and no limits.
+            PLOT is free to use, forever, on a Pay What You Like basis — no mandatory subscription. The first 100 households are Founding Members and get full access free for 12 months. Everyone else gets a 2-cycle trial, then a permanent free tier. PWYL unlocks the full suite.
           </motion.p>
-          <motion.div
-            variants={staggerItem}
-            className="rounded-lg border border-plot-accent/30 bg-plot-accent/5 px-4 py-3 text-center max-w-xl mx-auto"
-          >
-            <p className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text">
-              Launch offer: first 100 users get 12 months of Premium free
-            </p>
-            <p className="mt-1 text-sm text-plot-muted">
-              Sign up now to lock in Founding Member status — unlimited pots for 12 months, on us.
-            </p>
-          </motion.div>
         </motion.div>
 
         <motion.div
@@ -88,7 +94,7 @@ export default function PricingSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
-          className="grid gap-6 md:grid-cols-2 md:gap-8 max-w-2xl mx-auto"
+          className="grid gap-6 md:grid-cols-3 md:gap-8 max-w-4xl mx-auto"
         >
           {pricingTiers.map((tier) => (
             <motion.div
@@ -102,7 +108,7 @@ export default function PricingSection() {
             >
               {tier.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-plot-accent px-3 py-0.5 text-xs font-medium text-on-accent tracking-wider">
-                  Most flexible
+                  First 100
                 </div>
               )}
               <div className="mb-4">
@@ -160,7 +166,7 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="mt-8 text-center text-sm text-plot-muted"
         >
-          Payment is only taken after you sign up and choose to upgrade, inside the app.
+          No mandatory subscription. Pay What You Like is optional and set by you inside the app.
         </motion.p>
       </div>
     </section>

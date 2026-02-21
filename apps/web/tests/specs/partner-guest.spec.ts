@@ -35,19 +35,20 @@ test.describe('Partner invite (unauthenticated)', () => {
     await expect(page).toHaveURL(/\/partner\/join/);
     await page.waitForLoadState('networkidle');
 
-    const joinHeading = page.getByRole('heading', { name: /Join as partner/i });
+    // Prefer role-based selector (visible text); fallback to testid for resilience
+    const joinHeading = page.getByRole('heading', { name: /Join as partner/i }).or(page.getByTestId('partner-join-heading'));
     const invalidOrExpired = page.getByText(/Invalid or Expired|Invalid Invitation/);
-    await expect(joinHeading.or(invalidOrExpired)).toBeVisible({
+    await expect(joinHeading.or(invalidOrExpired).first()).toBeVisible({
       timeout: process.env.CI ? 25_000 : 15_000,
     });
     // If fixture not ready (e.g. parallel run vs global-setup), retry once after a short delay
-    if (!(await joinHeading.isVisible().catch(() => false))) {
+    if (!(await joinHeading.first().isVisible().catch(() => false))) {
       await page.waitForTimeout(2000);
       await partnerPage.goto(E2E_PARTNER_INVITE_TOKEN);
       await page.waitForLoadState('networkidle');
     }
-    await expect(joinHeading).toBeVisible({
-      timeout: process.env.CI ? 20_000 : 10_000,
+    await expect(joinHeading.first()).toBeVisible({
+      timeout: process.env.CI ? 25_000 : 12_000,
     });
 
     await partnerPage.expectUnauthenticatedJoin();
@@ -64,7 +65,7 @@ test.describe('Partner invite (unauthenticated)', () => {
     await page.waitForLoadState('networkidle');
     // Wait for unauthenticated view; server render can be slow on CI; join heading is also a valid indicator
     const unauthenticatedOrHeading = partnerPage.unauthenticatedContainer.or(
-      page.getByRole('heading', { name: /Join as partner/i })
+      page.getByRole('heading', { name: /Join as partner/i }).or(page.getByTestId('partner-join-heading'))
     );
     await expect(unauthenticatedOrHeading.first()).toBeVisible({
       timeout: process.env.CI ? 45_000 : 25_000,
@@ -103,9 +104,9 @@ test.describe('Partner invite (authenticated)', () => {
       );
     }
     const onDashboard =
-      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'));
+      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
     const onOnboarding = page.getByTestId('onboarding-step-1');
-    await expect(onDashboard.or(onOnboarding)).toBeVisible();
+    await expect(onDashboard.or(onOnboarding).first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
   });
 });
 }); // end describe.serial

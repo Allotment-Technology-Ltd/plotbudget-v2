@@ -88,9 +88,9 @@
     color: var(--text-primary) !important;
   }
 
-  /* Terminal-style section label (e.g., "THE PROBLEM") — WCAG 2.2 compliant accent text */
+  /* Terminal-style section label (e.g., "THE PROBLEM") — mint, Space Mono, uppercase, tracking-widest */
   .section-label {
-    @apply font-heading text-label uppercase tracking-[0.15em] text-plot-accent-text;
+    @apply font-heading text-label uppercase tracking-widest text-plot-accent-text;
   }
 
   /* Section headline */
