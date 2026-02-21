@@ -94,17 +94,12 @@ export const GET = async (req: NextRequest) => {
     .from('households')
     .select('id, currency, pay_cycle_type, pay_day')
     .eq('owner_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
     .maybeSingle();
 
   const { data: partnerHousehold } = await supabase
     .from('households')
     .select('id, currency, pay_cycle_type, pay_day')
     .eq('partner_user_id', user.id)
-    .order('partner_accepted_at', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .limit(1)
     .maybeSingle();
 
   type HouseholdData = {
