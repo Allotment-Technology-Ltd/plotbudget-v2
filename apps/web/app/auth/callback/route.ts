@@ -111,11 +111,16 @@ export async function GET(request: NextRequest) {
       if (decoded.startsWith('/partner/join?')) {
         decoded = decoded.replace(/^\/partner\/join/, '/partner/complete');
       }
-      if (decoded.startsWith('/')) {
-        const url = new URL(decoded, request.url);
-        const res = NextResponse.redirect(url);
-        res.cookies.set(REDIRECT_AFTER_AUTH_COOKIE, '', { path: '/', maxAge: 0 });
-        return res;
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+        const candidate = new URL(decoded, request.url);
+        if (candidate.origin !== requestUrl.origin) {
+          // skip cookie redirect; fall through to default /dashboard
+        } else {
+          const safeRedirect = new URL(candidate.pathname + candidate.search, requestUrl.origin);
+          const res = NextResponse.redirect(safeRedirect);
+          res.cookies.set(REDIRECT_AFTER_AUTH_COOKIE, '', { path: '/', maxAge: 0 });
+          return res;
+        }
       }
     } catch {
       // ignore invalid cookie
