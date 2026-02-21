@@ -1,4 +1,6 @@
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
+import { cookies } from 'next/headers';
+import { getServerModuleFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { TasksPageClient } from '@/components/tasks/tasks-page-client';
 
@@ -15,10 +17,16 @@ export type AssigneeLabels = {
 };
 
 export default async function TasksPage() {
-  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  const { user, profile, owned, partnerOf, isAdmin } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
   const householdId = profile?.household_id ?? partnerOf?.id ?? null;
   if (!householdId) redirect('/onboarding');
+  const cookieStore = await cookies();
+  const moduleFlags = await getServerModuleFlags(user.id, {
+    cookies: cookieStore,
+    isAdmin,
+  });
+  if (!moduleFlags.tasks) redirect('/dashboard/money');
 
   let myName = 'Me';
   let partnerName = 'Partner';

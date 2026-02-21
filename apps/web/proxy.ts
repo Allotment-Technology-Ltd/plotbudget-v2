@@ -117,28 +117,31 @@ export async function proxy(request: NextRequest) {
 
     // Essential setup gate: user must have a household (owner or partner) to access dashboard.
     // Launcher at /dashboard is shown once they have a household; Money onboarding is gated per-module.
-    const { data: profile } = await supabase
-      .from('users')
-      .select('household_id')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    const { data: ownedHousehold } = await supabase
-      .from('households')
-      .select('id')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const { data: partnerHousehold } = await supabase
-      .from('households')
-      .select('id')
-      .eq('partner_user_id', user.id)
-      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const [profileRes, ownedRes, partnerRes] = await Promise.all([
+      supabase
+        .from('users')
+        .select('household_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('households')
+        .select('id')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('households')
+        .select('id')
+        .eq('partner_user_id', user.id)
+        .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    const profile = profileRes.data;
+    const ownedHousehold = ownedRes.data;
+    const partnerHousehold = partnerRes.data;
 
     const hasHousehold = !!(
       (profile as { household_id?: string | null } | null)?.household_id ??
@@ -192,15 +195,29 @@ export async function proxy(request: NextRequest) {
       has_completed_onboarding: boolean;
       household_id: string | null;
     } | null;
-    const hasHousehold = !!(
+    const householdId =
       profile?.household_id ??
       (ownedRes.data as { id?: string } | null)?.id ??
-      (partnerRes.data as { id?: string } | null)?.id
-    );
+      (partnerRes.data as { id?: string } | null)?.id ??
+      null;
 
-    if (profile?.has_completed_onboarding || hasHousehold) {
+    if (profile?.has_completed_onboarding) {
       return NextResponse.redirect(new URL('/dashboard/money/blueprint', request.url));
     }
+
+    if (householdId) {
+      const { data: activePaycycle } = await supabase
+        .from('paycycles')
+        .select('id')
+        .eq('household_id', householdId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      if (activePaycycle?.id) {
+        return NextResponse.redirect(new URL('/dashboard/money/blueprint', request.url));
+      }
+    }
+
   }
 
   // Auth routes - redirect to dashboard (or redirect param e.g. partner join) if already authenticated

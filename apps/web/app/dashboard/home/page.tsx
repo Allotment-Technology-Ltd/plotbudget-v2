@@ -1,4 +1,6 @@
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
+import { cookies } from 'next/headers';
+import { getServerModuleFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { HomeFeedClient } from '@/components/home/home-feed-client';
 import type { ActivityFeed, Notification } from '@repo/supabase';
@@ -7,8 +9,14 @@ import type { ActivityFeed, Notification } from '@repo/supabase';
 const HOME_ACTIVITY_LIMIT = 5;
 
 export default async function DashboardHomePage() {
-  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  const { user, profile, owned, partnerOf, isAdmin } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
+  const cookieStore = await cookies();
+  const moduleFlags = await getServerModuleFlags(user.id, {
+    cookies: cookieStore,
+    isAdmin,
+  });
+  if (!moduleFlags.home) redirect('/dashboard/money');
 
   const supabase = await getCachedSupabase();
   const isPartner = !owned && !!partnerOf;

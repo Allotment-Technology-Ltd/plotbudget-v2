@@ -7,6 +7,7 @@
 
 import { isPreProdContext } from '@/lib/feature-flags';
 import {
+  DEFAULT_MODULE_FLAGS,
   getModuleFlagsFromEnv,
   type ModuleFlags,
   type ModuleFlagId,
@@ -121,28 +122,45 @@ export async function getFeatureFlagsFromPostHog(
     if (!res.ok) return null;
 
     const data = (await res.json()) as {
-      flags?: Record<string, { enabled?: boolean }>;
+      flags?: Record<string, unknown>;
+      featureFlags?: Record<string, unknown>;
       quotaLimited?: string[];
     };
 
     if (data.quotaLimited?.includes('feature_flags')) return null;
-    const flags = data.flags ?? {};
+    const flags = data.flags ?? data.featureFlags ?? {};
+
+    const readEnabled = (key: string): boolean | undefined => {
+      const raw = flags[key];
+      if (typeof raw === 'boolean') return raw;
+      if (
+        typeof raw === 'object' &&
+        raw !== null &&
+        'enabled' in raw &&
+        typeof (raw as { enabled?: unknown }).enabled === 'boolean'
+      ) {
+        return (raw as { enabled: boolean }).enabled;
+      }
+      return undefined;
+    };
 
     const moduleFlags: ModuleFlags = {
-      money: flags[MODULE_FLAG_KEYS.money]?.enabled ?? true,
-      home: flags[MODULE_FLAG_KEYS.home]?.enabled ?? false,
-      tasks: flags[MODULE_FLAG_KEYS.tasks]?.enabled ?? false,
-      calendar: flags[MODULE_FLAG_KEYS.calendar]?.enabled ?? false,
-      meals: flags[MODULE_FLAG_KEYS.meals]?.enabled ?? false,
-      holidays: flags[MODULE_FLAG_KEYS.holidays]?.enabled ?? false,
-      vault: flags[MODULE_FLAG_KEYS.vault]?.enabled ?? false,
-      kids: flags[MODULE_FLAG_KEYS.kids]?.enabled ?? false,
+      money: readEnabled(MODULE_FLAG_KEYS.money) ?? DEFAULT_MODULE_FLAGS.money,
+      home: readEnabled(MODULE_FLAG_KEYS.home) ?? DEFAULT_MODULE_FLAGS.home,
+      tasks: readEnabled(MODULE_FLAG_KEYS.tasks) ?? DEFAULT_MODULE_FLAGS.tasks,
+      calendar:
+        readEnabled(MODULE_FLAG_KEYS.calendar) ?? DEFAULT_MODULE_FLAGS.calendar,
+      meals: readEnabled(MODULE_FLAG_KEYS.meals) ?? DEFAULT_MODULE_FLAGS.meals,
+      holidays:
+        readEnabled(MODULE_FLAG_KEYS.holidays) ?? DEFAULT_MODULE_FLAGS.holidays,
+      vault: readEnabled(MODULE_FLAG_KEYS.vault) ?? DEFAULT_MODULE_FLAGS.vault,
+      kids: readEnabled(MODULE_FLAG_KEYS.kids) ?? DEFAULT_MODULE_FLAGS.kids,
     };
 
     return {
-      signupGated: flags['signup-gated']?.enabled ?? false,
-      googleLoginEnabled: flags['google-login-enabled']?.enabled ?? false,
-      pricingEnabled: flags['pricing-enabled']?.enabled ?? false,
+      signupGated: readEnabled('signup-gated') ?? false,
+      googleLoginEnabled: readEnabled('google-login-enabled') ?? false,
+      pricingEnabled: readEnabled('pricing-enabled') ?? false,
       moduleFlags,
     };
   } catch {
@@ -169,7 +187,16 @@ export async function getServerFeatureFlags(
   const id = distinctId ?? 'anonymous';
   const posthogFlags = await getFeatureFlagsFromPostHog(id);
   const envFlags = getEnvFlags();
-  let base: ServerFeatureFlags = posthogFlags ?? envFlags;
+  let base: ServerFeatureFlags;
+
+  if (posthogFlags) {
+    base = posthogFlags;
+  } else if (isPreProdContext()) {
+    base = envFlags;
+  } else {
+    // Production must fail closed for module exposure if PostHog is unavailable.
+    base = { ...envFlags, moduleFlags: { ...DEFAULT_MODULE_FLAGS } };
+  }
 
   // In production, admins bypass module feature flags: all modules enabled
   if (!isPreProdContext() && options?.isAdmin === true) {

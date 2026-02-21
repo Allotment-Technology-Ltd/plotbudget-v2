@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const SESSION_KEY = 'plot-splash-shown';
+const STORAGE_KEY = 'plot-pwa-splash-shown-v1';
 const TAGLINE = 'The 20-minute payday ritual.';
 
 /** P logo paths (same as icon.tsx) – stroked for draw animation */
@@ -18,6 +18,30 @@ const TAGLINE_STAGGER_MS = 45;
 const HOLD_AFTER_TAGLINE_MS = 500;
 const FADE_OUT_MS = 400;
 
+function isStandalonePwaContext(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    ((window.navigator as Navigator & { standalone?: boolean }).standalone ?? false)
+  );
+}
+
+function hasSeenSplash(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markSplashSeen() {
+  try {
+    localStorage.setItem(STORAGE_KEY, '1');
+  } catch {
+    // Non-fatal: if storage is unavailable, splash may show again.
+  }
+}
+
 export function PwaSplashScreen() {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
@@ -25,7 +49,14 @@ export function PwaSplashScreen() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem(SESSION_KEY) === '1') {
+
+    // Show only for installed PWA launches, not normal browser tabs.
+    if (!isStandalonePwaContext()) {
+      queueMicrotask(() => setMounted(true));
+      return;
+    }
+
+    if (hasSeenSplash()) {
       queueMicrotask(() => setMounted(true));
       return;
     }
@@ -45,7 +76,7 @@ export function PwaSplashScreen() {
       FADE_OUT_MS;
 
     const t = setTimeout(() => {
-      sessionStorage.setItem(SESSION_KEY, '1');
+      markSplashSeen();
       setExiting(true);
     }, totalMs - FADE_OUT_MS);
 

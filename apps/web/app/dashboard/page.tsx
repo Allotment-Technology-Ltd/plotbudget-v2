@@ -1,5 +1,7 @@
 import { addDays, endOfWeek, format, parseISO } from 'date-fns';
+import { cookies } from 'next/headers';
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
+import { getServerModuleFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { LauncherClient } from '@/components/dashboard/launcher-client';
 
@@ -38,7 +40,7 @@ function bucketEvent(event: LauncherEventItem, todayStr: string, tomorrowStr: st
  * Money tile: /dashboard/money if onboarded (or partner), else /onboarding.
  */
 export default async function LauncherPage() {
-  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  const { user, profile, owned, partnerOf, isAdmin } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
   const isPartner = !owned && !!partnerOf;
@@ -48,6 +50,11 @@ export default async function LauncherPage() {
   const hasCompletedMoneyOnboarding = !!(profile?.has_completed_onboarding ?? isPartner);
 
   const supabase = await getCachedSupabase();
+  const cookieStore = await cookies();
+  const moduleFlags = await getServerModuleFlags(user.id, {
+    cookies: cookieStore,
+    isAdmin,
+  });
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
   const tomorrowDate = addDays(parseISO(`${todayStr}T00:00:00.000Z`), 1);
@@ -59,23 +66,27 @@ export default async function LauncherPage() {
   const weekEndExclusive = format(addDays(endOfWeekDate, 1), "yyyy-MM-dd'T00:00:00.000Z");
 
   const [tasksRes, eventsRes] = await Promise.all([
-    supabase
-      .from('tasks')
-      .select('id, name, due_date')
-      .eq('household_id', householdId)
-      .gte('due_date', todayStr)
-      .lte('due_date', endOfWeekStr)
-      .in('status', ['backlog', 'todo', 'in_progress'])
-      .order('due_date', { ascending: true })
-      .limit(30),
-    supabase
-      .from('events')
-      .select('id, title, start_at')
-      .eq('household_id', householdId)
-      .gte('start_at', weekStart)
-      .lt('start_at', weekEndExclusive)
-      .order('start_at', { ascending: true })
-      .limit(30),
+    moduleFlags.tasks
+      ? supabase
+          .from('tasks')
+          .select('id, name, due_date')
+          .eq('household_id', householdId)
+          .gte('due_date', todayStr)
+          .lte('due_date', endOfWeekStr)
+          .in('status', ['backlog', 'todo', 'in_progress'])
+          .order('due_date', { ascending: true })
+          .limit(30)
+      : Promise.resolve({ data: [] }),
+    moduleFlags.calendar
+      ? supabase
+          .from('events')
+          .select('id, title, start_at')
+          .eq('household_id', householdId)
+          .gte('start_at', weekStart)
+          .lt('start_at', weekEndExclusive)
+          .order('start_at', { ascending: true })
+          .limit(30)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const tasks = (tasksRes.data ?? []) as LauncherTaskItem[];
@@ -105,6 +116,7 @@ export default async function LauncherPage() {
     <LauncherClient
       hasCompletedMoneyOnboarding={hasCompletedMoneyOnboarding}
       isPartner={isPartner}
+      moduleFlags={moduleFlags}
       taskGroups={taskGroups}
       eventGroups={eventGroups}
     />

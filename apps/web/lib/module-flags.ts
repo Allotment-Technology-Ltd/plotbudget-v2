@@ -18,7 +18,7 @@ export type ModuleFlagId =
 export type ModuleFlags = Record<ModuleFlagId, boolean>;
 
 /** Default: only Money is on so existing UX is unchanged. */
-const DEFAULT_MODULE_FLAGS: ModuleFlags = {
+export const DEFAULT_MODULE_FLAGS: ModuleFlags = {
   money: true,
   home: false,
   tasks: false,

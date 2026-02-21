@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { PoundSterling, CheckSquare, Calendar, Search, RotateCcw } from 'lucide-react';
 import { cn } from '@repo/ui';
 import type { LauncherTaskGroups, LauncherEventGroups } from '@/app/dashboard/page';
+import type { ModuleFlags } from '@/lib/module-flags';
 
 type LauncherClientProps = {
   hasCompletedMoneyOnboarding: boolean;
   isPartner: boolean;
+  moduleFlags: ModuleFlags;
   taskGroups: LauncherTaskGroups;
   eventGroups: LauncherEventGroups;
 };
@@ -26,10 +28,12 @@ function LauncherSearch({
   taskGroups,
   eventGroups,
   moneyLink,
+  moduleFlags,
 }: {
   taskGroups: LauncherTaskGroups;
   eventGroups: LauncherEventGroups;
   moneyLink: string;
+  moduleFlags: ModuleFlags;
 }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
@@ -50,13 +54,31 @@ function LauncherSearch({
   };
 
   const modules: SearchResult[] = useMemo(
-    () =>     [
+    () => [
       { type: 'module', id: 'money', label: 'Money', href: moneyLink },
-      { type: 'module', id: 'tasks', label: 'Tasks', href: '/dashboard/tasks' },
-      { type: 'module', id: 'calendar', label: 'Calendar', href: '/dashboard/calendar' },
-      { type: 'module', id: 'weekly-reset', label: 'Weekly Reset', href: '/dashboard/tasks/weekly-reset' },
+      ...(moduleFlags.tasks
+        ? [
+            { type: 'module' as const, id: 'tasks', label: 'Tasks', href: '/dashboard/tasks' },
+            {
+              type: 'module' as const,
+              id: 'weekly-reset',
+              label: 'Weekly Reset',
+              href: '/dashboard/tasks/weekly-reset',
+            },
+          ]
+        : []),
+      ...(moduleFlags.calendar
+        ? [
+            {
+              type: 'module' as const,
+              id: 'calendar',
+              label: 'Calendar',
+              href: '/dashboard/calendar',
+            },
+          ]
+        : []),
     ],
-    [moneyLink]
+    [moneyLink, moduleFlags.tasks, moduleFlags.calendar]
   );
 
   const allTasks = useMemo(
@@ -208,118 +230,136 @@ function UpcomingList({
 export function LauncherClient({
   hasCompletedMoneyOnboarding,
   isPartner,
+  moduleFlags,
   taskGroups,
   eventGroups,
 }: LauncherClientProps) {
   const moneyLink = moneyHref(hasCompletedMoneyOnboarding, isPartner);
-
-  const modules = [
-    {
-      id: 'money',
-      name: 'Money',
-      href: moneyLink,
-      icon: PoundSterling,
-      available: true,
-      accent: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      id: 'tasks',
-      name: 'Tasks',
-      href: '/dashboard/tasks',
-      icon: CheckSquare,
-      available: true,
-      accent: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      href: '/dashboard/calendar',
-      icon: Calendar,
-      available: true,
-      accent: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-    },
-  ];
+  const modules = useMemo(
+    () => [
+      {
+        id: 'money',
+        name: 'Money',
+        href: moneyLink,
+        icon: PoundSterling,
+        accent: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+      },
+      ...(moduleFlags.tasks
+        ? [
+            {
+              id: 'tasks',
+              name: 'Tasks',
+              href: '/dashboard/tasks',
+              icon: CheckSquare,
+              accent: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+            },
+          ]
+        : []),
+      ...(moduleFlags.calendar
+        ? [
+            {
+              id: 'calendar',
+              name: 'Calendar',
+              href: '/dashboard/calendar',
+              icon: Calendar,
+              accent: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+            },
+          ]
+        : []),
+    ],
+    [moneyLink, moduleFlags.tasks, moduleFlags.calendar]
+  );
 
   const now = new Date();
   const monthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-8">
-      {/* Widgets row — Calendar, Tasks, Weekly Reset (always link so user can drill down or add) */}
-      <section className="px-4 pt-4 sm:pt-6" aria-label="Widgets">
-        <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">
-          <Link
-            href="/dashboard/calendar"
-            className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/15 text-violet-600 dark:text-violet-400">
-                <Calendar className="h-4 w-4" aria-hidden />
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Calendar
-              </span>
-            </div>
-            <p className="font-semibold text-foreground">{monthLabel}</p>
-            <UpcomingList
-              today={[
-                ...eventGroups.today.map((e) => ({ id: e.id, title: e.title })),
-                ...taskGroups.today.map((t) => ({ id: t.id, name: t.name, title: t.name })),
-              ]}
-              tomorrow={[
-                ...eventGroups.tomorrow.map((e) => ({ id: e.id, title: e.title })),
-                ...taskGroups.tomorrow.map((t) => ({ id: t.id, name: t.name, title: t.name })),
-              ]}
-              thisWeek={[
-                ...eventGroups.this_week.map((e) => ({ id: e.id, title: e.title })),
-                ...taskGroups.this_week.map((t) => ({ id: t.id, name: t.name, title: t.name })),
-              ]}
-              titleKey="title"
-              emptyLabel="No events or tasks — open calendar"
-            />
-          </Link>
-          <Link
-            href="/dashboard/tasks"
-            className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <CheckSquare className="h-4 w-4" aria-hidden />
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Tasks
-              </span>
-            </div>
-            <p className="font-semibold text-foreground">
-              {taskGroups.today.length + taskGroups.tomorrow.length + taskGroups.this_week.length > 0
-                ? `${taskGroups.today.length + taskGroups.tomorrow.length + taskGroups.this_week.length} due soon`
-                : 'No tasks'}
-            </p>
-            <UpcomingList
-              today={taskGroups.today}
-              tomorrow={taskGroups.tomorrow}
-              thisWeek={taskGroups.this_week}
-              titleKey="name"
-              emptyLabel="Chores & routines"
-            />
-          </Link>
-          <Link
-            href="/dashboard/tasks/weekly-reset"
-            className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <RotateCcw className="h-4 w-4" aria-hidden />
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Weekly Reset
-              </span>
-            </div>
-            <p className="font-semibold text-foreground">Sort out the week</p>
-            <p className="text-sm text-muted-foreground">Review routines, claim tasks, set deadlines</p>
-          </Link>
-        </div>
-      </section>
+      {/* Widgets row — only show enabled modules */}
+      {(moduleFlags.calendar || moduleFlags.tasks) && (
+        <section className="px-4 pt-4 sm:pt-6" aria-label="Widgets">
+          <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">
+            {moduleFlags.calendar && (
+              <Link
+                href="/dashboard/calendar"
+                className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                    <Calendar className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Calendar
+                  </span>
+                </div>
+                <p className="font-semibold text-foreground">{monthLabel}</p>
+                <UpcomingList
+                  today={[
+                    ...eventGroups.today.map((e) => ({ id: e.id, title: e.title })),
+                    ...taskGroups.today.map((t) => ({ id: t.id, name: t.name, title: t.name })),
+                  ]}
+                  tomorrow={[
+                    ...eventGroups.tomorrow.map((e) => ({ id: e.id, title: e.title })),
+                    ...taskGroups.tomorrow.map((t) => ({ id: t.id, name: t.name, title: t.name })),
+                  ]}
+                  thisWeek={[
+                    ...eventGroups.this_week.map((e) => ({ id: e.id, title: e.title })),
+                    ...taskGroups.this_week.map((t) => ({ id: t.id, name: t.name, title: t.name })),
+                  ]}
+                  titleKey="title"
+                  emptyLabel="No events or tasks — open calendar"
+                />
+              </Link>
+            )}
+            {moduleFlags.tasks && (
+              <>
+                <Link
+                  href="/dashboard/tasks"
+                  className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      <CheckSquare className="h-4 w-4" aria-hidden />
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Tasks
+                    </span>
+                  </div>
+                  <p className="font-semibold text-foreground">
+                    {taskGroups.today.length + taskGroups.tomorrow.length + taskGroups.this_week.length > 0
+                      ? `${taskGroups.today.length + taskGroups.tomorrow.length + taskGroups.this_week.length} due soon`
+                      : 'No tasks'}
+                  </p>
+                  <UpcomingList
+                    today={taskGroups.today}
+                    tomorrow={taskGroups.tomorrow}
+                    thisWeek={taskGroups.this_week}
+                    titleKey="name"
+                    emptyLabel="Chores & routines"
+                  />
+                </Link>
+                <Link
+                  href="/dashboard/tasks/weekly-reset"
+                  className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      <RotateCcw className="h-4 w-4" aria-hidden />
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Weekly Reset
+                    </span>
+                  </div>
+                  <p className="font-semibold text-foreground">Sort out the week</p>
+                  <p className="text-sm text-muted-foreground">
+                    Review routines, claim tasks, set deadlines
+                  </p>
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Search — modules, tasks, events */}
       <section className="px-4 pt-4 sm:pt-6" aria-label="Search">
@@ -328,6 +368,7 @@ export function LauncherClient({
             taskGroups={taskGroups}
             eventGroups={eventGroups}
             moneyLink={moneyLink}
+            moduleFlags={moduleFlags}
           />
         </div>
       </section>
@@ -341,47 +382,24 @@ export function LauncherClient({
           >
             {modules.map((mod) => {
               const Icon = mod.icon;
-              const isComingSoon = !mod.available;
               return (
                 <li key={mod.id} className="flex flex-col items-center">
-                  {isComingSoon ? (
-                    <div
-                      className="flex flex-col items-center gap-2 opacity-50"
-                      aria-disabled="true"
+                  <Link
+                    href={mod.href}
+                    className="flex flex-col items-center gap-2 transition opacity-100 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+                  >
+                    <span
+                      className={cn(
+                        'flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16',
+                        mod.accent
+                      )}
                     >
-                      <span
-                        className={cn(
-                          'flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16',
-                          mod.accent
-                        )}
-                      >
-                        <Icon className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden />
-                      </span>
-                      <span className="text-center text-xs font-medium text-muted-foreground sm:text-sm">
-                        {mod.name}
-                      </span>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 sm:text-xs">
-                        Soon
-                      </span>
-                    </div>
-                  ) : (
-                    <Link
-                      href={mod.href}
-                      className="flex flex-col items-center gap-2 transition opacity-100 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
-                    >
-                      <span
-                        className={cn(
-                          'flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16',
-                          mod.accent
-                        )}
-                      >
-                        <Icon className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden />
-                      </span>
-                      <span className="text-center text-xs font-medium text-foreground sm:text-sm">
-                        {mod.name}
-                      </span>
-                    </Link>
-                  )}
+                      <Icon className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden />
+                    </span>
+                    <span className="text-center text-xs font-medium text-foreground sm:text-sm">
+                      {mod.name}
+                    </span>
+                  </Link>
                 </li>
               );
             })}

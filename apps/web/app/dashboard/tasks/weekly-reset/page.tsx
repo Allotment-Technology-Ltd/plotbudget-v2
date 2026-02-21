@@ -1,4 +1,6 @@
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
+import { cookies } from 'next/headers';
+import { getServerModuleFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
 import { ResetFlow } from '@/components/tasks/weekly-reset/reset-flow';
 import type { AssigneeLabels } from '@/app/dashboard/tasks/page';
@@ -9,10 +11,16 @@ export const metadata = {
 };
 
 export default async function WeeklyResetPage() {
-  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  const { user, profile, owned, partnerOf, isAdmin } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
   const householdId = profile?.household_id ?? partnerOf?.id ?? null;
   if (!householdId) redirect('/onboarding');
+  const cookieStore = await cookies();
+  const moduleFlags = await getServerModuleFlags(user.id, {
+    cookies: cookieStore,
+    isAdmin,
+  });
+  if (!moduleFlags.tasks) redirect('/dashboard/money');
 
   let displayName = (profile?.display_name ?? '').trim() || 'there';
   let myName = 'Me';
