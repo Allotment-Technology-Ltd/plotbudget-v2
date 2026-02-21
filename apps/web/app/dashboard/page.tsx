@@ -1,186 +1,112 @@
-import { Suspense } from 'react';
+import { addDays, endOfWeek, format, parseISO } from 'date-fns';
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
-import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
 import { redirect } from 'next/navigation';
-import { DashboardClient } from '@/components/dashboard/dashboard-client';
-import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
-import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
-import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
-import type { Household, PayCycle, Pot, Repayment, Seed } from '@repo/supabase';
+import { LauncherClient } from '@/components/dashboard/launcher-client';
 
-type HistoricalCycleRow = Pick<
-  PayCycle,
-  | 'id'
-  | 'name'
-  | 'start_date'
-  | 'end_date'
-  | 'total_income'
-  | 'total_allocated'
-  | 'alloc_needs_me'
-  | 'alloc_needs_partner'
-  | 'alloc_needs_joint'
-  | 'alloc_wants_me'
-  | 'alloc_wants_partner'
-  | 'alloc_wants_joint'
-  | 'alloc_savings_me'
-  | 'alloc_savings_partner'
-  | 'alloc_savings_joint'
-  | 'alloc_repay_me'
-  | 'alloc_repay_partner'
-  | 'alloc_repay_joint'
->;
+type DateBucket = 'today' | 'tomorrow' | 'this_week';
 
-export default async function DashboardPage() {
+export type LauncherTaskItem = { id: string; name: string; due_date: string };
+export type LauncherEventItem = { id: string; title: string; start_at: string };
+
+export type LauncherTaskGroups = {
+  today: LauncherTaskItem[];
+  tomorrow: LauncherTaskItem[];
+  this_week: LauncherTaskItem[];
+};
+
+export type LauncherEventGroups = {
+  today: LauncherEventItem[];
+  tomorrow: LauncherEventItem[];
+  this_week: LauncherEventItem[];
+};
+
+function bucketTask(task: LauncherTaskItem, todayStr: string, tomorrowStr: string): DateBucket {
+  if (task.due_date === todayStr) return 'today';
+  if (task.due_date === tomorrowStr) return 'tomorrow';
+  return 'this_week';
+}
+
+function bucketEvent(event: LauncherEventItem, todayStr: string, tomorrowStr: string): DateBucket {
+  const date = event.start_at.slice(0, 10);
+  if (date === todayStr) return 'today';
+  if (date === tomorrowStr) return 'tomorrow';
+  return 'this_week';
+}
+
+/**
+ * Module Launcher (PLOT home). Shown after essential setup (household).
+ * Money tile: /dashboard/money if onboarded (or partner), else /onboarding.
+ */
+export default async function LauncherPage() {
   const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
   if (!user) redirect('/login');
 
-  const supabase = await getCachedSupabase();
   const isPartner = !owned && !!partnerOf;
-  const partnerHouseholdId = partnerOf?.id ?? null;
-  let householdId: string;
-  let currentPaycycleId: string | null = null;
+  const householdId = profile?.household_id ?? partnerOf?.id ?? null;
+  if (!householdId) redirect('/onboarding');
 
-  if (profile?.household_id) {
-    householdId = profile.household_id;
-    currentPaycycleId = profile.current_paycycle_id;
-  } else if (isPartner && partnerHouseholdId) {
-    householdId = partnerHouseholdId;
-    const { data: activeCycle } = (await supabase
-      .from('paycycles')
-      .select('id')
+  const hasCompletedMoneyOnboarding = !!(profile?.has_completed_onboarding ?? isPartner);
+
+  const supabase = await getCachedSupabase();
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const tomorrowDate = addDays(parseISO(`${todayStr}T00:00:00.000Z`), 1);
+  const tomorrowStr = format(tomorrowDate, 'yyyy-MM-dd');
+  const endOfWeekDate = endOfWeek(now, { weekStartsOn: 1 });
+  const endOfWeekStr = format(endOfWeekDate, 'yyyy-MM-dd');
+
+  const weekStart = `${todayStr}T00:00:00.000Z`;
+  const weekEndExclusive = format(addDays(endOfWeekDate, 1), "yyyy-MM-dd'T00:00:00.000Z");
+
+  const [tasksRes, eventsRes] = await Promise.all([
+    supabase
+      .from('tasks')
+      .select('id, name, due_date')
       .eq('household_id', householdId)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle()) as { data: { id: string } | null };
-    currentPaycycleId = activeCycle?.id ?? null;
-  } else {
-    redirect('/onboarding');
-  }
-
-  // Parallel fetch: household + owner display name, and all household-scoped data
-  const householdPromise = supabase
-    .from('households')
-    .select('*')
-    .eq('id', householdId)
-    .single();
-  const potsPromise = supabase
-    .from('pots')
-    .select('*')
-    .eq('household_id', householdId)
-    .in('status', ['active', 'paused']);
-  const repaymentsPromise = supabase
-    .from('repayments')
-    .select('*')
-    .eq('household_id', householdId)
-    .in('status', ['active', 'paused']);
-  const historicalPromise = supabase
-    .from('paycycles')
-    .select(
-      'id, name, start_date, end_date, total_income, total_allocated, alloc_needs_me, alloc_needs_partner, alloc_needs_joint, alloc_wants_me, alloc_wants_partner, alloc_wants_joint, alloc_savings_me, alloc_savings_partner, alloc_savings_joint, alloc_repay_me, alloc_repay_partner, alloc_repay_joint'
-    )
-    .eq('household_id', householdId)
-    .eq('status', 'completed')
-    .order('start_date', { ascending: false })
-    .limit(6);
-  const draftCyclePromise = supabase
-    .from('paycycles')
-    .select('id')
-    .eq('household_id', householdId)
-    .eq('status', 'draft')
-    .limit(1)
-    .maybeSingle();
-
-  const [
-    householdRes,
-    potsRes,
-    repaymentsRes,
-    historicalRes,
-    draftCycleRes,
-  ] = await Promise.all([
-    householdPromise,
-    potsPromise,
-    repaymentsPromise,
-    historicalPromise,
-    draftCyclePromise,
+      .gte('due_date', todayStr)
+      .lte('due_date', endOfWeekStr)
+      .in('status', ['backlog', 'todo', 'in_progress'])
+      .order('due_date', { ascending: true })
+      .limit(30),
+    supabase
+      .from('events')
+      .select('id, title, start_at')
+      .eq('household_id', householdId)
+      .gte('start_at', weekStart)
+      .lt('start_at', weekEndExclusive)
+      .order('start_at', { ascending: true })
+      .limit(30),
   ]);
 
-  const { data: household } = householdRes as { data: Household | null };
-  if (!household) redirect('/onboarding');
+  const tasks = (tasksRes.data ?? []) as LauncherTaskItem[];
+  const events = (eventsRes.data ?? []) as LauncherEventItem[];
 
-  const ownerDisplayNamePromise = household.owner_id
-    ? supabase.from('users').select('display_name').eq('id', household.owner_id).single()
-    : Promise.resolve({ data: null });
-  const ownerDisplayNameRes = await ownerDisplayNamePromise;
-  const ownerDisplayName = (ownerDisplayNameRes.data as { display_name: string | null } | null)?.display_name ?? null;
-  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
-  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
-
-  let currentPaycycle: PayCycle | null = null;
-  let seeds: Seed[] = [];
-  const historicalCycles: HistoricalCycleRow[] = (historicalRes.data ?? []) as HistoricalCycleRow[];
-  const hasDraftCycle = !!draftCycleRes.data;
-
-  if (currentPaycycleId) {
-    const { data: paycycle } = await supabase
-      .from('paycycles')
-      .select('*')
-      .eq('id', currentPaycycleId)
-      .single();
-    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
-    if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
-      await markOverdueSeedsPaid(currentPaycycleId, undefined, { skipRevalidate: true });
-    }
-    const { data: seedsData } = await supabase
-      .from('seeds')
-      .select('*, pots(*), repayments(*)')
-      .eq('paycycle_id', currentPaycycleId)
-      .order('created_at', { ascending: false });
-    seeds = seedsData ?? [];
+  const taskGroups: LauncherTaskGroups = {
+    today: [],
+    tomorrow: [],
+    this_week: [],
+  };
+  for (const t of tasks) {
+    const bucket = bucketTask(t, todayStr, tomorrowStr);
+    taskGroups[bucket].push(t);
   }
 
-  let incomeEvents: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[] = [];
-  if (currentPaycycle) {
-    const { data: incomeSources } = await supabase
-      .from('income_sources')
-      .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
-      .eq('household_id', householdId)
-      .eq('is_active', true);
-    const sources = (incomeSources ?? []) as {
-      id: string;
-      name: string;
-      amount: number;
-      frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
-      day_of_month: number | null;
-      anchor_date: string | null;
-      payment_source: 'me' | 'partner' | 'joint';
-    }[];
-    incomeEvents = getIncomeEventsForCycle(
-      currentPaycycle.start_date,
-      currentPaycycle.end_date,
-      sources
-    );
+  const eventGroups: LauncherEventGroups = {
+    today: [],
+    tomorrow: [],
+    this_week: [],
+  };
+  for (const e of events) {
+    const bucket = bucketEvent(e, todayStr, tomorrowStr);
+    eventGroups[bucket].push(e);
   }
 
   return (
-    <>
-      <Suspense fallback={null}>
-        <CheckoutSuccessToast />
-      </Suspense>
-      <DashboardClient
-        household={household as Household}
-        currentPaycycle={currentPaycycle}
-        seeds={seeds}
-        pots={(potsRes.data ?? []) as Pot[]}
-        repayments={(repaymentsRes.data ?? []) as Repayment[]}
-        historicalCycles={historicalCycles}
-        hasDraftCycle={hasDraftCycle}
-        incomeEvents={incomeEvents}
-        isPartner={isPartner}
-        ownerLabel={ownerLabel}
-        partnerLabel={partnerLabel}
-        userId={user.id}
-        foundingMemberUntil={household?.founding_member_until ?? null}
-      />
-    </>
+    <LauncherClient
+      hasCompletedMoneyOnboarding={hasCompletedMoneyOnboarding}
+      isPartner={isPartner}
+      taskGroups={taskGroups}
+      eventGroups={eventGroups}
+    />
   );
 }

@@ -60,7 +60,7 @@ export async function createIncomeSource(
     if (!row) return { error: 'Income source create did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return { incomeSourceId: (row as { id: string }).id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create income source' };
@@ -99,7 +99,7 @@ export async function updateIncomeSource(
     if (!updated) return { error: 'Income source update did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update income source' };
@@ -123,7 +123,7 @@ export async function deleteIncomeSource(
     if (!deleted) return { error: 'Income source delete did not persist. Please try again.' };
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to delete income source' };
@@ -219,7 +219,7 @@ export async function backfillIncomeSourcesFromOnboarding(
 
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard');
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return { created };
   } catch (e) {
     return { created: 0, error: e instanceof Error ? e.message : 'Backfill failed' };

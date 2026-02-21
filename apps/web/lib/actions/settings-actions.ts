@@ -321,5 +321,5 @@ export async function updateHouseholdCurrency(householdId: string, currency: str
 
   revalidatePath('/dashboard/settings');
   revalidatePath('/dashboard', 'layout');
-  revalidatePath('/dashboard/blueprint', 'layout');
+  revalidatePath('/dashboard/money/blueprint', 'layout');
 }

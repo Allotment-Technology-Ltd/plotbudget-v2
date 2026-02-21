@@ -5,6 +5,8 @@ import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { useEffect, useRef, useState } from 'react';
 import { useCookieConsentOptional } from './cookie-consent-context';
 
+/** Calm Design Rule 8: Analytics only after explicit user opt-in (cookie consent). */
+
 const key =
   typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_POSTHOG_KEY : '';
 const host =

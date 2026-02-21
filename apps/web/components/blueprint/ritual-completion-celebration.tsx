@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface RitualCompletionCelebrationProps {
   open: boolean;
@@ -23,6 +24,8 @@ export function RitualCompletionCelebration({
   totalIncome,
 }: RitualCompletionCelebrationProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const reducedMotion = useReducedMotion();
+  const t = (d: number) => (reducedMotion ? 0 : d);
 
   const budgetState: BudgetState = useMemo(() => {
     const allocated = Number(totalAllocated);
@@ -79,7 +82,7 @@ export function RitualCompletionCelebration({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: t(0.15) }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
           onClick={handleOverlayClick}
           role="dialog"
@@ -106,7 +109,7 @@ export function RitualCompletionCelebration({
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: t(0.2) }}
             className="relative w-full max-w-md rounded border-2 border-emerald-500/60 bg-black shadow-[0_0_30px_rgba(16,185,129,0.15)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -126,7 +129,7 @@ export function RitualCompletionCelebration({
                   id="ritual-complete-heading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
+                  transition={{ delay: t(0.1) }}
                   className="text-xl font-heading uppercase tracking-wider text-emerald-400"
                 >
                   Ritual Complete!
@@ -135,7 +138,7 @@ export function RitualCompletionCelebration({
                   id="ritual-complete-description"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: t(0.2) }}
                   className="text-muted-foreground text-sm"
                 >
                   You closed your cycle. Budget locked for the month.
@@ -145,7 +148,7 @@ export function RitualCompletionCelebration({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
+                transition={{ delay: t(0.35) }}
                 className={`rounded border p-4 ${stateBorderColor}`}
               >
                 <p
@@ -158,12 +161,14 @@ export function RitualCompletionCelebration({
                 <p className="text-xs text-muted-foreground">
                   {stateMessage.body}
                 </p>
-                <motion.span
-                  className="inline-block w-2 h-4 ml-0.5 bg-emerald-400/80 align-middle mt-1"
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                  aria-hidden
-                />
+                {!reducedMotion && (
+                  <motion.span
+                    className="inline-block w-2 h-4 ml-0.5 bg-emerald-400/80 align-middle mt-1"
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    aria-hidden
+                  />
+                )}
               </motion.div>
 
               <div className="pt-1 flex flex-wrap gap-3">
@@ -177,7 +182,7 @@ export function RitualCompletionCelebration({
                 </button>
                 <button
                   type="button"
-                  onClick={() => (window.location.href = '/dashboard')}
+                  onClick={() => (window.location.href = '/dashboard/money')}
                   className="font-mono uppercase tracking-wider text-xs px-4 py-2 rounded border border-white/20 text-muted-foreground hover:bg-white/5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
                   data-testid="ritual-celebration-dashboard"
                 >

@@ -44,12 +44,12 @@ export async function gotoSettingsPage(
   }
 
   const ok = await tryGoto();
-  if (!ok && page.url().includes('/dashboard/blueprint')) {
+  if (!ok && page.url().includes('/dashboard/money/blueprint')) {
     await tryGoto();
   }
-  if (page.url().includes('/dashboard/blueprint')) {
+  if (page.url().includes('/dashboard/money/blueprint')) {
     throw new Error(
-      `Still on /dashboard/blueprint after ensuring household for ${userEmail}. ` +
+      `Still on /dashboard/money/blueprint after ensuring household for ${userEmail}. ` +
         'Check that the app and E2E use the same Supabase project (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).'
     );
   }

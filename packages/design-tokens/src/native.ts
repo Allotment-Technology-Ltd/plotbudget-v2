@@ -229,6 +229,29 @@ export const zIndex = {
   toast: 500,
 } as const;
 
+export const moduleColors: Record<'light' | 'dark', Record<string, string>> = {
+  light: {
+    money: '#0E8345',
+    tasks: '#2563EB',
+    calendar: '#7C3AED',
+    meals: '#EA580C',
+    holidays: '#0D9488',
+    vault: '#475569',
+    home: '#D97706',
+    kids: '#DB2777',
+  },
+  dark: {
+    money: '#69F0AE',
+    tasks: '#60A5FA',
+    calendar: '#A78BFA',
+    meals: '#FB923C',
+    holidays: '#5EEAD4',
+    vault: '#94A3B8',
+    home: '#FCD34D',
+    kids: '#F472B6',
+  },
+};
+
 // Type exports for TypeScript autocomplete
 export type ColorScheme = keyof typeof colors;
 export type ColorToken = keyof ColorPalette;

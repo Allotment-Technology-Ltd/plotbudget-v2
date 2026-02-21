@@ -6,6 +6,7 @@ import {
   getDashboardCycleMetrics,
 } from '@repo/logic';
 import type { Household, PayCycle, Seed } from '@repo/supabase';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface HeroMetricsProps {
   paycycle: PayCycle;
@@ -17,6 +18,7 @@ type StatusKey = 'good' | 'warning' | 'danger' | 'neutral';
 
 export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
   const currency = household?.currency ?? 'GBP';
+  const reducedMotion = useReducedMotion();
   const cycleMetrics = getDashboardCycleMetrics(paycycle, seeds);
   const {
     totalRemaining,
@@ -38,9 +40,9 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
     ? `Pay day: ${startDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
     : `${cycleProgress.toFixed(0)}% through`;
 
+  // Calm Design Rule 6: Use warning for over-allocated (planning state), not red/danger.
   let allocatedStatus: StatusKey = 'good';
-  if (allocatedPercent > 100) allocatedStatus = 'danger';
-  else if (allocatedPercent > 90) allocatedStatus = 'warning';
+  if (allocatedPercent > 90) allocatedStatus = 'warning';
 
   const metrics = [
     {
@@ -75,7 +77,7 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
 
   return (
     <section
-      className="grid grid-cols-2 lg:grid-cols-3 gap-4"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
       aria-label="Current cycle overview"
       data-testid="dashboard-hero"
     >
@@ -84,7 +86,7 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
             key={metric.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ duration: reducedMotion ? 0 : 0.4, delay: reducedMotion ? 0 : index * 0.05 }}
             className="bg-card rounded-lg p-6 border border-border min-w-0 overflow-hidden"
             role="article"
             aria-label={`${metric.label}: ${metric.value}`}
@@ -113,15 +115,11 @@ export function HeroMetrics({ paycycle, household, seeds }: HeroMetricsProps) {
               >
                 <motion.div
                   className={`h-full transition-all ${
-                    metric.status === 'danger'
-                      ? 'bg-destructive'
-                      : metric.status === 'warning'
-                        ? 'bg-warning'
-                        : 'bg-primary'
+                    metric.status === 'warning' ? 'bg-warning' : 'bg-primary'
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(metric.percentage, 100)}%` }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : 0.2 }}
                 />
               </div>
             )}

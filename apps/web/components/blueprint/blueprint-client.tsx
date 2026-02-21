@@ -22,6 +22,7 @@ import { useBlueprintOptimisticPaid } from './use-blueprint-optimistic-paid';
 import { useBlueprintDialogs } from './use-blueprint-dialogs';
 import { useBlueprintCycleActions } from './use-blueprint-cycle-actions';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { Database } from '@repo/supabase';
 
 type Household = Database['public']['Tables']['households']['Row'];
@@ -53,6 +54,8 @@ interface BlueprintClientProps {
   initialEditPotId?: string | null;
   initialEditRepaymentId?: string | null;
   initialNewCycleCelebration?: boolean;
+  /** Calm Design Rule 7: Show greeting when ritual is ready (payday near, cycle not closed). */
+  showRitualGreeting?: boolean;
   incomeEvents?: {
     sourceName: string;
     amount: number;
@@ -79,6 +82,7 @@ export function BlueprintClient({
   initialEditPotId = null,
   initialEditRepaymentId = null,
   initialNewCycleCelebration = false,
+  showRitualGreeting = false,
   incomeEvents = [],
   isPartner = false,
   ownerLabel = 'Account owner',
@@ -86,6 +90,7 @@ export function BlueprintClient({
 }: BlueprintClientProps) {
   const router = useRouter();
   const otherLabel = isPartner ? ownerLabel : partnerLabel;
+  const [greetingDismissed, setGreetingDismissed] = useState(false);
   const [selectedCategoryFilters, setSelectedCategoryFilters] = useState<
     BlueprintCategoryKey[]
   >([]);
@@ -209,6 +214,23 @@ export function BlueprintClient({
       />
 
       <main className="content-wrapper section-padding" id="main-content">
+        {showRitualGreeting && !greetingDismissed ? (
+          <div className="mx-auto max-w-md space-y-6 rounded-lg border border-border bg-card p-8 text-center">
+            <h2 className="font-heading text-xl font-semibold uppercase tracking-wider text-foreground">
+              It&apos;s payday
+            </h2>
+            <p className="text-muted-foreground">
+              Let&apos;s sort the month out together.
+            </p>
+            <Button
+              type="button"
+              onClick={() => setGreetingDismissed(true)}
+              className="w-full"
+            >
+              Let&apos;s go
+            </Button>
+          </div>
+        ) : (
         <div className="space-y-8">
           {isActiveCycle && allPaid && !ritualClosedAt && (
             <CloseCycleRitual
@@ -379,6 +401,7 @@ export function BlueprintClient({
             })}
           </div>
         </div>
+        )}
       </main>
 
       <CategoryRatioDialog

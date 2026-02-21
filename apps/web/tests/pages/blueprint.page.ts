@@ -102,14 +102,14 @@ export class BlueprintPage {
 
   // Actions
   async goto() {
-    await this.page.goto('/dashboard/blueprint', {
+    await this.page.goto('/dashboard/money/blueprint', {
       waitUntil: 'domcontentloaded',
       timeout: process.env.CI ? 45_000 : 30_000,
     });
     if (this.page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login instead of blueprint');
     }
-    await this.page.waitForURL(/\/(dashboard\/blueprint|dashboard\/payday-complete)/, {
+    await this.page.waitForURL(/\/(dashboard\/money\/blueprint|dashboard\/payday-complete)/, {
       timeout: 15_000,
     });
     if (this.page.url().includes('/dashboard/payday-complete')) {
@@ -180,7 +180,7 @@ export class BlueprintPage {
     // Force full page load so we get fresh server data (router.refresh() can be unreliable in CI)
     // Use reload() when already on blueprint — more stable than goto() which can ERR_ABORTED on parallel runs
     await this.page.reload({ waitUntil: 'domcontentloaded' });
-    await this.page.waitForURL(/\/dashboard\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
+    await this.page.waitForURL(/\/dashboard\/money\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
     // Use .first() because the same seed name can appear in multiple categories or cycles (strict mode).
     // Allow 30s in CI where the new seed can take a moment to appear after reload.
     const seedCardTimeout = process.env.CI ? 30_000 : 20_000;
@@ -209,7 +209,7 @@ export class BlueprintPage {
 
     // Reload to get fresh server data (consistent with addSeed/editSeed)
     await this.page.reload({ waitUntil: 'domcontentloaded' });
-    await this.page.waitForURL(/\/dashboard\/blueprint/, {
+    await this.page.waitForURL(/\/dashboard\/money\/blueprint/, {
       timeout: process.env.CI ? 25_000 : 15_000,
     });
 

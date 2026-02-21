@@ -275,7 +275,7 @@ export async function markSeedPaid(
   if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
   await updatePaycycleRemaining(seed, payer);
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }
@@ -342,7 +342,7 @@ export async function unmarkSeedPaid(
   if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
   await incrementPaycycleRemaining(seed, payer);
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }
@@ -389,7 +389,7 @@ export async function closeRitual(
 
   if (error) return { error: (error as { message: string }).message };
   if (!updated) return { error: 'Ritual close did not persist. Please try again.' };
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }
@@ -436,7 +436,7 @@ export async function unlockRitual(
 
   if (error) return { error: (error as { message: string }).message };
   if (!updated) return { error: 'Ritual unlock did not persist. Please try again.' };
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }
@@ -556,7 +556,7 @@ async function completeActiveAndSetMembersCurrent(
 }
 
 function revalidateNextCyclePaths(): void {
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/payday-complete');
 }

@@ -8,6 +8,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import {
   colorTokens,
+  moduleTokens,
   spacingTokens,
   borderRadiusTokens,
   typographyTokens,
@@ -15,6 +16,12 @@ import {
   zIndexTokens,
   rgbTokens,
 } from '../src/tokens.config';
+
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '0 0 0';
+  return `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}`;
+}
 
 const SRC_DIR = join(__dirname, '../src');
 
@@ -63,6 +70,11 @@ function generateCssTokens(): string {
   lines.push(`  --plot-text-primary-rgb: ${rgbTokens.light.textPrimaryRgb};`);
   lines.push(`  --plot-text-secondary-rgb: ${rgbTokens.light.textSecondaryRgb};`);
   lines.push('');
+  lines.push('  /* Module colours (RGB for Tailwind alpha) */');
+  Object.entries(moduleTokens).forEach(([key, val]) => {
+    lines.push(`  --module-${key}: ${hexToRgb(val.light)};`);
+  });
+  lines.push('');
   lines.push('  /* Aliases for marketing site (maps to plot- tokens) */');
   lines.push('  --bg-primary: var(--plot-bg-primary);');
   lines.push('  --bg-secondary: var(--plot-bg-secondary);');
@@ -93,6 +105,11 @@ function generateCssTokens(): string {
   lines.push(`  --plot-bg-secondary-rgb: ${rgbTokens.dark.bgSecondaryRgb};`);
   lines.push(`  --plot-text-primary-rgb: ${rgbTokens.dark.textPrimaryRgb};`);
   lines.push(`  --plot-text-secondary-rgb: ${rgbTokens.dark.textSecondaryRgb};`);
+  lines.push('');
+  lines.push('  /* Module colours (RGB for Tailwind alpha) */');
+  Object.entries(moduleTokens).forEach(([key, val]) => {
+    lines.push(`  --module-${key}: ${hexToRgb(val.dark)};`);
+  });
   lines.push('}');
 
   return lines.join('\n');
@@ -293,6 +310,21 @@ function generateTypeScriptTokens(): string {
     lines.push(`  ${key}: ${value},`);
   });
   lines.push('} as const;');
+  lines.push('');
+
+  // Module colours (for nav, tabs, cards)
+  lines.push('export const moduleColors: Record<\'light\' | \'dark\', Record<string, string>> = {');
+  lines.push('  light: {');
+  Object.entries(moduleTokens).forEach(([key, val]) => {
+    lines.push(`    ${key}: '${val.light}',`);
+  });
+  lines.push('  },');
+  lines.push('  dark: {');
+  Object.entries(moduleTokens).forEach(([key, val]) => {
+    lines.push(`    ${key}: '${val.dark}',`);
+  });
+  lines.push('  },');
+  lines.push('};');
   lines.push('');
 
   // Type exports

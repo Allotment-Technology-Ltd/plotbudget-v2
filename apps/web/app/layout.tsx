@@ -9,6 +9,7 @@ import { PostHogProvider } from '../components/providers/posthog-provider';
 import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
 import { CookieBanner } from '../components/cookie-banner';
 import { NavigationProgressProvider } from '../components/navigation/navigation-progress-context';
+import { QueryProvider } from '../components/providers/query-provider';
 import { PwaSplashScreen } from '../components/pwa/pwa-splash-screen';
 import './globals.css';
 
@@ -114,9 +115,11 @@ export default function RootLayout({
               storageKey="plot-theme"
             >
               <ThemeSync />
-              <NavigationProgressProvider>
-                <main id="main-content">{children}</main>
-              </NavigationProgressProvider>
+              <QueryProvider>
+                <NavigationProgressProvider>
+                  <main id="main-content">{children}</main>
+                </NavigationProgressProvider>
+              </QueryProvider>
               <Toaster position="top-right" />
             </ThemeProvider>
           </PostHogProvider>

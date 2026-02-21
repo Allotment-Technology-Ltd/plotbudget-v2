@@ -37,6 +37,16 @@
   --plot-text-primary-rgb: 17 17 17;
   --plot-text-secondary-rgb: 85 85 85;
 
+  /* Module colours (RGB for Tailwind alpha) */
+  --module-money: 14 131 69;
+  --module-tasks: 37 99 235;
+  --module-calendar: 124 58 237;
+  --module-meals: 234 88 12;
+  --module-holidays: 13 148 136;
+  --module-vault: 71 85 105;
+  --module-home: 217 119 6;
+  --module-kids: 219 39 119;
+
   /* Aliases for marketing site (maps to plot- tokens) */
   --bg-primary: var(--plot-bg-primary);
   --bg-secondary: var(--plot-bg-secondary);
@@ -67,4 +77,14 @@
   --plot-bg-secondary-rgb: 26 26 26;
   --plot-text-primary-rgb: 245 240 234;
   --plot-text-secondary-rgb: 153 153 153;
+
+  /* Module colours (RGB for Tailwind alpha) */
+  --module-money: 105 240 174;
+  --module-tasks: 96 165 250;
+  --module-calendar: 167 139 250;
+  --module-meals: 251 146 60;
+  --module-holidays: 94 234 212;
+  --module-vault: 148 163 184;
+  --module-home: 252 211 77;
+  --module-kids: 244 114 182;
 }

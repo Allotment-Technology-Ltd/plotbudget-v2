@@ -39,7 +39,7 @@ export function SavingsDebtProgress({
             progress.
           </p>
           <Link
-            href="/dashboard/blueprint"
+            href="/dashboard/money/blueprint"
             className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Manage Blueprint
@@ -62,7 +62,7 @@ export function SavingsDebtProgress({
           Savings & Debt
         </h2>
         <Link
-          href="/dashboard/blueprint"
+          href="/dashboard/money/blueprint"
           className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
         >
           Manage

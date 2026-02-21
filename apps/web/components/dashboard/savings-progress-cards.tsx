@@ -27,7 +27,7 @@ export function SavingsProgressCards({
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-xl uppercase tracking-wider">Savings goals</h2>
           <Link
-            href="/dashboard/blueprint"
+            href="/dashboard/money/blueprint"
             className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Manage

@@ -76,6 +76,18 @@ export const colorTokens = {
   },
 } as const;
 
+/** Module accent colours (light/dark) for nav, tabs, and cards. */
+export const moduleTokens = {
+  money: { light: '#0E8345', dark: '#69F0AE' },
+  tasks: { light: '#2563EB', dark: '#60A5FA' },
+  calendar: { light: '#7C3AED', dark: '#A78BFA' },
+  meals: { light: '#EA580C', dark: '#FB923C' },
+  holidays: { light: '#0D9488', dark: '#5EEAD4' },
+  vault: { light: '#475569', dark: '#94A3B8' },
+  home: { light: '#D97706', dark: '#FCD34D' },
+  kids: { light: '#DB2777', dark: '#F472B6' },
+} as const;
+
 export const spacingTokens = {
   xs: 4,
   sm: 8,

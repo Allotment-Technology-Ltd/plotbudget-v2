@@ -3,8 +3,8 @@
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/blueprint', label: 'Blueprint' },
+  { href: '/dashboard/money', label: 'Money' },
+  { href: '/dashboard/money/blueprint', label: 'Blueprint' },
 ];
 
 /**
@@ -20,8 +20,8 @@ export function DashboardNav() {
         const isExternal = 'external' in item && item.external;
         const isActive =
           !isExternal &&
-          (item.href === '/dashboard'
-            ? pathname === '/dashboard'
+          (item.href === '/dashboard/money'
+            ? pathname === '/dashboard/money' || pathname.startsWith('/dashboard/money/')
             : pathname.startsWith(item.href));
         const linkClassName =
           isActive

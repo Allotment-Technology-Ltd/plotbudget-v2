@@ -52,7 +52,7 @@ export async function createRepayment(
 
     if (error) return { error: error.message };
     if (!repayment) return { error: 'Repayment create did not persist. Please try again.' };
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return { repaymentId: repayment.id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create repayment' };
@@ -74,7 +74,7 @@ export async function updateRepayment(
 
     if (error) return { error: error.message };
     if (!updated) return { error: 'Repayment update did not persist. Please try again.' };
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
     return {};
   } catch (e) {
@@ -128,7 +128,7 @@ export async function deleteRepayment(
     .single();
   if (deleteError) return { error: deleteError.message };
   if (!deleted) return { error: 'Repayment delete did not persist. Please try again.' };
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }

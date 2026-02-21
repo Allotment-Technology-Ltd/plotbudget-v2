@@ -89,7 +89,7 @@ export function CategoryDonutChart({
             No allocations yet. Add expenses in Blueprint to see your breakdown.
           </p>
           <a
-            href="/dashboard/blueprint"
+            href="/dashboard/money/blueprint"
             className="text-primary font-heading text-sm uppercase tracking-wider hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Go to Blueprint

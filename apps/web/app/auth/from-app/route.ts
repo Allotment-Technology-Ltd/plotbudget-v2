@@ -53,9 +53,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  let session: { expires_at?: number };
+  type SessionLike = { expires_at?: number; access_token?: string; user?: unknown };
+  let session: SessionLike;
   try {
-    session = JSON.parse(sessionPayload);
+    let parsed: unknown = JSON.parse(sessionPayload);
+    // Handle double-stringified payload (e.g. from native or storage): parse until we have an object
+    while (typeof parsed === 'string') {
+      parsed = JSON.parse(parsed);
+    }
+    if (typeof parsed !== 'object' || parsed === null) {
+      throw new Error('Session payload is not an object');
+    }
+    session = parsed as SessionLike;
   } catch {
     loginUrl.searchParams.set('error', 'auth_failed');
     return NextResponse.redirect(loginUrl);
@@ -71,9 +80,11 @@ export async function GET(request: NextRequest) {
   const redirectUrl = new URL(safeReturnTo, request.url);
   const res = NextResponse.redirect(redirectUrl);
 
+  // Always write a single stringified session object so the Supabase client receives JSON that parses to an object (avoids "Cannot create property 'user' on string")
+  const payloadToStore = JSON.stringify(session);
   const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
   const cookieName = `sb-${projectRef}-auth-token`;
-  const cookieValue = 'base64-' + base64UrlEncode(sessionPayload);
+  const cookieValue = 'base64-' + base64UrlEncode(payloadToStore);
   const expiresAt = session.expires_at ?? Math.floor(Date.now() / 1000) + 3600;
   res.cookies.set(cookieName, cookieValue, {
     path: '/',

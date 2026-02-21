@@ -1,0 +1,191 @@
+import { Suspense } from 'react';
+import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
+import { formatDisplayNameForLabel } from '@/lib/utils/display-name';
+import { redirect } from 'next/navigation';
+import { DashboardClient } from '@/components/dashboard/dashboard-client';
+import { CheckoutSuccessToast } from '@/components/dashboard/checkout-success-toast';
+import { markOverdueSeedsPaid } from '@/lib/actions/seed-actions';
+import { getIncomeEventsForCycle } from '@/lib/utils/income-projection';
+import type { Household, PayCycle, Pot, Repayment, Seed } from '@repo/supabase';
+
+type HistoricalCycleRow = Pick<
+  PayCycle,
+  | 'id'
+  | 'name'
+  | 'start_date'
+  | 'end_date'
+  | 'total_income'
+  | 'total_allocated'
+  | 'alloc_needs_me'
+  | 'alloc_needs_partner'
+  | 'alloc_needs_joint'
+  | 'alloc_wants_me'
+  | 'alloc_wants_partner'
+  | 'alloc_wants_joint'
+  | 'alloc_savings_me'
+  | 'alloc_savings_partner'
+  | 'alloc_savings_joint'
+  | 'alloc_repay_me'
+  | 'alloc_repay_partner'
+  | 'alloc_repay_joint'
+>;
+
+export default async function MoneyDashboardPage() {
+  const { user, profile, owned, partnerOf } = await getCachedDashboardAuth();
+  if (!user) redirect('/login');
+
+  const supabase = await getCachedSupabase();
+  const isPartner = !owned && !!partnerOf;
+  const partnerHouseholdId = partnerOf?.id ?? null;
+  let householdId: string;
+  let currentPaycycleId: string | null = null;
+
+  if (profile?.household_id) {
+    householdId = profile.household_id;
+    currentPaycycleId = profile.current_paycycle_id;
+  } else if (isPartner && partnerHouseholdId) {
+    householdId = partnerHouseholdId;
+    const { data: activeCycle } = (await supabase
+      .from('paycycles')
+      .select('id')
+      .eq('household_id', householdId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()) as { data: { id: string } | null };
+    currentPaycycleId = activeCycle?.id ?? null;
+  } else {
+    redirect('/onboarding');
+  }
+
+  // Money module gate: account owner must have completed onboarding; partners can view.
+  if (!isPartner && !profile?.has_completed_onboarding) {
+    redirect('/onboarding');
+  }
+
+  // Parallel fetch: household + owner display name, and all household-scoped data
+  const householdPromise = supabase
+    .from('households')
+    .select('*')
+    .eq('id', householdId)
+    .single();
+  const potsPromise = supabase
+    .from('pots')
+    .select('*')
+    .eq('household_id', householdId)
+    .in('status', ['active', 'paused']);
+  const repaymentsPromise = supabase
+    .from('repayments')
+    .select('*')
+    .eq('household_id', householdId)
+    .in('status', ['active', 'paused']);
+  const historicalPromise = supabase
+    .from('paycycles')
+    .select(
+      'id, name, start_date, end_date, total_income, total_allocated, alloc_needs_me, alloc_needs_partner, alloc_needs_joint, alloc_wants_me, alloc_wants_partner, alloc_wants_joint, alloc_savings_me, alloc_savings_partner, alloc_savings_joint, alloc_repay_me, alloc_repay_partner, alloc_repay_joint'
+    )
+    .eq('household_id', householdId)
+    .eq('status', 'completed')
+    .order('start_date', { ascending: false })
+    .limit(6);
+  const draftCyclePromise = supabase
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('status', 'draft')
+    .limit(1)
+    .maybeSingle();
+
+  const [
+    householdRes,
+    potsRes,
+    repaymentsRes,
+    historicalRes,
+    draftCycleRes,
+  ] = await Promise.all([
+    householdPromise,
+    potsPromise,
+    repaymentsPromise,
+    historicalPromise,
+    draftCyclePromise,
+  ]);
+
+  const { data: household } = householdRes as { data: Household | null };
+  if (!household) redirect('/onboarding');
+
+  const ownerDisplayNamePromise = household.owner_id
+    ? supabase.from('users').select('display_name').eq('id', household.owner_id).single()
+    : Promise.resolve({ data: null });
+  const ownerDisplayNameRes = await ownerDisplayNamePromise;
+  const ownerDisplayName = (ownerDisplayNameRes.data as { display_name: string | null } | null)?.display_name ?? null;
+  const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
+  const partnerLabel = formatDisplayNameForLabel(household.partner_name, 'Partner');
+
+  let currentPaycycle: PayCycle | null = null;
+  let seeds: Seed[] = [];
+  const historicalCycles: HistoricalCycleRow[] = (historicalRes.data ?? []) as HistoricalCycleRow[];
+  const hasDraftCycle = !!draftCycleRes.data;
+
+  if (currentPaycycleId) {
+    const { data: paycycle } = await supabase
+      .from('paycycles')
+      .select('*')
+      .eq('id', currentPaycycleId)
+      .single();
+    currentPaycycle = paycycle ? (paycycle as PayCycle) : null;
+    if ((currentPaycycle as { status?: string } | null)?.status === 'active') {
+      await markOverdueSeedsPaid(currentPaycycleId, undefined, { skipRevalidate: true });
+    }
+    const { data: seedsData } = await supabase
+      .from('seeds')
+      .select('*, pots(*), repayments(*)')
+      .eq('paycycle_id', currentPaycycleId)
+      .order('created_at', { ascending: false });
+    seeds = seedsData ?? [];
+  }
+
+  let incomeEvents: { sourceName: string; amount: number; date: string; payment_source: 'me' | 'partner' | 'joint' }[] = [];
+  if (currentPaycycle) {
+    const { data: incomeSources } = await supabase
+      .from('income_sources')
+      .select('id, name, amount, frequency_rule, day_of_month, anchor_date, payment_source')
+      .eq('household_id', householdId)
+      .eq('is_active', true);
+    const sources = (incomeSources ?? []) as {
+      id: string;
+      name: string;
+      amount: number;
+      frequency_rule: 'specific_date' | 'last_working_day' | 'every_4_weeks';
+      day_of_month: number | null;
+      anchor_date: string | null;
+      payment_source: 'me' | 'partner' | 'joint';
+    }[];
+    incomeEvents = getIncomeEventsForCycle(
+      currentPaycycle.start_date,
+      currentPaycycle.end_date,
+      sources
+    );
+  }
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <CheckoutSuccessToast />
+      </Suspense>
+      <DashboardClient
+        household={household as Household}
+        currentPaycycle={currentPaycycle}
+        seeds={seeds}
+        pots={(potsRes.data ?? []) as Pot[]}
+        repayments={(repaymentsRes.data ?? []) as Repayment[]}
+        historicalCycles={historicalCycles}
+        hasDraftCycle={hasDraftCycle}
+        incomeEvents={incomeEvents}
+        isPartner={isPartner}
+        ownerLabel={ownerLabel}
+        partnerLabel={partnerLabel}
+        userId={user.id}
+        foundingMemberUntil={household?.founding_member_until ?? null}
+      />
+    </>
+  );
+}

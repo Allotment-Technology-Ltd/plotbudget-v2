@@ -1,4 +1,4 @@
-# Release: on push to main, apply production migrations, deploy Sanity schema, then run semantic-release (version + changelog).
+# Release: on push to main, apply production migrations, deploy Sanity schema + Studio app, then run semantic-release (version + changelog).
 # Requires: SUPABASE_PROD_DATABASE_URL (full Postgres URI). Vercel deploys main automatically.
 # Sanity: create a deploy token at https://sanity.io/manage → project → API → Deploy tokens; add as Actions secret SANITY_AUTH_TOKEN.
 # Root CHANGELOG.md is for repo/developer use only. The public "What's new" page is manually maintained in apps/marketing/src/data/publicChangelog.js.
@@ -42,7 +42,7 @@ jobs:
           supabase db push --db-url "$DATABASE_URL" --include-all
 
   sanity-schema:
-    name: Deploy Sanity schema
+    name: Deploy Sanity schema and Studio
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -63,6 +63,11 @@ jobs:
             exit 1
           fi
           npx sanity schema deploy
+      - name: Deploy Studio app
+        working-directory: sanity-studio
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: npx sanity deploy
 
   release:
     name: semantic-release

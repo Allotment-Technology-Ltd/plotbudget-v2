@@ -128,7 +128,7 @@ async function updateOrCreateLockInSeed(
 
 function revalidateForecastPaths(potId: string | null, repaymentId: string | null): void {
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   if (potId) revalidatePath(`/dashboard/forecast/pot/${potId}`);
   if (repaymentId) revalidatePath(`/dashboard/forecast/repayment/${repaymentId}`);
 }

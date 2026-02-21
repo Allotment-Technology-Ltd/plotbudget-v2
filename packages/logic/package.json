@@ -10,15 +10,21 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo node_modules"
+    "clean": "rm -rf dist .turbo node_modules",
+    "test:phase0": "pnpm exec tsx src/test-phase0.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
+    "rrule": "^2.8.1",
     "zod": "^3.22.4",
-    "zustand": "^4.5.0",
-    "date-fns": "^4.1.0"
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "typescript": "^5.3.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
   }
 }

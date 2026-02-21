@@ -38,13 +38,13 @@ test.describe('Dashboard and app shell', () => {
     // Navigate directly so cookies are sent (client-side Link nav can lose session in CI)
     await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
     // Accept settings, login, or blueprint (redirect chain: settings → onboarding → blueprint if user has no household)
-    await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20_000 });
+    await page.waitForURL(/\/(dashboard\/settings|dashboard\/money\/blueprint|login)/, { timeout: 20_000 });
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login. Check baseURL and auth state origin.');
     }
-    if (page.url().includes('/dashboard/blueprint')) {
+    if (page.url().includes('/dashboard/money/blueprint')) {
       throw new Error(
-        'Redirected to /dashboard/blueprint instead of settings. Restart the dev server so proxy/middleware changes apply; ensure global-setup ran (dashboard user has household + has_completed_onboarding).'
+        'Redirected to /dashboard/money/blueprint instead of settings. Restart the dev server so proxy/middleware changes apply; ensure global-setup ran (dashboard user has household + has_completed_onboarding).'
       );
     }
     const settingsPage = page.getByTestId('settings-page');
@@ -60,13 +60,13 @@ test.describe('Dashboard and app shell', () => {
 
   test('settings shows who is signed in (owner: Logged in as)', async ({ page }) => {
     await page.goto('/dashboard/settings', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20_000 });
+    await page.waitForURL(/\/(dashboard\/settings|dashboard\/money\/blueprint|login)/, { timeout: 20_000 });
     if (page.url().includes('/login')) {
       throw new Error('Session lost: redirected to login.');
     }
-    if (page.url().includes('/dashboard/blueprint')) {
+    if (page.url().includes('/dashboard/money/blueprint')) {
       throw new Error(
-        'Redirected to /dashboard/blueprint instead of settings. Restart the dev server so proxy changes apply; ensure dashboard user has household (global-setup).'
+        'Redirected to /dashboard/money/blueprint instead of settings. Restart the dev server so proxy changes apply; ensure dashboard user has household (global-setup).'
       );
     }
     await expect(page.getByText('Who is signed in', { exact: false })).toBeVisible({ timeout: 10_000 });

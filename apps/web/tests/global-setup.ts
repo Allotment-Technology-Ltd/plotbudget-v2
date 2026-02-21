@@ -119,7 +119,7 @@ export default async function globalSetup(config: FullConfig) {
   // Without this, multiple workers requesting an uncompiled route can trigger a webpack memory-cache
   // race ("Cannot read properties of undefined (reading 'call')") that crashes the page.
   console.log('⏳ Global setup: warming up routes…');
-  const warmupRoutes = ['/dashboard', '/dashboard/settings', '/dashboard/blueprint'];
+  const warmupRoutes = ['/dashboard', '/dashboard/settings', '/dashboard/money/blueprint'];
   for (const route of warmupRoutes) {
     try {
       await fetch(`${baseURL}${route}`, { method: 'GET', redirect: 'follow' }).catch(() => {});

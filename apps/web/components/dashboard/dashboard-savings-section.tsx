@@ -63,7 +63,7 @@ export function DashboardSavingsSection({
             </h2>
             <div className="flex items-center gap-2 shrink-0">
               <Link
-                href="/dashboard/blueprint"
+                href="/dashboard/money/blueprint"
                 onClick={(e) => e.stopPropagation()}
                 className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
               >
@@ -102,7 +102,7 @@ export function DashboardSavingsSection({
           </h2>
           <p className="text-muted-foreground text-sm mb-4">{EMPTY_MESSAGE}</p>
           <Link
-            href="/dashboard/blueprint"
+            href="/dashboard/money/blueprint"
             onClick={() => setNavigating(true)}
             className="text-primary font-heading text-sm uppercase tracking-wider hover:underline"
           >

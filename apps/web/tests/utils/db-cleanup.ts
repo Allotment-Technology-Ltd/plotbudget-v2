@@ -127,7 +127,7 @@ export async function cleanupTestUser(email: string) {
 /**
  * Clear ritual_closed_at on the household's active paycycle so the app does not
  * redirect to /dashboard/payday-complete. Call from ensureBlueprintReady so
- * E2E tests that visit /dashboard or /dashboard/blueprint see the normal page.
+ * E2E tests that visit /dashboard or /dashboard/money/blueprint see the normal page.
  */
 export async function clearPaydayCompleteStateForHousehold(
   householdId: string
@@ -283,7 +283,7 @@ export async function ensureUserInPublicUsers(email: string) {
 }
 
 /**
- * Ensure a test user has a household and completed onboarding so /dashboard/blueprint loads.
+ * Ensure a test user has a household and completed onboarding so /dashboard/money/blueprint loads.
  * Creates a minimal household + paycycle if the user has none (e.g. after onboarding tests reset them).
  */
 export async function ensureBlueprintReady(email: string) {
@@ -345,7 +345,7 @@ export async function ensureBlueprintReady(email: string) {
     return;
   }
 
-  // Create minimal household and paycycle so /dashboard/blueprint is reachable
+  // Create minimal household and paycycle so /dashboard/money/blueprint is reachable
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
   const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);

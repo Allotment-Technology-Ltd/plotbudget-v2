@@ -37,7 +37,7 @@ export function useBlueprintCycleActions({
     (cycleId: string) => {
       if (cycleId === paycycleId) return;
       setIsSwitchingCycle(true);
-      router.push(`/dashboard/blueprint?cycle=${cycleId}`);
+      router.push(`/dashboard/money/blueprint?cycle=${cycleId}`);
     },
     [paycycleId, router]
   );
@@ -47,7 +47,7 @@ export function useBlueprintCycleActions({
     try {
       const result = await createNextPaycycle(paycycleId);
       if (result.cycleId) {
-        router.push(`/dashboard/blueprint?cycle=${result.cycleId}&newCycle=1`);
+        router.push(`/dashboard/money/blueprint?cycle=${result.cycleId}&newCycle=1`);
         onRefresh();
       } else if (result.error) {
         toast.error(result.error);

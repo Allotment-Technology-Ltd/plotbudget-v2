@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { usePostHog } from 'posthog-js/react';
+import { useCookieConsentOptional } from '@/components/providers/cookie-consent-context';
 
 /** Allowed checkout paths (same-origin only). Used to avoid open redirect / XSS. */
 const ALLOWED_CHECKOUT_PREFIX = '/api/checkout';
@@ -23,6 +24,8 @@ interface CheckoutCtaProps {
 export function CheckoutCta({ href, children, className, amount, pricingMode }: CheckoutCtaProps) {
   const router = useRouter();
   const posthog = usePostHog();
+  const consent = useCookieConsentOptional();
+  const analyticsAccepted = consent?.consent?.analytics === true;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,7 +34,7 @@ export function CheckoutCta({ href, children, className, amount, pricingMode }: 
         ? href
         : `${ALLOWED_CHECKOUT_PREFIX}?product=pwyl`;
     try {
-      if (posthog?.capture) {
+      if (analyticsAccepted && posthog?.capture) {
         posthog.capture('checkout_started', {
           amount: amount ?? undefined,
           pricing_mode: pricingMode ?? 'pwyl',

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const PAYDAY_COMPLETE_PATH = '/dashboard/payday-complete';
-const REDIRECT_PATHS = ['/dashboard', '/dashboard/blueprint'];
+const REDIRECT_PATHS = ['/dashboard', '/dashboard/money', '/dashboard/money/blueprint'];
 
 export function PaydayCompleteRedirect({
   shouldRedirectToPaydayComplete,

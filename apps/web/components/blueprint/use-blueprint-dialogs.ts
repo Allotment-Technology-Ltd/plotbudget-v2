@@ -114,13 +114,13 @@ export function useBlueprintDialogs({
     setIsAddSeedOpen(false);
     setEditingSeed(null);
     setSelectedCategory(null);
-    onReplace(`/dashboard/blueprint?cycle=${paycycleId}`);
+    onReplace(`/dashboard/money/blueprint?cycle=${paycycleId}`);
     onRefresh();
   }, [paycycleId, onReplace, onRefresh]);
 
   const handleNewCycleCelebrationClose = useCallback(() => {
     setShowNewCycleCelebration(false);
-    onReplace('/dashboard/blueprint?cycle=' + paycycleId);
+    onReplace('/dashboard/money/blueprint?cycle=' + paycycleId);
   }, [paycycleId, onReplace]);
 
   const handleCelebrationClose = useCallback(() => {

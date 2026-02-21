@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AuthMinimalHeader } from '@/components/auth/auth-brand-header';
@@ -54,13 +54,18 @@ function useLoginOAuth(redirectTo: string | null) {
 
 /**
  * Last-used login method (from storage) and ordered list of methods for the hub.
+ * lastUsed is only read after mount to avoid hydration mismatch (server has no localStorage).
  */
 function useOrderedLoginMethods(
   googleLoginEnabled: boolean,
   appleLoginEnabled: boolean,
   magicLinkEnabled: boolean
 ) {
-  const lastUsed = useMemo(() => getLastLoginMethod(), []);
+  const [lastUsed, setLastUsed] = useState<LastLoginMethod | null>(null);
+
+  useEffect(() => {
+    setLastUsed(getLastLoginMethod());
+  }, []);
 
   const orderedMethods = useMemo(() => {
     const enabled = new Set<LastLoginMethod>();

@@ -115,11 +115,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If authenticated, check onboarding: owners go to onboarding until complete;
-    // partners (partner_user_id set) can use dashboard without completing owner onboarding.
+    // Essential setup gate: user must have a household (owner or partner) to access dashboard.
+    // Launcher at /dashboard is shown once they have a household; Money onboarding is gated per-module.
     const { data: profile } = await supabase
       .from('users')
-      .select('has_completed_onboarding')
+      .select('household_id')
       .eq('id', user.id)
       .single();
 
@@ -129,14 +129,12 @@ export async function proxy(request: NextRequest) {
       .eq('partner_user_id', user.id)
       .maybeSingle();
 
-    const isPartner = !!partnerHousehold;
+    const hasHousehold = !!(profile?.household_id ?? partnerHousehold);
 
     // Allow /dashboard/settings so owners can always reach it; the settings page redirects to onboarding if no household.
     const isSettingsPath = request.nextUrl.pathname === '/dashboard/settings';
     if (
-      profile != null &&
-      !profile.has_completed_onboarding &&
-      !isPartner &&
+      !hasHousehold &&
       !request.nextUrl.pathname.includes('/onboarding') &&
       !isSettingsPath
     ) {
@@ -160,7 +158,7 @@ export async function proxy(request: NextRequest) {
       .single();
 
     if (profile?.has_completed_onboarding) {
-      return NextResponse.redirect(new URL('/dashboard/blueprint', request.url));
+      return NextResponse.redirect(new URL('/dashboard/money/blueprint', request.url));
     }
   }
 

@@ -226,7 +226,7 @@ export function PotForecastClient({
       return;
     }
     toast.success('Savings goal removed');
-    router.push('/dashboard');
+    router.push('/dashboard/money');
   };
 
   return (
@@ -501,10 +501,10 @@ export function PotForecastClient({
           <Link
             href={
               paycycle && linkedSeed
-                ? `/dashboard/blueprint?cycle=${paycycle.id}&edit=${linkedSeed.id}`
+                ? `/dashboard/money/blueprint?cycle=${paycycle.id}&edit=${linkedSeed.id}`
                 : paycycle
-                  ? `/dashboard/blueprint?cycle=${paycycle.id}&editPot=${pot.id}`
-                  : '/dashboard/blueprint'
+                  ? `/dashboard/money/blueprint?cycle=${paycycle.id}&editPot=${pot.id}`
+                  : '/dashboard/money/blueprint'
             }
           >
             <Button variant="outline" type="button">

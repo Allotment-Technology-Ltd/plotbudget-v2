@@ -3,6 +3,10 @@ import Image from 'next/image';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PricingHeaderNavClient } from '@/app/pricing/pricing-header-nav-client';
 
+/**
+ * Shared layout for all public marketing pages (e.g. /roadmap, /pricing).
+ * Single header: PLOT logo + nav; main content uses content-wrapper / section-padding for consistency.
+ */
 export default async function MarketingLayout({
   children,
 }: {

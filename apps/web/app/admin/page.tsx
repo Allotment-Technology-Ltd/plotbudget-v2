@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Mail, FileText, Map, ExternalLink } from 'lucide-react';
+import { Mail, FileText, Map, ExternalLink, Flag } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -19,7 +19,23 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <section className="space-y-4" aria-labelledby="admin-emails-heading">
+      <section className="space-y-4" aria-labelledby="admin-flags-heading">
+        <h2 id="admin-flags-heading" className="font-heading text-lg uppercase tracking-wider text-foreground">
+          Feature flag overrides
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          In pre-production only: override module flags (Money, Home, Tasks, etc.) for testing without changing PostHog. Production continues to use PostHog.
+        </p>
+        <Link
+          href="/admin/flags"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Flag className="h-4 w-4" aria-hidden />
+          Open flag overrides
+        </Link>
+      </section>
+
+      <section className="space-y-4 border-t border-border pt-8" aria-labelledby="admin-emails-heading">
         <h2 id="admin-emails-heading" className="font-heading text-lg uppercase tracking-wider text-foreground">
           Email testing
         </h2>

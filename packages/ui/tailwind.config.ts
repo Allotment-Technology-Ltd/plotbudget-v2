@@ -102,6 +102,18 @@ const config: Config = {
         error: 'rgb(var(--error) / <alpha-value>)',
         warning: 'rgb(var(--warning) / <alpha-value>)',
         info: 'rgb(var(--info) / <alpha-value>)',
+
+        /* Module colours (from design-tokens; use --module-* in CSS) */
+        module: {
+          money: 'rgb(var(--module-money) / <alpha-value>)',
+          tasks: 'rgb(var(--module-tasks) / <alpha-value>)',
+          calendar: 'rgb(var(--module-calendar) / <alpha-value>)',
+          meals: 'rgb(var(--module-meals) / <alpha-value>)',
+          holidays: 'rgb(var(--module-holidays) / <alpha-value>)',
+          vault: 'rgb(var(--module-vault) / <alpha-value>)',
+          home: 'rgb(var(--module-home) / <alpha-value>)',
+          kids: 'rgb(var(--module-kids) / <alpha-value>)',
+        },
       },
 
       fontFamily: {

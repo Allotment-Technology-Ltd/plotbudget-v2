@@ -82,6 +82,12 @@
    ======================================================== */
 
 @layer components {
+  /* Prose: ensure bold/strong use body text colour (typography plugin can override otherwise) */
+  .prose strong,
+  .prose b {
+    color: var(--text-primary) !important;
+  }
+
   /* Terminal-style section label (e.g., "THE PROBLEM") — WCAG 2.2 compliant accent text */
   .section-label {
     @apply font-heading text-label uppercase tracking-[0.15em] text-plot-accent-text;

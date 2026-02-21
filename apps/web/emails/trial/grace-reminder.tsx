@@ -20,7 +20,7 @@ export default function GraceReminderEmail({ displayName = 'there', graceDay = 6
       <Button href="https://app.plotbudget.com/pricing" style={button}>
         Upgrade with Pay-What-You-Like
       </Button>
-      <Button href="https://app.plotbudget.com/dashboard/blueprint" style={buttonSecondary}>
+      <Button href="https://app.plotbudget.com/dashboard/money/blueprint" style={buttonSecondary}>
         Reduce to Free Tier Limits
       </Button>
 

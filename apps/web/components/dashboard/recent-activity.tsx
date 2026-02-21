@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Plus, Edit3, PiggyBank, CreditCard } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { currencySymbol } from '@/lib/utils/currency';
 import type { Seed, Pot, Repayment } from '@repo/supabase';
 
@@ -97,7 +98,7 @@ function buildActivity(
   items.sort(
     (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
   );
-  return items.slice(0, 10);
+  return items.slice(0, 5);
 }
 
 export function RecentActivity({
@@ -107,12 +108,15 @@ export function RecentActivity({
   currency = 'GBP',
 }: RecentActivityProps) {
   const activity = buildActivity(seeds, pots, repayments, currency);
+  const reducedMotion = useReducedMotion();
+  const transition = { duration: reducedMotion ? 0 : 0.4 };
 
   if (activity.length === 0) {
     return (
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={transition}
         className="bg-card rounded-lg p-6 border border-border"
         aria-label="Recent activity"
       >
@@ -130,7 +134,7 @@ export function RecentActivity({
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={transition}
       className="bg-card rounded-lg p-6 border border-border"
       aria-label="Recent activity"
     >
@@ -139,7 +143,7 @@ export function RecentActivity({
           Recent Activity
         </h2>
         <Link
-          href="/dashboard/blueprint"
+          href="/dashboard/money/blueprint"
           className="text-xs font-heading uppercase tracking-wider text-primary hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
         >
           View All
@@ -160,9 +164,9 @@ export function RecentActivity({
           const isPot = item.type === 'pot';
           const isRepayment = item.type === 'repayment';
           const editHref = isSeed
-            ? `/dashboard/blueprint?edit=${item.id}`
+            ? `/dashboard/money/blueprint?edit=${item.id}`
             : isPot || isRepayment
-              ? '/dashboard/blueprint'
+              ? '/dashboard/money/blueprint'
               : null;
           const rowContent = (
             <>

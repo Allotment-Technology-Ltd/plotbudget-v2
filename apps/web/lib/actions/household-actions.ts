@@ -41,7 +41,7 @@ export async function updateHouseholdPercentages(
     if (error) return { error: error.message };
     if (!updated) return { error: 'Percentages update did not persist. Please try again.' };
 
-    if (!client) revalidatePath('/dashboard/blueprint');
+    if (!client) revalidatePath('/dashboard/money/blueprint');
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to update percentages' };

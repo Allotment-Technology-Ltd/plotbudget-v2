@@ -3,17 +3,21 @@
 import { useEffect, useRef } from 'react';
 import { usePostHog } from 'posthog-js/react';
 import { createClient } from '@/lib/supabase/client';
+import { useCookieConsentOptional } from '@/components/providers/cookie-consent-context';
 
 /**
  * Calls posthog.identify(userId) when the user session is available.
- * Mount inside PostHogProvider so it runs on every page after login/signup.
+ * Only runs when user has explicitly accepted analytics (Calm Design Rule 8).
  */
 export function PostHogIdentifyOnAuth() {
   const posthog = usePostHog();
+  const consent = useCookieConsentOptional();
   const identified = useRef<Set<string>>(new Set());
 
+  const analyticsAccepted = consent?.consent?.analytics === true;
+
   useEffect(() => {
-    if (!posthog) return;
+    if (!posthog || !analyticsAccepted) return;
 
     const supabase = createClient();
 
@@ -37,7 +41,7 @@ export function PostHogIdentifyOnAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [posthog]);
+  }, [posthog, analyticsAccepted]);
 
   return null;
 }

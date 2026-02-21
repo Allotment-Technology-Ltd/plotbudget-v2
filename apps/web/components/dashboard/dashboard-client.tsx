@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { HeroMetrics } from './hero-metrics';
 import { IncomeThisCycle } from './income-this-cycle';
 import { CoupleContributions } from './couple-contributions';
@@ -14,6 +16,8 @@ import { DashboardNoCycleView } from './dashboard-no-cycle-view';
 import { DashboardSavingsSection } from './dashboard-savings-section';
 import { DashboardRepaymentSection } from './dashboard-repayment-section';
 import { useIsFoundingMember } from './use-dashboard-state';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { Button } from '@/components/ui/button';
 import type { DashboardClientProps, HistoricalCycle, IncomeEventDisplay } from './dashboard-types';
 import type { Household, PayCycle, Seed, Pot, Repayment } from '@repo/supabase';
 
@@ -26,6 +30,7 @@ interface DashboardSavingsAndTrendsProps {
   seeds: Seed[];
   pots: Pot[];
   repayments: Repayment[];
+  reducedMotion: boolean;
 }
 
 function DashboardSavingsAndTrends({
@@ -35,7 +40,9 @@ function DashboardSavingsAndTrends({
   seeds,
   pots,
   repayments,
+  reducedMotion,
 }: DashboardSavingsAndTrendsProps) {
+  const motionTransition = { duration: reducedMotion ? 0 : 0.4, delay: reducedMotion ? 0 : 0.1 };
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -45,7 +52,7 @@ function DashboardSavingsAndTrends({
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        transition={motionTransition}
         className="w-full"
       >
         <DebtTrendChart
@@ -77,8 +84,10 @@ interface DashboardMainContentProps {
   otherLabel: string;
   ownerLabel: string;
   partnerLabel: string;
+  reducedMotion: boolean;
 }
 
+/** Calm Design Rules 1 & 6: Default view shows ≤5 key data points; rest behind progressive disclosure. */
 function DashboardMainContent({
   household,
   currentPaycycle,
@@ -91,7 +100,11 @@ function DashboardMainContent({
   otherLabel,
   ownerLabel,
   partnerLabel,
+  reducedMotion,
 }: DashboardMainContentProps) {
+  const [showMore, setShowMore] = useState(false);
+  const motionTransition = { duration: reducedMotion ? 0 : 0.4 };
+
   return (
     <main className="content-wrapper section-padding space-y-8">
       <HeroMetrics paycycle={currentPaycycle} household={household} seeds={seeds} />
@@ -102,43 +115,76 @@ function DashboardMainContent({
         ownerLabel={ownerLabel}
         partnerLabel={partnerLabel}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UpcomingBills seeds={seeds} currency={household.currency} />
-        <RecentActivity
-          seeds={seeds}
-          pots={pots}
-          repayments={repayments}
-          currency={household.currency}
-        />
-      </div>
-      {household.is_couple && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <CoupleContributions
+      <UpcomingBills seeds={seeds} currency={household.currency} />
+
+      {!showMore ? (
+        <div className="flex justify-center pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowMore(true)}
+            className="gap-2"
+            aria-expanded="false"
+            aria-controls="dashboard-more-section"
+          >
+            <ChevronDown className="h-4 w-4" aria-hidden />
+            Activity, savings & trends
+          </Button>
+        </div>
+      ) : (
+        <div id="dashboard-more-section" className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentActivity
+              seeds={seeds}
+              pots={pots}
+              repayments={repayments}
+              currency={household.currency}
+            />
+          </div>
+          {household.is_couple && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={motionTransition}
+            >
+              <CoupleContributions
+                household={household}
+                paycycle={currentPaycycle}
+                seeds={seeds}
+                isPartner={isPartner}
+                otherLabel={otherLabel}
+              />
+            </motion.div>
+          )}
+          <SpendingTrends
+            currentCycle={currentPaycycle}
+            historicalCycles={historicalCycles}
             household={household}
-            paycycle={currentPaycycle}
-            seeds={seeds}
-            isPartner={isPartner}
-            otherLabel={otherLabel}
           />
-        </motion.div>
+          <DashboardSavingsAndTrends
+            household={household}
+            currentPaycycle={currentPaycycle}
+            historicalCycles={historicalCycles}
+            seeds={seeds}
+            pots={pots}
+            repayments={repayments}
+            reducedMotion={reducedMotion}
+          />
+          <div className="flex justify-center pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowMore(false)}
+              className="gap-2 text-muted-foreground"
+              aria-expanded="true"
+              aria-controls="dashboard-more-section"
+            >
+              <ChevronUp className="h-4 w-4" aria-hidden />
+              Show less
+            </Button>
+          </div>
+        </div>
       )}
-      <SpendingTrends
-        currentCycle={currentPaycycle}
-        historicalCycles={historicalCycles}
-        household={household}
-      />
-      <DashboardSavingsAndTrends
-        household={household}
-        currentPaycycle={currentPaycycle}
-        historicalCycles={historicalCycles}
-        seeds={seeds}
-        pots={pots}
-        repayments={repayments}
-      />
     </main>
   );
 }
@@ -161,6 +207,7 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const otherLabel = isPartner ? ownerLabel : partnerLabel;
   const isFoundingMember = useIsFoundingMember(foundingMemberUntil, userId);
+  const reducedMotion = useReducedMotion();
 
   if (!currentPaycycle) {
     return (
@@ -193,6 +240,7 @@ export function DashboardClient({
         otherLabel={otherLabel}
         ownerLabel={ownerLabel}
         partnerLabel={partnerLabel}
+        reducedMotion={reducedMotion}
       />
     </div>
   );

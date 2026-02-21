@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { isAdminUser } from '@/lib/auth/admin-gate';
-import { Shield, Mail, LayoutDashboard, Map, FileText } from 'lucide-react';
+import { Shield, Mail, LayoutDashboard, Map, FileText, Flag } from 'lucide-react';
 
 export default async function AdminLayout({
   children,
@@ -46,6 +46,13 @@ export default async function AdminLayout({
             >
               <LayoutDashboard className="h-4 w-4" aria-hidden />
               Home
+            </Link>
+            <Link
+              href="/admin/flags"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Flag className="h-4 w-4" aria-hidden />
+              Flags
             </Link>
             <Link
               href="/admin/emails"

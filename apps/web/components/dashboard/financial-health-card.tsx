@@ -3,6 +3,7 @@
 import { CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Household, PayCycle, Seed } from '@repo/supabase';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface FinancialHealthCardProps {
   paycycle: PayCycle;
@@ -75,11 +76,12 @@ function calculateHealthScore(
   return { score, insights };
 }
 
+// Calm Design Rule 6: Use warning for low score (planning state), not red/destructive.
 function getScoreLabel(s: number): { text: string; color: string } {
   if (s >= 90) return { text: 'Excellent!', color: 'text-primary' };
   if (s >= 75) return { text: 'Good', color: 'text-primary' };
   if (s >= 60) return { text: 'Fair', color: 'text-warning' };
-  return { text: 'Needs Attention', color: 'text-destructive' };
+  return { text: 'Needs Attention', color: 'text-warning' };
 }
 
 export function FinancialHealthCard({
@@ -89,12 +91,13 @@ export function FinancialHealthCard({
 }: FinancialHealthCardProps) {
   const { score, insights } = calculateHealthScore(paycycle, household, seeds);
   const scoreLabel = getScoreLabel(score);
+  const reducedMotion = useReducedMotion();
 
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: reducedMotion ? 0 : 0.4 }}
       className="bg-card rounded-lg p-6 border border-border"
       aria-label="Financial health score"
     >
@@ -126,15 +129,11 @@ export function FinancialHealthCard({
       >
         <motion.div
           className={`h-full transition-all ${
-            score >= 75
-              ? 'bg-primary'
-              : score >= 60
-                ? 'bg-warning'
-                : 'bg-destructive'
+            score >= 75 ? 'bg-primary' : 'bg-warning'
           }`}
           initial={{ width: 0 }}
           animate={{ width: `${score}%` }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: reducedMotion ? 0 : 0.5 }}
         />
       </div>
 

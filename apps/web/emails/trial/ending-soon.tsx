@@ -72,7 +72,7 @@ export default function TrialEndingSoonEmail({
       <Button href="https://app.plotbudget.com/pricing" style={button}>
         View Pay-What-You-Like Pricing
       </Button>
-      <Button href="https://app.plotbudget.com/dashboard/blueprint" style={buttonSecondary}>
+      <Button href="https://app.plotbudget.com/dashboard/money/blueprint" style={buttonSecondary}>
         Reduce to Free Tier Limits
       </Button>
     </EmailLayout>

@@ -134,7 +134,7 @@ export function TrialEmailTestingPanel() {
       toast.success(data.message ?? 'State updated');
 
       if (action === 'simulate-cycle-switchover' && data.newCycleId) {
-        router.push(`/dashboard/blueprint?cycle=${data.newCycleId}&newCycle=1`);
+        router.push(`/dashboard/money/blueprint?cycle=${data.newCycleId}&newCycle=1`);
         return;
       }
 

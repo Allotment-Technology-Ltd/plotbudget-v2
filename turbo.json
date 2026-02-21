@@ -1,73 +1,81 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env.*local"
-  ],
-  "globalEnv": [
-    "VERCEL_URL",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "SUPABASE_ANON_KEY",
-    "SUPABASE_URL",
-    "SUPABASE_JWT_SECRET",
-    "SUPABASE_PUBLISHABLE_KEY",
-    "SUPABASE_SECRET_KEY",
-    "POSTGRES_URL",
-    "POSTGRES_PRISMA_URL",
-    "POSTGRES_URL_NON_POOLING",
-    "POSTGRES_USER",
-    "POSTGRES_HOST",
-    "POSTGRES_PASSWORD",
-    "POSTGRES_DATABASE",
-    "ALLOWED_EMAILS",
-    "CRON_SECRET",
-    "RESEND_API_KEY",
-    "RESEND_REPLY_TO",
-    "RESEND_FROM_EMAIL",
-    "NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_MARKETING_URL",
-    "MAILERLITE_API_KEY",
-    "MAILERLITE_GROUP_ID",
-    "POLAR_ACCESS_TOKEN",
-    "POLAR_WEBHOOK_SECRET",
-    "POLAR_SUCCESS_URL",
-    "POLAR_PREMIUM_PRODUCT_ID",
-    "POLAR_PREMIUM_PRICE_ID",
-    "POLAR_PREMIUM_ANNUAL_PRODUCT_ID",
-    "POLAR_SANDBOX",
-    "POLAR_PWYL_BASE_PRODUCT_ID",
-    "POLAR_PWYL_GBP_PRODUCT_ID",
-    "POLAR_PWYL_USD_PRODUCT_ID",
-    "POLAR_PWYL_EUR_PRODUCT_ID"
-  ],
-  "tasks": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "dist/**"
-      ]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {
-      "dependsOn": [
-        "^build"
-      ]
-    },
-    "type-check": {
-      "dependsOn": [
-        "^build"
-      ]
-    },
-    "clean": {
-      "cache": false
-    }
-  }
+"$schema": "https://turbo.build/schema.json",
+"globalDependencies": [
+"**/.env.*local"
+],
+"globalEnv": [
+"VERCEL_URL",
+"NEXT_PUBLIC_SUPABASE_URL",
+"NEXT_PUBLIC_SUPABASE_ANON_KEY",
+"SUPABASE_SERVICE_ROLE_KEY",
+"SUPABASE_ANON_KEY",
+"SUPABASE_URL",
+"SUPABASE_JWT_SECRET",
+"SUPABASE_PUBLISHABLE_KEY",
+"SUPABASE_SECRET_KEY",
+"POSTGRES_URL",
+"POSTGRES_PRISMA_URL",
+"POSTGRES_URL_NON_POOLING",
+"POSTGRES_USER",
+"POSTGRES_HOST",
+"POSTGRES_PASSWORD",
+"POSTGRES_DATABASE",
+"ALLOWED_EMAILS",
+"CRON_SECRET",
+"RESEND_API_KEY",
+"RESEND_REPLY_TO",
+"RESEND_FROM_EMAIL",
+"NEXT_PUBLIC_APP_URL",
+"NEXT_PUBLIC_MARKETING_URL",
+"MAILERLITE_API_KEY",
+"MAILERLITE_GROUP_ID",
+"POLAR_ACCESS_TOKEN",
+"POLAR_WEBHOOK_SECRET",
+"POLAR_SUCCESS_URL",
+"POLAR_PREMIUM_PRODUCT_ID",
+"POLAR_PREMIUM_PRICE_ID",
+"POLAR_PREMIUM_ANNUAL_PRODUCT_ID",
+"POLAR_SANDBOX",
+"POLAR_PWYL_BASE_PRODUCT_ID",
+"POLAR_PWYL_GBP_PRODUCT_ID",
+"POLAR_PWYL_USD_PRODUCT_ID",
+"POLAR_PWYL_EUR_PRODUCT_ID",
+"NEXT_PUBLIC_MODULE_MONEY_ENABLED",
+"NEXT_PUBLIC_MODULE_HOME_ENABLED",
+"NEXT_PUBLIC_MODULE_TASKS_ENABLED",
+"NEXT_PUBLIC_MODULE_CALENDAR_ENABLED",
+"NEXT_PUBLIC_MODULE_MEALS_ENABLED",
+"NEXT_PUBLIC_MODULE_HOLIDAYS_ENABLED",
+"NEXT_PUBLIC_MODULE_VAULT_ENABLED",
+"NEXT_PUBLIC_MODULE_KIDS_ENABLED"
+],
+"tasks": {
+"build": {
+"dependsOn": [
+"^build"
+],
+"outputs": [
+".next/**",
+"!.next/cache/**",
+"dist/**"
+]
+},
+"dev": {
+"cache": false,
+"persistent": true
+},
+"lint": {
+"dependsOn": [
+"^build"
+]
+},
+"type-check": {
+"dependsOn": [
+"^build"
+]
+},
+"clean": {
+"cache": false
+}
+}
 }

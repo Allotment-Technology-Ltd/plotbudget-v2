@@ -57,13 +57,13 @@ test.describe('Visual regression', () => {
 
     test('settings page matches snapshot', async ({ page }) => {
       await page.goto('/dashboard/settings');
-      await page.waitForURL(/\/(dashboard\/settings|dashboard\/blueprint|login)/, { timeout: 20000 });
+      await page.waitForURL(/\/(dashboard\/settings|dashboard\/money\/blueprint|login)/, { timeout: 20000 });
       if (page.url().includes('/login')) {
         test.skip(true, 'Session lost — run with visual user auth state');
       }
-      if (page.url().includes('/dashboard/blueprint')) {
+      if (page.url().includes('/dashboard/money/blueprint')) {
         throw new Error(
-          'Redirected to /dashboard/blueprint instead of settings. Restart dev server and ensure visual user has household (global-setup).'
+          'Redirected to /dashboard/money/blueprint instead of settings. Restart dev server and ensure visual user has household (global-setup).'
         );
       }
       await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
@@ -74,8 +74,8 @@ test.describe('Visual regression', () => {
     });
 
     test('blueprint page matches snapshot', async ({ page }) => {
-      await page.goto('/dashboard/blueprint');
-      await page.waitForURL(/\/(dashboard\/blueprint|dashboard\/payday-complete|login)/, {
+      await page.goto('/dashboard/money/blueprint');
+      await page.waitForURL(/\/(dashboard\/money\/blueprint|dashboard\/payday-complete|login)/, {
         timeout: 15000,
       });
       if (page.url().includes('/login')) {

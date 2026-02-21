@@ -314,7 +314,7 @@ export async function createSeed(
     if (!inserted) return { error: 'Seed create did not persist. Please try again.' };
 
     await updatePaycycleAllocations(data.paycycle_id);
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath('/dashboard');
     return {};
   } catch (e) {
@@ -494,7 +494,7 @@ export async function updateSeed(
     if (!seedUpdated) return { error: 'Seed update did not persist. Please try again.' };
 
     await updatePaycycleAllocations(seed.paycycle_id);
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath('/dashboard');
     return {};
   } catch (e) {
@@ -528,7 +528,7 @@ export async function deleteSeed(
     if (!deleted) return { error: 'Seed delete did not persist. Please try again.' };
 
     await updatePaycycleAllocations(seed.paycycle_id);
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath('/dashboard');
     return {};
   } catch (e) {
@@ -581,7 +581,7 @@ export async function markOverdueSeedsPaid(
 
   await updatePaycycleAllocations(paycycleId);
   if (!options?.skipRevalidate) {
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath('/dashboard');
   }
   return overdue.length;
@@ -600,7 +600,7 @@ export async function createNextPaycycle(
       status: 'draft',
     });
     if (result.cycleId) {
-      revalidatePath('/dashboard/blueprint');
+      revalidatePath('/dashboard/money/blueprint');
     }
     return result;
   } catch (e) {
@@ -619,6 +619,6 @@ export async function resyncDraftFromActive(
   const { resyncDraftFromActiveCore } = await import('@/lib/paycycle/resync-draft-core');
   const supabase = await createServerSupabaseClient();
   const result = await resyncDraftFromActiveCore(supabase, draftPaycycleId, activePaycycleId);
-  if (!result.error) revalidatePath('/dashboard/blueprint');
+  if (!result.error) revalidatePath('/dashboard/money/blueprint');
   return result;
 }

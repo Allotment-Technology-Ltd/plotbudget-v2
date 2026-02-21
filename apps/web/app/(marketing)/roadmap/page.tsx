@@ -70,10 +70,10 @@ async function RoadmapPageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Hero */}
       <section
-        className="content-wrapper py-16 md:py-20 text-center"
+        className="content-wrapper section-padding text-center"
         aria-labelledby="roadmap-title"
       >
         <h1
@@ -100,7 +100,7 @@ async function RoadmapPageInner() {
       </section>
 
       {/* Why an operating system callout */}
-      <section className="content-wrapper py-8" aria-label="Why an operating system">
+      <section className="content-wrapper py-12 md:py-16" aria-label="Why an operating system">
         <div className="max-w-3xl mx-auto rounded-xl border-l-4 border-primary border-border bg-card p-6 md:p-8">
           <h2 className="font-heading text-lg md:text-xl font-bold uppercase tracking-wider text-foreground mb-4">
             Why an Operating System?
@@ -138,7 +138,7 @@ async function RoadmapPageInner() {
       </section>
 
       {/* Timeline sections */}
-      <section className="content-wrapper py-12 md:py-16 border-t border-border" aria-label="Roadmap timeline">
+      <section className="content-wrapper section-padding border-t border-border" aria-label="Roadmap timeline">
         <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
           {(['now', 'next', 'later', 'shipped'] as const).map((status) => {
             const list = byStatus[status];
@@ -172,7 +172,7 @@ async function RoadmapPageInner() {
 
       {/* How we decide */}
       <section
-        className="content-wrapper py-16 border-t border-border"
+        className="content-wrapper section-padding border-t border-border"
         aria-labelledby="how-we-decide-title"
       >
         <div className="max-w-prose mx-auto">
@@ -231,7 +231,7 @@ async function RoadmapPageInner() {
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }
 

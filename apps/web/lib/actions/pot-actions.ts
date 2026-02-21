@@ -49,7 +49,7 @@ export async function createPot(
 
     if (error) return { error: error.message };
     if (!pot) return { error: 'Pot create did not persist. Please try again.' };
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     return { potId: pot.id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to create pot' };
@@ -72,7 +72,7 @@ export async function updatePot(
 
     if (error) return { error: error.message };
     if (!updated) return { error: 'Pot update did not persist. Please try again.' };
-    revalidatePath('/dashboard/blueprint');
+    revalidatePath('/dashboard/money/blueprint');
     revalidatePath('/dashboard');
     return {};
   } catch (e) {
@@ -170,7 +170,7 @@ export async function deletePot(
     .single();
   if (deleteError) return { error: deleteError.message };
   if (!deleted) return { error: 'Pot delete did not persist. Please try again.' };
-  revalidatePath('/dashboard/blueprint');
+  revalidatePath('/dashboard/money/blueprint');
   revalidatePath('/dashboard');
   return { success: true };
 }

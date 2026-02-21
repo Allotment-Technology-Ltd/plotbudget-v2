@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -16,20 +16,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { deleteUserAccount } from '@/lib/actions/account-actions';
 
+/** Calm Design Rules 2, 3, 8: Single confirmation then delete → done (no type-to-confirm). */
 export function DeleteAccountDialog() {
   const [open, setOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const isValid = confirmText === 'DELETE';
-
   const handleDelete = async () => {
-    if (!isValid) return;
-
     setIsLoading(true);
     try {
       await deleteUserAccount();
@@ -42,13 +36,8 @@ export function DeleteAccountDialog() {
     }
   };
 
-  const handleOpenChange = (next: boolean) => {
-    if (!next) setConfirmText('');
-    setOpen(next);
-  };
-
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button
           type="button"
@@ -86,36 +75,6 @@ export function DeleteAccountDialog() {
             </ul>
           </AlertDescription>
         </Alert>
-        <div className="space-y-2">
-          <Label htmlFor="confirmDelete">
-            Type <span className="font-display font-semibold">DELETE</span> to
-            confirm
-          </Label>
-          <div className="relative">
-            <Input
-              id="confirmDelete"
-              type="text"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="DELETE"
-              disabled={isLoading}
-              className={isValid ? 'pr-10 border-destructive/50' : ''}
-              autoComplete="off"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              spellCheck={false}
-              aria-invalid={confirmText.length > 0 && !isValid}
-            />
-            {isValid && (
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary"
-                aria-hidden
-              >
-                <CheckCircle2 className="h-5 w-5" />
-              </span>
-            )}
-          </div>
-        </div>
         <AlertDialogFooter className="gap-2 pt-4">
           <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
@@ -123,13 +82,13 @@ export function DeleteAccountDialog() {
               e.preventDefault();
               handleDelete();
             }}
-            disabled={!isValid || isLoading}
+            disabled={isLoading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isLoading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
             )}
-            Confirm Deletion
+            Permanently delete my account
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

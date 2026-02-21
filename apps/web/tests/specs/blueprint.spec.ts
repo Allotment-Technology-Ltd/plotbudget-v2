@@ -55,7 +55,7 @@ test.describe.serial('Blueprint - Seed Management', () => {
       timeout: process.env.CI ? 20_000 : 10_000,
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/dashboard\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
+    await page.waitForURL(/\/dashboard\/money\/blueprint/, { timeout: process.env.CI ? 25_000 : 15_000 });
 
     // Verify updated amount
     await blueprintPage.expectSeedInList('Groceries', 350);

@@ -41,7 +41,7 @@ export function DashboardNoCycleView({
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Create or activate a pay cycle in Blueprint to see your dashboard.
           </p>
-          <Link href="/dashboard/blueprint" onClick={() => setNavigating(true)}>
+          <Link href="/dashboard/money/blueprint" onClick={() => setNavigating(true)}>
             <Button className="btn-primary">Go to Blueprint</Button>
           </Link>
         </div>

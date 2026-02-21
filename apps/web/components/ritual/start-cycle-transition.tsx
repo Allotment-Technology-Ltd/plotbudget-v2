@@ -17,7 +17,7 @@ function useReducedMotion(): boolean {
 }
 
 interface StartCycleTransitionProps {
-  /** After animation, navigate to this path (e.g. /dashboard/blueprint?cycle=id&newCycle=1) */
+  /** After animation, navigate to this path (e.g. /dashboard/money/blueprint?cycle=id&newCycle=1) */
   redirectTo: string;
 }
 

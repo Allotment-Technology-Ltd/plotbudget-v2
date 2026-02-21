@@ -24,12 +24,14 @@
     "prepare": "husky",
     "code-review": "node scripts/code-review.mjs",
     "create-polar-products": "pnpm --filter @repo/web run create-polar-products",
-    "check-updates": "bash scripts/check-updates.sh"
+    "check-updates": "bash scripts/check-updates.sh",
+    "test:phase0": "pnpm --filter @repo/logic run test:phase0"
   },
   "lint-staged": {
     "*": "bash -c 'pnpm lint && pnpm type-check'"
   },
   "devDependencies": {
+    "tsx": "^4.21.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^11.0.3",

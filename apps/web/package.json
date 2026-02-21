@@ -2,6 +2,7 @@
   "name": "@repo/web",
   "version": "0.2.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --webpack",
     "dev:with-webhooks": "bash scripts/dev-with-webhooks.sh",
@@ -36,6 +37,9 @@
     "db:apply-founding-member-household": "tsx scripts/run-founding-member-household-migration.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@polar-sh/sdk": "^0.43.1",
     "@radix-ui/react-alert-dialog": "^1.1.0",
@@ -78,8 +82,8 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@react-email/components": "^1.0.8",
-    "@tailwindcss/postcss": "^4.2.0",
     "@repo/eslint-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^20.11.0",
     "@types/pg": "^8.11.0",
     "@types/react": "^18.3.0",

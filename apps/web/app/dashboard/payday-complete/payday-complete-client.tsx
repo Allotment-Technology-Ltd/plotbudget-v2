@@ -67,7 +67,7 @@ export function PaydayCompleteClient({
   if (showTransition && newCycleId) {
     return (
       <StartCycleTransition
-        redirectTo={`/dashboard/blueprint?cycle=${newCycleId}&newCycle=1`}
+        redirectTo={`/dashboard/money/blueprint?cycle=${newCycleId}&newCycle=1`}
       />
     );
   }
