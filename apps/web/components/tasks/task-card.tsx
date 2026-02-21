@@ -36,7 +36,7 @@ export function TaskCard({
 }: {
   task: Task;
   showCheckbox?: boolean;
-  onToggleComplete?: (id: string) => void;
+  onToggleComplete?: (id: string, completed?: boolean) => void;
   onClick?: (task: Task) => void;
   isDragging?: boolean;
   className?: string;
@@ -72,10 +72,11 @@ export function TaskCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (task.status !== 'done') onToggleComplete(task.id);
+              onToggleComplete(task.id, task.status !== 'done');
             }}
             className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={task.status === 'done' ? 'Completed' : 'Mark complete'}
+            aria-label={task.status === 'done' ? 'Mark incomplete' : 'Mark complete'}
+            aria-pressed={task.status === 'done'}
           >
             {task.status === 'done' && (
               <span className="text-xs text-primary" aria-hidden>✓</span>

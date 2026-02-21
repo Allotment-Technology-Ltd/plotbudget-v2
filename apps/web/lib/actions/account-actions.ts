@@ -75,12 +75,17 @@ export async function exportUserData(): Promise<string> {
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   const { data: partnerOf } = await supabase
     .from('households')
     .select('*')
     .eq('partner_user_id', user.id)
+    .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   const household = owned ?? partnerOf;

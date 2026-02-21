@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.8.0...v1.8.1) (2026-02-21)
+
+
+### Bug Fixes
+
+* Aikido 14 findings, Dependabot ajv, and admin bypass of PostHog flags ([#102](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/issues/102)) ([3701ff3](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/3701ff31e831ff32bf441e07efddac013e63aed7))
+
 # [1.8.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.7.0...v1.8.0) (2026-02-21)
 
 

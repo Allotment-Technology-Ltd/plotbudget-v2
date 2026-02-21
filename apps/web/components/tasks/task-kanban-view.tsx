@@ -14,7 +14,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Task } from '@repo/supabase';
 import { TaskCard } from './task-card';
-import { useTasks, useUpdateTask } from '@/hooks/use-tasks';
+import { useTasks, useUpdateTask, useCompleteTask } from '@/hooks/use-tasks';
 import type { AssigneeLabels } from '@/app/dashboard/tasks/page';
 
 const COLUMNS: { id: Task['status']; title: string }[] = [
@@ -41,7 +41,7 @@ function DraggableTaskCard({
 }: {
   task: Task;
   showCheckbox: boolean;
-  onToggleComplete: (id: string) => void;
+  onToggleComplete: (id: string, completed?: boolean) => void;
   onTaskClick?: (task: Task) => void;
   assigneeLabels?: AssigneeLabels;
 }) {
@@ -73,7 +73,7 @@ function DroppableColumn({
   title: string;
   tasks: Task[];
   showCheckbox: boolean;
-  onToggleComplete: (id: string) => void;
+  onToggleComplete: (id: string, completed?: boolean) => void;
   onTaskClick?: (task: Task) => void;
   assigneeLabels?: AssigneeLabels;
 }) {
@@ -107,6 +107,7 @@ export function TaskKanbanView({
 }: { onTaskClick?: (task: Task) => void; assigneeLabels?: AssigneeLabels } = {}) {
   const { data: tasks = [] } = useTasks();
   const updateTask = useUpdateTask();
+  const completeTask = useCompleteTask();
   const queryClient = useQueryClient();
   const byStatus = tasksByStatus(tasks);
 
@@ -146,8 +147,8 @@ export function TaskKanbanView({
             columnId={col.id}
             title={col.title}
             tasks={byStatus[col.id] ?? []}
-            showCheckbox={col.id !== 'done'}
-            onToggleComplete={(id) => updateTask.mutate({ id, status: 'done' })}
+            showCheckbox={true}
+            onToggleComplete={(id, completed) => completeTask.mutate({ id, completed })}
             onTaskClick={onTaskClick}
             assigneeLabels={assigneeLabels}
           />

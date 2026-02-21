@@ -37,6 +37,8 @@ export default async function MarketingLayout({
       .from('households')
       .select('id')
       .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     owned = ownedData as { id: string } | null;
 
@@ -44,6 +46,9 @@ export default async function MarketingLayout({
       .from('households')
       .select('id, partner_name')
       .eq('partner_user_id', user.id)
+      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     partnerOf = partnerOfData as { id: string; partner_name: string | null } | null;
     isPartner = !owned && !!partnerOf;

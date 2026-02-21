@@ -33,6 +33,22 @@ async function syncOAuthProfileToUser(
   await supabase.from('users').update(updates as never).eq('id', user.id);
 }
 
+/** Ensure public.users row exists for OAuth/magic-link users before profile updates. */
+async function ensureUserProfileRow(
+  supabase: SupabaseClient<Database>,
+  user: User
+): Promise<void> {
+  await supabase
+    .from('users')
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? `${user.id}@plot.invalid`,
+      } as never,
+      { onConflict: 'id' }
+    );
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -65,6 +81,7 @@ export async function GET(request: NextRequest) {
         loginUrl.searchParams.set('error', 'allowlist');
         return NextResponse.redirect(loginUrl);
       }
+      await ensureUserProfileRow(supabase, user);
       await syncOAuthProfileToUser(supabase, user);
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? null;
       await logAuditEvent({
@@ -90,6 +107,7 @@ export async function GET(request: NextRequest) {
         loginUrl.searchParams.set('error', 'allowlist');
         return NextResponse.redirect(loginUrl);
       }
+      await ensureUserProfileRow(supabase, user);
       await syncOAuthProfileToUser(supabase, user);
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? null;
       await logAuditEvent({

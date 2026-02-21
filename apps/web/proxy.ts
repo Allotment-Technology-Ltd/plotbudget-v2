@@ -129,15 +129,30 @@ export async function proxy(request: NextRequest) {
       .from('users')
       .select('household_id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
+
+    const { data: ownedHousehold } = await supabase
+      .from('households')
+      .select('id')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     const { data: partnerHousehold } = await supabase
       .from('households')
       .select('id')
       .eq('partner_user_id', user.id)
+      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    const hasHousehold = !!(profile?.household_id ?? partnerHousehold);
+    const hasHousehold = !!(
+      (profile as { household_id?: string | null } | null)?.household_id ??
+      (ownedHousehold as { id?: string } | null)?.id ??
+      (partnerHousehold as { id?: string } | null)?.id
+    );
 
     // Allow /dashboard/settings so owners can always reach it; the settings page redirects to onboarding if no household.
     const isSettingsPath = request.nextUrl.pathname === '/dashboard/settings';
@@ -159,13 +174,39 @@ export async function proxy(request: NextRequest) {
     }
   }
   if (request.nextUrl.pathname.includes('/onboarding') && user) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('has_completed_onboarding')
-      .eq('id', user.id)
-      .single();
+    const [profileRes, ownedRes, partnerRes] = await Promise.all([
+      supabase
+        .from('users')
+        .select('has_completed_onboarding, household_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('households')
+        .select('id')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('households')
+        .select('id')
+        .eq('partner_user_id', user.id)
+        .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    const profile = profileRes.data as {
+      has_completed_onboarding: boolean;
+      household_id: string | null;
+    } | null;
+    const hasHousehold = !!(
+      profile?.household_id ??
+      (ownedRes.data as { id?: string } | null)?.id ??
+      (partnerRes.data as { id?: string } | null)?.id
+    );
 
-    if (profile?.has_completed_onboarding) {
+    if (profile?.has_completed_onboarding || hasHousehold) {
       return NextResponse.redirect(new URL('/dashboard/money/blueprint', request.url));
     }
   }

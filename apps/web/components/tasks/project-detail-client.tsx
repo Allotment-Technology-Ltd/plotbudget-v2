@@ -214,7 +214,7 @@ function PhaseBlock({
                 <li key={task.id}>
                   <TaskCard
                     task={task}
-                    onToggleComplete={(id) => completeTask.mutate(id)}
+                    onToggleComplete={(id, completed) => completeTask.mutate({ id, completed })}
                   />
                 </li>
               ))}

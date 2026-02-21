@@ -131,21 +131,49 @@ export function useUpdateTask() {
 export function useCompleteTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/tasks/${id}/complete`, { method: 'PATCH' });
+    mutationFn: async ({ id, completed }: { id: string; completed?: boolean }) => {
+      const res = await fetch(`/api/tasks/${id}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          completed == null ? {} : { completed }
+        ),
+      });
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<Task>;
     },
-    onMutate: async (id) => {
+    onMutate: async ({ id, completed }) => {
       await qc.cancelQueries({ queryKey: ['tasks'] });
-      const prev = qc.getQueryData<Task[]>(['tasks']);
-      qc.setQueryData<Task[]>(['tasks'], (old) =>
-        old?.map((t) => (t.id === id ? { ...t, status: 'done' as const, completed_at: new Date().toISOString() } : t)) ?? []
-      );
-      return { prev };
+      const previous = qc.getQueriesData<Task[]>({ queryKey: ['tasks'] });
+      const nowIso = new Date().toISOString();
+      const setDone = (task: Task): Task => {
+        const shouldBeDone = completed ?? task.status !== 'done';
+        return {
+          ...task,
+          status: shouldBeDone ? 'done' : 'todo',
+          completed_at: shouldBeDone ? nowIso : null,
+        };
+      };
+
+      for (const [key] of previous) {
+        qc.setQueryData<Task[]>(key, (old) =>
+          old?.map((t) => (t.id === id ? setDone(t) : t)) ?? old
+        );
+      }
+      qc.setQueryData<Task>(['task', id], (old) => (old ? setDone(old) : old));
+      return { previous };
     },
-    onError: (_err, _id, ctx) => { if (ctx?.prev) qc.setQueryData(['tasks'], ctx.prev); },
-    onSettled: () => { qc.invalidateQueries({ queryKey: ['tasks'] }); },
+    onError: (_err, variables, ctx) => {
+      if (!ctx?.previous) return;
+      for (const [key, data] of ctx.previous) {
+        qc.setQueryData(key, data);
+      }
+      qc.invalidateQueries({ queryKey: ['task', variables.id] });
+    },
+    onSettled: (_data, _err, variables) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['task', variables.id] });
+    },
   });
 }
 
