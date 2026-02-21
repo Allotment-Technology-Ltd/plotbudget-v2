@@ -125,7 +125,7 @@ function isAbortError(error: unknown): boolean {
   return msg.includes('abort') || msg.includes('signal is aborted');
 }
 
-async function withAbortRetry<T>(operation: () => Promise<T>, retries = 2): Promise<T> {
+async function withAbortRetry<T>(operation: () => PromiseLike<T>, retries = 2): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
