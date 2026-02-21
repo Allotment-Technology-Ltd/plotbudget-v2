@@ -145,7 +145,8 @@ export class BlueprintPage {
   }) {
     await this.addSeedButton.click();
     // Wait for the seed form (not generic dialog) so we don't match Server Error or time out on animation
-    await expect(this.seedNameInput).toBeVisible({ timeout: 15_000 });
+    const seedFormTimeout = process.env.CI ? 20_000 : 15_000;
+    await expect(this.seedNameInput).toBeVisible({ timeout: seedFormTimeout });
     await this.seedNameInput.fill(params.name);
     await this.seedAmountInput.fill(params.amount.toString());
     // Category is set by which section opened the dialog (add-seed-button = Needs); no need to select

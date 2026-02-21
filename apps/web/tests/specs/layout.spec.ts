@@ -32,7 +32,9 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
+      const dashboard =
+        page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
+      await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
       await expectNoHorizontalOverflow(page);
     });
 
@@ -47,7 +49,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
           'Redirected to /dashboard/money/blueprint instead of settings. Restart dev server and ensure test user has household (global-setup).'
         );
       }
-      await expect(page.getByTestId('settings-page')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId('settings-page').first()).toBeVisible({ timeout: 15000 });
       await expectNoHorizontalOverflow(page);
     });
 
@@ -78,7 +80,9 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
           'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users.'
         );
       }
-      await expect(page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))).toBeVisible({ timeout: 10000 });
+      const dashboard =
+        page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
+      await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
       await expectNoHorizontalOverflow(page);
       const header = page.locator('header .content-wrapper').first();
       await expect(header).toBeVisible();

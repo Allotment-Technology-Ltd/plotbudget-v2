@@ -35,9 +35,9 @@ test.describe('Authentication Flow', () => {
         'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users (global-setup).'
       );
     }
-    await expect(
-      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle'))
-    ).toBeVisible({ timeout: 15_000 });
+    const dashboard =
+      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
+    await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
   });
 
   // TODO: Un-skip when login form submit is reliably handled (form currently triggers native submit)

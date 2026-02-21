@@ -21,12 +21,12 @@ test.describe('Dashboard and app shell', () => {
         'Redirected to payday-complete. ensureBlueprintReady should clear ritual_closed_at for test users; check db-cleanup and global-setup.'
       );
     }
-    const hero = page.getByTestId('dashboard-hero');
-    const noCycle = page.getByTestId('dashboard-no-cycle');
+    const dashboard =
+      page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
     const serverError = page.getByRole('dialog', { name: 'Server Error' });
-    // Wait for terminal state: either dashboard content or Server Error overlay (fail fast with clear message)
+    // Wait for terminal state: launcher (at /dashboard) or money dashboard (hero/no-cycle) or Server Error overlay
     await Promise.race([
-      expect(hero.or(noCycle)).toBeVisible({ timeout: 15_000 }),
+      expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 }),
       serverError.waitFor({ state: 'visible', timeout: 15_000 }).then(async () => {
         const detail = await page.getByText(/TypeError|useContext|PathnameContext/).first().textContent().catch(() => '');
         throw new Error(`App threw Server Error (e.g. useContext null). Fix the app; then re-run. ${detail ? `Detail: ${detail}` : ''}`);
@@ -47,7 +47,7 @@ test.describe('Dashboard and app shell', () => {
         'Redirected to /dashboard/money/blueprint instead of settings. Restart the dev server so proxy/middleware changes apply; ensure global-setup ran (dashboard user has household + has_completed_onboarding).'
       );
     }
-    const settingsPage = page.getByTestId('settings-page');
+    const settingsPage = page.getByTestId('settings-page').first();
     const serverError = page.getByRole('dialog', { name: 'Server Error' });
     await Promise.race([
       expect(settingsPage).toBeVisible({ timeout: 15_000 }),

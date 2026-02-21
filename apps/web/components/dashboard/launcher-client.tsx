@@ -244,7 +244,7 @@ export function LauncherClient({
   const monthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-8">
+    <div className="flex min-h-screen flex-col bg-background pb-8" data-testid="dashboard-launcher">
       {/* Widgets row — Calendar, Tasks, Weekly Reset (always link so user can drill down or add) */}
       <section className="px-4 pt-4 sm:pt-6" aria-label="Widgets">
         <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">

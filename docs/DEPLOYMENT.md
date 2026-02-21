@@ -119,6 +119,14 @@ The **user-facing** changelog on the marketing site ("What's new" at /changelog)
 
 ## Troubleshooting
 
+- **Deployments not triggering (no build on push/PR)**  
+  Vercel deploys are driven by its **Git integration** (GitHub webhooks). If pushes or PRs no longer start a deployment:
+
+  1. **Repo moved or renamed** (e.g. from `adamboon1984-arch/plotbudget-v2` to `Allotment-Technology-Ltd/plotbudget-v2`): the Vercel project may still be linked to the old repo. In **Vercel Dashboard → Project → Settings → Git**, confirm **Connected Git Repository** is the current repo. If it shows the old repo or is disconnected, use **Connect Git Repository** and select the correct org/repo and branch (e.g. `main` for Production).
+  2. **GitHub App access**: In **GitHub → Settings → Applications → Vercel**, ensure the Vercel app has access to the organisation/repo that owns the project.
+  3. **Branch settings**: In Vercel **Settings → Git**, check **Production Branch** (e.g. `main`) and that **Preview** deployments are enabled for your branches.
+  4. **Sanity check**: Use **Deployments → … → Redeploy**; if that works, the problem is the Git connection, not the build.
+
 - **Build fails with “module not found” for `@repo/ui` or `@repo/logic`**  
   Ensure **Root Directory** is `apps/web` and that `vercel.json` is in `apps/web` with the install/build commands above so the full monorepo is installed and built.
 
