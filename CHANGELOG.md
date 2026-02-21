@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.7.0...v1.8.0) (2026-02-21)
+
+
+### Features
+
+* launcher, calendar, tasks, notifications, marketing layout, and type/lint fixes ([7a03d10](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/7a03d1063c7fd9b7c6e38b7da0e2de1517d769e3))
+
 # [1.7.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.6.0...v1.7.0) (2026-02-20)
 
 
