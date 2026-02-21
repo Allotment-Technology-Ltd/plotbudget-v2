@@ -99,7 +99,19 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${jetbrainsMono.variable} ${spaceMono.variable}`}
     >
-      <head />
+      <head>
+        {
+          // eslint-disable-next-line turbo/no-undeclared-env-vars
+          (process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview") && (
+            // eslint-disable-next-line @next/next/no-sync-scripts
+            <script
+              data-recording-token="a6ByPx9vmTskFEScHlgEF0bDkQoMFPYCUZSKiiAR"
+              data-is-production-environment="false"
+              src="https://snippet.meticulous.ai/v1/meticulous.js"
+            />
+          )
+        }
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <PwaSplashScreen />
         <a href="#main-content" className="skip-link">
