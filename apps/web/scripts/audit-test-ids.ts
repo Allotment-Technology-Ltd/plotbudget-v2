@@ -1,6 +1,6 @@
 // apps/web/scripts/audit-test-ids.ts
 import { readdir, readFile } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 const INTERACTIVE_PATTERNS = [
   /onClick\s*=/,
@@ -15,7 +15,10 @@ const INTERACTIVE_PATTERNS = [
 
 const TEST_ID_PATTERN = /data-testid\s*=/;
 
-async function scanFile(filePath: string): Promise<string[]> {
+async function scanFile(filePath: string, allowedRoot: string): Promise<string[]> {
+  const resolved = resolve(filePath);
+  const rootResolved = resolve(allowedRoot);
+  if (!resolved.startsWith(rootResolved) || resolved === rootResolved) return [];
   const content = await readFile(filePath, 'utf-8');
   const violations: string[] = [];
 
@@ -40,7 +43,7 @@ async function scanFile(filePath: string): Promise<string[]> {
   return violations;
 }
 
-async function scanDirectory(dir: string): Promise<string[]> {
+async function scanDirectory(dir: string, allowedRoot: string = dir): Promise<string[]> {
   let entries: { name: string; isDirectory: () => boolean }[];
   try {
     entries = await readdir(dir, { withFileTypes: true });
@@ -56,9 +59,9 @@ async function scanDirectory(dir: string): Promise<string[]> {
     const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
-      violations.push(...(await scanDirectory(fullPath)));
+      violations.push(...(await scanDirectory(fullPath, allowedRoot)));
     } else if (entry.name.endsWith('.tsx') || entry.name.endsWith('.jsx')) {
-      violations.push(...(await scanFile(fullPath)));
+      violations.push(...(await scanFile(fullPath, allowedRoot)));
     }
   }
 
@@ -72,9 +75,9 @@ async function main() {
   const componentsDir = join(process.cwd(), 'components');
   const packagesUiDir = join(process.cwd(), '../packages/ui');
 
-  const componentsViolations = await scanDirectory(appDir);
-  const componentsViolations2 = await scanDirectory(componentsDir);
-  const packagesViolations = await scanDirectory(packagesUiDir);
+  const componentsViolations = await scanDirectory(appDir, appDir);
+  const componentsViolations2 = await scanDirectory(componentsDir, componentsDir);
+  const packagesViolations = await scanDirectory(packagesUiDir, packagesUiDir);
 
   const allViolations = [...componentsViolations, ...componentsViolations2, ...packagesViolations];
 

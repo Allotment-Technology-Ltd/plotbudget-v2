@@ -89,10 +89,18 @@ export async function proxy(request: NextRequest) {
   // Use getUser() so auth is validated with the server; getSession() can be stale and cause redirect loops
   const { data: { user } } = await supabase.auth.getUser();
 
-  // When signup is gated, hide pricing page (uses PostHog when configured, else env)
+  let isAdmin = false;
+  if (user) {
+    const { data: row } = await supabase.from('users').select('is_admin').eq('id', user.id).single();
+    isAdmin = (row as { is_admin?: boolean } | null)?.is_admin === true;
+  }
+
+  const cookieStore = { get: (name: string) => request.cookies.get(name) };
+  const flags = await getServerFeatureFlags(user?.id ?? null, { isAdmin, cookies: cookieStore });
+
+  // When signup is gated, hide pricing page — except for admins (they can use all functionality)
   if (request.nextUrl.pathname === '/pricing') {
-    const flags = await getServerFeatureFlags(user?.id ?? null);
-    if (flags.signupGated) {
+    if (flags.signupGated && !isAdmin) {
       const url = new URL(request.url);
       return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', url));
     }
@@ -208,8 +216,15 @@ export async function proxy(request: NextRequest) {
     if (user) {
       const redirectTo = request.nextUrl.searchParams.get('redirect');
       const path = redirectTo ?? '/dashboard';
-      const url = path.startsWith('/') ? new URL(path, request.url) : new URL('/dashboard', request.url);
-      return NextResponse.redirect(url);
+      const requestOrigin = new URL(request.url).origin;
+      const candidate = path.startsWith('/') && !path.startsWith('//')
+        ? new URL(path, request.url)
+        : new URL('/dashboard', request.url);
+      if (candidate.origin !== requestOrigin) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+      const safeRedirect = new URL(candidate.pathname + candidate.search, requestOrigin);
+      return NextResponse.redirect(safeRedirect);
     }
   }
 
