@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const { id: _id, ...rest } = input;
   const updates: Record<string, unknown> = { ...rest };
   if (updates.status === 'done') updates.completed_at = new Date().toISOString();
+  if (updates.status && updates.status !== 'done') updates.completed_at = null;
 
   const { data: updated, error } = await supabase
     .from('tasks')

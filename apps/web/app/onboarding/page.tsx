@@ -119,6 +119,27 @@ const onboardingSchema = z
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
+function isAbortError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return msg.includes('abort') || msg.includes('signal is aborted');
+}
+
+async function withAbortRetry<T>(operation: () => Promise<T>, retries = 2): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isAbortError(error) || attempt === retries) {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+}
+
 /** Input wrapper with currency prefix. Uses forwardRef so react-hook-form's ref attaches to the real input. */
 const IncomeInput = React.forwardRef<
   HTMLInputElement,
@@ -190,12 +211,24 @@ export default function OnboardingPage() {
     const supabase = createClient();
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
+      const { data: authData } = await withAbortRetry(() => supabase.auth.getUser());
       const user = authData?.user;
       if (!user) {
         form.setError('root', { message: 'Not authenticated' });
         return;
       }
+
+      await withAbortRetry(() =>
+        supabase
+          .from('users')
+          .upsert(
+            {
+              id: user.id,
+              email: user.email ?? `${user.id}@plot.invalid`,
+            } as never,
+            { onConflict: 'id' }
+          )
+      );
 
       const totalIncome =
         Number(data.myIncome) + (data.partnerIncome ? Number(data.partnerIncome) : 0);
@@ -217,27 +250,45 @@ export default function OnboardingPage() {
         currency: data.currency,
       };
       type HouseholdRow = Database['public']['Tables']['households']['Row'];
-      let householdResult = await supabase
-        .from('households')
-        .insert(householdInsert as never)
-        .select()
-        .single();
-      let householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
-      // Retry without currency when the project's schema cache doesn't have the column (e.g. E2E DB before migration 20250209120001_household_currency)
-      const errMsg = String((householdError as { message?: string })?.message ?? '');
-      if (householdError && errMsg.includes('currency') && errMsg.includes('schema cache')) {
-        const { currency: _dropped, ...insertWithoutCurrency } = householdInsert;
-        void _dropped;
-        householdResult = await supabase
+      const existingOwnedResult = await withAbortRetry(() =>
+        supabase
           .from('households')
-          .insert(insertWithoutCurrency as never)
-          .select()
-          .single();
-        householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
-      }
-      const { data: household } = householdResult as { data: HouseholdRow | null; error: unknown };
+          .select('*')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      );
+      let household = (existingOwnedResult as { data: HouseholdRow | null }).data;
+      let householdError: unknown = null;
 
-      if (householdError) {
+      if (!household) {
+        let householdResult = await withAbortRetry(() =>
+          supabase
+            .from('households')
+            .insert(householdInsert as never)
+            .select()
+            .single()
+        );
+        householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
+        // Retry without currency when the project's schema cache doesn't have the column (e.g. E2E DB before migration 20250209120001_household_currency)
+        const errMsg = String((householdError as { message?: string })?.message ?? '');
+        if (householdError && errMsg.includes('currency') && errMsg.includes('schema cache')) {
+          const { currency: _dropped, ...insertWithoutCurrency } = householdInsert;
+          void _dropped;
+          householdResult = await withAbortRetry(() =>
+            supabase
+              .from('households')
+              .insert(insertWithoutCurrency as never)
+              .select()
+              .single()
+          );
+          householdError = (householdResult as { data: HouseholdRow | null; error: unknown }).error;
+        }
+        household = (householdResult as { data: HouseholdRow | null; error: unknown }).data;
+      }
+
+      if (householdError || !household) {
         form.setError('root', {
           message:
             (householdError as { message?: string })?.message ??
@@ -258,7 +309,7 @@ export default function OnboardingPage() {
       );
 
       const paycycleInsert: Database['public']['Tables']['paycycles']['Insert'] = {
-        household_id: household?.id ?? '',
+        household_id: household.id,
         status: 'active',
         name: 'First Paycycle',
         start_date: startDate,
@@ -268,15 +319,32 @@ export default function OnboardingPage() {
         snapshot_partner_income: data.partnerIncome ?? 0,
       };
       type PaycycleRow = Database['public']['Tables']['paycycles']['Row'];
-      const paycycleResult = await supabase
-        .from('paycycles')
-        .insert(paycycleInsert as never)
-        .select()
-        .single();
-      const { data: paycycle, error: paycycleError } =
-        paycycleResult as { data: PaycycleRow | null; error: unknown };
+      const existingPaycycleResult = await withAbortRetry(() =>
+        supabase
+          .from('paycycles')
+          .select('*')
+          .eq('household_id', household.id)
+          .eq('status', 'active')
+          .order('start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      );
+      const existingPaycycle = (existingPaycycleResult as { data: PaycycleRow | null }).data;
+      let paycycle = existingPaycycle;
+      let paycycleError: unknown = null;
+      if (!paycycle) {
+        const paycycleResult = await withAbortRetry(() =>
+          supabase
+            .from('paycycles')
+            .insert(paycycleInsert as never)
+            .select()
+            .single()
+        );
+        paycycle = (paycycleResult as { data: PaycycleRow | null; error: unknown }).data;
+        paycycleError = (paycycleResult as { data: PaycycleRow | null; error: unknown }).error;
+      }
 
-      if (paycycleError) {
+      if (paycycleError || !paycycle) {
         form.setError('root', {
           message:
             (paycycleError as { message?: string })?.message ??
@@ -293,10 +361,12 @@ export default function OnboardingPage() {
         onboarding_step: 6,
         ...(data.myName?.trim() && { display_name: data.myName.trim() }),
       };
-      await supabase
-        .from('users')
-        .update(userUpdate as never)
-        .eq('id', user.id);
+      await withAbortRetry(() =>
+        supabase
+          .from('users')
+          .update(userUpdate as never)
+          .eq('id', user.id)
+      );
 
       setShowCelebration(true);
     } catch (err) {

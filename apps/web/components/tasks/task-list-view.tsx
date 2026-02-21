@@ -46,6 +46,10 @@ export function TaskListView({
   const completeTask = useCompleteTask();
   const { overdue, today, thisWeek, later, done } = useMemo(() => groupTasks(tasks), [tasks]);
   const [showDone, setShowDone] = useState(false);
+  const handleToggleComplete = (id: string, completed?: boolean) => {
+    if (completed) setShowDone(true);
+    completeTask.mutate({ id, completed });
+  };
   const sections = [
     { title: 'Overdue', items: overdue, accent: 'text-red-600 dark:text-red-400' },
     { title: 'Today', items: today, accent: '' },
@@ -67,7 +71,7 @@ export function TaskListView({
                   <li key={task.id}>
                     <TaskCard
                       task={task}
-                      onToggleComplete={(id) => completeTask.mutate(id)}
+                      onToggleComplete={handleToggleComplete}
                       onClick={onTaskClick}
                       assigneeLabels={assigneeLabels}
                     />
@@ -92,7 +96,7 @@ export function TaskListView({
                 <li key={task.id}>
                   <TaskCard
                     task={task}
-                    onToggleComplete={(id) => completeTask.mutate(id)}
+                    onToggleComplete={handleToggleComplete}
                     onClick={onTaskClick}
                     assigneeLabels={assigneeLabels}
                   />
