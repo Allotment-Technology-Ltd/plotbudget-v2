@@ -1,0 +1,97 @@
+name: Vercel Web Deploy
+
+on:
+  pull_request_target:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.github/workflows/vercel-web-deploy.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.github/workflows/vercel-web-deploy.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-web-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    name: Deploy Web Preview (Vercel)
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: 8.15.4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Validate Vercel secrets
+        env:
+          VERCEL_TOKEN_WEB: ${{ secrets.VERCEL_TOKEN_WEB }}
+          VERCEL_ORG_ID_WEB: ${{ secrets.VERCEL_ORG_ID_WEB }}
+          VERCEL_PROJECT_ID_WEB: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        run: |
+          missing=0
+          [ -z "$VERCEL_TOKEN_WEB" ] && echo "::error::Missing secret VERCEL_TOKEN_WEB" && missing=1
+          [ -z "$VERCEL_ORG_ID_WEB" ] && echo "::error::Missing secret VERCEL_ORG_ID_WEB" && missing=1
+          [ -z "$VERCEL_PROJECT_ID_WEB" ] && echo "::error::Missing secret VERCEL_PROJECT_ID_WEB" && missing=1
+          [ "$missing" -eq 0 ] || exit 1
+      - name: Deploy web preview to Vercel
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN_WEB: ${{ secrets.VERCEL_TOKEN_WEB }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_WEB }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        run: |
+          pnpm dlx vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN_WEB"
+          pnpm dlx vercel@latest deploy --yes --token="$VERCEL_TOKEN_WEB"
+
+  deploy-production:
+    name: Deploy Web Production (Vercel)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: 8.15.4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Validate Vercel secrets
+        env:
+          VERCEL_TOKEN_WEB: ${{ secrets.VERCEL_TOKEN_WEB }}
+          VERCEL_ORG_ID_WEB: ${{ secrets.VERCEL_ORG_ID_WEB }}
+          VERCEL_PROJECT_ID_WEB: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        run: |
+          missing=0
+          [ -z "$VERCEL_TOKEN_WEB" ] && echo "::error::Missing secret VERCEL_TOKEN_WEB" && missing=1
+          [ -z "$VERCEL_ORG_ID_WEB" ] && echo "::error::Missing secret VERCEL_ORG_ID_WEB" && missing=1
+          [ -z "$VERCEL_PROJECT_ID_WEB" ] && echo "::error::Missing secret VERCEL_PROJECT_ID_WEB" && missing=1
+          [ "$missing" -eq 0 ] || exit 1
+      - name: Deploy web production to Vercel
+        working-directory: apps/web
+        env:
+          VERCEL_TOKEN_WEB: ${{ secrets.VERCEL_TOKEN_WEB }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_WEB }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        run: |
+          pnpm dlx vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN_WEB"
+          pnpm dlx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN_WEB"
