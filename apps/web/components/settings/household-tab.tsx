@@ -121,75 +121,57 @@ export function HouseholdTab({ household, isPartner = false }: HouseholdTabProps
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Household Details
         </h2>
-        {isPartner ? (
-          <p className="text-sm text-muted-foreground">
-            {household.name || 'Unnamed household'}
-          </p>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="householdName">Household Name</Label>
-              <Input
-                id="householdName"
-                value={householdName}
-                onChange={(e) => setHouseholdName(e.target.value)}
-                placeholder="e.g., Smith Household"
-                maxLength={50}
-                disabled={isLoading}
-                aria-describedby="householdName-help"
-              />
-              <p id="householdName-help" className="text-sm text-muted-foreground">
-                A friendly name for your household.
-              </p>
-            </div>
-            <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
-              {isLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-              )}
-              Save Changes
-            </Button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="householdName">Household Name</Label>
+            <Input
+              id="householdName"
+              value={householdName}
+              onChange={(e) => setHouseholdName(e.target.value)}
+              placeholder="e.g., Smith Household"
+              maxLength={50}
+              disabled={isLoading}
+              aria-describedby="householdName-help"
+            />
+            <p id="householdName-help" className="text-sm text-muted-foreground">
+              A friendly name for your household.
+            </p>
+          </div>
+          <Button type="submit" disabled={isLoading} aria-busy={isLoading}>
+            {isLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            )}
+            Save Changes
+          </Button>
+        </form>
       </section>
 
       <section className="bg-card rounded-lg border border-border p-6">
         <h2 className="font-heading text-lg uppercase tracking-wider text-foreground mb-6">
           Currency
         </h2>
-        {isPartner ? (
+        <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Current Currency</p>
+            <Label htmlFor="currency">Select Currency</Label>
+            <Select
+              value={selectedCurrency}
+              onValueChange={handleCurrencyChange}
+              disabled={isCurrencySaving}
+            >
+              <SelectTrigger id="currency" aria-busy={isCurrencySaving}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GBP">British Pound (GBP) £</SelectItem>
+                <SelectItem value="USD">United States Dollar (USD) $</SelectItem>
+                <SelectItem value="EUR">Euro (EUR) €</SelectItem>
+              </SelectContent>
+            </Select>
             <p className="text-sm text-muted-foreground">
-              {household.currency || 'GBP'}
-            </p>
-            <p className="text-sm text-muted-foreground mt-4">
-              Only the account owner can change the currency.
+              All amounts throughout PLOT will display in your selected currency.
             </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Select Currency</Label>
-              <Select
-                value={selectedCurrency}
-                onValueChange={handleCurrencyChange}
-                disabled={isCurrencySaving}
-              >
-                <SelectTrigger id="currency" aria-busy={isCurrencySaving}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GBP">British Pound (GBP) £</SelectItem>
-                  <SelectItem value="USD">United States Dollar (USD) $</SelectItem>
-                  <SelectItem value="EUR">Euro (EUR) €</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                All amounts throughout PLOT will display in your selected currency.
-              </p>
-            </div>
-          </div>
-        )}
+        </div>
       </section>
 
       {household.is_couple && (

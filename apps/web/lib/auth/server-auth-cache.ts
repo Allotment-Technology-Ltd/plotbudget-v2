@@ -43,24 +43,72 @@ export const getCachedDashboardAuth = cache(async (): Promise<{
     return { user: null, profile: null, owned: null, partnerOf: null, isAdmin: false };
   }
 
+  const profileSelect =
+    'display_name, avatar_url, household_id, current_paycycle_id, has_completed_onboarding, is_admin';
+
   const [profileRes, ownedRes, partnerOfRes] = await Promise.all([
     supabase
       .from('users')
-      .select('display_name, avatar_url, household_id, current_paycycle_id, has_completed_onboarding, is_admin')
+      .select(profileSelect)
       .eq('id', user.id)
-      .single(),
-    supabase.from('households').select('id').eq('owner_id', user.id).maybeSingle(),
+      .maybeSingle(),
+    supabase
+      .from('households')
+      .select('id')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from('households')
       .select('id, partner_name')
       .eq('partner_user_id', user.id)
+      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ]);
 
-  const profile = profileRes.data as DashboardProfile;
+  let profile = profileRes.data as DashboardProfile;
   const owned = ownedRes.data as OwnedHousehold;
   const partnerOf = partnerOfRes.data as PartnerHousehold;
-  const isAdmin = (profile?.is_admin === true);
+  const resolvedHouseholdId = profile?.household_id ?? owned?.id ?? partnerOf?.id ?? null;
+
+  if (!profile) {
+    await supabase
+      .from('users')
+      .upsert(
+        {
+          id: user.id,
+          email: user.email ?? `${user.id}@plot.invalid`,
+        } as never,
+        { onConflict: 'id' }
+      );
+    const { data: repairedProfile } = await supabase
+      .from('users')
+      .select(profileSelect)
+      .eq('id', user.id)
+      .maybeSingle();
+    profile = repairedProfile as DashboardProfile;
+  }
+
+  if (resolvedHouseholdId && profile && !profile.household_id) {
+    await supabase
+      .from('users')
+      .update({ household_id: resolvedHouseholdId } as never)
+      .eq('id', user.id);
+    profile = { ...profile, household_id: resolvedHouseholdId };
+  }
+
+  if (partnerOf && profile && !profile.has_completed_onboarding) {
+    await supabase
+      .from('users')
+      .update({ has_completed_onboarding: true } as never)
+      .eq('id', user.id);
+    profile = { ...profile, has_completed_onboarding: true };
+  }
+
+  const isAdmin = profile?.is_admin === true;
 
   return { user, profile, owned, partnerOf, isAdmin };
 });

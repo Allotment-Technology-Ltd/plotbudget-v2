@@ -224,6 +224,20 @@ export async function removePartner() {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  const { data: householdsWithPartner } = await supabase
+    .from('households')
+    .select('partner_user_id')
+    .eq('owner_id', user.id)
+    .not('partner_user_id', 'is', null);
+
+  const partnerUserIds = Array.from(
+    new Set(
+      ((householdsWithPartner ?? []) as { partner_user_id: string | null }[])
+        .map((row) => row.partner_user_id)
+        .filter((id): id is string => !!id)
+    )
+  );
+
   const { error } = await supabase
     .from('households')
     .update({
@@ -238,6 +252,18 @@ export async function removePartner() {
     .eq('owner_id', user.id);
 
   if (error) throw new Error('Failed to remove partner');
+
+  if (partnerUserIds.length > 0) {
+    const admin = createAdminClient();
+    await admin
+      .from('users')
+      .update({
+        household_id: null,
+        current_paycycle_id: null,
+        has_completed_onboarding: false,
+      } as never)
+      .in('id', partnerUserIds);
+  }
 
   await logAuditEvent({
     userId: user.id,
@@ -276,6 +302,22 @@ export async function acceptPartnerInvite(token: string) {
     throw new Error('Invalid or expired invitation');
   }
 
+  // Keep exactly one partner household association per user to prevent
+  // ambiguous partner context and onboarding redirects.
+  await admin
+    .from('households')
+    .update({
+      partner_user_id: null,
+      partner_invite_status: 'none',
+      partner_email: null,
+      partner_auth_token: null,
+      partner_invite_sent_at: null,
+      partner_accepted_at: null,
+      partner_last_login_at: null,
+    } as never)
+    .eq('partner_user_id', user.id)
+    .neq('id', household.id);
+
   const { error: updateError } = await admin
     .from('households')
     .update({
@@ -287,6 +329,29 @@ export async function acceptPartnerInvite(token: string) {
     .eq('id', household.id);
 
   if (updateError) throw new Error('Failed to accept invitation');
+
+  const { data: activePaycycle } = await admin
+    .from('paycycles')
+    .select('id')
+    .eq('household_id', household.id)
+    .eq('status', 'active')
+    .order('start_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  await admin
+    .from('users')
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? `${user.id}@plot.invalid`,
+        household_id: household.id,
+        current_paycycle_id:
+          (activePaycycle as { id: string } | null)?.id ?? null,
+        has_completed_onboarding: true,
+      } as never,
+      { onConflict: 'id' }
+    );
 
   await logAuditEvent({
     userId: user.id,
@@ -324,6 +389,15 @@ export async function leaveHouseholdAsPartner(): Promise<void> {
     .eq('partner_user_id', user.id);
 
   if (error) throw new Error('Failed to leave household');
+
+  await admin
+    .from('users')
+    .update({
+      household_id: null,
+      current_paycycle_id: null,
+      has_completed_onboarding: false,
+    } as never)
+    .eq('id', user.id);
 
   await logAuditEvent({
     userId: user.id,
@@ -365,7 +439,7 @@ export async function removePartnerAndDeleteAccount(): Promise<void> {
       partner_accepted_at: null,
       partner_last_login_at: null,
     } as never)
-    .eq('owner_id', user.id);
+    .eq('partner_user_id', partnerUserId);
 
   if (updateError) throw new Error('Failed to remove partner');
 

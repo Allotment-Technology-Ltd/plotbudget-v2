@@ -4,10 +4,13 @@ import { getHouseholdIdForUser } from '@/lib/household-for-user';
 
 /**
  * PATCH /api/tasks/[id]/complete
- * Mark task as done (status = 'done', completed_at = NOW()). Create activity + optional notification for partner.
+ * Toggle task completion state.
+ * - completed=true  => status='done', completed_at=NOW()
+ * - completed=false => status='todo', completed_at=NULL
+ * If body is empty, it toggles based on current status.
  */
 export async function PATCH(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
@@ -27,9 +30,19 @@ export async function PATCH(
     );
   }
 
+  let completed: boolean | null = null;
+  try {
+    const body = (await request.json()) as { completed?: unknown };
+    if (typeof body.completed === 'boolean') {
+      completed = body.completed;
+    }
+  } catch {
+    // Empty/invalid body => default toggle behavior.
+  }
+
   const { data: taskRow, error: fetchError } = await supabase
     .from('tasks')
-    .select('id, name, assigned_to')
+    .select('id, name, status')
     .eq('id', id)
     .eq('household_id', householdId)
     .single();
@@ -41,12 +54,14 @@ export async function PATCH(
     );
   }
 
-  const task = taskRow as { id: string; name: string; assigned_to: string };
+  const task = taskRow as { id: string; name: string; status: string };
+  const willBeDone = completed ?? task.status !== 'done';
+  const nextStatus = willBeDone ? 'done' : 'todo';
   const { data: updated, error } = await supabase
     .from('tasks')
     .update({
-      status: 'done',
-      completed_at: new Date().toISOString(),
+      status: nextStatus,
+      completed_at: willBeDone ? new Date().toISOString() : null,
     } as never)
     .eq('id', id)
     .eq('household_id', householdId)
@@ -60,18 +75,20 @@ export async function PATCH(
     );
   }
 
-  await supabase.from('activity_feed').insert({
-    household_id: householdId,
-    actor_user_id: user.id,
-    actor_type: 'user',
-    action: 'completed',
-    object_name: task.name,
-    object_detail: null,
-    source_module: 'tasks',
-    source_entity_id: id,
-    action_url: `/dashboard/tasks?task=${id}`,
-    metadata: {},
-  } as never);
+  if (willBeDone && task.status !== 'done') {
+    await supabase.from('activity_feed').insert({
+      household_id: householdId,
+      actor_user_id: user.id,
+      actor_type: 'user',
+      action: 'completed',
+      object_name: task.name,
+      object_detail: null,
+      source_module: 'tasks',
+      source_entity_id: id,
+      action_url: `/dashboard/tasks?task=${id}`,
+      metadata: {},
+    } as never);
+  }
 
   // Calm Design Rule 4: Do not notify partner of activity without explicit opt-in.
   // Partner can see completion in Activity on Home when they choose to look.

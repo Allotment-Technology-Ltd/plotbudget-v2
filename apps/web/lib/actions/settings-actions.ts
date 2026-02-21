@@ -25,6 +25,28 @@ const householdNameSchema = z
   .min(1, 'Household name cannot be empty')
   .max(50, 'Household name must be 50 characters or less');
 
+async function getEditableHousehold(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  householdId: string,
+  userId: string
+) {
+  const { data: owned } = await supabase
+    .from('households')
+    .select('id')
+    .eq('id', householdId)
+    .eq('owner_id', userId)
+    .maybeSingle();
+  if (owned) return owned;
+
+  const { data: partner } = await supabase
+    .from('households')
+    .select('id')
+    .eq('id', householdId)
+    .eq('partner_user_id', userId)
+    .maybeSingle();
+  return partner;
+}
+
 export async function updateUserProfile(displayName: string) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -68,12 +90,7 @@ export async function updateHouseholdName(householdId: string, name: string) {
 
   const validatedName = householdNameSchema.parse(name.trim());
 
-  const { data: household } = await supabase
-    .from('households')
-    .select('id')
-    .eq('id', householdId)
-    .eq('owner_id', user.id)
-    .maybeSingle();
+  const household = await getEditableHousehold(supabase, householdId, user.id);
 
   if (!household) {
     throw new Error('Household not found or unauthorized');
@@ -118,12 +135,7 @@ export async function updatePartnerName(householdId: string, partnerName: string
 
   const validatedName = partnerNameSchema.parse(partnerName.trim());
 
-  const { data: household } = await supabase
-    .from('households')
-    .select('id')
-    .eq('id', householdId)
-    .eq('owner_id', user.id)
-    .maybeSingle();
+  const household = await getEditableHousehold(supabase, householdId, user.id);
 
   if (!household) {
     throw new Error('Household not found or unauthorized');
@@ -293,12 +305,7 @@ export async function updateHouseholdCurrency(householdId: string, currency: str
 
   const validatedCurrency = currencySchema.parse(currency);
 
-  const { data: household } = await supabase
-    .from('households')
-    .select('id')
-    .eq('id', householdId)
-    .eq('owner_id', user.id)
-    .maybeSingle();
+  const household = await getEditableHousehold(supabase, householdId, user.id);
 
   if (!household) {
     throw new Error('Household not found or unauthorized');

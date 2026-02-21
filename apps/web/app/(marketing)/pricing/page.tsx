@@ -36,11 +36,16 @@ export default async function PricingPage() {
       .from('households')
       .select('id')
       .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     const { data: partnerOfData } = await supabase
       .from('households')
       .select('id')
       .eq('partner_user_id', user.id)
+      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     const householdId = (ownedData as { id: string } | null)?.id ?? (partnerOfData as { id: string } | null)?.id ?? null;
     if (householdId) {

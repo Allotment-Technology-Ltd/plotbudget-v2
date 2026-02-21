@@ -19,6 +19,9 @@ export async function getPartnerContext(
     .from('households')
     .select('id')
     .eq('partner_user_id', userId)
+    .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   const row = data as { id: string } | null;
