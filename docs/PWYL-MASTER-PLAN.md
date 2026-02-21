@@ -492,7 +492,7 @@ POLAR_SUCCESS_URL=https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}
 # ==========================================
 # EMAIL CONFIGURATION
 # ==========================================
-RESEND_API_KEY=re_aKpjN9bF_FMNZQyWK8gNX2ATtiqTBj4nx
+RESEND_API_KEY=re_xxxxxxxx
 RESEND_FROM_EMAIL=PLOT <hello@app.plotbudget.com>
 RESEND_REPLY_TO=hello@plotbudget.com
 

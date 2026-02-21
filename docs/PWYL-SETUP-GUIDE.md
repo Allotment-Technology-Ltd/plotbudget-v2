@@ -150,8 +150,8 @@ POLAR_WEBHOOK_SECRET=<production_secret>
 POLAR_SUCCESS_URL=https://app.plotbudget.com/dashboard?checkout_id={CHECKOUT_ID}
 POLAR_PWYL_BASE_PRODUCT_ID=<production_pwyl_product_id>
 
-# Resend (already configured)
-RESEND_API_KEY=re_aKpjN9bF_FMNZQyWK8gNX2ATtiqTBj4nx
+# Resend (placeholder — use your Resend API key from dashboard)
+RESEND_API_KEY=re_xxxxxxxx
 RESEND_FROM_EMAIL=PLOT <hello@app.plotbudget.com>
 RESEND_REPLY_TO=hello@plotbudget.com
 ```

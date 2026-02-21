@@ -13,8 +13,8 @@ The entire PWYL implementation depends on Polar supporting dynamic price creatio
 ### Test Command
 
 ```bash
-# Use your sandbox access token
-export POLAR_TOKEN="polar_oat_cG5eIiPqVf7e0rQNDGTq8reppDahsJWACEpo50WpGBy"
+# Use your sandbox access token (placeholder — get from Polar dashboard)
+export POLAR_TOKEN="polar_oat_xxxxxxxx"
 
 # Create PWYL product first in Polar dashboard, then:
 curl -X POST https://sandbox-api.polar.sh/v1/checkouts \

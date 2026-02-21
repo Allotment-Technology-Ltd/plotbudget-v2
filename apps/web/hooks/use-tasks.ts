@@ -31,6 +31,7 @@ export function useTasks(filters?: TaskFilters) {
   return useQuery({
     queryKey: ['tasks', filters ?? {}],
     queryFn: async () => {
+      // Relative URL only — same-origin request, no SSRF (client-side fetch to our API).
       const res = await fetch(buildTasksQuery(filters));
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<Task[]>;

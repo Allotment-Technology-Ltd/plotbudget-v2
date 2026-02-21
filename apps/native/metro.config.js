@@ -41,10 +41,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
 
   if (isAllowlisted) {
     try {
-      return {
-        type: 'sourceFile',
-        filePath: require.resolve(moduleName, { paths: [projectRoot, monorepoRoot] }),
-      };
+      const resolved = require.resolve(moduleName, { paths: [projectRoot, monorepoRoot] });
+      const relProject = path.relative(projectRoot, resolved);
+      const relMonorepo = path.relative(monorepoRoot, resolved);
+      if (relProject.startsWith('..') && relMonorepo.startsWith('..')) return context.resolveRequest(context, moduleName, platform);
+      return { type: 'sourceFile', filePath: resolved };
     } catch (_) {
       // fall through to default
     }

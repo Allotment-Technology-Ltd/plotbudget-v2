@@ -26,9 +26,11 @@ permissions:
 
 jobs:
   # Security: dependency vulns (fail on high/critical) + code/secret audit (fail on dangerous patterns only).
+  # Only run on same-repo PRs so fork PRs never receive secrets (pull_request_target mitigation).
   security:
     name: security
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -68,6 +70,7 @@ jobs:
   code-review:
     name: code-review
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -86,6 +89,7 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -103,6 +107,7 @@ jobs:
   type-check:
     name: type-check
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -120,6 +125,7 @@ jobs:
   test-unit:
     name: Unit tests (Vitest)
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -139,6 +145,7 @@ jobs:
   test-pwyl-api:
     name: PWYL API and email tests
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6
         with:
@@ -161,6 +168,7 @@ jobs:
   test-localhost:
     name: E2E on localhost
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -209,6 +217,7 @@ jobs:
   test-pwyl-e2e:
     name: PWYL E2E (sandbox)
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     continue-on-error: true
     timeout-minutes: 10
     steps:

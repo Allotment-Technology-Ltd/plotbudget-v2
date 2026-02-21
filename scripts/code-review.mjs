@@ -47,6 +47,9 @@ walkDir(root, exts, ignore, files);
 
 const failures = [];
 for (const file of files) {
+  const resolved = path.resolve(file);
+  const rootResolved = path.resolve(root);
+  if (!resolved.startsWith(rootResolved) || resolved === rootResolved) continue;
   const rel = path.relative(root, file);
   const hits = scanFile(file);
   if (hits.length > 0) {

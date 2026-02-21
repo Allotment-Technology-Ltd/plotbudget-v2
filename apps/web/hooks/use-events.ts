@@ -18,6 +18,7 @@ export function useEvents(range?: EventRange) {
   return useQuery({
     queryKey: ['events', range ?? {}],
     queryFn: async () => {
+      // Relative URL only — same-origin request, no SSRF (client-side fetch to our API).
       const res = await fetch(buildEventsQuery(range));
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<Event[]>;
