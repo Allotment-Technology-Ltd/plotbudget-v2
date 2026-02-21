@@ -4,28 +4,24 @@ import { staggerContainer, staggerItem } from '../lib/animationUtils';
 
 const faqs = [
   {
-    q: 'How does PLOT pricing work?',
-    a: 'PLOT starts with a free trial for your first two pay cycles. The first 100 users get 12 months of Premium free as Founding Members — sign up early to lock it in.',
+    q: 'Is PLOT just for couples?',
+    a: 'No. PLOT works for solo households, couples, and anyone managing a home. The partner features are optional — add them when you\'re ready.',
   },
   {
-    q: 'Do I need to connect my bank account?',
-    a: 'Never. PLOT is privacy-first. You enter your income and bills manually — which is actually faster than you\'d think, because you only do it once and PLOT remembers everything for next month.',
+    q: 'Why won\'t you connect to my bank?',
+    a: 'Because your transaction data is worth money to companies that harvest it. We don\'t want it. Manual input takes five extra minutes and keeps your data yours. That\'s a trade worth making.',
   },
   {
-    q: 'Can I use PLOT on my own?',
-    a: 'Yes. PLOT works for solo use or with a partner. You can invite someone to join your household anytime — or not. It\'s your choice.',
+    q: 'What\'s actually available now?',
+    a: 'The Money module is fully live — budget planning, bill tracking, shared visibility, the Payday Ritual. Tasks, Calendar, Meals, Holidays, Vault, and Home Maintenance arrive by end of March 2026.',
   },
   {
-    q: 'What if my partner doesn\'t want to use it?',
-    a: 'PLOT works brilliantly for solo use. If you have a partner, you can invite them anytime — and when they see how simple it makes everything, they may want in.',
+    q: 'What does "pay what you like" actually mean?',
+    a: 'PLOT is free to use, forever — there\'s no mandatory subscription. The first 100 households to join are Founding Members and get full access free for 12 months. After that, new households get a 2-cycle trial (two full Payday Rituals), all features, no card required. Then you’re on a permanent free tier: core budgeting and shared finances stay free forever. Optional PWYL contributions unlock the full suite (holidays, home, meals, and more).',
   },
   {
-    q: 'Is this just another budgeting app?',
-    a: 'Most budgeting apps want you to track every coffee. PLOT doesn\'t. We believe in allocating your money on payday and then getting on with your life. It\'s a 20-minute ritual, not a lifestyle change.',
-  },
-  {
-    q: 'When does it launch?',
-    a: 'The app is live now. The first 100 users get free access — sign up to claim your spot.',
+    q: 'Is my data safe?',
+    a: 'Your data lives in Supabase (enterprise-grade Postgres) with Row Level Security on every table. We don\'t sell it, share it, or analyse it for advertising. Full details in our privacy policy.',
   },
 ];
 

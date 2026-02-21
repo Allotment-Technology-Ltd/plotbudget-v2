@@ -208,14 +208,14 @@ export default function StoryPage() {
               Ready to join?
             </h2>
             <p className="font-body text-plot-muted mb-8">
-              Be part of the first 100 founding members. Pay what you like. Shape what we build next.
+              PLOT is free forever on Pay What You Like. The first 100 households are Founding Members — full access free for 12 months. Everyone else gets a 2-cycle trial, then a permanent free tier.
             </p>
             <a
               href={APP_URL}
               className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
-              aria-label="Join founding members"
+              aria-label="Join as a founding household"
             >
-              Join founding members →
+              Join as a founding household →
             </a>
           </motion.div>
         </section>

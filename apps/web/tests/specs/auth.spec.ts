@@ -4,16 +4,16 @@ import { AuthPage } from '../pages/auth.page';
 import { setAuthState } from '../utils/test-auth';
 import { TEST_USERS, EMPTY_STORAGE_WITH_CONSENT } from '../fixtures/test-data';
 
-/** Session key used by PwaSplashScreen; when set, the PLOT draw animation is skipped in tests. */
-const PLOT_SPLASH_SESSION_KEY = 'plot-splash-shown';
+/** Storage key used by PwaSplashScreen; when set, the splash is skipped in tests. */
+const PLOT_SPLASH_STORAGE_KEY = 'plot-splash-shown';
 
 test.describe('Authentication Flow', () => {
   test.use({ storageState: EMPTY_STORAGE_WITH_CONSENT }); // No auth state
 
   test.beforeEach(async ({ page }) => {
     await page.addInitScript((key: string) => {
-      sessionStorage.setItem(key, '1');
-    }, PLOT_SPLASH_SESSION_KEY);
+      localStorage.setItem(key, '1');
+    }, PLOT_SPLASH_STORAGE_KEY);
   });
 
   test('login form renders and accepts input', async ({ page }) => {

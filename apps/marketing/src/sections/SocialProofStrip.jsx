@@ -15,7 +15,7 @@ export default function SocialProofStrip() {
         uppercase tracking-[0.15em] text-plot-accent-text
         content-wrapper
       ">
-        Built for couples who budget with spreadsheets — and for anyone who wants to plan their household finances, with or without a partner.
+        Built for households who want one system for money, tasks, and home — with or without a partner.
       </p>
     </motion.section>
   );

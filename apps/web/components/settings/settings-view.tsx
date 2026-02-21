@@ -1,6 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CalmTab } from './calm-tab';
 import { GetTheAppTab } from './get-the-app-tab';
 import { HouseholdTab } from './household-tab';
 import { IncomeSourcesTab } from './income-sources-tab';
@@ -75,8 +76,8 @@ export function SettingsView({
   portalError = false,
 }: SettingsViewProps) {
   const validTabs = pricingEnabled
-    ? ['profile', 'household', 'income', 'app', 'privacy', 'subscription']
-    : ['profile', 'household', 'income', 'app', 'privacy'];
+    ? ['profile', 'household', 'income', 'app', 'calm', 'privacy', 'subscription']
+    : ['profile', 'household', 'income', 'app', 'calm', 'privacy'];
   const defaultTab =
     initialTab && validTabs.includes(initialTab) ? initialTab : 'profile';
 
@@ -105,6 +106,7 @@ export function SettingsView({
           <TabsTrigger value="household">Household</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="app">Get the app</TabsTrigger>
+          <TabsTrigger value="calm">Calm</TabsTrigger>
           {pricingEnabled && <TabsTrigger value="subscription">Subscription</TabsTrigger>}
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
         </TabsList>
@@ -152,6 +154,9 @@ export function SettingsView({
             }}
             isPartner={isPartner}
           />
+        </TabsContent>
+        <TabsContent value="calm" className="space-y-6 mt-6">
+          <CalmTab />
         </TabsContent>
         {pricingEnabled && (
           <TabsContent value="subscription" className="space-y-6 mt-6">

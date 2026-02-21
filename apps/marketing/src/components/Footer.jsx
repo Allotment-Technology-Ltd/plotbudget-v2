@@ -59,7 +59,7 @@ export default function Footer({ pricingEnabled = false, appUrl = DEFAULT_APP_UR
               </span>
             </div>
             <p className="font-body text-sm text-plot-muted">
-              Household budgeting.
+              The household operating system.
             </p>
           </div>
 

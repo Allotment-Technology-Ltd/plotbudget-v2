@@ -3,16 +3,19 @@ import { staggerContainer, staggerItem } from '../lib/animationUtils';
 
 const problems = [
   {
-    title: 'One partner manages everything',
-    body: 'One of you becomes the "Chancellor of the Household" while the other stays disconnected. Neither feels great about it.',
+    label: 'THE PROBLEM',
+    title: 'The mental load is invisible — until it breaks something.',
+    body: 'One person tracks the bills, plans the meals, books the repairs, and remembers the insurance renewal. The other person asks. Neither wanted it this way.',
   },
   {
-    title: 'Spreadsheets don\'t scale',
-    body: 'You built a Google Sheet. It worked for a while. Now it\'s a monster that only one of you understands, and it breaks every January.',
+    label: 'THE PATTERN',
+    title: 'Six apps, three spreadsheets, forty-seven sticky notes.',
+    body: 'Households are complex systems managed with consumer tools built for individuals. Something always falls through the cracks.',
   },
   {
-    title: 'Apps want your bank access',
-    body: 'Every budgeting app demands Open Banking. You want to manage your money together — not hand your data to another company.',
+    label: 'THE COST',
+    title: 'Time, autonomy, and the feeling that you\'re both on the same team.',
+    body: 'When household management defaults to one person, it creates dependency, resentment, and exhaustion. Slowly. Quietly.',
   },
 ];
 
@@ -28,7 +31,7 @@ export default function ProblemSection() {
           className="space-y-10"
         >
           <motion.p variants={staggerItem} className="section-label">
-            The Problem
+            THE PROBLEM
           </motion.p>
 
           <motion.h2
@@ -36,7 +39,7 @@ export default function ProblemSection() {
             id="problem-headline"
             className="section-headline max-w-prose"
           >
-            Money is the #1 source of stress in relationships
+            One person shouldn&apos;t have to run the whole household.
           </motion.h2>
 
           <motion.div
@@ -49,10 +52,12 @@ export default function ProblemSection() {
                 variants={staggerItem}
                 className="card group hover:border-plot-border-accent transition-colors duration-300"
               >
+                <p className="font-heading text-label-sm uppercase tracking-[0.15em] text-plot-accent-text mb-3">
+                  {p.label}
+                </p>
                 <h3 className="
                   font-heading text-sub-sm uppercase tracking-wider
                   text-plot-text mb-4
-                  terminal-prompt
                 ">
                   {p.title}
                 </h3>

@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '../components/providers/theme-provider';
 import { ThemeSync } from '../components/providers/theme-sync';
+import { CalmProvider } from '../components/providers/calm-provider';
 import { PostHogProvider } from '../components/providers/posthog-provider';
 import { CookieConsentProvider } from '../components/providers/cookie-consent-context';
 import { CookieBanner } from '../components/cookie-banner';
@@ -128,11 +129,13 @@ export default function RootLayout({
               storageKey="plot-theme"
             >
               <ThemeSync />
-              <QueryProvider>
-                <NavigationProgressProvider>
-                  <main id="main-content">{children}</main>
-                </NavigationProgressProvider>
-              </QueryProvider>
+              <CalmProvider>
+                <QueryProvider>
+                  <NavigationProgressProvider>
+                    <main id="main-content">{children}</main>
+                  </NavigationProgressProvider>
+                </QueryProvider>
+              </CalmProvider>
               <Toaster position="top-right" />
             </ThemeProvider>
           </PostHogProvider>

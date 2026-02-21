@@ -72,7 +72,7 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
       await expectNoHorizontalOverflow(page);
     });
 
-    test('app header and content-wrapper do not overflow', async ({ page }) => {
+    test('app header and main content do not overflow', async ({ page }) => {
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
       if (page.url().includes('/dashboard/payday-complete')) {
@@ -84,9 +84,13 @@ test.describe('Mobile layout — no overflow or content off-screen', () => {
         page.getByTestId('dashboard-hero').or(page.getByTestId('dashboard-no-cycle')).or(page.getByTestId('dashboard-launcher'));
       await expect(dashboard.first()).toBeVisible({ timeout: process.env.CI ? 20_000 : 15_000 });
       await expectNoHorizontalOverflow(page);
-      const header = page.locator('header .content-wrapper').first();
-      await expect(header).toBeVisible();
-      await expectElementInViewport(page, 'header .content-wrapper');
+      // Dashboard layout uses <header> and <main>; no .content-wrapper inside header (unlike marketing/admin)
+      const header = page.locator('header').first();
+      await expect(header).toBeVisible({ timeout: 5000 });
+      await expectElementInViewport(page, 'header');
+      const main = page.locator('main').first();
+      await expect(main).toBeVisible({ timeout: 5000 });
+      await expectElementInViewport(page, 'main');
     });
   });
 });

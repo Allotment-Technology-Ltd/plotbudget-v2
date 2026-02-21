@@ -19,9 +19,9 @@ import {
 } from './utils/db-cleanup';
 import { TEST_USERS, E2E_PARTNER_INVITE_TOKEN, COOKIE_CONSENT_LOCALSTORAGE } from './fixtures/test-data';
 
-// Load env (same as playwright.config.ts)
-loadEnv({ path: path.resolve(process.cwd(), '.env.local') });
-loadEnv({ path: path.resolve(process.cwd(), '.env.test.local') });
+// Load env (same as playwright.config.ts); quiet to avoid log noise in test output
+loadEnv({ path: path.resolve(process.cwd(), '.env.local'), quiet: true });
+loadEnv({ path: path.resolve(process.cwd(), '.env.test.local'), quiet: true });
 
 async function waitForServer(url: string, timeoutMs = 120000): Promise<boolean> {
   const start = Date.now();

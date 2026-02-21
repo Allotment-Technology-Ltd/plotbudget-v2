@@ -43,7 +43,7 @@ const principles = [
     title: 'Tools Should Serve, Not Surveil',
     main: 'Most budgeting apps want to connect to your bank. They harvest your transactions. They analyse your behaviour. Some sell this data. Others use it to shape your spending. This is surveillance capitalism—extracting value from your data without your meaningful consent.',
     approach: 'No bank connections. No transaction harvesting. No behavioural extraction. You enter the numbers. You make the decisions. You own the data.',
-    quote: 'We\'re paid by subscription, not by your data. This changes everything.',
+    quote: 'We\'re paid by optional Pay What You Like contributions, not by your data. This changes everything.',
   },
   {
     id: '04',
@@ -238,9 +238,9 @@ export default function PrinciplesPage() {
             <a
               href={APP_URL}
               className="btn-primary inline-flex items-center gap-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2 focus-visible:ring-offset-plot-bg"
-              aria-label="Join founding members"
+              aria-label="Join as a founding household"
             >
-              Join founding members →
+              Join as a founding household →
             </a>
           </div>
         </section>

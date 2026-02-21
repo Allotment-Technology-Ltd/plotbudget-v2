@@ -3,17 +3,17 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const SESSION_KEY = 'plot-splash-shown';
-const TAGLINE = 'The 20-minute payday ritual.';
+/** Persist in localStorage so splash shows at most once per browser/device, not every session */
+const STORAGE_KEY = 'plot-splash-shown';
+const TAGLINE = 'Household Operating System.';
 
-/** P logo paths (same as icon.tsx) – stroked for draw animation */
+/** P logo paths (same as icon.tsx) – stroked, no animation */
 const P_PATH_1 =
   'M224.8 131.2H141.6C135.856 131.2 131.2 135.856 131.2 141.6V370.4C131.2 376.144 135.856 380.8 141.6 380.8H224.8C230.544 380.8 235.2 376.144 235.2 370.4V141.6C235.2 135.856 230.544 131.2 224.8 131.2Z';
 const P_PATH_2 =
   'M370.4 131.2H266.4C260.656 131.2 256 135.856 256 141.6V256C256 261.744 260.656 266.4 266.4 266.4H370.4C376.144 266.4 380.8 261.744 380.8 256V141.6C380.8 135.856 376.144 131.2 370.4 131.2Z';
 
 const MINT = '#69F0AE';
-const DURATION_DRAW_MS = 1000;
 const TAGLINE_STAGGER_MS = 45;
 const HOLD_AFTER_TAGLINE_MS = 500;
 const FADE_OUT_MS = 400;
@@ -25,7 +25,7 @@ export function PwaSplashScreen() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    if (localStorage.getItem(STORAGE_KEY) === '1') {
       queueMicrotask(() => setMounted(true));
       return;
     }
@@ -39,13 +39,12 @@ export function PwaSplashScreen() {
     if (!visible || typeof window === 'undefined') return;
 
     const totalMs =
-      DURATION_DRAW_MS +
       TAGLINE.length * TAGLINE_STAGGER_MS +
       HOLD_AFTER_TAGLINE_MS +
       FADE_OUT_MS;
 
     const t = setTimeout(() => {
-      sessionStorage.setItem(SESSION_KEY, '1');
+      localStorage.setItem(STORAGE_KEY, '1');
       setExiting(true);
     }, totalMs - FADE_OUT_MS);
 
@@ -74,30 +73,17 @@ export function PwaSplashScreen() {
           fill="none"
           aria-hidden
         >
-          <motion.path
+          <path
             d={P_PATH_1}
             stroke={MINT}
             strokeWidth={16}
             strokeLinejoin="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{
-              duration: DURATION_DRAW_MS / 1000,
-              ease: 'easeInOut',
-            }}
           />
-          <motion.path
+          <path
             d={P_PATH_2}
             stroke={MINT}
             strokeWidth={16}
             strokeLinejoin="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{
-              duration: DURATION_DRAW_MS / 1000,
-              ease: 'easeInOut',
-              delay: 0.08,
-            }}
           />
         </svg>
         <p
@@ -111,7 +97,7 @@ export function PwaSplashScreen() {
               animate={{ opacity: 1 }}
               transition={{
                 duration: 0.15,
-                delay: DURATION_DRAW_MS / 1000 + (i * TAGLINE_STAGGER_MS) / 1000,
+                delay: (i * TAGLINE_STAGGER_MS) / 1000,
               }}
             >
               {char === ' ' ? '\u00A0' : char}

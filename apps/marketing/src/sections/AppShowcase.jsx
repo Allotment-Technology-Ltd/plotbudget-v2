@@ -70,7 +70,7 @@ export default function AppShowcase() {
           className="space-y-10"
         >
           <motion.p variants={staggerItem} className="section-label">
-            The App
+            THE APP
           </motion.p>
 
           <motion.h2
@@ -78,12 +78,52 @@ export default function AppShowcase() {
             id="showcase-headline"
             className="section-headline"
           >
-            One view. Your numbers.
+            One system. Your whole household.
           </motion.h2>
 
           <motion.p variants={staggerItem} className="text-plot-muted text-lg max-w-2xl">
-            Dashboard, Blueprint, savings goals, and income — all in one place. No daily tracking. Just your payday ritual.
+            The Money module is live now. Tasks, Calendar, Meals, Holidays, Vault, and Home Maintenance arrive by end of March 2026. One place. No subscriptions to six separate apps.
           </motion.p>
+        </motion.div>
+
+        {/* Module preview strip — enabled = mint, coming soon = muted */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="mt-10 flex flex-wrap justify-center gap-4 md:gap-6"
+          aria-label="Module status"
+        >
+          {[
+            { name: 'Money', enabled: true },
+            { name: 'Tasks', enabled: false },
+            { name: 'Calendar', enabled: false },
+            { name: 'Meals', enabled: false },
+            { name: 'Holidays', enabled: false },
+            { name: 'Vault', enabled: false },
+            { name: 'Home', enabled: false },
+          ].map((mod, i) => (
+            <motion.div
+              key={mod.name}
+              variants={staggerItem}
+              className="flex flex-col items-center gap-1"
+            >
+              <span
+                className="font-heading text-label-sm uppercase tracking-wider"
+                style={{
+                  color: mod.enabled ? '#69F0AE' : '#444444',
+                }}
+              >
+                {mod.name}
+              </span>
+              {!mod.enabled && (
+                <span className="font-body text-xs uppercase tracking-wider" style={{ color: '#444444' }}>
+                  Coming soon
+                </span>
+              )}
+            </motion.div>
+          ))}
         </motion.div>
 
         <div

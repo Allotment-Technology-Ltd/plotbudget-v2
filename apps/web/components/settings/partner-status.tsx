@@ -30,7 +30,6 @@ export function PartnerStatus({
   lastLoginAt,
 }: PartnerStatusProps) {
   const [loading, setLoading] = useState(false);
-
   const [linkOnlyEmail, setLinkOnlyEmail] = useState('');
   const [linkOnlySending, setLinkOnlySending] = useState(false);
   const [linkOnlyError, setLinkOnlyError] = useState('');
@@ -91,7 +90,7 @@ export function PartnerStatus({
     }
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Invite link copied. Share it via WhatsApp, SMS, or any app.');
+      toast.success('Link copied');
     } catch {
       toast.error('Failed to copy link');
     }
@@ -100,56 +99,54 @@ export function PartnerStatus({
   if (status === 'pending') {
     const linkOnly = !email;
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 p-4">
-        <p className="text-sm font-medium">Invitation Pending</p>
-        {linkOnly ? (
-          <p className="mt-1 text-sm text-muted-foreground">
-            Share the link below with your partner (e.g. WhatsApp, SMS, or in person).
-          </p>
-        ) : (
-          <>
+      <div className="rounded-lg border border-border bg-muted/30 p-5 space-y-4">
+        <div>
+          <p className="font-medium text-foreground">Invitation pending</p>
+          {linkOnly ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              Sent to <strong>{email}</strong>
-              {sentAt
-                ? ` on ${new Date(sentAt).toLocaleDateString()}`
-                : ''}
+              Share the link with your partner (e.g. WhatsApp, SMS).
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              You can also copy the invite link and share it (e.g. WhatsApp, SMS).
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sent to {email}
+              {sentAt ? ` on ${new Date(sentAt).toLocaleDateString()}` : ''}.
             </p>
-          </>
-        )}
-        <div className="mt-4 flex flex-wrap gap-2">
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="primary"
             disabled={loading}
             onClick={handleCopyLink}
-            className="text-sm"
           >
             Copy invite link
           </Button>
           {linkOnly ? (
             <>
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                if (!linkOnlyEmail.trim()) return;
-                setLinkOnlySending(true);
-                setLinkOnlyError('');
-                try {
-                  await sendPartnerInviteToEmail(linkOnlyEmail.trim());
-                  toast.success('Invitation email sent');
-                  setLinkOnlyEmail('');
-                } catch (err) {
-                  setLinkOnlyError(err instanceof Error ? err.message : 'Something went wrong');
-                } finally {
-                  setLinkOnlySending(false);
-                }
-              }} className="inline-flex flex-wrap items-end gap-2"
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!linkOnlyEmail.trim()) return;
+                  setLinkOnlySending(true);
+                  setLinkOnlyError('');
+                  try {
+                    await sendPartnerInviteToEmail(linkOnlyEmail.trim());
+                    toast.success('Invitation email sent');
+                    setLinkOnlyEmail('');
+                  } catch (err) {
+                    setLinkOnlyError(
+                      err instanceof Error ? err.message : 'Something went wrong'
+                    );
+                  } finally {
+                    setLinkOnlySending(false);
+                  }
+                }}
+                className="inline-flex flex-wrap items-end gap-2"
               >
                 <div className="flex flex-col gap-1">
                   <Label htmlFor="link-only-email" className="text-xs text-muted-foreground">
-                    Or send invitation email to
+                    Send to email
                   </Label>
                   <Input
                     id="link-only-email"
@@ -158,11 +155,15 @@ export function PartnerStatus({
                     onChange={(e) => setLinkOnlyEmail(e.target.value)}
                     placeholder="partner@example.com"
                     disabled={linkOnlySending}
-                    className="h-8 w-48 text-sm"
+                    className="h-9 w-52 text-sm"
                   />
                 </div>
-                <Button type="submit" variant="outline" className="text-sm" disabled={linkOnlySending || !linkOnlyEmail.trim()}>
-                  {linkOnlySending ? 'Sending...' : 'Send email'}
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={linkOnlySending || !linkOnlyEmail.trim()}
+                >
+                  {linkOnlySending ? 'Sending…' : 'Send email'}
                 </Button>
               </form>
               {linkOnlyError && (
@@ -174,22 +175,21 @@ export function PartnerStatus({
           ) : (
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               disabled={loading}
               onClick={handleResend}
-              className="text-sm"
             >
               Resend email
             </Button>
           )}
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             disabled={loading}
             onClick={handleRemove}
-            className="text-sm border-destructive text-destructive hover:bg-destructive/10"
+            className="text-muted-foreground hover:text-destructive"
           >
-            Cancel Invitation
+            Cancel invitation
           </Button>
         </div>
       </div>
@@ -197,38 +197,38 @@ export function PartnerStatus({
   }
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/30 p-4">
-      <p className="text-sm font-medium">Partner Active</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {email ?? 'Partner'} accepted
-        {acceptedAt
-          ? ` on ${new Date(acceptedAt).toLocaleDateString()}`
-          : ''}
-      </p>
-      {lastLoginAt && (
-        <p className="text-xs text-muted-foreground mt-1">
-          Last login: {new Date(lastLoginAt).toLocaleDateString()}
+    <div className="rounded-lg border border-border bg-muted/30 p-5 space-y-4">
+      <div>
+        <p className="font-medium text-foreground">Partner active</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {email ?? 'Partner'} joined
+          {acceptedAt ? ` on ${new Date(acceptedAt).toLocaleDateString()}` : ''}.
         </p>
-      )}
-      <p className="mt-2 text-xs text-muted-foreground">
-        Remove from household only (they can be re-invited), or remove and delete their account.
+        {lastLoginAt && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Last login: {new Date(lastLoginAt).toLocaleDateString()}
+          </p>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground">
+        You can remove them from the household (they can be re-invited), or remove and delete
+        their account.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           disabled={loading}
           onClick={handleRemove}
-          className="text-sm"
         >
           Remove from household
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           disabled={loading}
           onClick={handleRemoveAndDeleteAccount}
-          className="text-sm border-destructive text-destructive hover:bg-destructive/10"
+          className="text-muted-foreground hover:text-destructive"
         >
           Remove and delete account
         </Button>

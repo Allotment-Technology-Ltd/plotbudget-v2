@@ -295,6 +295,7 @@ export default function OnboardingScreen() {
 
       const householdInsert: Database['public']['Tables']['households']['Insert'] = {
         owner_id: user.id,
+        name: 'My Household',
         is_couple: data.mode === 'couple',
         partner_name: data.partnerName ?? null,
         partner_income: data.partnerIncome ?? 0,

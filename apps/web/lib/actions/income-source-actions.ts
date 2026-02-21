@@ -174,10 +174,26 @@ export async function backfillIncomeSourcesFromOnboarding(
       .select('monthly_income')
       .eq('id', ownerId)
       .single();
-    const monthlyIncome = (owner as { monthly_income: number } | null)?.monthly_income ?? 0;
-    const partnerIncome = Number((household as { partner_income: number }).partner_income ?? 0);
+    let monthlyIncome = (owner as { monthly_income: number } | null)?.monthly_income ?? 0;
+    let partnerIncome = Number((household as { partner_income: number }).partner_income ?? 0);
 
-    if (monthlyIncome <= 0 && partnerIncome <= 0) return { created: 0 };
+    // Fallback: if user/household income not set (e.g. onboarding bug or legacy), use latest paycycle snapshot
+    if (monthlyIncome <= 0 && partnerIncome <= 0) {
+      const { data: paycycle } = await supabase
+        .from('paycycles')
+        .select('snapshot_user_income, snapshot_partner_income')
+        .eq('household_id', householdId)
+        .order('start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const snap = paycycle as { snapshot_user_income?: number; snapshot_partner_income?: number } | null;
+      if (snap && (Number(snap.snapshot_user_income ?? 0) > 0 || Number(snap.snapshot_partner_income ?? 0) > 0)) {
+        monthlyIncome = Number(snap.snapshot_user_income ?? 0);
+        partnerIncome = Number(snap.snapshot_partner_income ?? 0);
+      } else {
+        return { created: 0 };
+      }
+    }
 
     const cycleType = (household as { pay_cycle_type: FrequencyRule }).pay_cycle_type;
     const payDay = (household as { pay_day: number | null }).pay_day;

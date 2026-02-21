@@ -126,15 +126,15 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
           <Link to="/story" className={desktopNavLinkClass}>
             Story
           </Link>
-          <Link to="/blog" className={desktopNavLinkClass}>
-            Blog
-          </Link>
           <Link to="/roadmap" className={desktopNavLinkClass}>
             Roadmap
           </Link>
+          <Link to="/blog" className={`${desktopNavLinkClass} text-plot-accent-text`}>
+            Blog
+          </Link>
         </nav>
 
-        {/* Right: Log in (text), Sign up (CTA), theme — clear space */}
+        {/* Right: Log in (text), theme — clear space */}
         <div className="flex items-center flex-1 justify-end gap-4 lg:gap-6 min-w-0">
           <a
             href={`${appUrl}/login`}
@@ -142,19 +142,6 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
             aria-label="Log in to PLOT"
           >
             Log in
-          </a>
-          <a
-            href={`${appUrl}/signup`}
-            className="
-              font-heading text-cta-sm uppercase tracking-[0.2em]
-              bg-plot-accent text-on-accent px-5 py-2.5
-              hover:shadow-[0_0_20px_var(--accent-glow)] hover:-translate-y-px
-              transition-all duration-200 rounded-none
-              focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-plot-accent focus-visible:ring-offset-2
-            "
-            aria-label="Sign up for PLOT"
-          >
-            Sign up
           </a>
           <button
             type="button"
@@ -334,11 +321,11 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
                 <Link to="/story" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Story
                 </Link>
-                <Link to="/blog" onClick={() => setMenuOpen(false)} className={navLinkClass}>
-                  Blog
-                </Link>
                 <Link to="/roadmap" onClick={() => setMenuOpen(false)} className={navLinkClass}>
                   Roadmap
+                </Link>
+                <Link to="/blog" onClick={() => setMenuOpen(false)} className={`${navLinkClass} text-plot-accent-text`}>
+                  Blog
                 </Link>
                 <a
                   href={`${appUrl}/login`}
@@ -346,13 +333,6 @@ export default function Navbar({ theme, onToggleTheme, pricingEnabled = false, a
                   className={navLinkClass}
                 >
                   Log in
-                </a>
-                <a
-                  href={`${appUrl}/signup`}
-                  onClick={() => setMenuOpen(false)}
-                  className="font-heading text-label-sm uppercase tracking-wider text-plot-accent-text hover:text-plot-accent-text block w-full text-left py-3 mt-2 border-t border-plot-border pt-4"
-                >
-                  Sign up
                 </a>
               </nav>
             </motion.div>

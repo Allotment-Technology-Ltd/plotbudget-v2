@@ -356,6 +356,7 @@ export async function ensureBlueprintReady(email: string) {
     .from('households')
     .insert({
       owner_id: user.id,
+      name: 'My Household',
       is_couple: false,
       pay_cycle_type: 'specific_date',
       pay_day: 1,
