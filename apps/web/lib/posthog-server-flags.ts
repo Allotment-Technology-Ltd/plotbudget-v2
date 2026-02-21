@@ -198,12 +198,18 @@ export async function getServerFeatureFlags(
     base = { ...envFlags, moduleFlags: { ...DEFAULT_MODULE_FLAGS } };
   }
 
-  // In production, admins bypass module feature flags: all modules enabled
-  if (!isPreProdContext() && options?.isAdmin === true) {
-    base = { ...base, moduleFlags: ALL_MODULES_ENABLED };
-  } else if (isPreProdContext() && options?.isAdmin === true && options?.cookies) {
-    const overrides = parseAdminOverrideCookie(options.cookies);
-    if (overrides) base = mergeAdminOverrides(base, overrides);
+  // Admins bypass PostHog flags: all modules enabled and pricing/signup gating relaxed so they can use all functionality
+  if (options?.isAdmin === true) {
+    base = {
+      ...base,
+      moduleFlags: ALL_MODULES_ENABLED,
+      signupGated: false,
+      pricingEnabled: true,
+    };
+    if (isPreProdContext() && options?.cookies) {
+      const overrides = parseAdminOverrideCookie(options.cookies);
+      if (overrides) base = mergeAdminOverrides(base, overrides);
+    }
   }
 
   return base;
