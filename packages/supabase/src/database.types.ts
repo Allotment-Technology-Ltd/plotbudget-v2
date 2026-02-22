@@ -1024,6 +1024,176 @@ export type Database = {
           updated_at?: string;
         };
       };
+      recipes: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          description: string | null;
+          ingredients: Json;
+          servings: number;
+          source_url: string | null;
+          instructions: string | null;
+          image_url: string | null;
+          prep_mins: number | null;
+          cook_mins: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          description?: string | null;
+          ingredients?: Json;
+          servings?: number;
+          source_url?: string | null;
+          instructions?: string | null;
+          image_url?: string | null;
+          prep_mins?: number | null;
+          cook_mins?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          name?: string;
+          description?: string | null;
+          ingredients?: Json;
+          servings?: number;
+          source_url?: string | null;
+          instructions?: string | null;
+          image_url?: string | null;
+          prep_mins?: number | null;
+          cook_mins?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      meal_plan_entries: {
+        Row: {
+          id: string;
+          household_id: string;
+          recipe_id: string | null;
+          free_text: string | null;
+          planned_date: string;
+          servings: number | null;
+          sort_order: number;
+          meal_slot: string;
+          is_batch_cook: boolean;
+          leftovers_from_meal_plan_entry_id: string | null;
+          cooked_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          recipe_id?: string | null;
+          free_text?: string | null;
+          planned_date: string;
+          servings?: number | null;
+          sort_order?: number;
+          meal_slot?: string;
+          is_batch_cook?: boolean;
+          leftovers_from_meal_plan_entry_id?: string | null;
+          cooked_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          recipe_id?: string | null;
+          free_text?: string | null;
+          planned_date?: string;
+          servings?: number | null;
+          sort_order?: number;
+          meal_slot?: string;
+          is_batch_cook?: boolean;
+          leftovers_from_meal_plan_entry_id?: string | null;
+          cooked_at?: string | null;
+          created_at?: string;
+        };
+      };
+      grocery_items: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          quantity_text: string | null;
+          quantity_value: number | null;
+          quantity_unit: string | null;
+          source_recipe_id: string | null;
+          source_meal_plan_entry_id: string | null;
+          is_checked: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          quantity_text?: string | null;
+          quantity_value?: number | null;
+          quantity_unit?: string | null;
+          source_recipe_id?: string | null;
+          source_meal_plan_entry_id?: string | null;
+          is_checked?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          name?: string;
+          quantity_text?: string | null;
+          quantity_value?: number | null;
+          quantity_unit?: string | null;
+          source_recipe_id?: string | null;
+          source_meal_plan_entry_id?: string | null;
+          is_checked?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      pantry_items: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          quantity_value: number | null;
+          quantity_unit: string | null;
+          location: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          quantity_value?: number | null;
+          quantity_unit?: string | null;
+          location?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          name?: string;
+          quantity_value?: number | null;
+          quantity_unit?: string | null;
+          location?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Enums: {
       subscription_tier: 'free' | 'pro';
@@ -1063,3 +1233,7 @@ export type ProjectPhase = Tables<'project_phases'>;
 export type Task = Tables<'tasks'>;
 export type Routine = Tables<'routines'>;
 export type Event = Tables<'events'>;
+export type Recipe = Tables<'recipes'>;
+export type MealPlanEntry = Tables<'meal_plan_entries'>;
+export type GroceryItem = Tables<'grocery_items'>;
+export type PantryItem = Tables<'pantry_items'>;

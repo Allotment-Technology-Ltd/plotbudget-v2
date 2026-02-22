@@ -213,3 +213,107 @@ If no to any → don't build it.
 
 If in doubt: **Would this feature make Adam's household's life better?**
 If no → don't build it.
+
+---
+
+# 8. ERROR-FRIENDLY FORM DESIGN
+
+All forms must follow error-friendly design principles from [Bunnyfoot's 13 Best Practices](https://www.bunnyfoot.com/2024/01/13-best-practices-to-design-error-friendly-forms/). See [`docs/ERROR-FRIENDLY-FORM-DESIGN.md`](docs/ERROR-FRIENDLY-FORM-DESIGN.md) for full patterns.
+
+### Validation Message Strategy
+
+1. **Write descriptive, actionable error messages** (not technical):
+   - ✅ "Recipe name is required"
+   - ✅ "Servings must be at least 1"
+   - ❌ "Validation failed"
+   - ❌ "Invalid input"
+
+2. **Zod schemas MUST include custom error messages**:
+```typescript
+export const createRecipeSchema = z.object({
+  name: z.string().min(1, 'Recipe name is required').max(200, 'Name must be under 200 characters'),
+  servings: z.number().int('Must be a whole number').min(1, 'Servings must be at least 1'),
+});
+```
+
+### Form UI Checklist
+
+- [ ] **Validation Summary**: Show count of errors at top if form has errors (use `role="alert"` + `aria-live="polite"`)
+- [ ] **Field Errors**: Display immediately below each field with icon + message
+- [ ] **Visual Indicators**: Red border on invalid fields + focus state styling
+- [ ] **Required Markers**: Show `<span className="text-destructive" aria-label="required">*</span>` on required fields
+- [ ] **Disabled Submit**: Disable button when `hasErrors === true`
+- [ ] **Accessibility**: All fields must have `aria-invalid`, `aria-describedby`, and linked error message IDs
+
+### Implementation Pattern
+
+```tsx
+// Field-level error rendering
+{errors.fieldName && (
+  <div id="fieldName-error" className="flex gap-1 mt-1 text-sm text-destructive">
+    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" aria-hidden />
+    <span>{errors.fieldName.message}</span>
+  </div>
+)}
+
+// Input field styling
+<input
+  {...register('fieldName')}
+  className={`${errors.fieldName ? 'border-destructive focus:border-destructive focus:ring-destructive/50' : 'border-border'}`}
+  aria-invalid={!!errors.fieldName}
+  aria-describedby={errors.fieldName ? 'fieldName-error' : undefined}
+/>
+
+// Form submission disabled when errors exist
+<Button type="submit" disabled={isSubmitting || hasErrors}>Submit</Button>
+```
+
+### Array Field Pattern (Ingredients, Items, etc.)
+
+```tsx
+{items.map((_, index) => (
+  <div key={index} className="flex flex-col gap-1">
+    <input
+      {...register(`items.${index}.name`)}
+      className={`${errors.items?.[index]?.name ? 'border-destructive' : 'border-border'}`}
+      aria-invalid={!!errors.items?.[index]?.name}
+      aria-describedby={errors.items?.[index]?.name ? `item-${index}-error` : undefined}
+    />
+    {errors.items?.[index]?.name && (
+      <div id={`item-${index}-error`} className="flex gap-1 text-xs text-destructive">
+        <AlertCircle className="h-3 w-3 flex-shrink-0" aria-hidden />
+        <span>{errors.items[index].name.message}</span>
+      </div>
+    )}
+  </div>
+))}
+```
+
+### Server vs Client Errors
+
+**Client-side (validation)**: Show list of field errors at top + inline messages
+**Server-side (API)**: Show single alert block above form with specific error message
+
+```tsx
+// Server error alert
+{serverError && (
+  <div 
+    className="flex gap-2 rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive"
+    role="alert"
+    aria-live="polite"
+  >
+    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" aria-hidden />
+    <div>{serverError}</div>
+  </div>
+)}
+```
+
+### Testing Forms
+
+Before submitting:
+- [ ] Submit empty form—all errors appear
+- [ ] Tab through fields—focus states visible
+- [ ] Fix errors—button enables when all fixed
+- [ ] Test with screen reader—errors announced correctly
+- [ ] Mobile view—errors visible without scrolling
+- [ ] Server error—shown prominently above form

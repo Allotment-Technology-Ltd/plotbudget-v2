@@ -1,0 +1,16 @@
+{
+  "name": "reciperadar-mcp",
+  "version": "1.0.0",
+  "description": "MCP server that runs RecipeRadar bootstrap (clone, start stack, cron, webhook).",
+  "type": "module",
+  "main": "index.js",
+  "bin": { "reciperadar-mcp": "index.js" },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.23.0"
+  }
+}

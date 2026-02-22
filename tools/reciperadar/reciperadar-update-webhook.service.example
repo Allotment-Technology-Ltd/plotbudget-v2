@@ -1,0 +1,28 @@
+# Example systemd unit for the RecipeRadar update webhook server.
+# Run on the host that runs the RecipeRadar Docker stack.
+#
+# 1. Copy to systemd (adjust REPO_PATH and secret):
+#    sudo cp tools/reciperadar/reciperadar-update-webhook.service.example /etc/systemd/system/reciperadar-update-webhook.service
+#    sudo sed -i "s|/path/to/plotbudget|$(pwd)|" /etc/systemd/system/reciperadar-update-webhook.service
+#    sudo nano /etc/systemd/system/reciperadar-update-webhook.service  # set Environment=RECIPERADAR_UPDATE_SECRET=...
+# 2. Reload and enable:
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable --now reciperadar-update-webhook
+#
+# Listens on port 9090. POST /update with Authorization: Bearer <secret> triggers the update script.
+
+[Unit]
+Description=RecipeRadar update webhook (triggered from GitHub Actions)
+After=network.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/plotbudget
+Environment=RECIPERADAR_UPDATE_SECRET=your-secret-min-16-chars
+Environment=RECIPERADAR_UPDATE_PORT=9090
+ExecStart=/usr/bin/env node tools/reciperadar/update-webhook.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   DndContext,
   PointerSensor,
@@ -14,7 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Task } from '@repo/supabase';
 import { TaskCard } from './task-card';
-import { useTasks, useUpdateTask, useCompleteTask } from '@/hooks/use-tasks';
+import { useTasks, useUpdateTask, useCompleteTask, useDeleteTask } from '@/hooks/use-tasks';
 import type { AssigneeLabels } from '@/app/dashboard/tasks/page';
 
 const COLUMNS: { id: Task['status']; title: string }[] = [
@@ -36,12 +37,16 @@ function DraggableTaskCard({
   task,
   showCheckbox,
   onToggleComplete,
+  onDelete,
+  onCancel,
   onTaskClick,
   assigneeLabels,
 }: {
   task: Task;
   showCheckbox: boolean;
   onToggleComplete: (id: string, completed?: boolean) => void;
+  onDelete?: (id: string) => void;
+  onCancel?: (id: string) => void;
   onTaskClick?: (task: Task) => void;
   assigneeLabels?: AssigneeLabels;
 }) {
@@ -53,6 +58,8 @@ function DraggableTaskCard({
         task={task}
         showCheckbox={showCheckbox}
         onToggleComplete={onToggleComplete}
+        onDelete={onDelete}
+        onCancel={onCancel}
         isDragging={isDragging}
         assigneeLabels={assigneeLabels}
       />
@@ -66,6 +73,8 @@ function DroppableColumn({
   tasks,
   showCheckbox,
   onToggleComplete,
+  onDelete,
+  onCancel,
   onTaskClick,
   assigneeLabels,
 }: {
@@ -74,6 +83,8 @@ function DroppableColumn({
   tasks: Task[];
   showCheckbox: boolean;
   onToggleComplete: (id: string, completed?: boolean) => void;
+  onDelete?: (id: string) => void;
+  onCancel?: (id: string) => void;
   onTaskClick?: (task: Task) => void;
   assigneeLabels?: AssigneeLabels;
 }) {
@@ -91,6 +102,8 @@ function DroppableColumn({
               task={task}
               showCheckbox={showCheckbox}
               onToggleComplete={onToggleComplete}
+              onDelete={onDelete}
+              onCancel={onCancel}
               onTaskClick={onTaskClick}
               assigneeLabels={assigneeLabels}
             />
@@ -108,7 +121,51 @@ export function TaskKanbanView({
   const { data: tasks = [] } = useTasks();
   const updateTask = useUpdateTask();
   const completeTask = useCompleteTask();
+  const deleteTask = useDeleteTask();
   const queryClient = useQueryClient();
+
+  const handleDelete = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    
+    if (confirm(`Delete "${task.name}"? This action cannot be undone.`)) {
+      deleteTask.mutate(id, {
+        onSuccess: () => {
+          toast.error(`Deleted: "${task.name}"`, {
+            description: 'This task has been permanently deleted.',
+            duration: 5000,
+          });
+        },
+      });
+    }
+  };
+
+  const handleCancel = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    
+    updateTask.mutate(
+      { id, status: 'skipped' },
+      {
+        onSuccess: () => {
+          toast.warning(`Cancelled: "${task.name}"`, {
+            description: 'This task has been skipped.',
+            action: {
+              label: 'Undo',
+              onClick: () => {
+                updateTask.mutate({ id, status: 'todo' }, {
+                  onSuccess: () => {
+                    toast.success(`Restored: "${task.name}"`);
+                  },
+                });
+              },
+            },
+            duration: 5000,
+          });
+        },
+      }
+    );
+  };
   const byStatus = tasksByStatus(tasks);
 
   const handleDragEnd = useCallback(
@@ -149,6 +206,8 @@ export function TaskKanbanView({
             tasks={byStatus[col.id] ?? []}
             showCheckbox={true}
             onToggleComplete={(id, completed) => completeTask.mutate({ id, completed })}
+            onDelete={handleDelete}
+            onCancel={handleCancel}
             onTaskClick={onTaskClick}
             assigneeLabels={assigneeLabels}
           />

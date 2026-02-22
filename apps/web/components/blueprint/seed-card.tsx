@@ -153,7 +153,7 @@ export function SeedCard({
                     onChange={(e) =>
                       handleCheckboxChange('me', e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
+                    className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
                     aria-label={`Mark ${seed.name} - your portion as paid`}
                     data-testid={`seed-paid-me-${seedSlug}`}
                   />
@@ -166,7 +166,7 @@ export function SeedCard({
                     onChange={(e) =>
                       handleCheckboxChange('partner', e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
+                    className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
                     aria-label={`Mark ${seed.name} - ${otherName}'s portion as paid`}
                     data-testid={`seed-paid-partner-${seedSlug}`}
                   />

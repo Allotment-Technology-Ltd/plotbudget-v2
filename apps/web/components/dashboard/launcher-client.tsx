@@ -3,8 +3,9 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PoundSterling, CheckSquare, Calendar, Search, RotateCcw } from 'lucide-react';
+import { PoundSterling, CheckSquare, Calendar, Search, RotateCcw, UtensilsCrossed } from 'lucide-react';
 import { cn } from '@repo/ui';
+import { useModuleFlags } from '@/contexts/module-flags-context';
 import type { LauncherTaskGroups, LauncherEventGroups } from '@/app/dashboard/page';
 
 type LauncherClientProps = {
@@ -49,14 +50,19 @@ function LauncherSearch({
     }
   };
 
+  const moduleFlags = useModuleFlags();
   const modules: SearchResult[] = useMemo(
-    () =>     [
-      { type: 'module', id: 'money', label: 'Money', href: moneyLink },
-      { type: 'module', id: 'tasks', label: 'Tasks', href: '/dashboard/tasks' },
-      { type: 'module', id: 'calendar', label: 'Calendar', href: '/dashboard/calendar' },
-      { type: 'module', id: 'weekly-reset', label: 'Weekly Reset', href: '/dashboard/tasks/weekly-reset' },
-    ],
-    [moneyLink]
+    () => {
+      const list: SearchResult[] = [
+        { type: 'module', id: 'money', label: 'Money', href: moneyLink },
+        { type: 'module', id: 'tasks', label: 'Tasks', href: '/dashboard/tasks' },
+        { type: 'module', id: 'calendar', label: 'Calendar', href: '/dashboard/calendar' },
+        { type: 'module', id: 'weekly-reset', label: 'Weekly Reset', href: '/dashboard/tasks/weekly-reset' },
+      ];
+      if (moduleFlags.meals) list.push({ type: 'module', id: 'meals', label: 'Meals', href: '/dashboard/meals' });
+      return list;
+    },
+    [moneyLink, moduleFlags.meals]
   );
 
   const allTasks = useMemo(
@@ -212,33 +218,54 @@ export function LauncherClient({
   eventGroups,
 }: LauncherClientProps) {
   const moneyLink = moneyHref(hasCompletedMoneyOnboarding, isPartner);
+  const moduleFlags = useModuleFlags();
 
-  const modules = [
-    {
-      id: 'money',
-      name: 'Money',
-      href: moneyLink,
-      icon: PoundSterling,
-      available: true,
-      accent: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      id: 'tasks',
-      name: 'Tasks',
-      href: '/dashboard/tasks',
-      icon: CheckSquare,
-      available: true,
-      accent: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      href: '/dashboard/calendar',
-      icon: Calendar,
-      available: true,
-      accent: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-    },
-  ];
+  const modules = useMemo(() => {
+    const list: {
+      id: string;
+      name: string;
+      href: string;
+      icon: typeof PoundSterling;
+      available: boolean;
+      accent: string;
+    }[] = [
+      {
+        id: 'money',
+        name: 'Money',
+        href: moneyLink,
+        icon: PoundSterling,
+        available: true,
+        accent: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+      },
+      {
+        id: 'tasks',
+        name: 'Tasks',
+        href: '/dashboard/tasks',
+        icon: CheckSquare,
+        available: true,
+        accent: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+      },
+      {
+        id: 'calendar',
+        name: 'Calendar',
+        href: '/dashboard/calendar',
+        icon: Calendar,
+        available: true,
+        accent: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+      },
+    ];
+    if (moduleFlags.meals) {
+      list.push({
+        id: 'meals',
+        name: 'Meals',
+        href: '/dashboard/meals',
+        icon: UtensilsCrossed,
+        available: true,
+        accent: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
+      });
+    }
+    return list;
+  }, [moneyLink, moduleFlags.meals]);
 
   const now = new Date();
   const monthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });

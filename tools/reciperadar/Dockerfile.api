@@ -1,0 +1,23 @@
+# RecipeRadar API (OpenCulinary) — minimal image for local/dev.
+# Builds from upstream; recipe index must be populated separately.
+# See https://github.com/openculinary/api
+
+FROM python:3.13-slim AS builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+  && rm -rf /var/lib/apt/lists/*
+ARG API_REV=main
+RUN git clone --depth 1 --branch "${API_REV}" https://github.com/openculinary/api.git .
+
+FROM python:3.13-slim
+WORKDIR /app
+RUN useradd --no-create-home --shell /sbin/nologin gunicorn
+COPY --from=builder /build/reciperadar ./reciperadar
+COPY --from=builder /build/requirements.txt .
+RUN pip install --no-cache-dir --no-deps -r requirements.txt \
+  && pip install --no-cache-dir --no-deps gunicorn \
+  && chown -R gunicorn:nogroup /app
+ENV PYTHONDONTWRITEBYTECODE=1
+USER gunicorn
+EXPOSE 8000
+CMD ["gunicorn", "reciperadar:app", "--bind", ":8000", "--reuse-port"]

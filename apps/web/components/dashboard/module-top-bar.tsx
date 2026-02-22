@@ -6,9 +6,11 @@ import { usePathname } from 'next/navigation';
 import { Bell, Calendar as CalendarIcon, CheckSquare, FolderKanban, LayoutList, PoundSterling } from 'lucide-react';
 import { UserMenu } from '@/components/navigation/user-menu';
 import { cn } from '@repo/ui';
+import type { ModuleFlags } from '@/lib/module-flags';
 import type { SidebarUserMenuProps } from './sidebar';
 
 interface ModuleTopBarProps {
+  moduleFlags: ModuleFlags;
   userMenuProps: SidebarUserMenuProps;
   unreadNotificationCount?: number;
 }
@@ -16,7 +18,7 @@ interface ModuleTopBarProps {
 /**
  * Single top bar when inside a module (no sidebar). PLOT → launcher, in-module nav, notifications, user menu.
  */
-export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: ModuleTopBarProps) {
+export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCount = 0 }: ModuleTopBarProps) {
   const pathname = usePathname();
   const inMoney = pathname.startsWith('/dashboard/money');
   const isBlueprint = pathname.startsWith('/dashboard/money/blueprint');
@@ -24,6 +26,11 @@ export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: Mod
   const isProjects = pathname.startsWith('/dashboard/tasks/projects');
   const isWeeklyReset = pathname.startsWith('/dashboard/tasks/weekly-reset');
   const inCalendar = pathname.startsWith('/dashboard/calendar');
+  const inMeals = pathname.startsWith('/dashboard/meals');
+  const isMealsRecipes = pathname.startsWith('/dashboard/meals/recipes');
+  const isMealsPlan = pathname.startsWith('/dashboard/meals/meal-plan');
+  const isMealsPantry = pathname.startsWith('/dashboard/meals/pantry');
+  const isMealsGrocery = pathname.startsWith('/dashboard/meals/grocery');
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4">
@@ -119,6 +126,58 @@ export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: Mod
             >
               <CalendarIcon className="h-4 w-4 shrink-0" aria-hidden />
               <span>Calendar</span>
+            </Link>
+          </nav>
+        )}
+        {inMeals && moduleFlags.meals && (
+          <nav className="flex items-center gap-1" aria-label="Meals">
+            <Link
+              href="/dashboard/meals/recipes"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isMealsRecipes
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+              aria-current={isMealsRecipes ? 'page' : undefined}
+            >
+              <span>Recipes</span>
+            </Link>
+            <Link
+              href="/dashboard/meals/meal-plan"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isMealsPlan
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+              aria-current={isMealsPlan ? 'page' : undefined}
+            >
+              <span>Meal plan</span>
+            </Link>
+            <Link
+              href="/dashboard/meals/pantry"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isMealsPantry
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+              aria-current={isMealsPantry ? 'page' : undefined}
+            >
+              <span>Pantry</span>
+            </Link>
+            <Link
+              href="/dashboard/meals/grocery"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isMealsGrocery
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+              aria-current={isMealsGrocery ? 'page' : undefined}
+            >
+              <span>Shopping</span>
             </Link>
           </nav>
         )}

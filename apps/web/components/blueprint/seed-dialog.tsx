@@ -964,7 +964,7 @@ export function SeedDialog({
                 <input
                   type="checkbox"
                   id="seed-uses-joint"
-                  className="h-4 w-4 rounded border-primary text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="h-5 w-5 rounded border-primary text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0"
                   {...form.register('uses_joint_account')}
                   aria-describedby="seed-uses-joint-desc"
                 />
@@ -986,7 +986,7 @@ export function SeedDialog({
             <input
               type="checkbox"
               id="seed-recurring"
-              className="h-4 w-4 rounded border-primary text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="h-5 w-5 rounded border-primary text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0"
               {...form.register('is_recurring')}
               aria-describedby="seed-recurring-desc"
               data-testid="seed-recurring-checkbox"
