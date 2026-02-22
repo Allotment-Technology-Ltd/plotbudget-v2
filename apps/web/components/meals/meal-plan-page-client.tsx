@@ -160,7 +160,7 @@ export function MealPlanPageClient() {
           open={!!dialogDate}
           onOpenChange={(open) => !open && setDialogDate(null)}
           date={dialogDate}
-          dateLabel={dialogDate ? format(new Date(dialogDate), 'EEE d MMM') : ''}
+          dateLabel={format(new Date(dialogDate), 'EEE d MMM')}
           entries={entriesByDate[dialogDate] ?? []}
           weekEntries={entries ?? []}
           recipes={recipes}
