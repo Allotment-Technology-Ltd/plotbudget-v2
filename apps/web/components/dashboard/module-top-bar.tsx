@@ -195,7 +195,7 @@ export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCou
 
             {/* Mobile dropdown selector */}
             <Select value={getCurrentMealPage()} onValueChange={(value) => router.push(value)}>
-              <SelectTrigger className="sm:hidden w-32">
+              <SelectTrigger className="sm:hidden w-32" aria-label="Meals navigation">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
