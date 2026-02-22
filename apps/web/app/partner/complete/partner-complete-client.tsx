@@ -11,7 +11,7 @@ import { acceptPartnerInvite } from '@/app/actions/partner-invite';
  * Fixes the issue where partner would land on the create-account screen until refresh (server
  * didn't see the new session on the first redirect).
  */
-export function PartnerCompleteClient() {
+export function PartnerCompleteClient(): React.JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('t');
