@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
   try {
     const { data, error } = await supabase.from('trips').insert(row as never).select().single();
     if (error || !data) {
+      console.error('[POST /api/trips] insert error:', error);
       return NextResponse.json({ error: 'Failed to create trip' }, { status: 500 });
     }
     const created = data as { id: string; name: string };
