@@ -351,6 +351,9 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@rethora/url-recipe-scraper':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@supabase/ssr':
         specifier: ^0.8.0
         version: 0.8.0(@supabase/supabase-js@2.94.1)
@@ -6065,6 +6068,10 @@ packages:
   /@remix-run/router@1.23.2:
     resolution: {integrity: sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==}
     engines: {node: '>=14.0.0'}
+    dev: false
+
+  /@rethora/url-recipe-scraper@1.1.0:
+    resolution: {integrity: sha512-Yb78JD2BWv6hqBm3LxIhBJLx9QYCHBumEy1Lv6nHj84+eNPMU19/4rkEkDkuWbXs+AI6pCtXAYFhhTv5WBG3cg==}
     dev: false
 
   /@rolldown/pluginutils@1.0.0-beta.27:
