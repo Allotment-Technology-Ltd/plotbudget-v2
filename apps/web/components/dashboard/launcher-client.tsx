@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PoundSterling, CheckSquare, Calendar, Search, RotateCcw, UtensilsCrossed } from 'lucide-react';
+import { PoundSterling, CheckSquare, Calendar, Search, RotateCcw, UtensilsCrossed, Plane } from 'lucide-react';
 import { cn } from '@repo/ui';
 import { useModuleFlags } from '@/contexts/module-flags-context';
 import type { LauncherTaskGroups, LauncherEventGroups } from '@/app/dashboard/page';
@@ -60,9 +60,10 @@ function LauncherSearch({
         { type: 'module', id: 'weekly-reset', label: 'Weekly Reset', href: '/dashboard/tasks/weekly-reset' },
       ];
       if (moduleFlags.meals) list.push({ type: 'module', id: 'meals', label: 'Meals', href: '/dashboard/meals' });
+      if (moduleFlags.holidays) list.push({ type: 'module', id: 'holidays', label: 'Holidays', href: '/dashboard/holidays' });
       return list;
     },
-    [moneyLink, moduleFlags.meals]
+    [moneyLink, moduleFlags.meals, moduleFlags.holidays]
   );
 
   const allTasks = useMemo(
@@ -264,8 +265,18 @@ export function LauncherClient({
         accent: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
       });
     }
+    if (moduleFlags.holidays) {
+      list.push({
+        id: 'holidays',
+        name: 'Holidays',
+        href: '/dashboard/holidays',
+        icon: Plane,
+        available: true,
+        accent: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
+      });
+    }
     return list;
-  }, [moneyLink, moduleFlags.meals]);
+  }, [moneyLink, moduleFlags.meals, moduleFlags.holidays]);
 
   const now = new Date();
   const monthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
