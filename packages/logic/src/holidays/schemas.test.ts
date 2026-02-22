@@ -62,7 +62,30 @@ describe('createTripSchema', () => {
     }
   });
 
-  it('rejects invalid status enum', () => {
+  it('rejects end_date before start_date', () => {
+    const result = createTripSchema.safeParse({
+      name: 'Paris Trip',
+      destination: 'Paris',
+      start_date: '2026-06-08',
+      end_date: '2026-06-01',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const msg = result.error.flatten().fieldErrors.end_date?.[0];
+      expect(msg).toBe('End date must not be before start date');
+    }
+  });
+
+  it('accepts same start_date and end_date (day trip)', () => {
+    const result = createTripSchema.safeParse({
+      name: 'Day Trip',
+      destination: 'Brighton',
+      start_date: '2026-06-01',
+      end_date: '2026-06-01',
+    });
+    expect(result.success).toBe(true);
+  });
+
     const result = createTripSchema.safeParse({
       name: 'Paris Trip',
       destination: 'Paris',
@@ -127,8 +150,18 @@ describe('createItineraryEntrySchema', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const msg = result.error.flatten().fieldErrors.start_time?.[0];
-      expect(msg).toBe('Start time must be in HH:mm format');
+      expect(msg).toContain('HH:mm format');
     }
+  });
+
+  it('rejects invalid time values like 99:99', () => {
+    const result = createItineraryEntrySchema.safeParse({
+      trip_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      date: '2026-06-02',
+      title: 'Visit',
+      start_time: '99:99',
+    });
+    expect(result.success).toBe(false);
   });
 
   it('accepts valid entry_type values', () => {

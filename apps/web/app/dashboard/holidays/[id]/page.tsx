@@ -166,7 +166,7 @@ export default async function TripDetailPage({
                 </div>
                 <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                   <span>{formatDate(entry.date)}</span>
-                  {entry.start_time && <span>{entry.start_time}{entry.end_time ? `–${entry.end_time}` : ''}</span>}
+                  {entry.start_time && <span>{entry.start_time}{entry.end_time ? ` – ${entry.end_time}` : ''}</span>}
                   {entry.cost_amount != null && (
                     <span>{fmt(entry.cost_amount, entry.cost_currency ?? trip.currency)}</span>
                   )}

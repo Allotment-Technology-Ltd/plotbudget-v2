@@ -273,7 +273,7 @@ export function useTogglePackingItem(tripId: string) {
       await qc.cancelQueries({ queryKey: ['trip-packing', tripId] });
       const previous = qc.getQueryData<PackingItem[]>(['trip-packing', tripId]);
       qc.setQueryData<PackingItem[]>(['trip-packing', tripId], (old) =>
-        old?.map((item) => (item.id === id ? { ...item, is_packed } : item)) ?? old
+        old?.map((item) => (item.id === id ? { ...item, is_packed } : item)) ?? []
       );
       return { previous };
     },

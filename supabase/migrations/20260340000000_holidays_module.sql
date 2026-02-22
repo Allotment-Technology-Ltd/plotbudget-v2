@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.trips (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'planning', 'booked', 'in_progress', 'completed', 'cancelled')),
+  CHECK (end_date >= start_date),
   linked_pot_id UUID REFERENCES public.pots(id) ON DELETE SET NULL,
   linked_project_id UUID REFERENCES public.projects(id) ON DELETE SET NULL,
   currency TEXT NOT NULL DEFAULT 'GBP',

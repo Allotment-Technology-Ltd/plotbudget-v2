@@ -10,41 +10,46 @@ export const tripStatusSchema = z.enum([
 ]);
 export type TripStatus = z.infer<typeof tripStatusSchema>;
 
-export const createTripSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Trip name is required')
-    .max(200, 'Trip name must be under 200 characters'),
-  destination: z
-    .string()
-    .min(1, 'Destination is required')
-    .max(200, 'Destination must be under 200 characters'),
-  start_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
-  end_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
-  status: tripStatusSchema.optional(),
-  linked_pot_id: z.string().uuid('Linked pot ID must be a valid UUID').optional().nullable(),
-  linked_project_id: z
-    .string()
-    .uuid('Linked project ID must be a valid UUID')
-    .optional()
-    .nullable(),
-  currency: z
-    .string()
-    .min(1, 'Currency is required')
-    .max(10, 'Currency code must be under 10 characters')
-    .optional(),
-  notes: z.string().max(5000, 'Notes must be under 5000 characters').optional().nullable(),
-  cover_image_url: z
-    .string()
-    .url('Cover image must be a valid URL')
-    .max(2000, 'Cover image URL must be under 2000 characters')
-    .optional()
-    .nullable(),
-});
+export const createTripSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Trip name is required')
+      .max(200, 'Trip name must be under 200 characters'),
+    destination: z
+      .string()
+      .min(1, 'Destination is required')
+      .max(200, 'Destination must be under 200 characters'),
+    start_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
+    end_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
+    status: tripStatusSchema.optional(),
+    linked_pot_id: z.string().uuid('Linked pot ID must be a valid UUID').optional().nullable(),
+    linked_project_id: z
+      .string()
+      .uuid('Linked project ID must be a valid UUID')
+      .optional()
+      .nullable(),
+    currency: z
+      .string()
+      .min(1, 'Currency is required')
+      .max(10, 'Currency code must be under 10 characters')
+      .optional(),
+    notes: z.string().max(5000, 'Notes must be under 5000 characters').optional().nullable(),
+    cover_image_url: z
+      .string()
+      .url('Cover image must be a valid URL')
+      .max(2000, 'Cover image URL must be under 2000 characters')
+      .optional()
+      .nullable(),
+  })
+  .refine((data) => new Date(data.end_date) >= new Date(data.start_date), {
+    message: 'End date must not be before start date',
+    path: ['end_date'],
+  });
 
 export type CreateTripInput = z.infer<typeof createTripSchema>;
 
@@ -116,12 +121,12 @@ export const createItineraryEntrySchema = z.object({
     .nullable(),
   start_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:mm format')
+    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'Start time must be in HH:mm format (e.g. 09:30)')
     .optional()
     .nullable(),
   end_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, 'End time must be in HH:mm format')
+    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'End time must be in HH:mm format (e.g. 17:00)')
     .optional()
     .nullable(),
   entry_type: itineraryEntryTypeSchema.optional(),
@@ -169,12 +174,12 @@ export const updateItineraryEntrySchema = z.object({
     .nullable(),
   start_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:mm format')
+    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'Start time must be in HH:mm format (e.g. 09:30)')
     .optional()
     .nullable(),
   end_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, 'End time must be in HH:mm format')
+    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'End time must be in HH:mm format (e.g. 17:00)')
     .optional()
     .nullable(),
   entry_type: itineraryEntryTypeSchema.optional(),
