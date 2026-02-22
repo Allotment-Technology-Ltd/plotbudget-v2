@@ -78,10 +78,13 @@ export default async function TripDetailPage({
 
   if (tripResult.error || !tripResult.data) notFound();
 
-  const trip = tripResult.data as Trip;
-  const itinerary = (itineraryResult.data ?? []) as ItineraryEntry[];
-  const budgetItems = (budgetResult.data ?? []) as TripBudgetItem[];
-  const packingItems = (packingResult.data ?? []) as PackingItem[];
+  const { data: trip } = tripResult as { data: Trip };
+  const { data: itineraryRaw } = itineraryResult as { data: ItineraryEntry[] | null };
+  const { data: budgetRaw } = budgetResult as { data: TripBudgetItem[] | null };
+  const { data: packingRaw } = packingResult as { data: PackingItem[] | null };
+  const itinerary = itineraryRaw ?? [];
+  const budgetItems = budgetRaw ?? [];
+  const packingItems = packingRaw ?? [];
 
   const budgetSummary = calculateTripBudget(
     budgetItems.map((b) => ({
