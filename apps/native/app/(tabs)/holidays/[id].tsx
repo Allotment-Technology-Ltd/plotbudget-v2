@@ -30,7 +30,7 @@ export default function TripDetailScreen() {
         >
           Trip detail
         </Text>
-        <Text variant="caption" style={{ color: colors.textSecondary, marginTop: 4 }}>
+        <Text variant="body-sm" style={{ color: colors.textSecondary, marginTop: 4 }}>
           Trip ID: {id}
         </Text>
       </View>
@@ -48,7 +48,7 @@ export default function TripDetailScreen() {
         >
           Itinerary
         </Text>
-        <Text variant="caption" style={{ color: colors.textSecondary }}>
+        <Text variant="body-sm" style={{ color: colors.textSecondary }}>
           No itinerary entries yet.
         </Text>
       </View>
@@ -66,7 +66,7 @@ export default function TripDetailScreen() {
         >
           Budget
         </Text>
-        <Text variant="caption" style={{ color: colors.textSecondary }}>
+        <Text variant="body-sm" style={{ color: colors.textSecondary }}>
           No budget items yet.
         </Text>
       </View>
@@ -84,7 +84,7 @@ export default function TripDetailScreen() {
         >
           Packing list
         </Text>
-        <Text variant="caption" style={{ color: colors.textSecondary }}>
+        <Text variant="body-sm" style={{ color: colors.textSecondary }}>
           No packing items yet.
         </Text>
       </View>

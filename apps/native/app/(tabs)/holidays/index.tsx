@@ -69,7 +69,7 @@ export default function HolidaysListScreen() {
             <Text variant="body" style={{ color: colors.textPrimary }}>
               No trips yet
             </Text>
-            <Text variant="caption" style={{ color: colors.textSecondary, marginTop: 4 }}>
+            <Text variant="body-sm" style={{ color: colors.textSecondary, marginTop: 4 }}>
               Add your first trip to start planning.
             </Text>
           </View>
@@ -108,10 +108,10 @@ export default function HolidaysListScreen() {
               >
                 {item.name}
               </Text>
-              <Text variant="caption" style={{ color: colors.textSecondary, marginBottom: 2 }}>
+              <Text variant="body-sm" style={{ color: colors.textSecondary, marginBottom: 2 }}>
                 {item.destination}
               </Text>
-              <Text variant="caption" style={{ color: colors.textSecondary }}>
+              <Text variant="body-sm" style={{ color: colors.textSecondary }}>
                 {formatDateRange(item.start_date, item.end_date)}
               </Text>
             </Pressable>
