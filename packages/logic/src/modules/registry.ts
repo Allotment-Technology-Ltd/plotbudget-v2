@@ -95,7 +95,7 @@ const MODULES: ModuleDefinition[] = [
     colorLight: '#0D9488',
     colorDark: '#5EEAD4',
     isPro: false,
-    isEnabled: false,
+    isEnabled: true,
     navOrder: 5,
     tabBar: false,
   },
