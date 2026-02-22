@@ -3,9 +3,7 @@ import {
   createTripSchema,
   updateTripSchema,
   createItineraryEntrySchema,
-  updateItineraryEntrySchema,
   createTripBudgetItemSchema,
-  updateTripBudgetItemSchema,
   createPackingItemSchema,
   updatePackingItemSchema,
 } from './schemas';
