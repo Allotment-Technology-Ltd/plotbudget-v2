@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.8.1...v1.9.0) (2026-02-22)
+
+
+### Features
+
+* Phase 4 — Holidays & Trip Planning module ([#110](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/issues/110)) ([1a54e9d](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/1a54e9d954a238181678ff15c7e02bce387182fb))
+
 ## [1.8.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.8.0...v1.8.1) (2026-02-21)
 
 
