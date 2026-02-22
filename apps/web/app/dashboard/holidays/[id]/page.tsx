@@ -259,7 +259,9 @@ export default async function TripDetailPage({
               >
                 <span
                   className={`h-4 w-4 shrink-0 rounded border-2 ${item.is_packed ? 'bg-green-500 border-green-500' : 'border-border'}`}
-                  aria-label={item.is_packed ? 'Packed' : 'Not packed'}
+                  role="checkbox"
+                  aria-checked={item.is_packed}
+                  aria-readonly="true"
                 />
                 <span
                   className={`flex-1 text-sm ${item.is_packed ? 'line-through text-muted-foreground' : 'text-foreground'}`}

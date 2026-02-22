@@ -61,27 +61,28 @@ export async function POST(request: NextRequest) {
     cover_image_url: input.cover_image_url ?? null,
   };
 
-  let created: { id: string; name: string } | null = null;
   try {
     const { data, error } = await supabase.from('trips').insert(row as never).select().single();
-    if (error) return NextResponse.json({ error: 'Failed to create trip' }, { status: 500 });
-    created = data as { id: string; name: string };
+    if (error || !data) {
+      return NextResponse.json({ error: 'Failed to create trip' }, { status: 500 });
+    }
+    const created = data as { id: string; name: string };
+
+    await supabase.from('activity_feed').insert({
+      household_id: householdId,
+      actor_user_id: user.id,
+      actor_type: 'user',
+      action: 'created',
+      object_name: input.name,
+      object_detail: input.destination,
+      source_module: 'holidays',
+      source_entity_id: created.id,
+      action_url: `/dashboard/holidays/${created.id}`,
+      metadata: {},
+    } as never);
+
+    return NextResponse.json(data as object, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create trip' }, { status: 500 });
   }
-
-  await supabase.from('activity_feed').insert({
-    household_id: householdId,
-    actor_user_id: user.id,
-    actor_type: 'user',
-    action: 'created',
-    object_name: input.name,
-    object_detail: input.destination,
-    source_module: 'holidays',
-    source_entity_id: created.id,
-    action_url: `/dashboard/holidays/${created.id}`,
-    metadata: {},
-  } as never);
-
-  return NextResponse.json(created as object, { status: 201 });
 }

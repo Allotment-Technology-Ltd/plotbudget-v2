@@ -86,6 +86,7 @@ describe('createTripSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('rejects invalid status enum', () => {
     const result = createTripSchema.safeParse({
       name: 'Paris Trip',
       destination: 'Paris',

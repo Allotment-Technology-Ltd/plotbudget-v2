@@ -40,6 +40,8 @@ CREATE POLICY trips_insert_household ON public.trips
 CREATE POLICY trips_update_household ON public.trips
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
+  ) WITH CHECK (
+    household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
 
 CREATE POLICY trips_delete_household ON public.trips
@@ -99,6 +101,8 @@ CREATE POLICY itinerary_entries_insert_household ON public.itinerary_entries
 CREATE POLICY itinerary_entries_update_household ON public.itinerary_entries
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
+  ) WITH CHECK (
+    household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
 
 CREATE POLICY itinerary_entries_delete_household ON public.itinerary_entries
@@ -154,6 +158,8 @@ CREATE POLICY trip_budget_items_insert_household ON public.trip_budget_items
 CREATE POLICY trip_budget_items_update_household ON public.trip_budget_items
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
+  ) WITH CHECK (
+    household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
 
 CREATE POLICY trip_budget_items_delete_household ON public.trip_budget_items
@@ -206,6 +212,8 @@ CREATE POLICY packing_items_insert_household ON public.packing_items
 
 CREATE POLICY packing_items_update_household ON public.packing_items
   FOR UPDATE USING (
+    household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
+  ) WITH CHECK (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
 

@@ -115,9 +115,11 @@ const TEMPLATES: PackingTemplate[] = [
 ];
 
 export function getPackingTemplate(id: string): PackingTemplate | undefined {
-  return TEMPLATES.find((t) => t.id === id);
+  const template = TEMPLATES.find((t) => t.id === id);
+  if (!template) return undefined;
+  return { ...template, items: template.items.map((item) => ({ ...item })) };
 }
 
 export function getAllPackingTemplates(): PackingTemplate[] {
-  return TEMPLATES;
+  return TEMPLATES.map((template) => ({ ...template, items: template.items.map((item) => ({ ...item })) }));
 }
