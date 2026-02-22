@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Plane, Plus } from 'lucide-react';
 import { getCachedDashboardAuth, getCachedSupabase } from '@/lib/auth/server-auth-cache';
 import { getModule } from '@repo/logic';
+import type { Trip } from '@repo/supabase';
 
 export const metadata = {
   title: 'Holidays',
@@ -39,7 +40,7 @@ export default async function HolidaysPage() {
     .order('start_date', { ascending: false })
     .limit(20);
 
-  const tripList = trips ?? [];
+  const tripList = (trips ?? []) as Trip[];
   const module = getModule('holidays');
   const moduleColor = module.colorLight;
 
