@@ -19,7 +19,8 @@
     "dev": "turbo dev",
     "dev:polar": "bash scripts/dev-with-polar-cli.sh",
     "build": "turbo build",
-    "lint": "turbo lint",
+    "validate:rules": "node scripts/validate-rules.js",
+    "lint": "node scripts/validate-rules.js && turbo lint",
     "type-check": "turbo type-check",
     "clean": "turbo clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
@@ -33,16 +34,17 @@
     "*": "bash -c 'pnpm lint && pnpm type-check'"
   },
   "devDependencies": {
-    "tsx": "^4.21.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^11.0.3",
     "@types/node": "^20.19.33",
     "chalk": "^5.6.2",
     "husky": "^9.1.7",
+    "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "semantic-release": "^23.1.1",
+    "tsx": "^4.21.0",
     "turbo": "^2.8.10",
     "typescript": "^5.9.3"
   },
