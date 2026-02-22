@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@repo/ui';
@@ -70,7 +70,7 @@ export function ModuleNavDropdown({
   const showHubInMenu = subLinks.length === 0 || subLinks[0]?.href !== moduleHref;
 
   return (
-    <div className="relative flex min-w-0" ref={containerRef}>
+    <div className="relative flex min-w-0" ref={containerRef as React.RefObject<HTMLDivElement>}>
       <button
         type="button"
         onClick={handleTriggerClick}

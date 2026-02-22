@@ -6,6 +6,7 @@ import {
   useCreatePantryItem,
   useDeletePantryItem,
   useBarcodeLookup,
+  type BarcodeLookupResult,
 } from '@/hooks/use-meals';
 import { useDevice } from '@/hooks/use-device';
 import { getCameraPermissionDeniedCopy } from '@/lib/camera-permission-copy';
@@ -92,7 +93,7 @@ export function PantryPageClient() {
   };
 
   const applyBarcodeResult = useCallback(
-    (result: { found: boolean; name?: string; quantity_value?: number; quantity_unit?: string }) => {
+    (result: BarcodeLookupResult) => {
       if (result.found) {
         if (result.name) setNewName(result.name);
         if (result.quantity_value != null) setNewQty(String(result.quantity_value));
@@ -358,7 +359,6 @@ export function PantryPageClient() {
                           <Button
                             type="button"
                             variant="outline"
-                            size="sm"
                             onClick={handleCameraTryAgain}
                             data-testid="pantry-barcode-camera-try-again"
                           >
@@ -377,7 +377,6 @@ export function PantryPageClient() {
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
                       className="gap-1"
                       onClick={() => setScanMode('choice')}
                       data-testid="pantry-barcode-camera-back"
@@ -388,7 +387,6 @@ export function PantryPageClient() {
                     <Button
                       type="button"
                       className="gap-1 flex-1"
-                      size="sm"
                       onClick={handleCaptureFromCamera}
                       disabled={capturing}
                       data-testid="pantry-barcode-camera-capture"

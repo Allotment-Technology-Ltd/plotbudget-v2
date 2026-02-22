@@ -222,7 +222,6 @@ export function RecipesPageClient() {
           });
         }}
         isSubmitting={createRecipe.isPending}
-        initialValues={importedRecipe?.recipe ?? undefined}
       />
     </>
   );

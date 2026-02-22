@@ -4,13 +4,6 @@ import { getHouseholdIdForUser } from '@/lib/household-for-user';
 import { createRecipeSchema, type CreateRecipeInput } from '@repo/logic';
 import type { InsertTables } from '@repo/supabase';
 
-/** True if text contains the word as a substring (case-insensitive). */
-function textContainsWord(text: string, word: string): boolean {
-  const t = text.toLowerCase();
-  const w = word.trim().toLowerCase();
-  return w.length > 0 && t.includes(w);
-}
-
 type RecipeRow = { id: string; name: string; ingredients: unknown; [key: string]: unknown };
 
 /** Fuzzy match: recipe matches if its name or any ingredient contains *any* of the query words (not all required). */

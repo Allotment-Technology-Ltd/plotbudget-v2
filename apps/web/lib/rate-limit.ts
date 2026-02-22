@@ -10,9 +10,12 @@
 const AUTH_LIMIT = 10; // requests per window
 const AUTH_WINDOW_SEC = 60;
 
-export type RateLimitKey = 'auth' | 'api-sensitive';
+export type RateLimitKey = 'auth' | 'api-sensitive' | 'spoonacular';
 
-async function getLimiter() {
+const SPOONACULAR_LIMIT = 50; // requests per window per user (free tier ~50/day; we use sliding 1h to smooth)
+const SPOONACULAR_WINDOW_SEC = 3600;
+
+async function getLimiter(limit = AUTH_LIMIT, windowSec = AUTH_WINDOW_SEC) {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
@@ -22,7 +25,7 @@ async function getLimiter() {
     const redis = new Redis({ url, token });
     return new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(AUTH_LIMIT, `${AUTH_WINDOW_SEC} s`),
+      limiter: Ratelimit.slidingWindow(limit, `${windowSec} s`),
       analytics: false,
     });
   } catch {
@@ -41,5 +44,19 @@ export async function checkRateLimit(
   const limiter = await getLimiter();
   if (!limiter) return { allowed: true };
   const { success } = await limiter.limit(identifier);
+  return { allowed: success };
+}
+
+/**
+ * Rate limit for Spoonacular recipe-suggest API per user. Admins are not limited.
+ */
+export async function checkSpoonacularRateLimit(
+  userId: string,
+  isAdmin?: boolean
+): Promise<{ allowed: boolean }> {
+  if (isAdmin) return { allowed: true };
+  const limiter = await getLimiter(SPOONACULAR_LIMIT, SPOONACULAR_WINDOW_SEC);
+  if (!limiter) return { allowed: true };
+  const { success } = await limiter.limit(`spoonacular:${userId}`);
   return { allowed: success };
 }

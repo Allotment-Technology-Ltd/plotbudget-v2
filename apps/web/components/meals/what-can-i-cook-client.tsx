@@ -67,6 +67,10 @@ const INTOLERANCE_OPTIONS: { value: string; label: string }[] = [
 /** Number of web results to show. */
 const NUMBER_OPTIONS = [5, 10, 15, 20] as const;
 
+/** Shared input/select styling for date and meal slot in add-to-meal-plan dialog. */
+const SELECT_CLASSES =
+  'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+
 /** Meal type options for web search (Spoonacular `type`). Focus on breakfast / lunch / dinner + common. */
 const MEAL_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'Any meal' },
@@ -160,7 +164,6 @@ function WebRecipeCard({
           <Button
             type="button"
             variant="outline"
-            size="sm"
             className="mt-1 h-8 shrink-0 gap-1.5 px-3 text-xs"
             onClick={(e) => (e.preventDefault(), onAddToMealPlan())}
             data-testid={`what-can-i-cook-web-add-meal-plan-${s.id}`}
@@ -214,7 +217,7 @@ export function WhatCanICookClient() {
     const title = addToMealPlanSuggestion.title;
     const sourceUrl = addToMealPlanSuggestion.sourceUrl;
     createRecipe.mutate(
-      { name: title, source_url: sourceUrl },
+      { name: title, servings: 1, ingredients: [], source_url: sourceUrl },
       {
         onSuccess: (recipe) => {
           createMealPlanEntry.mutate(
