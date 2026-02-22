@@ -1,0 +1,33 @@
+---
+description: Use enabled MCPs (Linear, Sanity, Browser, Supabase) when relevant; do not ask the user to create tickets or use external UIs when an MCP can do it.
+alwaysApply: true
+---
+
+# Enabled MCPs — Use by default
+
+The following MCPs are enabled in this workspace. **Use them when the task involves their domain** instead of asking the user to do things manually or saying "I don't have access."
+
+## Linear (server: `user-linear`)
+
+- **When to use:** Creating, updating, or listing Linear issues; adding comments; managing projects, teams, milestones, labels; attaching links.
+- **Key tools:** `create_issue` (title, team, description [Markdown], optional project, state, assignee, labels, dueDate, links), `list_issues`, `get_issue`, `update_issue`, `create_comment`, `list_teams`, `list_projects`, `create_attachment`, `list_issue_labels`, etc.
+- **Usage:** When the user asks for a "Linear ticket," "create an issue," "add a ticket for X," or for user stories/acceptance criteria in Linear — **call the Linear MCP** (e.g. `create_issue` with team and description). Check tool schema in `mcps/user-linear/tools/*.json` for required/optional args (e.g. `create_issue` requires `title` and `team`).
+
+## Sanity (server: `user-Sanity`)
+
+- **When to use:** Querying or mutating Sanity content, schemas, documents; building with Sanity Studio.
+- **Usage:** Follow the server instructions (schema-first, list_sanity_rules first, resource clarification when multiple). Use Sanity MCP tools for content/schema work; do not suggest "do it in the Sanity dashboard" when the MCP can do it.
+
+## Browser (server: `cursor-ide-browser`)
+
+- **When to use:** Navigating the web, testing front-end flows, taking screenshots, form filling, waiting for page changes.
+- **Usage:** Lock → interact → unlock; use browser_snapshot before interactions; prefer short waits + snapshot over one long wait. Use for E2E-style checks or when the user asks to "test in the browser" or "open this URL."
+
+## Supabase (server: `plugin-supabase-supabase`)
+
+- **When to use:** Supabase project/database operations exposed via this MCP (if tools are available).
+- **Usage:** Check `mcps/plugin-supabase-supabase/tools/` for available tools and use for Supabase-related tasks when applicable.
+
+---
+
+**Rule:** Before saying "create the ticket in Linear" or "you can do this in the Linear UI," check whether the Linear MCP is available and use `create_issue` (or other tools) with the appropriate arguments. Same for other enabled MCPs: prefer MCP tools over directing the user to external UIs.
