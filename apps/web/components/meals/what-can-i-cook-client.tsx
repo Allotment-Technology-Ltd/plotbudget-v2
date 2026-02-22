@@ -102,7 +102,7 @@ function parseIngredientChips(raw: string): string[] {
 }
 
 /** Fixed height for all recipe cards (your recipes + web) so grid rows are consistent. */
-const RECIPE_CARD_HEIGHT = 'h-[11rem]';
+const RECIPE_CARD_HEIGHT = 'h-[14rem]';
 
 type WebSuggestion = SuggestExternalResponse['suggestions'][number];
 function WebRecipeCard({
@@ -429,7 +429,7 @@ export function WhatCanICookClient() {
                         type="checkbox"
                         checked={intolerances.includes(opt.value)}
                         onChange={() => toggleIntolerance(opt.value)}
-                        className="rounded border-input"
+                        className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
                         data-testid={`what-can-i-cook-intolerance-${opt.value.replace(/\s/g, '-')}`}
                       />
                       {opt.label}

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRecipes, useCreateRecipe, useImportRecipeFromUrl, type ImportRecipeFromUrlResponse } from '@/hooks/use-meals';
-import { getModule } from '@repo/logic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Link2, Search } from 'lucide-react';
@@ -21,7 +20,6 @@ export function RecipesPageClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [importedRecipe, setImportedRecipe] = useState<ImportRecipeFromUrlResponse | null>(null);
-  const moduleColor = getModule('meals').colorLight;
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchInput), SEARCH_DEBOUNCE_MS);
@@ -41,20 +39,9 @@ export function RecipesPageClient() {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground">
-            Recipes
-          </h1>
-          <Button
-            onClick={() => handleOpenCreate()}
-            data-testid="recipes-add-recipe"
-            style={{ backgroundColor: moduleColor }}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            Add recipe
-          </Button>
-        </div>
+        <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground">
+          Recipes
+        </h1>
 
         <div className="rounded-lg border border-border bg-card p-4" data-testid="recipes-search">
           <label htmlFor="recipes-search-input" className="mb-2 block text-sm font-medium text-foreground">
@@ -63,18 +50,30 @@ export function RecipesPageClient() {
           <p className="mb-3 text-sm text-muted-foreground">
             Search by recipe name or ingredient. &quot;cumin&quot; shows recipes that list cumin; &quot;chicken curry&quot; shows recipes containing both words.
           </p>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="recipes-search-input"
-              type="search"
-              placeholder="e.g. tikka, chicken, tofu"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9"
-              data-testid="recipes-search-input"
-              aria-label="Search by recipe or ingredient"
-            />
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                id="recipes-search-input"
+                type="search"
+                placeholder="e.g. tikka, chicken, tofu"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-9"
+                data-testid="recipes-search-input"
+                aria-label="Search by recipe or ingredient"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenCreate()}
+              data-testid="recipes-add-recipe"
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              Create
+            </Button>
           </div>
         </div>
 
@@ -110,7 +109,7 @@ export function RecipesPageClient() {
               className="gap-2"
             >
               <Link2 className="h-4 w-4" aria-hidden />
-              {importFromUrl.isPending ? 'Fetching…' : 'Fetch recipe'}
+              {importFromUrl.isPending ? 'Fetching…' : 'Fetch'}
             </Button>
           </div>
           {importFromUrl.isError && (
@@ -140,7 +139,7 @@ export function RecipesPageClient() {
             ) : (
               <>
                 <p className="mb-2">No recipes yet.</p>
-                <Button variant="outline" onClick={() => handleOpenCreate()}>
+                <Button type="button" variant="outline" onClick={() => handleOpenCreate()}>
                   Add your first recipe
                 </Button>
               </>
@@ -203,26 +202,29 @@ export function RecipesPageClient() {
         )}
       </div>
 
-      <CreateRecipeDialog
-        open={dialogOpen}
-        onOpenChange={handleCloseCreate}
-        initialValues={
-          importedRecipe
-            ? {
-                ...importedRecipe.recipe,
-                image_url: importedRecipe.image_url ?? undefined,
-                prep_mins: importedRecipe.prep_mins ?? undefined,
-                cook_mins: importedRecipe.cook_mins ?? undefined,
-              }
-            : undefined
-        }
-        onSubmit={(input) => {
-          createRecipe.mutate(input, {
-            onSuccess: () => handleCloseCreate(false),
-          });
-        }}
-        isSubmitting={createRecipe.isPending}
-      />
+      {dialogOpen && (
+        <CreateRecipeDialog
+          open={true}
+          onOpenChange={handleCloseCreate}
+          initialValues={
+            importedRecipe
+              ? {
+                  ...importedRecipe.recipe,
+                  image_url: importedRecipe.image_url ?? undefined,
+                  prep_mins: importedRecipe.prep_mins ?? undefined,
+                  cook_mins: importedRecipe.cook_mins ?? undefined,
+                }
+              : undefined
+          }
+          onSubmit={(input) => {
+            createRecipe.mutate(input, {
+              onSuccess: () => handleCloseCreate(false),
+            });
+          }}
+          isSubmitting={createRecipe.isPending}
+          error={createRecipe.error?.message ?? null}
+        />
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { ModuleTopBar } from '@/components/dashboard/module-top-bar';
 import { ModuleDock } from '@/components/dashboard/module-dock';
 import { UserMenu } from '@/components/navigation/user-menu';
@@ -93,5 +94,9 @@ export function DashboardLayoutClient({
     </>
   );
 
-  return <ModuleFlagsProvider moduleFlags={moduleFlags}>{content}</ModuleFlagsProvider>;
+  return (
+    <TooltipProvider>
+      <ModuleFlagsProvider moduleFlags={moduleFlags}>{content}</ModuleFlagsProvider>
+    </TooltipProvider>
+  );
 }

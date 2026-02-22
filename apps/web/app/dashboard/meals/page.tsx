@@ -15,7 +15,7 @@ export default function MealsPage() {
   const moduleColor = module.colorLight;
 
   return (
-    <div data-testid="meals-hub">
+    <div className="content-wrapper section-padding" data-testid="meals-hub">
       <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground mb-2">
         {module.name}
       </h1>

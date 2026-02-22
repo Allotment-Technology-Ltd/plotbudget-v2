@@ -371,7 +371,7 @@ export function RepaymentForecastClient({
               id="include-interest"
               checked={includeInterest}
               onChange={(e) => setIncludeInterest(e.target.checked)}
-              className="rounded border-border"
+              className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
             />
             <Label htmlFor="include-interest" className="font-normal cursor-pointer">
               Include interest ({interestRate}% p.a.) in projection

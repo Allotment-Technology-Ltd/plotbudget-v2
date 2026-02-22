@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Calendar, ListTodo, ChefHat } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Plus, Trash2, ChefHat } from 'lucide-react';
 import type { MealPlanEntryWithRecipe } from '@/hooks/use-meals';
 import { useCreateMealPlanEntry, useDeleteMealPlanEntry, usePantryMatch, useMarkMealPlanEntryCooked } from '@/hooks/use-meals';
 import { useCreateTask } from '@/hooks/use-tasks';
@@ -211,35 +212,7 @@ export function MealPlanDayDialog({
   const canAdd =
     (addMode === 'recipe' && selectedRecipeId) || (addMode === 'free' && freeText.trim().length > 0);
 
-  const handleAddDayToCalendar = () => {
-    const parts: string[] = [];
-    MEAL_SLOTS.forEach((slot) => {
-      const slotEntries = bySlot[slot];
-      if (slotEntries.length === 0) return;
-      const titles = slotEntries.map((e) => entryLabel(e)).join(', ');
-      parts.push(`${MEAL_SLOT_LABELS[slot]}: ${titles}`);
-    });
-    if (parts.length === 0) return;
-    createEvent.mutate({
-      title: `${MEALS_MODULE_NAME} – ${parts.join(' · ')}`,
-      start_at: `${date}T12:00:00.000Z`,
-      all_day: true,
-      source_module: 'meals',
-      source_entity_id: entries[0]?.id ?? undefined,
-    });
-  };
 
-  const handleCreateTaskForEntry = (entry: MealPlanEntryWithRecipe) => {
-    const label = entryLabel(entry);
-    const isBatch = (entry as { is_batch_cook?: boolean }).is_batch_cook;
-    const name = isBatch ? `Batch cook: ${label}` : `Cook: ${label}`;
-    createTask.mutate({
-      name,
-      due_date: (entry as { planned_date: string }).planned_date,
-      linked_module: 'meals',
-      linked_entity_id: entry.id,
-    });
-  };
 
   const hasAnyEntries = entries.length > 0;
 
@@ -282,29 +255,25 @@ export function MealPlanDayDialog({
                           </span>
                           <div className="flex items-center gap-1">
                             {e.recipe_id && !(e as { cooked_at?: string | null }).cooked_at && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="h-7 text-xs"
-                                onClick={() => markCooked.mutate(e.id)}
-                                disabled={markCooked.isPending}
-                                title="Mark as cooked and deduct from pantry"
-                                data-testid={`meal-plan-day-mark-cooked-${e.id}`}
-                              >
-                                <ChefHat className="h-3.5 w-3.5 mr-1" />
-                                Mark cooked
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="h-7 text-xs"
+                                    onClick={() => markCooked.mutate(e.id)}
+                                    disabled={markCooked.isPending}
+                                    data-testid={`meal-plan-day-mark-cooked-${e.id}`}
+                                  >
+                                    <ChefHat className="h-3.5 w-3.5 mr-1" />
+                                    Mark cooked
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                  Mark as cooked and deduct ingredients from pantry
+                                </TooltipContent>
+                              </Tooltip>
                             )}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="h-7 text-xs"
-                              onClick={() => handleCreateTaskForEntry(e)}
-                              disabled={createTask.isPending}
-                            >
-                              <ListTodo className="h-3.5 w-3.5 mr-1" />
-                              Task
-                            </Button>
                             <Button
                               type="button"
                               variant="ghost"
@@ -355,22 +324,22 @@ export function MealPlanDayDialog({
               ))}
             </fieldset>
             <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <label className="flex items-center gap-3 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={addToCalendar}
                   onChange={(e) => setAddToCalendar(e.target.checked)}
-                  className="rounded border-border"
+                  className="h-5 w-5 rounded border-border cursor-pointer"
                   data-testid="meal-plan-day-add-to-calendar"
                 />
                 Add to calendar
               </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <label className="flex items-center gap-3 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={addToTasks}
                   onChange={(e) => setAddToTasks(e.target.checked)}
-                  className="rounded border-border"
+                  className="h-5 w-5 rounded border-border cursor-pointer"
                   data-testid="meal-plan-day-add-to-tasks"
                 />
                 Add to tasks
@@ -499,21 +468,6 @@ export function MealPlanDayDialog({
               </p>
             )}
           </div>
-
-          {hasAnyEntries && (
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddDayToCalendar}
-                disabled={createEvent.isPending}
-                className="gap-2 text-sm py-1.5 px-2"
-              >
-                <Calendar className="h-4 w-4" />
-                Add day to calendar
-              </Button>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

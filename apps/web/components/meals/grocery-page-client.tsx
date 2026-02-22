@@ -168,7 +168,7 @@ export function GroceryPageClient() {
                 onChange={() => toggleChecked(item.id, item.is_checked)}
                 aria-label={`Mark ${item.name} as ${item.is_checked ? 'unchecked' : 'checked'}`}
                 data-testid={`grocery-check-${item.id}`}
-                className="h-4 w-4 rounded border-border"
+                className="h-5 w-5 rounded border-border cursor-pointer shrink-0"
               />
               <span
                 className={

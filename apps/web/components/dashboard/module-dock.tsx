@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar as CalendarIcon, CheckSquare, GripVertical, PoundSterling, UtensilsCrossed } from 'lucide-react';
+import { Home, ClipboardList, Calendar as CalendarIcon, CheckSquare, GripVertical, PoundSterling, UtensilsCrossed } from 'lucide-react';
 import { getModule } from '@repo/logic';
 import { cn } from '@repo/ui';
 import type { ModuleFlags } from '@/lib/module-flags';
@@ -83,7 +83,7 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
     ...(moduleFlags.tasks ? [{ href: '/dashboard/tasks', label: getModule('tasks').name, shortLabel: 'Tasks', icon: CheckSquare }] : []),
     ...(moduleFlags.calendar ? [{ href: '/dashboard/calendar', label: getModule('calendar').name, shortLabel: 'Calendar', icon: CalendarIcon }] : []),
     ...(moduleFlags.meals ? [{ href: '/dashboard/meals', label: getModule('meals').name, shortLabel: 'Meals', icon: UtensilsCrossed }] : []),
-    ...(moduleFlags.home ? [{ href: '/dashboard/home', label: getModule('home').name, shortLabel: 'Feed', icon: Home }] : []),
+    ...(moduleFlags.home ? [{ href: '/dashboard/home', label: getModule('home').name, shortLabel: 'Feed', icon: ClipboardList }] : []),
   ].filter(Boolean) as { href: string; label: string; icon: React.ElementType; shortLabel?: string }[];
 
   // Only enable magnification on pointer devices (desktop) and when user hasn't requested reduced motion

@@ -3,6 +3,7 @@
 import { cn } from '@repo/ui';
 import type { Task } from '@repo/supabase';
 import { format, isPast, isToday } from 'date-fns';
+import { Trash2, X } from 'lucide-react';
 import type { AssigneeLabels } from '@/app/dashboard/tasks/page';
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -30,6 +31,8 @@ export function TaskCard({
   showCheckbox = true,
   onToggleComplete,
   onClick,
+  onDelete,
+  onCancel,
   isDragging,
   className,
   assigneeLabels,
@@ -38,6 +41,8 @@ export function TaskCard({
   showCheckbox?: boolean;
   onToggleComplete?: (id: string, completed?: boolean) => void;
   onClick?: (task: Task) => void;
+  onDelete?: (id: string) => void;
+  onCancel?: (id: string) => void;
   isDragging?: boolean;
   className?: string;
   assigneeLabels?: AssigneeLabels;
@@ -74,7 +79,7 @@ export function TaskCard({
               e.stopPropagation();
               onToggleComplete(task.id, task.status !== 'done');
             }}
-            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background cursor-pointer transition hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={task.status === 'done' ? 'Mark incomplete' : 'Mark complete'}
             aria-pressed={task.status === 'done'}
           >
@@ -131,6 +136,38 @@ export function TaskCard({
           </div>
         </div>
       </div>
+      {(onDelete || onCancel) && (
+        <div className="flex items-center gap-1 ml-auto">
+          {onCancel && task.status !== 'done' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel(task.id);
+              }}
+              className="p-1.5 rounded hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              title="Cancel task"
+              aria-label="Cancel task"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(task.id);
+              }}
+              className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              title="Delete task"
+              aria-label="Delete task"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

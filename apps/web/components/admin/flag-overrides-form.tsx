@@ -100,7 +100,7 @@ export function FlagOverridesForm({ initialFlags, preProd }: Props) {
               id={`flag-${id}`}
               checked={flags[id]}
               onChange={() => toggle(id)}
-              className="h-4 w-4 rounded border-border"
+              className="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer shrink-0"
             />
             <label htmlFor={`flag-${id}`} className="text-sm font-medium capitalize">
               {MODULE_LABELS[id]}

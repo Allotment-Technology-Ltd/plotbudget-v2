@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { isPast, isToday, isThisWeek } from 'date-fns';
+import { toast } from 'sonner';
 import type { Task } from '@repo/supabase';
 import { cn } from '@repo/ui';
 import { TaskCard } from './task-card';
-import { useCompleteTask } from '@/hooks/use-tasks';
+import { useCompleteTask, useDeleteTask, useUpdateTask } from '@/hooks/use-tasks';
 import type { AssigneeLabels } from '@/app/dashboard/tasks/page';
 
 function groupTasks(tasks: Task[]) {
@@ -44,11 +45,55 @@ export function TaskListView({
   assigneeLabels?: AssigneeLabels;
 }) {
   const completeTask = useCompleteTask();
+  const deleteTask = useDeleteTask();
+  const updateTask = useUpdateTask();
   const { overdue, today, thisWeek, later, done } = useMemo(() => groupTasks(tasks), [tasks]);
   const [showDone, setShowDone] = useState(false);
   const handleToggleComplete = (id: string, completed?: boolean) => {
     if (completed) setShowDone(true);
     completeTask.mutate({ id, completed });
+  };
+  const handleDelete = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    
+    if (confirm(`Delete "${task.name}"? This action cannot be undone.`)) {
+      deleteTask.mutate(id, {
+        onSuccess: () => {
+          toast.error(`Deleted: "${task.name}"`, {
+            description: 'This task has been permanently deleted.',
+            duration: 5000,
+          });
+        },
+      });
+    }
+  };
+  
+  const handleCancel = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    
+    updateTask.mutate(
+      { id, status: 'skipped' },
+      {
+        onSuccess: () => {
+          toast.warning(`Cancelled: "${task.name}"`, {
+            description: 'This task has been skipped.',
+            action: {
+              label: 'Undo',
+              onClick: () => {
+                updateTask.mutate({ id, status: 'todo' }, {
+                  onSuccess: () => {
+                    toast.success(`Restored: "${task.name}"`);
+                  },
+                });
+              },
+            },
+            duration: 5000,
+          });
+        },
+      }
+    );
   };
   const sections = [
     { title: 'Overdue', items: overdue, accent: 'text-red-600 dark:text-red-400' },
@@ -72,6 +117,8 @@ export function TaskListView({
                     <TaskCard
                       task={task}
                       onToggleComplete={handleToggleComplete}
+                      onDelete={handleDelete}
+                      onCancel={handleCancel}
                       onClick={onTaskClick}
                       assigneeLabels={assigneeLabels}
                     />
