@@ -1,0 +1,47 @@
+# Monthly update of the RecipeRadar Docker stack, triggered from Git (this repo).
+# Runs on the 1st of each month at 00:00 UTC, and can be run manually.
+#
+# To use this workflow you need either:
+#
+#  A) Webhook (recommended, no self-hosted runner):
+#     - On the host that runs RecipeRadar, run the update webhook server (see
+#       tools/reciperadar/README.md). It listens for POST with a secret and runs
+#       the update script.
+#     - In this repo: Settings → Secrets and variables → Actions, add:
+#       RECIPERADAR_UPDATE_WEBHOOK_URL = https://your-host:9090/update  (or http)
+#       RECIPERADAR_UPDATE_SECRET     = same secret used by the webhook server
+#     - This job will call the webhook; the host runs the actual update.
+#
+#  B) Self-hosted runner:
+#     - Register a runner on the host that runs RecipeRadar (and has Docker).
+#     - In this workflow, set runs-on to that runner and remove or skip the
+#       webhook step; add a step that runs ./tools/reciperadar/update.sh
+#
+#  C) Cron on that host (no GitHub):
+#     - Run ./tools/reciperadar/install-cron.sh on the host.
+
+name: Update RecipeRadar
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # 00:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+jobs:
+  update-via-webhook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger RecipeRadar update
+        run: |
+          if [[ -z "${{ secrets.RECIPERADAR_UPDATE_WEBHOOK_URL }}" || -z "${{ secrets.RECIPERADAR_UPDATE_SECRET }}" ]]; then
+            echo "RECIPERADAR_UPDATE_WEBHOOK_URL and RECIPERADAR_UPDATE_SECRET must be set in repo secrets to use this workflow."
+            echo "See tools/reciperadar/README.md for webhook setup. Otherwise use cron or a self-hosted runner."
+            exit 1
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.RECIPERADAR_UPDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.RECIPERADAR_UPDATE_WEBHOOK_URL }}" \
+            --max-time 10 \
+            -o /dev/null -w "%{http_code}" | grep -q 200 || exit 1
+          echo "Update triggered successfully."

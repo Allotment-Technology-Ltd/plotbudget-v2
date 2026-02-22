@@ -1,0 +1,53 @@
+# Minimal RecipeRadar stack for local/dev: API + OpenSearch.
+# Recipe index is empty until populated (see OpenCulinary backend/crawler).
+# See docs/RECIPERADAR-SELF-HOSTING.md and README.md in this directory.
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.18.0
+    container_name: reciperadar-opensearch
+    environment:
+      - cluster.name=reciperadar
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - "DISABLE_SECURITY_PLUGIN=true"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - reciperadar
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: reciperadar-api
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    networks:
+      - reciperadar
+
+networks:
+  reciperadar:
+    driver: bridge
