@@ -42,6 +42,6 @@ export function DashboardHeaderNavClient({ userMenuProps }: DashboardHeaderNavCl
   );
 }
 
-export function DashboardFooterClient() {
+export function DashboardFooterClient(): React.JSX.Element {
   return <AppFooterClient />;
 }

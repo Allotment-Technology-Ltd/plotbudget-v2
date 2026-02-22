@@ -9,3 +9,4 @@ export * from './activity-feed';
 export * from './tasks';
 export * from './calendar';
 export * from './meals';
+export * from './holidays';
