@@ -71,6 +71,7 @@ export function isDevContext(): boolean {
  */
 export function isPreProdContext(): boolean {
   if (isDevContext()) return true;
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') return true;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
   if (appUrl.includes('vercel.app')) return true;
   const appEnv = (process.env.NEXT_PUBLIC_APP_ENV ?? '').toLowerCase();

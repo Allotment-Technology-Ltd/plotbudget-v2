@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Bell, Calendar as CalendarIcon, CheckSquare, FolderKanban, LayoutList, PoundSterling } from 'lucide-react';
+import { Bell, Calendar as CalendarIcon, CheckSquare, FolderKanban, LayoutList, PoundSterling, UtensilsCrossed } from 'lucide-react';
 import { UserMenu } from '@/components/navigation/user-menu';
 import { cn } from '@repo/ui';
+import type { ModuleFlags } from '@/lib/module-flags';
 import type { SidebarUserMenuProps } from './sidebar';
 
 interface ModuleTopBarProps {
+  moduleFlags: ModuleFlags;
   userMenuProps: SidebarUserMenuProps;
   unreadNotificationCount?: number;
 }
@@ -16,7 +18,7 @@ interface ModuleTopBarProps {
 /**
  * Single top bar when inside a module (no sidebar). PLOT → launcher, in-module nav, notifications, user menu.
  */
-export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: ModuleTopBarProps) {
+export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCount = 0 }: ModuleTopBarProps) {
   const pathname = usePathname();
   const inMoney = pathname.startsWith('/dashboard/money');
   const isBlueprint = pathname.startsWith('/dashboard/money/blueprint');
@@ -24,6 +26,7 @@ export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: Mod
   const isProjects = pathname.startsWith('/dashboard/tasks/projects');
   const isWeeklyReset = pathname.startsWith('/dashboard/tasks/weekly-reset');
   const inCalendar = pathname.startsWith('/dashboard/calendar');
+  const inMeals = pathname.startsWith('/dashboard/meals');
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4">
@@ -119,6 +122,18 @@ export function ModuleTopBar({ userMenuProps, unreadNotificationCount = 0 }: Mod
             >
               <CalendarIcon className="h-4 w-4 shrink-0" aria-hidden />
               <span>Calendar</span>
+            </Link>
+          </nav>
+        )}
+        {inMeals && moduleFlags.meals && (
+          <nav className="flex items-center gap-1" aria-label="Meals">
+            <Link
+              href="/dashboard/meals"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-muted text-foreground"
+              aria-current="page"
+            >
+              <UtensilsCrossed className="h-4 w-4 shrink-0" aria-hidden />
+              <span>Meals</span>
             </Link>
           </nav>
         )}

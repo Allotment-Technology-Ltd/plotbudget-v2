@@ -5,10 +5,12 @@ const nextConfig = {
   // Avoid sharp install on Vercel (build was hanging at sharp install step).
   images: { unoptimized: true },
   // So preview (and client code) use current deployment URL; Production should set NEXT_PUBLIC_APP_URL in Vercel.
+  // NEXT_PUBLIC_VERCEL_ENV lets isPreProdContext() detect preview (admin flag overrides, env-based flags).
   env: {
     NEXT_PUBLIC_APP_URL:
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
   },
   webpack: (config, { dev }) => {
     // In dev, use memory-only cache so webpack doesn't serialize large strings to disk (which
