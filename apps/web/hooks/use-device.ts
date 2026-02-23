@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { getDeviceType, isMobileDevice, type DeviceType } from '@/lib/device';
 
 /**
@@ -9,13 +9,26 @@ import { getDeviceType, isMobileDevice, type DeviceType } from '@/lib/device';
  * Use for device-specific instructions (e.g. camera permission steps).
  */
 export function useDevice(): { deviceType: DeviceType; isMobile: boolean } {
-  const [deviceType, setDeviceType] = useState<DeviceType>('other');
-  const [isMobile, setIsMobile] = useState(false);
+  const subscribe = (listener: () => void) => {
+    if (typeof window === 'undefined') return () => {};
+    window.addEventListener('resize', listener);
+    window.addEventListener('orientationchange', listener);
+    return () => {
+      window.removeEventListener('resize', listener);
+      window.removeEventListener('orientationchange', listener);
+    };
+  };
 
-  useEffect(() => {
-    setDeviceType(getDeviceType());
-    setIsMobile(isMobileDevice());
-  }, []);
+  const deviceType = useSyncExternalStore<DeviceType>(
+    subscribe,
+    () => getDeviceType(),
+    () => 'other'
+  );
+  const isMobile = useSyncExternalStore<boolean>(
+    subscribe,
+    () => isMobileDevice(),
+    () => false
+  );
 
   return { deviceType, isMobile };
 }

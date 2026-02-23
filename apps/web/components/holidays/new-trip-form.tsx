@@ -16,9 +16,18 @@ import { toast } from 'sonner';
 import type { Trip } from '@repo/supabase';
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft' },
   { value: 'planning', label: 'Planning' },
   { value: 'booked', label: 'Booked' },
+];
+
+const TRIP_TYPE_OPTIONS = [
+  { value: '', label: 'None (blank trip)' },
+  { value: 'beach', label: 'Beach Holiday' },
+  { value: 'city', label: 'City Break' },
+  { value: 'skiing', label: 'Skiing Trip' },
+  { value: 'winter-city', label: 'Winter City Break' },
+  { value: 'camping', label: 'Camping Trip' },
+  { value: 'business', label: 'Business Travel' },
 ];
 
 export function NewTripForm() {
@@ -27,8 +36,9 @@ export function NewTripForm() {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [status, setStatus] = useState('draft');
+  const [status, setStatus] = useState('planning');
   const [currency, setCurrency] = useState('GBP');
+  const [tripType, setTripType] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,6 +63,7 @@ export function NewTripForm() {
           status,
           currency,
           notes: notes.trim() || null,
+          trip_type: tripType || null,
         }),
       });
       if (!res.ok) {
@@ -61,6 +72,7 @@ export function NewTripForm() {
         return;
       }
       const trip = (await res.json()) as Trip;
+      toast.success(tripType ? 'Trip created with templates applied' : 'Trip created');
       router.push(`/dashboard/holidays/${trip.id}`);
     } finally {
       setSubmitting(false);
@@ -93,6 +105,23 @@ export function NewTripForm() {
           required
           className="font-body normal-case"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="trip-type">Trip type</Label>
+        <Select value={tripType} onValueChange={setTripType}>
+          <SelectTrigger id="trip-type" className="h-9 w-full pl-3 pr-8 text-sm">
+            <SelectValue placeholder="Select a trip type (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {TRIP_TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Templates will be applied automatically for itinerary, budget, and packing list
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

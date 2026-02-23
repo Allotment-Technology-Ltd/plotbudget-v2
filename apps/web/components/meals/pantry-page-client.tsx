@@ -125,7 +125,7 @@ export function PantryPageClient() {
           onSuccess: applyBarcodeResult,
         });
       }
-    } catch (_) {
+    } catch {
       // Decode failed or API not supported
     }
   };
@@ -194,7 +194,7 @@ export function PantryPageClient() {
           onSuccess: applyBarcodeResult,
         });
       }
-    } catch (_) {
+    } catch {
       setCameraError('Could not read barcode. Try again or use Upload photo.');
     } finally {
       setCapturing(false);

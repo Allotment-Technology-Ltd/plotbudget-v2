@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const tripStatusSchema = z.enum([
-  'draft',
   'planning',
   'booked',
   'in_progress',

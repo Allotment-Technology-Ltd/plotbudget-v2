@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const input: UpdatePantryItemInput = parsed.data;
   const { id: _id, ...rest } = input;
+  void _id;
   const updates: Record<string, unknown> = { ...rest };
   if (rest.name !== undefined) updates.name = rest.name.trim();
   if (rest.location !== undefined) updates.location = rest.location.trim();

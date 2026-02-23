@@ -95,7 +95,7 @@ export function SettingsView({
       {portalError && (
         <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">
-            <strong>Portal Error:</strong> We couldn't open the subscription portal. Please try again.
+            <strong>Portal Error:</strong> We couldn&apos;t open the subscription portal. Please try again.
           </p>
         </div>
       )}

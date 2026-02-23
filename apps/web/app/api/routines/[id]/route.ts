@@ -20,6 +20,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const input: UpdateRoutineInput = parsed.data;
   const { id: _id, ...rest } = input;
+  void _id;
   const { data: updated, error } = await supabase
     .from('routines')
     .update(rest as never)

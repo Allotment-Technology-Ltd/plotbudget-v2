@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createRecipeSchema, type CreateRecipeInput } from '@repo/logic';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -41,9 +41,9 @@ export function CreateRecipeDialog({
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue,
     reset,
+    control,
   } = useForm<FormValues>({
     resolver: zodResolver(createRecipeSchema) as never,
     defaultValues: {
@@ -59,17 +59,20 @@ export function CreateRecipeDialog({
     },
   });
 
-  const emptyDefaults = {
-    name: '',
-    description: '',
-    ingredients: [] as { name: string; quantity?: string }[],
-    servings: 1,
-    source_url: null as string | null,
-    instructions: '',
-    image_url: null as string | null,
-    prep_mins: null as number | null,
-    cook_mins: null as number | null,
-  };
+  const emptyDefaults = useMemo<FormValues>(
+    () => ({
+      name: '',
+      description: '',
+      ingredients: [] as { name: string; quantity?: string }[],
+      servings: 1,
+      source_url: null,
+      instructions: '',
+      image_url: null,
+      prep_mins: null,
+      cook_mins: null,
+    }),
+    []
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -93,9 +96,9 @@ export function CreateRecipeDialog({
     } else {
       reset(emptyDefaults);
     }
-  }, [open, initialValues, reset]);
+  }, [open, initialValues, reset, emptyDefaults]);
 
-  const ingredients = watch('ingredients') ?? [];
+  const ingredients = useWatch({ control, name: 'ingredients' }) ?? [];
   const errorCount = Object.keys(errors).length;
   const hasErrors = errorCount > 0 || !!serverError;
 
@@ -309,7 +312,7 @@ export function CreateRecipeDialog({
               {errors.ingredients && typeof errors.ingredients === 'object' && !Array.isArray(errors.ingredients) && 'message' in errors.ingredients && (
                 <div className="flex gap-1 mt-2 text-sm text-destructive">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" aria-hidden />
-                  <span>{(errors.ingredients as any).message}</span>
+                  <span>{(errors.ingredients as { message?: string }).message}</span>
                 </div>
               )}
             </div>

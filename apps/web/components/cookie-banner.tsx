@@ -23,7 +23,7 @@ export function CookieBanner() {
     if (consent && consent.analytics !== analyticsOn) {
       queueMicrotask(() => setAnalyticsOn(consent.analytics));
     }
-  }, [consent]);
+  }, [consent, analyticsOn]);
 
   const acceptAll = () => {
     setConsent({ essential: true, analytics: true });

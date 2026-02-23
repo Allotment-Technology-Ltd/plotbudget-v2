@@ -10,7 +10,6 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS trial_ending_email_sent BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS trial_ended_email_sent BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS grace_period_reminder_sent BOOLEAN DEFAULT FALSE;
-
 COMMENT ON COLUMN public.users.trial_cycles_completed IS 'Number of completed pay cycles (trial = first 2)';
 COMMENT ON COLUMN public.users.trial_ended_at IS 'When trial ended (2nd cycle completed)';
 COMMENT ON COLUMN public.users.grace_period_start IS 'Start of 7-day grace period after trial ends for users over free tier limits';

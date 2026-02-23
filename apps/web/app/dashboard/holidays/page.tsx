@@ -11,7 +11,6 @@ export const metadata = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
   planning: 'Planning',
   booked: 'Booked',
   in_progress: 'In progress',
@@ -41,15 +40,15 @@ export default async function HolidaysPage() {
     .limit(20);
 
   const tripList = (trips ?? []) as Trip[];
-  const module = getModule('holidays');
-  const moduleColor = module.colorLight;
+  const moduleInfo = getModule('holidays');
+  const moduleColor = moduleInfo.colorLight;
 
   return (
     <div className="content-wrapper section-padding" data-testid="holidays-hub">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground mb-1">
-            {module.name}
+            {moduleInfo.name}
           </h1>
           <p className="text-muted-foreground text-sm">
             Plan and track your household trips.

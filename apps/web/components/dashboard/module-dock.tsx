@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, ClipboardList, Calendar as CalendarIcon, CheckSquare, GripVertical, PoundSterling, UtensilsCrossed, Plane } from 'lucide-react';
@@ -58,6 +58,20 @@ function clampDockPosition(
   };
 }
 
+function useMatchMedia(query: string, defaultValue: boolean): boolean {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === 'undefined') return () => {};
+      const mq = window.matchMedia(query);
+      const handler = () => onStoreChange();
+      mq.addEventListener('change', handler);
+      return () => mq.removeEventListener('change', handler);
+    },
+    () => (typeof window === 'undefined' ? defaultValue : window.matchMedia(query).matches),
+    () => defaultValue
+  );
+}
+
 /**
  * macOS-style floating dock: Home + enabled modules. Desktop: magnification on hover (icons scale
  * by proximity to pointer). Mobile: no magnification (no hover); equal touch targets, clear active state.
@@ -71,9 +85,13 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
   const lastXRef = useRef<number | null>(null);
 
   const [scales, setScales] = useState<number[]>([]);
-  const [magnifyEnabled, setMagnifyEnabled] = useState(false);
-  const [hasHover, setHasHover] = useState(false);
-  const [position, setPosition] = useState<{ bottom: number; left: number } | null>(null);
+  const prefersReducedMotion = useMatchMedia('(prefers-reduced-motion: reduce)', false);
+  const hasHover = useMatchMedia('(hover: hover)', false);
+  const magnifyEnabled = hasHover && !prefersReducedMotion;
+  const [position, setPosition] = useState<{ bottom: number; left: number } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return loadDockPosition();
+  });
   const dragStartRef = useRef<{ x: number; y: number; left: number; bottom: number } | null>(null);
   const dragHandleRef = useRef<HTMLDivElement | null>(null);
 
@@ -86,20 +104,6 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
     ...(moduleFlags.holidays ? [{ href: '/dashboard/holidays', label: getModule('holidays').name, shortLabel: 'Holidays', icon: Plane }] : []),
     ...(moduleFlags.home ? [{ href: '/dashboard/home', label: getModule('home').name, shortLabel: 'Feed', icon: ClipboardList }] : []),
   ].filter(Boolean) as { href: string; label: string; icon: React.ElementType; shortLabel?: string }[];
-
-  // Only enable magnification on pointer devices (desktop) and when user hasn't requested reduced motion
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const hover = window.matchMedia('(hover: hover)').matches;
-    setHasHover(hover);
-    setMagnifyEnabled(hover && !prefersReducedMotion);
-  }, []);
-
-  // Load persisted dock position (desktop only)
-  useEffect(() => {
-    if (!hasHover) return;
-    setPosition(loadDockPosition());
-  }, [hasHover]);
 
   const handleDragStart = useCallback(
     (e: React.PointerEvent) => {
@@ -177,7 +181,7 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
       });
       setScales(newScales);
     },
-    [items.length, magnifyEnabled]
+    [items, magnifyEnabled]
   );
 
   const handlePointerMove = useCallback(
@@ -197,14 +201,13 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
     updateScales(null);
   }, [updateScales]);
 
-  // Reset scales when magnify is disabled (e.g. resize to touch device)
-  useEffect(() => {
-    if (!magnifyEnabled) setScales(items.map(() => 1));
-  }, [magnifyEnabled, items.length]);
-
   if (items.length === 0) return null;
 
-  const scaleArray = scales.length === items.length ? scales : items.map(() => 1);
+  const scaleArray = !magnifyEnabled
+    ? items.map(() => 1)
+    : scales.length === items.length
+      ? scales
+      : items.map(() => 1);
 
   return (
     <nav

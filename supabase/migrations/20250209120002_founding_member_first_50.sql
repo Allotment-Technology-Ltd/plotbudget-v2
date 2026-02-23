@@ -6,9 +6,7 @@
 
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS founding_member_until TIMESTAMPTZ;
-
 COMMENT ON COLUMN public.users.founding_member_until IS 'When set, user has Premium (Founding Member) until this timestamp. First 50 signups get this set automatically to 1 year from creation.';
-
 -- Trigger: after a new user is inserted, if total user count is <= 50, grant them Founding Member for 1 year.
 CREATE OR REPLACE FUNCTION public.set_founding_member_if_first_50()
 RETURNS TRIGGER
@@ -30,7 +28,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 DROP TRIGGER IF EXISTS on_user_created_set_founding_member ON public.users;
 CREATE TRIGGER on_user_created_set_founding_member
   AFTER INSERT ON public.users

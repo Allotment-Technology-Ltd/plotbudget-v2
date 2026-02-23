@@ -1,0 +1,92 @@
+# Worktree Setup Guidance for Cursor Agents
+
+When an agent is engaged to create or work on a **new branch** or **feature development**:
+
+## Worktree Detection and Setup
+
+1. **Detect if a Git worktree is being created or used.**
+   - Look for commands like `git worktree add` or `git checkout -b` followed by development work.
+   - If in a new worktree context (`.git` is a file, not a directory), the worktree setup has been triggered.
+
+2. **Verify automatic setup completed.**
+   - Cursor automatically runs `.cursor/worktrees.json` setup profiles.
+   - Expected behavior:
+     - **Local dev**: `pnpm install` → `pnpm build` → `pnpm type-check` (full profile)
+     - **CI**: `pnpm install` → `pnpm build` (ci profile)
+   - Check for presence of `node_modules/` and successful build.
+
+3. **If setup didn't run automatically:**
+   ```bash
+   ./scripts/setup-worktree.sh --profile=full  # For local development
+   # or
+   ./scripts/setup-worktree.sh --profile=ci    # For CI environments
+   ```
+
+## Development Workflow
+
+1. **After setup completes**, confirm the worktree is ready:
+   - `ls -la node_modules` should show installed packages
+   - `pnpm build` should complete without errors
+   - `pnpm type-check` should pass (if full profile ran)
+
+2. **Implement changes** on the branch as normal.
+   - Use `pnpm dev` to start development server
+   - Run tests: `pnpm test:unit`, `pnpm test:e2e`, etc.
+
+3. **Before committing**, verify environment:
+   - If you ran new `pnpm install` commands, ensure `pnpm-lock.yaml` is updated
+   - Run `pnpm lint` and `pnpm type-check` to catch issues before CI
+   - Document any new dependencies
+
+## Setup Profile Selection Guide
+
+| Profile | Use When | Time | Commands |
+|---------|----------|------|----------|
+| **full** (default local) | Starting active development; need full verification | ~2-3 min | install + build + type-check |
+| **ci** (default CI) | In CI/CD environment; setup before parallel tests | ~1-2 min | install + build |
+| **fast** | Only need dependencies; manual test runs planned | ~30-60 sec | install |
+
+## Branch Integration
+
+1. **Worktrees are commonly created for:**
+   - Feature branches: `git worktree add ../feature-auth feature/user-authentication`
+   - Bug fixes: `git worktree add ../fix-auth fix/auth-bug`
+   - Hotfixes: `git worktree add ../hotfix-payment hotfix/payment-issue`
+
+2. **Worktrees persist across sessions.**
+   - Developers can return to a worktree and continue where they left off
+   - Setup is not re-run unless `node_modules` is deleted
+
+3. **Cleanup after development:**
+   - When a worktree-based PR is merged, remove it: `git worktree remove <name>`
+   - Document this in commit messages or PR descriptions
+
+## CI/CD Considerations
+
+- When Cursor is running in GitHub Actions (detected via `CI=true` or `GITHUB_ACTIONS`), the `ci` profile is selected automatically
+- The `ci` profile is optimized for speed and parallel test jobs
+- Worktrees in CI allow tests for different apps/features to run in isolation
+
+## Key Files
+
+- **Config**: `.cursor/worktrees.json` - Profile definitions
+- **Script**: `scripts/setup-worktree.sh` - Setup orchestration
+- **Guide**: `WORKTREES.md` - Comprehensive developer documentation
+
+## Common Issues and Recovery
+
+| Issue | Solution |
+|-------|----------|
+| Setup didn't run | Manually run: `./scripts/setup-worktree.sh` |
+| `pnpm: command not found` | Install pnpm or source shell profile |
+| Build failures in worktree | Run `pnpm clean && ./scripts/setup-worktree.sh --profile=full` |
+| Stale dependencies | Delete `node_modules` and re-run setup |
+| Type-check fails | Run `pnpm type-check` manually; check for unsaved files |
+
+## References
+
+See `WORKTREES.md` for:
+- Detailed quick start guide
+- Common workflows and scenarios
+- Troubleshooting and best practices
+- Performance considerations

@@ -122,6 +122,7 @@ function WebRecipeCard({
       data-testid={`what-can-i-cook-web-${s.id}`}
     >
       {s.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={s.image}
           alt=""

@@ -14,7 +14,7 @@ export default function PartnerInviteEmail({
 }: PartnerInviteEmailProps) {
   return (
     <EmailLayout>
-      <Text style={text}>You've been invited to join a household on PLOT Budget.</Text>
+      <Text style={text}>You&apos;ve been invited to join a household on PLOT Budget.</Text>
       <Text style={text}>
         Your partner ({inviterEmail}) wants to budget together — the 20-minute payday ritual that
         replaces every awkward money conversation.
@@ -25,7 +25,7 @@ export default function PartnerInviteEmail({
       <Text style={text}>Or copy this link:</Text>
       <Text style={{ ...textSmall, wordBreak: 'break-all' as const }}>{joinUrl}</Text>
       <Text style={textSmall}>
-        If you didn't expect this email, you can ignore it.
+        If you didn&apos;t expect this email, you can ignore it.
       </Text>
     </EmailLayout>
   );

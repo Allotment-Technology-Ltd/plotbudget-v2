@@ -82,7 +82,17 @@ codebase-audit.md
 .venv-crop/
 
 # Cursor IDE (local plans, rules, skills – do not track)
-.cursor/
+# we still keep most of the directory ignored, but explicitly allow the
+# two subfolders we care about so they can be checked in.
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
+!.cursor/rules/
+!.cursor/rules/**
+
+# but we want to version‑control the shared rules and skills used by
+# remote helpers.  unignore those subdirectories so they can be
+# committed and kept in sync with `rules.yaml`.
 
 # Allow sanity-studio lockfile for reproducible CI (npm ci)
 !sanity-studio/package-lock.json

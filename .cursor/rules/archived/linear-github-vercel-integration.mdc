@@ -1,0 +1,14 @@
+---
+description: Linear + GitHub + Vercel integration; branch naming and autolink for PM–code–deploy sync
+alwaysApply: false
+---
+
+# Linear + GitHub + Vercel Integration
+
+- **Audit trail:** Before creating a branch or building, prompt the user to confirm a Linear ticket exists for the change and ask for the issue ID. Do not start implementation until they respond or say to skip (e.g. "no Linear").
+- **Branch naming:** Use `<linear-issue-id>-<short-slug>` (e.g. `PROJ-123-update-login`) when the user is working from a Linear ticket so GitHub/Linear autolink and status updates work.
+- **Flow:** Create issue in Linear → create branch with issue ID in name → push → open PR (Linear moves to "In Review") → merge (Linear "Done", Vercel production).
+- **Setup:** Linear: Integrations → GitHub (enable Autolink PRs); Integrations → Vercel for preview comments and optional deploy-based "Done". In Cursor: Linear extension for "Create Issue" / "Copy Branch Name".
+- **Creating issues:** Use the **Linear MCP** (`user-linear`, tool `create_issue`) to create issues from the agent when the user asks for a Linear ticket. Requires `title` and `team`; description supports Markdown. See `.cursor/rules/enabled-mcps.mdc`.
+
+For full workflow and setup details, use the **linear-github-vercel-workflow** skill.

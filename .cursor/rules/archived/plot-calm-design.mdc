@@ -1,0 +1,39 @@
+---
+description: PLOT Calm Design principles from Calm Design Lab; apply for UI, copy, notifications, and UX decisions.
+alwaysApply: false
+---
+
+# PLOT Calm Design Rules
+
+PLOT follows Calm Design (calmdesignlab.com). Design for **completion** and **intention**, not engagement and attention extraction. Every screen, notification, and interaction should help users finish a task and leave — not keep them in the app.
+
+## NEVER
+
+- Add infinite scroll, engagement streaks, or "time in app" maximising patterns
+- Use countdown timers or false urgency language
+- Design notifications that function as re-engagement spam
+- Use red/warning colours for routine negative financial states (e.g. pot below target)
+- Pre-check upsell options or hide cancellation flows
+- Add features that reward browsing over task completion (e.g. feeds that reward passive consumption)
+- Auto-advance through ceremony steps — let users control pace
+
+## ALWAYS
+
+- Design ceremonies with **greeting → work → celebration** arc (never collapse to a single form)
+- Include explicit confirmation before destructive actions
+- Make notification copy specific and actionable (e.g. "Payday tomorrow — your ritual takes 15 minutes")
+- Respect `prefers-reduced-motion` in all animations and transitions
+- Show **one clear primary action** per screen; secondary actions visually subordinate
+- Use progressive disclosure: simple defaults, complexity on request
+- Write empty states as calm orientation ("Nothing here yet — [X] will appear after [Y]"), not aspirational pressure
+- Include data export and account deletion as prominent user controls
+- Write error messages without shame ("That didn't work — try again", not "Invalid input")
+- Design for completion: every screen needs a clear "done" exit
+
+## MEASURE
+
+- Ritual completion rate (not DAU)
+- Time-to-done (not session length)
+- Voluntary return rate (not notification open rate)
+
+**Source:** `docs/plot-calm-design-rules.md`

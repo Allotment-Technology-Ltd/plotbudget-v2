@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const input: UpdateRecipeInput = parsed.data;
   const { id: _id, ...rest } = input;
+  void _id;
   const updates: Record<string, unknown> = { ...rest };
 
   const { data: updated, error } = await supabase

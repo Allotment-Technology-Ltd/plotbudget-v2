@@ -14,6 +14,7 @@ interface PrivacyTabProps {
 }
 
 export function PrivacyTab({ userId: _userId, isPartner = false }: PrivacyTabProps) {
+  void _userId;
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {

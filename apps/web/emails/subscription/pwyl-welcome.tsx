@@ -20,7 +20,7 @@ export default function PWYLWelcomeEmail({ displayName = 'there', amount = 3 }: 
       {isFree ? (
         <>
           <Text style={text}>
-            You're now using PLOT Premium as a <strong>Community Supporter</strong> at no cost.
+            You&apos;re now using PLOT Premium as a <strong>Community Supporter</strong> at no cost.
             Thank you for being part of our community!
           </Text>
         </>

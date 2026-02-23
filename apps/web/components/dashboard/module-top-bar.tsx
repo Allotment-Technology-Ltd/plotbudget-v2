@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Calendar as CalendarIcon, CheckSquare, FolderKanban, LayoutList, PoundSterling } from 'lucide-react';
+import { Bell, Calendar as CalendarIcon, CheckSquare, FolderKanban, LayoutList, Plane, PoundSterling } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserMenu } from '@/components/navigation/user-menu';
 import { cn } from '@repo/ui';
@@ -28,6 +28,7 @@ export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCou
   const isProjects = pathname.startsWith('/dashboard/tasks/projects');
   const isWeeklyReset = pathname.startsWith('/dashboard/tasks/weekly-reset');
   const inCalendar = pathname.startsWith('/dashboard/calendar');
+  const inHolidays = pathname.startsWith('/dashboard/holidays');
   const inMeals = pathname.startsWith('/dashboard/meals');
   const isMealsRecipes = pathname.startsWith('/dashboard/meals/recipes');
   const isMealsPlan = pathname.startsWith('/dashboard/meals/meal-plan');
@@ -136,6 +137,18 @@ export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCou
             >
               <CalendarIcon className="h-4 w-4 shrink-0" aria-hidden />
               <span>Calendar</span>
+            </Link>
+          </nav>
+        )}
+        {inHolidays && (
+          <nav className="flex items-center gap-1" aria-label="Holidays">
+            <Link
+              href="/dashboard/holidays"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-muted text-foreground"
+              aria-current="page"
+            >
+              <Plane className="h-4 w-4 shrink-0" aria-hidden />
+              <span>Trips</span>
             </Link>
           </nav>
         )}

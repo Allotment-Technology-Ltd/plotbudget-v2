@@ -359,12 +359,11 @@ function StepComplete({
   tasks: Task[];
   fairness: { myCount: number; partnerCount: number; isBalanced: boolean };
 }) {
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(true);
   const myTasks = tasks.filter((t) => t.assigned_to === 'me' && t.status !== 'done');
   const partnerTasks = tasks.filter((t) => t.assigned_to === 'partner' && t.status !== 'done');
 
   useEffect(() => {
-    setShowConfetti(true);
     const t = setTimeout(() => setShowConfetti(false), 2000);
     return () => clearTimeout(t);
   }, []);

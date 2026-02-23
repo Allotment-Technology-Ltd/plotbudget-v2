@@ -21,6 +21,7 @@ export function NotificationsPageClient({
   notifications,
   userId: _userId,
 }: NotificationsPageClientProps) {
+  void _userId;
   const router = useRouter();
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 

@@ -20,24 +20,34 @@ CREATE TABLE IF NOT EXISTS public.income_sources (
   CONSTRAINT income_sources_every_4_weeks_anchor CHECK (
     frequency_rule != 'every_4_weeks' OR anchor_date IS NOT NULL
   )
-);
+)
+;
 
-CREATE INDEX IF NOT EXISTS idx_income_sources_household ON public.income_sources(household_id);
-CREATE INDEX IF NOT EXISTS idx_income_sources_household_active ON public.income_sources(household_id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_income_sources_household ON public.income_sources(household_id)
+;
+CREATE INDEX IF NOT EXISTS idx_income_sources_household_active ON public.income_sources(household_id) WHERE is_active = true
+;
 
-COMMENT ON TABLE public.income_sources IS 'Per-household income streams with independent frequency; used by projection engine for cycle total_income';
-COMMENT ON COLUMN public.income_sources.frequency_rule IS 'specific_date = day_of_month each month; last_working_day = LWD of month; every_4_weeks = anchor_date + 28n';
-COMMENT ON COLUMN public.income_sources.anchor_date IS 'Required for every_4_weeks; first payment date, then +28 days each time';
+COMMENT ON TABLE public.income_sources IS 'Per-household income streams with independent frequency; used by projection engine for cycle total_income'
+;
+COMMENT ON COLUMN public.income_sources.frequency_rule IS 'specific_date = day_of_month each month; last_working_day = LWD of month; every_4_weeks = anchor_date + 28n'
+;
+COMMENT ON COLUMN public.income_sources.anchor_date IS 'Required for every_4_weeks; first payment date, then +28 days each time'
+;
 
-DROP TRIGGER IF EXISTS update_income_sources_updated_at ON public.income_sources;
+DROP TRIGGER IF EXISTS update_income_sources_updated_at ON public.income_sources
+;
 CREATE TRIGGER update_income_sources_updated_at
   BEFORE UPDATE ON public.income_sources
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at()
+;
 
 -- RLS: owner and partner can manage income sources for their household
-ALTER TABLE public.income_sources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.income_sources ENABLE ROW LEVEL SECURITY
+;
 
-DROP POLICY IF EXISTS "Users can insert income_sources for own household" ON public.income_sources;
+DROP POLICY IF EXISTS "Users can insert income_sources for own household" ON public.income_sources
+;
 CREATE POLICY "Users can insert income_sources for own household"
   ON public.income_sources
   FOR INSERT
@@ -47,9 +57,11 @@ CREATE POLICY "Users can insert income_sources for own household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.owner_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Users can read income_sources of own household" ON public.income_sources;
+DROP POLICY IF EXISTS "Users can read income_sources of own household" ON public.income_sources
+;
 CREATE POLICY "Users can read income_sources of own household"
   ON public.income_sources
   FOR SELECT
@@ -59,9 +71,11 @@ CREATE POLICY "Users can read income_sources of own household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.owner_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Users can update income_sources of own household" ON public.income_sources;
+DROP POLICY IF EXISTS "Users can update income_sources of own household" ON public.income_sources
+;
 CREATE POLICY "Users can update income_sources of own household"
   ON public.income_sources
   FOR UPDATE
@@ -77,9 +91,11 @@ CREATE POLICY "Users can update income_sources of own household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.owner_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Users can delete income_sources of own household" ON public.income_sources;
+DROP POLICY IF EXISTS "Users can delete income_sources of own household" ON public.income_sources
+;
 CREATE POLICY "Users can delete income_sources of own household"
   ON public.income_sources
   FOR DELETE
@@ -89,9 +105,11 @@ CREATE POLICY "Users can delete income_sources of own household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.owner_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Partners can insert income_sources for their household" ON public.income_sources;
+DROP POLICY IF EXISTS "Partners can insert income_sources for their household" ON public.income_sources
+;
 CREATE POLICY "Partners can insert income_sources for their household"
   ON public.income_sources
   FOR INSERT
@@ -101,9 +119,11 @@ CREATE POLICY "Partners can insert income_sources for their household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.partner_user_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Partners can read income_sources of their household" ON public.income_sources;
+DROP POLICY IF EXISTS "Partners can read income_sources of their household" ON public.income_sources
+;
 CREATE POLICY "Partners can read income_sources of their household"
   ON public.income_sources
   FOR SELECT
@@ -113,9 +133,11 @@ CREATE POLICY "Partners can read income_sources of their household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.partner_user_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Partners can update income_sources of their household" ON public.income_sources;
+DROP POLICY IF EXISTS "Partners can update income_sources of their household" ON public.income_sources
+;
 CREATE POLICY "Partners can update income_sources of their household"
   ON public.income_sources
   FOR UPDATE
@@ -131,9 +153,11 @@ CREATE POLICY "Partners can update income_sources of their household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.partner_user_id = auth.uid()
     )
-  );
+  )
+;
 
-DROP POLICY IF EXISTS "Partners can delete income_sources of their household" ON public.income_sources;
+DROP POLICY IF EXISTS "Partners can delete income_sources of their household" ON public.income_sources
+;
 CREATE POLICY "Partners can delete income_sources of their household"
   ON public.income_sources
   FOR DELETE
@@ -143,4 +167,5 @@ CREATE POLICY "Partners can delete income_sources of their household"
       SELECT 1 FROM public.households h
       WHERE h.id = income_sources.household_id AND h.partner_user_id = auth.uid()
     )
-  );
+  )
+;

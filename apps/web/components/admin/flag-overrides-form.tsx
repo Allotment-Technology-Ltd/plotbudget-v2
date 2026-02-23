@@ -55,7 +55,7 @@ export function FlagOverridesForm({ initialFlags, preProd }: Props) {
       }
       setMessage('success');
       window.location.reload();
-    } catch (e) {
+    } catch {
       setMessage('error');
       setSaving(false);
     }

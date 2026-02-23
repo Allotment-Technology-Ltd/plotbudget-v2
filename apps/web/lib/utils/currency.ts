@@ -33,7 +33,7 @@ const CURRENCY_STRIP_REGEX = /[£$€,\s]/g;
  * Strip currency symbols (£, $, €), commas, and whitespace so "£3,100" or "$3100" parse as numbers.
  * Used for income and amount inputs across the app.
  */
-export function parseIncome(value: unknown, _currency?: CurrencyCode): number {
+export function parseIncome(value: unknown): number {
   if (value === '' || value === null || value === undefined) return NaN;
   const s = String(value).replace(CURRENCY_STRIP_REGEX, '');
   const n = Number(s);
