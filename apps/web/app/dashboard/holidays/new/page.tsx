@@ -15,7 +15,7 @@ export default async function NewTripPage() {
   if (!householdId) redirect('/onboarding');
 
   return (
-    <div className="content-wrapper section-padding" data-testid="new-trip-page">
+    <div className="content-wrapper py-8" data-testid="new-trip-page">
       <NewTripWizard />
     </div>
   );

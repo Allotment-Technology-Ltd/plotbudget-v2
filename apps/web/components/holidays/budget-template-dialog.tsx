@@ -70,8 +70,8 @@ export function BudgetTemplateDialog({ trip }: BudgetTemplateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Banknote className="h-4 w-4 mr-2" />
+        <Button variant="outline" className="gap-1.5 h-9 px-3 text-sm">
+          <Banknote className="h-4 w-4" />
           Use Template
         </Button>
       </DialogTrigger>
