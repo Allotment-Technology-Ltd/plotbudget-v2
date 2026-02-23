@@ -2,6 +2,12 @@
 # Purpose: a single source of truth for CI checks that prevent performance regressions
 # Scope: These rules apply to apps/web only. CI should run checks when PRs touch apps/web/**
 #
+# NOTE: This file is NOT a replacement for .clinerules or .cursorrules.
+#       .clinerules        → AI assistant behaviour rules for Roo Code / Cline
+#       .cursorrules       → AI assistant behaviour rules for Cursor IDE (legacy format)
+#       .cursor/rules/*.mdc → AI assistant behaviour rules for Cursor IDE (modern format)
+#       rules.yaml         → CI performance and correctness gating checks (this file)
+#
 # Implementation notes:
 # - "check.command" values are executable shell commands run in CI. Map them to your runner environment.
 # - Use environment variables for thresholds to make tuning easy:
