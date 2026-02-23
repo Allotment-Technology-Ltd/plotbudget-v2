@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRecipe, useDeleteRecipe } from '@/hooks/use-meals';
 import { Button } from '@/components/ui/button';
@@ -78,12 +79,15 @@ export function RecipeDetailClient({ recipeId }: { recipeId: string }) {
       <div className="rounded-lg border border-border bg-card overflow-hidden" data-testid={`recipe-detail-${recipe.id}`}>
         {(recipe as { image_url?: string | null }).image_url && (
           <div className="aspect-[21/9] w-full bg-muted/50">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={(recipe as { image_url: string }).image_url}
-              alt=""
-              className="h-full w-full object-cover"
-            />
+            <div className="relative h-full w-full">
+              <Image
+                src={(recipe as { image_url: string }).image_url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 800px"
+              />
+            </div>
           </div>
         )}
         <div className="p-6">

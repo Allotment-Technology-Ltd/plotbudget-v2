@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   useRecipes,
@@ -122,8 +123,7 @@ function WebRecipeCard({
       data-testid={`what-can-i-cook-web-${s.id}`}
     >
       {s.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={s.image}
           alt=""
           className="h-20 w-20 shrink-0 rounded object-cover"
@@ -519,10 +519,11 @@ export function WhatCanICookClient() {
                       >
                         {(r as { image_url?: string | null }).image_url ? (
                           <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-muted/50">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                               src={(r as { image_url: string }).image_url}
                               alt=""
+                              width={80}
+                              height={80}
                               className="h-full w-full object-cover"
                             />
                           </div>
