@@ -385,20 +385,51 @@ Products built in isolation from their users serve the builder, not the user.
 
 ## Design Philosophy: Designed to Get You Out of It
 
-> "The goal is to spend LESS time in PLOT, not more."
+> "Most apps are engineered to keep you inside them. PLOT is engineered to put you back in your life."
 
 Every coding decision must be evaluated against this principle: does this change help the user complete their task and leave, or does it invite them to stay longer?
 
 **PLOT is successful when users spend the minimum time needed.** A user who completes the Payday Ritual in 15 minutes and doesn't open the app for a month is a perfect user — not a churning user.
 
-**Implications for every feature and UI decision:**
+### Ceremonies, Not Check-ins
+
+The core unit of PLOT isn't a daily habit. It's a **ceremony** — a guided ritual tied to a natural moment in the household's rhythm:
+
+| Ceremony | Cadence | Target |
+|----------|---------|--------|
+| Payday Ritual | Monthly | ≤ 15 minutes |
+| Weekly Reset | Weekly (Sunday) | ≤ 10 minutes |
+| Quarterly Health Check | Quarterly | — |
+| Trip Planning Session | Ad hoc | — |
+| Annual Review | Yearly | — |
+
+Each ceremony has **a greeting, a piece of work, and a proper completion moment.** They're designed to feel *done*, not fast. A 15-minute ritual with a summary screen at the end leaves something behind. A 2-minute auto-advancing form does not.
+
+**Between ceremonies, PLOT is mostly quiet. That's not a gap in the product. That's the product working.**
+
+### Code Implications of Ceremony Design
+
+- Ceremonies are **interruptible and resumable** — never lose data on exit.
+- Never auto-advance through ceremony steps — let users control pace.
+- The completion screen is not optional — it is what makes the ceremony feel real.
+- Progress indicators should orient, not pressure. A step counter is fine; a countdown timer is not.
+
+### The Money Module Specifically
+
+The Money module doesn't connect to your bank. It doesn't track transactions. You allocate your income at the start of each pay cycle — needs, wants, savings, debts — and PLOT handles the arithmetic. Both partners see the same picture. Neither has to nag the other.
+
+> "An app that watches every coffee purchase introduces a low-level surveillance anxiety that no amount of clean UI can fix. PLOT trades transaction-level detail for something more valuable: trust."
+
+**This deliberate limitation is the point.** Never add transaction import, bank linking, or spending tracking — these would undermine the trust model.
+
+### Implications for Every Feature and UI Decision
 
 - **Every screen needs a clear exit.** If you can't immediately answer "what does the user do when they're done here?" — the screen is broken.
 - **Completion > discovery.** Features exist to complete tasks, not to be discovered. Don't add dashboards, feeds, or lists that reward passive browsing.
 - **Speed is care.** Fast load times, optimistic UI updates, and instant feedback respect the user's time. A spinner where there could be an optimistic update is a failure.
 - **Default to done.** Pre-fill, sensible defaults, and remembering previous choices all reduce the time it takes to get out.
 - **No re-engagement.** Never add notifications, prompts, or UI patterns whose purpose is to bring the user back into the app. The only acceptable notification is the payday reminder.
-- **Measure time-to-done, not time-in-app.** Payday Ritual target: ≤ 15 minutes. Weekly Reset target: ≤ 10 minutes. If a flow takes longer, it's broken.
+- **Measure time-to-done, not time-in-app.** If a flow takes longer than its target, it's broken.
 
 This is not minimalism for its own sake — it's respect encoded in software.
 
