@@ -31,7 +31,7 @@
   context: "apps/web/package.json — when adding new dependencies"
   description: "Keep the client-side JS bundle under 300 KB; avoid heavyweight dependencies."
   content: |
-    Before adding a new npm dependency to apps/web, estimate its gzipped size (bundlephobia.com).
+    Before adding a new npm dependency to apps/web, estimate its gzipped size (https://bundlephobia.com).
     Prefer lighter alternatives; import only the submodules you need.
     If a dependency adds > 250 KB gzipped, document the justification in the PR.
     Use dynamic `import()` for large optional features (dialogs, chart libraries, rich editors).
@@ -49,7 +49,7 @@
   context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
   description: "Achieve WCAG 2.2 AAA: 44px touch targets, sufficient colour contrast, keyboard navigation, ARIA labels."
   content: |
-    All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-[2.75rem] min-w-[2.75rem]` on Tailwind components.
+    All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-11 min-w-11` (Tailwind h-11 = 2.75rem = 44px at 16px base) on interactive elements.
     Colour contrast must meet WCAG AAA ratios (7:1 for normal text, 4.5:1 for large text).
     All interactive elements must be keyboard-accessible with visible focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`).
     Use semantic HTML elements (`<nav>`, `<main>`, `<section>`, `<button>`, etc.) rather than `<div>` with click handlers.
