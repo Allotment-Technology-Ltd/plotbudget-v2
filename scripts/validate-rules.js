@@ -59,3 +59,4 @@ for (let i = 0; i < data.rules.length; i++) {
 }
 
 console.log(`✅ rules.yaml validated (${data.rules.length} rules, ${Object.keys(data.thresholds).length} thresholds)`);
+
