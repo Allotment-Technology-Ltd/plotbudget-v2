@@ -60,7 +60,7 @@
     "@repo/ui": "workspace:*",
     "@rethora/url-recipe-scraper": "^1.1.0",
     "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "2.94.1",
+    "@supabase/supabase-js": "2.97.0",
     "@tanstack/react-query": "^5.20.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.34.0",
