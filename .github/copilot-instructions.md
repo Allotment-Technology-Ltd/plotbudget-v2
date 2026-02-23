@@ -315,18 +315,59 @@ Apply these to every screen and interaction:
 
 ---
 
-## Product Principles
+## Company Principles (The 8 PLOT Beliefs)
 
-Every feature must align with these principles. If **no** to any → don't build it.
+These are non-negotiable. Every feature, every line of code, every copy decision must align with all 8. If **no** to any → don't build it.
 
-| Principle | Meaning |
-|-----------|---------|
-| **Sisyphean Realism** | Design for ritual and rhythm, not elimination. Bills and chores are repetitive — make repetition bearable. |
-| **Labor Equity** | No hidden "manager" roles. Both partners see everything. Audit trails for who added/completed what. |
-| **User Autonomy** | No black-box AI. All calculations shown (formula, not just result). Users override any suggestion. |
-| **Constraint as Kindness** | One or two great ways to do each thing. Resist feature bloat. Default settings work for 80%. |
-| **Time Respect** | 15 min at payday, 10 min on Sunday. No gamification, no streaks, no engagement optimisation. |
-| **Reality over Aspiration** | Honest copy. Error messages honest, not cutesy. No "achievement unlocked" language. |
+### 01 — The Sisyphean Condition
+Life is repetitive. Bills need paying every month. Chores need doing every week. Meals need planning. The boulder always rolls back down the hill. Most apps promise to eliminate the boulder through automation or optimisation — they can't. The boulder is life.
+
+**PLOT's approach:** Accept the boulder. Make pushing it bearable. Turn repetition into ritual.  
+**Code implication:** 20 minutes at payday. 10 minutes on Sunday. The rest of their time? They live their life. Recurring tasks/bills must be explicit and visible, not hidden by automation. Rituals need clear entry/exit points.
+
+### 02 — Household Labour is Real Work
+Budgeting, meal planning, chore management, document tracking — this is real work. In most households, one person does most of this work invisibly. They manage the spreadsheet. They chase updates. They hold the mental load. This isn't just inefficient. It's unfair.
+
+**PLOT's approach:** Make household work visible. Distribute it equitably. No one should be the household chancellor. Households are teams, not hierarchies.  
+**Code implication:** No "admin" or "owner" roles that concentrate power. Fairness tracking (who does what). Both partners see everything by default. Audit trails for who added/completed what.
+
+### 03 — Tools Should Serve, Not Surveil
+Most budgeting apps want to connect to your bank. They harvest your transactions. They analyse your behaviour. Some sell this data. Others use it to shape your spending. This is surveillance capitalism.
+
+**PLOT's approach:** No bank connections. No transaction harvesting. No behavioural extraction. You enter the numbers. You make the decisions. You own the data. We're paid by optional Pay What You Like contributions, not by your data.  
+**Code implication:** No bank connections — ever. No third-party data sharing for advertising. Users export and delete data freely. Privacy defaults must be maximally protective.
+
+### 04 — Autonomy Over Optimisation
+Your household isn't an algorithm. Your values aren't data points. Software shouldn't decide for you — it should help you decide together.
+
+**PLOT's approach:** The tool helps. You decide. Structure, visibility, and shared control — the judgment is yours. Software is infrastructure, not a parent.  
+**Code implication:** No black-box AI recommendations. All calculations shown (formula, not just result). Users override any system suggestion. No dark patterns or nudges.
+
+### 05 — Constraint as Kindness
+When you have infinite options, decision-making becomes exhausting. Too much freedom is a burden.
+
+**PLOT's approach:** Make the hard decisions so users don't have to. One or two great ways to do each thing. Opinionated workflows. Simple systems beat complex ones.  
+**Code implication:** Resist feature bloat (each feature must solve real pain). Default settings work for 80% of users. Advanced options hidden behind a toggle. If adding configuration, question whether the feature is needed at all.
+
+### 06 — Respect for Time
+Most apps optimise for engagement. More notifications. More daily check-ins. More screen time. Your time is the product being sold.
+
+**PLOT's approach:** We want 20 minutes of your month. Not your life. Get in, handle it, get out. Good tools disappear when you're not using them. **The goal is to spend LESS time in PLOT, not more.**  
+**Code implication:** No gamification (streaks, badges, points). No pushy notifications. Fast load times. Every screen has a clear "done" exit. If you can't answer "what does the user do when they're done here?" — the screen is broken.
+
+### 07 — Reality Over Aspiration
+Most productivity apps sell transformation. But household admin isn't aspirational — it's mundane. Bills, chores, groceries are life's unglamorous scaffolding.
+
+**PLOT's approach:** Honesty. Not here to transform anyone. Here to make the boring parts of life less painful so there's more time for what matters: love, connection, presence, meaning.  
+**Code implication:** Copy must be straightforward, not motivational. No "achievement unlocked" language. Error messages honest, not cutesy. Onboarding sets realistic expectations.
+
+### 08 — Built With, Not For
+Products built in isolation from their users serve the builder, not the user.
+
+**PLOT's approach:** Founding members vote on what gets built next. Listen. Adapt. Build with users. The best tools emerge from conversation, not command.  
+**Code implication:** Feature flags for beta testing with founding members. In-app feedback mechanism. Changelogs visible and honest. Decision rationale documented.
+
+---
 
 **Decision test:** Would this feature make a household's life concretely better? If no → don't build it.
 
@@ -339,3 +380,54 @@ Every feature must align with these principles. If **no** to any → don't build
 ❌ Hierarchy enforcement (admin roles that concentrate power)  
 ❌ Aspiration marketing ("transform your life!")  
 ❌ Feature cloning (copying competitors without purpose)  
+
+---
+
+## Design Philosophy: Designed to Get You Out of It
+
+> "The goal is to spend LESS time in PLOT, not more."
+
+Every coding decision must be evaluated against this principle: does this change help the user complete their task and leave, or does it invite them to stay longer?
+
+**PLOT is successful when users spend the minimum time needed.** A user who completes the Payday Ritual in 15 minutes and doesn't open the app for a month is a perfect user — not a churning user.
+
+**Implications for every feature and UI decision:**
+
+- **Every screen needs a clear exit.** If you can't immediately answer "what does the user do when they're done here?" — the screen is broken.
+- **Completion > discovery.** Features exist to complete tasks, not to be discovered. Don't add dashboards, feeds, or lists that reward passive browsing.
+- **Speed is care.** Fast load times, optimistic UI updates, and instant feedback respect the user's time. A spinner where there could be an optimistic update is a failure.
+- **Default to done.** Pre-fill, sensible defaults, and remembering previous choices all reduce the time it takes to get out.
+- **No re-engagement.** Never add notifications, prompts, or UI patterns whose purpose is to bring the user back into the app. The only acceptable notification is the payday reminder.
+- **Measure time-to-done, not time-in-app.** Payday Ritual target: ≤ 15 minutes. Weekly Reset target: ≤ 10 minutes. If a flow takes longer, it's broken.
+
+This is not minimalism for its own sake — it's respect encoded in software.
+
+---
+
+## User Needs: Managing Money as a Couple
+
+PLOT exists to solve specific, real pain points that couples face when managing shared finances. Every feature must map to one of these needs.
+
+### The Core Problem
+Money is the #1 cause of relationship stress — and the stress is usually about the *conversation*, not the money itself. Couples need:
+
+1. **A fair split, calculated automatically** — "How do we divide joint bills when we earn different amounts?" PLOT calculates income-proportional splits (e.g. 37.5%/62.5% if incomes are £3k/£5k) and applies them to every joint bill. No manual negotiation every month.
+
+2. **Shared visibility without a household chancellor** — One partner shouldn't be the spreadsheet keeper. Both partners should see the same picture. Neither should have admin powers the other lacks.
+
+3. **A structure that replaces awkward conversations** — The Payday Ritual replaces ad-hoc, uncomfortable money conversations with a structured monthly ritual. The ritual is the product.
+
+4. **Privacy by design** — Many couples are not comfortable connecting bank accounts to third-party apps. Manual entry is a feature, not a limitation. You enter the numbers. You own the data.
+
+5. **Independence within a shared system** — PLOT is not a joint bank account. Partners maintain separate finances. PLOT shows how to split the shared parts fairly.
+
+6. **Solo → couple flexibility** — Users can start solo and invite a partner later. PLOT works for one person or two. Never make solo users feel like they're waiting for a partner.
+
+### What This Means for Code
+
+- Never build features that require one partner to be "admin" or have special access.
+- Fair split calculation is first-class logic — keep it transparent and overridable.
+- The Payday Ritual is the product's core ceremony — protect its greeting → work → celebration arc.
+- Onboarding must ask "solo or with a partner?" and both paths must feel equally valid.
+- Copy uses "household" where possible, not "couple", to be inclusive of solo users.
+- Never build transaction tracking, spending analytics, or bank-linking — these solve different problems and compromise privacy.
