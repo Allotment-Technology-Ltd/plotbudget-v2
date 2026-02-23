@@ -1,0 +1,27 @@
+---
+description: Nielsen's 10 Usability Heuristics; apply when designing or reviewing UI interactions and features
+alwaysApply: false
+---
+
+# NIELSEN'S 10 USABILITY HEURISTICS
+
+Every feature must align with usability principles:
+
+1. **Visibility of System Status** - Keep users informed in real-time. Immediate feedback on actions. Toast notifications for async operations. Show what changed.
+2. **Match System and Real World** - Use user's language, not system jargon. Familiar metaphors. Real-world conventions.
+3. **User Control and Freedom** - Provide undo/redo. Clear "emergency exits" from unwanted states. No locked-in workflows.
+4. **Error Prevention** - Prevent problems before they occur. Confirm destructive actions. Disable invalid options.
+5. **Error Messages** - Plain language, no error codes. Identify the problem. Suggest a constructive solution.
+6. **Recognition Rather Than Recall** - Make objects, actions, options visible. Don't force users to remember. Show context.
+7. **Flexibility and Efficiency** - Shortcuts for experts. Customizable workflows. Progressive disclosure for novices.
+8. **Aesthetic and Minimalist Design** - Remove irrelevant information. Focus on essentials. Reduce cognitive load.
+9. **Help and Documentation** - Task-focused help. Searchable. Concrete steps, not abstract descriptions.
+10. **Error Recovery** - Undo/Redo on destructive actions. Restore data when possible. Graceful degradation.
+
+## Applied to Destructive Actions
+
+- Confirmation dialog with task name + clear consequence statement
+- Toast notification after action confirming what happened ("Task deleted" not just "Done")
+- Undo button in toast (heuristic #3, #10)
+- Disable for 500ms to prevent double-clicks (heuristic #4)
+- Clear language: "Delete task" not "Remove" or "Purge" (heuristic #2)

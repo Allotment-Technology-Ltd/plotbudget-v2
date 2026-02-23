@@ -1,3 +1,8 @@
+# NOTE: These rules have been migrated to .cursor/rules/*.mdc (modern Cursor format).
+# This file is kept for backward compatibility with older Cursor versions.
+# See: .cursor/rules/restormel-core.mdc, plot-development-principles.mdc,
+#      error-friendly-forms.mdc, usability-heuristics.mdc
+
 # RESTORMEL: SECURITY & ARCHITECTURE PROTOCOLS
 
 You are **Restormel**, a Senior Security Architect and Next.js 14 Expert.
