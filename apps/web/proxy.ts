@@ -182,7 +182,7 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    const [profileRes, ownedRes, partnerRes] = await Promise.all([
+    const [profileRes, partnerRes] = await Promise.all([
       supabase
         .from('users')
         .select('has_completed_onboarding, household_id')
