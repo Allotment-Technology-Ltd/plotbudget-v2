@@ -1,368 +1,160 @@
-# Combined project rules for Cursor/Roo and design guidance
-# this file replaces the legacy .cursorrules and .clinerules
-# and is referenced by all skill definitions.
-
-- name: "RESTORMEL security & architecture protocols (Cursor / Roo Code)"
-  context: "developer / code review"
-  description: |
-    You are **Restormel**, a Senior Security Architect and Next.js 14 Expert
-    (Cursor) / Roo Code specialist. Your goal is to build "Bank‑Grade"
-    secure, scalable, and robust software.  You do not just write code;
-    you write *defensive* code.
-  content: |
-    ## 1. THE GOLDEN RULES (Zero Tolerance)
-    - **Zero Trust:** Never trust client input. Validate *everything* with Zod on the server.
-    - **Server First:** Default to React Server Components (RSC). Only use `'use client'` for interactivity.
-    - **No Leaks:** Never import `server-only` modules (DB, Secrets) into Client Components.
-    - **Strict Types:** No `any`. No `// @ts-ignore`. If types fail, fix the logic.
-    - **Sanitization:** Never use `dangerouslySetInnerHTML`.
-
-    ## 2. ARCHITECTURE STANDARDS
-    - **Colocation:** Tests live next to the code.
-      - `src/components/Button/Button.tsx`
-      - `src/components/Button/Button.test.tsx`
-    - **Feature Folders:** Group code by feature, not technical type (where possible).
-    - **Barrels:** Do not use index files (`index.ts`) for recursive exports. Explicit imports only.
-
-    ## 3. CODING PATTERNS
-    ### A. Server Actions (The Fortress)
-    Every Server Action must follow this pattern:
-    ```typescript
-    'use server'
-    import { z } from 'zod';
-    import { auth } from '@/lib/auth'; // Hypothetical auth
-    import { db } from '@/lib/db';
-
-    const schema = z.object({
-      email: z.string().email(),
-    });
-
-    export async function updateEmail(prevState: any, formData: FormData) {
-      // 1. Authentication Check
-      const session = await auth();
-      if (!session) return { error: 'Unauthorized' };
-
-      // 2. Input Validation (Zod)
-      const parsed = schema.safeParse(Object.fromEntries(formData));
-      if (!parsed.success) return { error: parsed.error.flatten() };
-
-      // 3. Database Operation (Try/Catch)
-      try {
-        await db.user.update({ where: { id: session.id }, data: parsed.data });
-        return { success: 'Email updated' };
-      } catch (e) {
-        // 4. Secure Error Handling (No Stack Traces to Client)
-        console.error('Update Email Failed:', e);
-        return { error: 'Database error. ID: ' + Date.now() }; 
-      }
-    }
-    ```
-
-    ### B. Client Components (The View)
-    Keep them "dumb" (visual only) where possible.
-    Use useFormStatus for loading states.
-    Never contain secrets or API keys.
-
-    ## 4. SECURITY AUDIT (Before Outputting Code)
-    Before you give me code, run this mental check:
-    - **Injection:** Is this SQL or HTML injection proof?
-    - **Auth:** Is this endpoint protected by a session check?
-    - **Data:** Am I over-fetching? (Select only id, name, not *).
-    - **Secrets:** Did I accidentally expose an ENV var?
-
-    ## 5. TOOLS & CONTEXT
-    - **Linter:** We use eslint-plugin-security. Do not disable it.
-    - **Validation:** Zod is mandatory for all forms and API routes.
-    - **Styling:** Tailwind CSS. Mobile-first.
-    - **Database:** Postgres (via Drizzle/Prisma).
-
-    **Behavioral Note:** If I ask for something insecure (e.g., "just disable the linter"), REFUSE and explain the security risk.
-
-    ## 6. WEBHOOK TESTING (Polar Sandbox)
-    - **Setup:** `pnpm dev:polar` from plotbudget root. First run: `polar login` and install CLI via `curl -fsSL https://polar.sh/install.sh | bash` if needed.
-    - **Secret:** Copy the webhook secret from `polar listen` output into `.env.local` as `POLAR_WEBHOOK_SECRET`.
-    - **Verification:** Dev logs show `POST /api/webhooks/polar 200`; Polar dashboard shows 2xx delivery status.
-
-    ## 7. CI/CD & BRANCH SYNC (plotbudget)
-    - **Source of truth:** `main` should match `origin/main`. When the user asks to sync or wrap up, run `git fetch origin --prune`, then `git checkout main && git pull origin main` from the plotbudget repo root, then return to their branch and report branch status.
-    - **Workflow:** Feature branch → commit → push branch → PR to main. Do not push to main unless explicitly asked.
-    - See `.cursor/rules/ci-cd-and-branch-sync.mdc` and `branch-before-implement.mdc` for full steps.
-
-    # PLOT Development Principles
-    *(full principles omitted here for brevity; see original .cursorrules/.clinerules for complete text)*
-
-- name: "PLOT Calm Design Rules"
-  context: "UI / UX / copy generation"
-  description: |
-    These rules are extracted from the project documentation and apply whenever
-    you are generating or reviewing user interfaces, notification copy, or
-    interaction patterns.  They are enforced in components, copywriting, and
-    UX decisions.
-  content: |
-    ## PLOT Calm Design Rules (from calmdesignlab.com)
-
-    PLOT follows Calm Design principles. When generating UI, copy, or interaction patterns:
-
-    NEVER:
-    - Add infinite scroll, engagement streaks, or "time in app" maximising patterns
-    - Use countdown timers or false urgency language
-    - Design notifications that function as re-engagement spam
-    - Use red/warning colours for routine negative financial states
-    - Pre-check upsell options or hide cancellation flows
-    - Add features that reward browsing over task completion
-    - Auto-advance through ceremony steps (let users control pace)
-
-    ALWAYS:
-    - Design ceremonies with greeting → work → celebration arc (never collapse to a single form)
-    - Include explicit confirmation before destructive actions
-    - Make notification copy specific and actionable ("Payday tomorrow — your ritual takes 15 minutes")
-    - Respect prefers-reduced-motion in all animations
-    - Show a clear primary action per screen — secondary actions are visually subordinate
-    - Use progressive disclosure: simple defaults, complexity on request
-    - Write empty states as calm orientation ("Nothing here yet — [X] will appear after [Y]")
-
-- name: "Branch Before Implementing Changes"
-  context: "git workflow"
-  description: "Always create a new branch before implementing changes; push to branch and open PR, not main"
-  content: |
-    When an agent is engaged to **implement a change** (new feature, fix, refactor, or any code change that will be committed):
-
-    0. **Linear ticket (audit trail) — before creating a branch or writing code:** Prompt the user to confirm there is a Linear ticket for this change. Ask for the issue ID (e.g. PROJ-123) if they have one, so the branch can be named for autolink. If they do not have a ticket, suggest creating one in Linear (or via Cursor: command palette → "Linear: Create Issue") and wait for the ID, or for explicit confirmation to proceed without one. Do not create a branch or start implementing until the user has responded.
-
-    1. **Create a new branch** after step 0 is resolved.
-       - Use a short, descriptive name: `feat/partner-invite`, `fix/type-errors`, `docs/readme`.
-       - **Linear:** If the user is working from a Linear ticket (e.g. PROJ-123, app-101), use branch format `<issue-id>-<short-slug>` (e.g. `PROJ-123-update-login`) so Linear ↔ GitHub autolink works. Prefer the exact ID the user gave.
-       - Create from the current branch (usually `main`): `git checkout -b <branch-name>`.
-
-    2. **Make all changes on that branch**; do not commit or push to `main`.
-
-    3. **When the user asks to commit or push:**
-       - Commit on the new branch.
-       - Push the branch: `git push origin <branch-name>`.
-       - Suggest opening a PR to `main` (or `develop`) so CI runs and Vercel creates a preview. Do not push directly to `main` unless the user explicitly asks to.
-
-    4. **If the user says "push to main" or "merge to main":** Confirm they want to push/merge to main, since the preferred flow is branch → PR → merge.
-
-    **Exclusions:** One-off exploratory edits, answering questions without changing code, or when the user explicitly says "no branch", "commit to main", or "no Linear" / "skip Linear ticket" — follow the user's instruction. If the user has already provided a Linear issue ID in the same request, skip the prompt and use that ID for the branch name.
-
-- name: "Chat wrap-up"
-  context: "assistant lifecycle"
-  description: "When the user signals the chat is complete, run wrap-up actions and keep the reply short"
-  content: |
-    # Chat wrap-up
-
-    When the user signals that development for this chat is **complete**, treat it as a wrap-up and do the following.
-
-    **Keyword / phrases to treat as wrap-up:**  
-    `wrap up`, `chat complete`, `we're done`, `done for now`, `that's it for this chat`, `close down this chat`, or similar (e.g. "can you wrap up" or "let's close this chat").
-
-    **When you see a wrap-up signal:**
-
-    1. **Do not start or suggest new work.** Keep the reply short and conclusive.
-    2. **Offer (or run if the user already asked) these actions:**
-       - **Sync main (plotbudget):** From the plotbudget repo root, run `git fetch origin --prune`, then `git checkout main && git pull origin main`, then switch back to the user's branch. Report if any local branches are ahead/behind their remotes.
-       - If there are uncommitted changes, ask whether to commit and push them (on the current branch), or note them for the user.
-    3. **Give a one- or two-sentence summary** of what was done in this chat (e.g. "This chat: added X, fixed Y, pushed branch Z.").
-    4. **End with a short sign-off** (e.g. "You’re all set. Say 'wrap up' anytime to run this again.").
-
-    Keep the whole reply brief (a few short paragraphs at most). Do not open new tasks, suggest follow-ups, or add detail unless the user asks.
-
-- name: "CI/CD & Branch Sync (plotbudget)"
-  context: "git workflow"
-  description: "Keep main and branches in sync in plotbudget; run fetch/pull and report status when user asks for sync, wrap-up, or before major commits"
-  content: |
-    # CI/CD and branch sync (plotbudget)
-
-    When the user asks to **sync branches**, **ensure main is synced**, **CI/CD sync**, **sync with main**, or similar, or when doing a **wrap-up** or **before committing/pushing** (if the user expects a clean state):
-
-    1. **Run all git commands from the plotbudget repo root** (the repo that contains `apps/web`, `package.json`, `.github/`, etc.). If the workspace root is above plotbudget, `cd plotbudget` first.
-
-    2. **Fetch and prune**
-       - `git fetch origin --prune`
-       - (Prunes deleted remote branches.)
-
-    3. **Sync local main with origin**
-       - `git checkout main`
-       - `git pull origin main --no-edit`
-       - Then switch back to the user's branch if they were on one: `git checkout <previous-branch>`.
-
-    4. **Report briefly**
-       - Confirm main is in sync with `origin/main`.
-       - List branches that are ahead/behind their remotes (e.g. "feat/X behind 5", "feat/Y ahead 2").
-       - If the user was on a feature branch, note whether it's up to date with its remote.
-
-    5. **Branch best practice (align with branch-before-implement)**
-       - Prefer: work on a feature branch → commit → push branch → open PR to main. Do not push directly to main unless the user explicitly asks.
-       - When starting implementation, create a branch from an up-to-date main when possible.
-
-    **Exclusions:** User says "don't sync" or "no branch sync". Skip sync in read-only or ask-only sessions if the user didn't ask for it.
-
-- name: "Enabled MCPs"
-  context: "tools"
-  description: "Use enabled MCPs (Linear, Sanity, Browser, Supabase) when relevant; do not ask the user to create tickets or use external UIs when an MCP can do it."
-  content: |
-    # Enabled MCPs — Use by default
-
-    The following MCPs are enabled in this workspace. **Use them when the task involves their domain** instead of asking the user to do things manually or saying "I don't have access."
-
-    ## Linear (server: `user-linear`)
-
-    - **When to use:** Creating, updating, or listing Linear issues; adding comments; managing projects, teams, milestones, labels; attaching links.
-    - **Key tools:** `create_issue` (title, team, description [Markdown], optional project, state, assignee, labels, dueDate, links), `list_issues`, `get_issue`, `update_issue`, `create_comment`, `list_teams`, `list_projects`, `create_attachment`, `list_issue_labels`, etc.
-    - **Usage:** When the user asks for a "Linear ticket," "create an issue," "add a ticket for X," or for user stories/acceptance criteria in Linear — **call the Linear MCP** (e.g. `create_issue` with team and description). Check tool schema in `mcps/user-linear/tools/*.json` for required/optional args (e.g. `create_issue` requires `title` and `team`).
-
-    ## Sanity (server: `user-Sanity`)
-
-    - **When to use:** Querying or mutating Sanity content, schemas, documents; building with Sanity Studio.
-    - **Usage:** Follow the server instructions (schema-first, list_sanity_rules first, resource clarification when multiple). Use Sanity MCP tools for content/schema work; do not suggest "do it in the Sanity dashboard" when the MCP can do it.
-
-    ## Browser (server: `cursor-ide-browser`)
-
-    - **When to use:** Navigating the web, testing front-end flows, taking screenshots, form filling, waiting for page changes.
-    - **Usage:** Lock → interact → unlock; use browser_snapshot before interactions; prefer short waits + snapshot over one long wait. Use for E2E-style checks or when the user asks to "test in the browser" or "open this URL."
-
-    ## Supabase (server: `plugin-supabase-supabase`)
-
-    - **When to use:** Supabase project/database operations exposed via this MCP (if tools are available).
-    - **Usage:** Check `mcps/plugin-supabase-supabase/tools/` for available tools and use for Supabase-related tasks when applicable.
-
-    ---
-
-    **Rule:** Before saying "create the ticket in Linear" or "you can do this in the Linear UI," check whether the Linear MCP is available and use `create_issue` (or other tools) with the appropriate arguments. Same for other enabled MCPs: prefer MCP tools over directing the user to external UIs.
-
-- name: "Linear‑GitHub‑Vercel Integration"
-  context: "workflow"
-  description: "Linear + GitHub + Vercel integration; branch naming and autolink for PM–code–deploy sync"
-  content: |
-    - **Audit trail:** Before creating a branch or building, prompt the user to confirm a Linear ticket exists for the change and ask for the issue ID. Do not start implementation until they respond or say to skip (e.g. "no Linear").
-    - **Branch naming:** Use `<linear-issue-id>-<short-slug>` (e.g. `PROJ-123-update-login`) when the user is working from a Linear ticket so GitHub/Linear autolink and status updates work.
-    - **Flow:** Create issue in Linear → create branch with issue ID in name → push → open PR (Linear moves to "In Review") → merge (Linear "Done", Vercel production).
-    - **Setup:** Linear: Integrations → GitHub (enable Autolink PRs); Integrations → Vercel for preview comments and optional deploy-based "Done". In Cursor: Linear extension for "Create Issue" / "Copy Branch Name".
-    - **Creating issues:** Use the **Linear MCP** (`user-linear`, tool `create_issue`) to create issues from the agent when the user asks for a Linear ticket. Requires `title` and `team`; description supports Markdown. See `.cursor/rules/enabled-mcps.mdc`.
-
-    For full workflow and setup details, use the **linear-github-vercel-workflow** skill.
-
-- name: "Releases and Versioning"
-  context: "release management"
-  description: "Manage releases and version numbers automatically using semantic versioning best practice"
-  content: |
-    # Releases and Version Numbers
-
-    When implementing changes that warrant a release, or when the user asks for a version bump or release:
-
-    1. **Use semantic versioning (semver):** `MAJOR.MINOR.PATCH`
-       - **PATCH** (0.0.x): Bug fixes, small fixes, no breaking or new features.
-       - **MINOR** (0.x.0): New features, backward-compatible.
-       - **MAJOR** (x.0.0): Breaking changes.
-
-    2. **Choose the bump from the change type:**
-       - `fix:` / bug fix → bump PATCH.
-       - `feat:` / new feature → bump MINOR.
-       - Breaking change or major refactor → bump MAJOR.
-
-    3. **Update version in this repo:**
-       - Root `package.json` and any workspace `package.json` that are part of the released surface (e.g. `apps/web`, published packages). Keep them in sync when they are released together.
-       - Do not bump version for docs-only or tooling-only changes unless the user asks for a release.
-
-    4. **Do it automatically when appropriate:** When you implement a feature, fix, or breaking change and commit, propose the version bump and apply it in the same change set (or the next commit) unless the user says otherwise.
-
-    5. **Best practice:** Prefer a single source of truth (e.g. root `package.json` for the app version). In a monorepo, internal packages can stay at a shared version or use workspace versions as needed.
-
-    **Exclusions:** Exploratory or throwaway changes, or when the user says "no version bump" — then skip version updates.
-
-- name: "Worktree Setup Guidance"
-  context: "git worktree"
-  description: "Instructions for detecting and setting up git worktrees with Cursor agents"
-  content: |
-    # Worktree Setup Guidance for Cursor Agents
-
-    When an agent is engaged to create or work on a **new branch** or **feature development**:
-
-    ## Worktree Detection and Setup
-
-    1. **Detect if a Git worktree is being created or used.**
-       - Look for commands like `git worktree add` or `git checkout -b` followed by development work.
-       - If in a new worktree context (`.git` is a file, not a directory), the worktree setup has been triggered.
-
-    2. **Verify automatic setup completed.**
-       - Cursor automatically runs `.cursor/worktrees.json` setup profiles.
-       - Expected behavior:
-         - **Local dev**: `pnpm install` → `pnpm build` → `pnpm type-check` (full profile)
-         - **CI**: `pnpm install` → `pnpm build` (ci profile)
-       - Check for presence of `node_modules/` and successful build.
-
-    3. **If setup didn't run automatically:**
-       ```bash
-       ./scripts/setup-worktree.sh --profile=full  # For local development
-       # or
-       ./scripts/setup-worktree.sh --profile=ci    # For CI environments
-       ```
-
-    ## Development Workflow
-
-    1. **After setup completes**, confirm the worktree is ready:
-       - `ls -la node_modules` should show installed packages
-       - `pnpm build` should complete without errors
-       - `pnpm type-check` should pass (if full profile ran)
-
-    2. **Implement changes** on the branch as normal.
-       - Use `pnpm dev` to start development server
-       - Run tests: `pnpm test:unit`, `pnpm test:e2e`, etc.
-
-    3. **Before committing**, verify environment:
-       - If you ran new `pnpm install` commands, ensure `pnpm-lock.yaml` is updated
-       - Run `pnpm lint` and `pnpm type-check` to catch issues before CI
-       - Document any new dependencies
-
-    ## Setup Profile Selection Guide
-
-    | Profile | Use When | Time | Commands |
-    |---------|----------|------|----------|
-    | **full** (default local) | Starting active development; need full verification | ~2-3 min | install + build + type-check |
-    | **ci** (default CI) | In CI/CD environment; setup before parallel tests | ~1-2 min | install + build |
-    | **fast** | Only need dependencies; manual test runs planned | ~30-60 sec | install |
-
-    ## Branch Integration
-
-    1. **Worktrees are commonly created for:**
-       - Feature branches: `git worktree add ../feature-auth feature/user-authentication`
-       - Bug fixes: `git worktree add ../fix-auth fix/auth-bug`
-       - Hotfixes: `git worktree add ../hotfix-payment hotfix/payment-issue`
-
-    2. **Worktrees persist across sessions.**
-       - Developers can return to a worktree and continue where they left off
-       - Setup is not re-run unless `node_modules` is deleted
-
-    3. **Cleanup after development:**
-       - When a worktree-based PR is merged, remove it: `git worktree remove <name>`
-       - Document this in commit messages or PR descriptions
-
-    ## CI/CD Considerations
-
-    - When Cursor is running in GitHub Actions (detected via `CI=true` or `GITHUB_ACTIONS`), the `ci` profile is selected automatically
-    - The `ci` profile is optimized for speed and parallel test jobs
-    - Worktrees in CI allow tests for different apps/features to run in isolation
-
-    ## Key Files
-
-    - **Config**: `.cursor/worktrees.json` - Profile definitions
-    - **Script**: `scripts/setup-worktree.sh` - Setup orchestration
-    - **Guide**: `WORKTREES.md` - Comprehensive developer documentation
-
-    ## Common Issues and Recovery
-
-    | Issue | Solution |
-    |-------|----------|
-    | Setup didn't run | Manually run: `./scripts/setup-worktree.sh` |
-    | `pnpm: command not found` | Install pnpm or source shell profile |
-    | Build failures in worktree | Run `pnpm clean && ./scripts/setup-worktree.sh --profile=full` |
-    | Stale dependencies | Delete `node_modules` and re-run setup |
-    | Type-check fails | Run `pnpm type-check` manually; check for unsaved files |
-
-    ## References
-
-    See `WORKTREES.md` for:
-    - Detailed quick start guide
-    - Common workflows and scenarios
-    - Troubleshooting and best practices
-    - Performance considerations
+# Performance & correctness gating rules for apps/web
+# Purpose: a single source of truth for CI checks that prevent performance regressions
+# Scope: These rules apply to apps/web only. CI should run checks when PRs touch apps/web/**
+#
+# Implementation notes:
+# - "check.command" values are executable shell commands run in CI. Map them to your runner environment.
+# - Use environment variables for thresholds to make tuning easy:
+#     BUNDLE_MAX_KB (default 300)
+#     NEW_DEP_THRESHOLD_KB (default 250)
+#     LHCI_PERF_THRESHOLD (default 90)
+# - Scripts referenced below are expected at repo root under /scripts (e.g. scripts/check-next-image-optimizer.js)
+#
+# Severity: "error" = block merge; "warning" = surface in CI/pr comments but may not block (adjust in your CI).
+#
+# If you add/rename scripts, update the check.command values accordingly.
+
+thresholds:
+  bundle_max_kb: 300            # total client-side JS budget (uncompressed); CI will fail if exceeded
+  new_dep_threshold_kb: 250     # warn/error when a new dependency's gzipped size > threshold
+  lhci_perf_threshold: 90       # Lighthouse performance score threshold
+  lhci_regression_threshold: 5  # allowed regression vs baseline before failing
+
+rules:
+  - id: no-next-unoptimized
+    description: "Ensure Next image optimization is enabled for apps/web (images.unoptimized MUST NOT be true)."
+    severity: error
+    scope: "apps/web/**"
+    check:
+      type: script
+      command: "node scripts/check-next-image-optimizer.js --path apps/web/next.config.js"
+    fail_if: "script exits non-zero or prints 'UNOPTIMIZED=true'"
+    fix: "Remove or set images.unoptimized=false in apps/web/next.config.js and configure images.domains or remotePatterns for your image hosts."
+
+  - id: lint-next-no-img
+    description: "Disallow raw <img> elements in apps/web; require next/image or approved wrapper."
+    severity: error
+    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
+    check:
+      type: eslint
+      command: "npm --workspace=apps/web run lint -- --max-warnings=0"
+      eslint_rule: "next/no-img-element"
+    fail_if: "eslint reports any next/no-img-element violation or any other lint errors"
+    fix: "Replace <img> with <Image> from 'next/image' or use the approved <AppImage> wrapper with explicit size or aspect container."
+
+  - id: enforce-image-attrs
+    description: "Require LCP/hero images to use next/image with explicit sizing or use width/height on <img> to avoid CLS."
+    severity: error
+    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
+    check:
+      type: eslint-or-script
+      command: "node scripts/enforce-image-attrs.js --path apps/web --fail"
+    fail_if: "script or ESLint custom rule reports violations"
+    fix: "Use next/image with sizes/priority for hero images or add explicit width/height/aspect containers to prevent layout shift."
+
+  - id: find-plain-img
+    description: "Detect any remaining plain <img> tags in apps/web and fail until they are converted, unless an approved exception is documented."
+    severity: error
+    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
+    check:
+      type: script
+      command: "node scripts/find-plain-img.js --path apps/web"
+    fail_if: "script finds any <img> occurrences outside approved directories/components"
+    fix: "Convert to next/image or document an exception (rare)."
+
+  - id: no-blocking-server-fetch-in-public-layouts
+    description: "Prevent server-side auth/profile fetches in global public marketing/layouts inside apps/web that block TTFB for public pages."
+    severity: error
+    scope: "apps/web/app/(marketing)/**, apps/web/app/(public)/**"
+    check:
+      type: grep
+      command: "git --no-pager grep -n --line-number -E \"createServerSupabaseClient\\(|supabase\\.auth\\.getUser\\(|createServerClient\\(|serverSideAuthenticate\\(\" -- apps/web/app || true"
+    fail_if: "matches reported"
+    fix: "Move profile/auth fetching into a client component (e.g. HeaderClient) that hydrates after initial HTML or guard fetch logic to only run on dashboard/authenticated routes."
+
+  - id: avoid-excessive-use-client
+    description: "Warn when files include 'use client' but contain no client-only APIs (unnecessary hydration)."
+    severity: warning
+    scope: "apps/web/**/*.{ts,tsx,js,jsx}"
+    check:
+      type: script
+      command: "node scripts/find-unused-use-client.js --path apps/web"
+    fail_if: "script returns candidate files"
+    fix: "Remove 'use client' and convert to server component, or move interactive parts into small client components."
+
+  - id: analytics-deferred
+    description: "Analytics & diagnostics (PostHog, Vercel Speed Insights, other heavy scripts) must be initialized after first paint or behind consent on public pages."
+    severity: error
+    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
+    check:
+      type: grep
+      command: "git --no-pager grep -n --line-number -E \"injectSpeedInsights|inject\\(|posthog\\.(init|capture|flush)|@vercel/speed-insights\" -- apps/web || true"
+    fail_if: "initialization found in top-level client entrypoints or server layouts for public pages"
+    fix: "Move analytics initialization into a client component that runs inside useEffect after consent/after first paint or replace with non-blocking deferred loader."
+
+  - id: bundle-size-budget
+    description: "Enforce a client-side bundle size budget for apps/web builds."
+    severity: error
+    scope: "apps/web/**"
+    check:
+      type: bundle-analyzer
+      command: "ANALYZE=true npm --workspace=apps/web run build:analyze && node scripts/parse-webpack-stats.js --report apps/web/.next/analyze/client.html --max-kb ${BUNDLE_MAX_KB:-300}"
+    fail_if: "parse-webpack-stats.js exits non-zero (bundle size > BUNDLE_MAX_KB)"
+    fix: "Run bundle analyzer, identify top modules, then code-split/dynamic-import or replace heavy libraries. Consider lazy-loading icon sets / large UI chunks."
+
+  - id: disallow-large-deps
+    description: "Warn or block commits that add large dependencies to apps/web package.json (prevent adding heavyweight libs without review)."
+    severity: warning
+    scope: "apps/web/package.json"
+    check:
+      type: script
+      command: "node scripts/check-new-deps.js --package apps/web/package.json --threshold ${NEW_DEP_THRESHOLD_KB:-250}"
+    fail_if: "new dependency gzipped size > NEW_DEP_THRESHOLD_KB"
+    fix: "Choose lighter alternatives, import only submodules, or lazy-load the dependency."
+
+  - id: dependency-version-lock
+    description: "Require explicit version ranges for deps in apps/web package.json to avoid accidental upgrades that increase size."
+    severity: warning
+    scope: "apps/web/package.json"
+    check:
+      type: script
+      command: "node scripts/check-dep-versions.js --path apps/web/package.json"
+    fail_if: "wildcard or caret ranges flagged (policy-specific)"
+    fix: "Pin or set conservative semver ranges for production dependencies."
+
+  - id: ci-lighthouse-guard
+    description: "Run Lighthouse CI on preview deploys and fail PRs that drop performance below threshold or regress significantly vs baseline."
+    severity: error
+    scope: "PRs touching apps/web/** with preview deployments"
+    check:
+      type: lhci
+      command: "npx @lhci/cli@0.9.x autorun --config=./lhci-apps-web.config.js --collect.numberOfRuns=3 --upload.target=temporary-public-storage"
+    fail_if: "Lighthouse performance < ${LHCI_PERF_THRESHOLD:-90} OR regression > ${LHCI_REGRESSION_THRESHOLD:-5}"
+    fix: "Address LCP/LCP images, JS payload, and TTFB causes. If preview deploy not available in the environment, document how to enable and allow the job to be optional."
+
+  - id: ci-flaky-exceptions
+    description: "Allow documented exceptions for checks (owner-approved) but require explicit PR label and linked issue for long-term exceptions."
+    severity: warning
+    scope: "repo"
+    check:
+      type: metadata
+      command: "node scripts/validate-exceptions.js --pr $PR_NUMBER"
+    fail_if: "exception labels found without linked issue or owner approval"
+    fix: "Add linked issue describing the exception, mitigation plan, and timeframe; update exception metadata."
+
+  - id: ci-health
+    description: "Ensure required helper scripts and CI config exist before gating (fail early with actionable message)."
+    severity: error
+    scope: "repo-root"
+    check:
+      type: files-exist
+      command: "node scripts/validate-ci-prereqs.js --expect scripts/check-next-image-optimizer.js,scripts/find-plain-img.js,scripts/parse-webpack-stats.js,.github/workflows/perf-guard.yml"
+    fail_if: "missing required script or workflow files"
+    fix: "Add the referenced scripts/workflows to the repo root or update rules.yaml to reflect new locations."
+
+notes:
+  - "CI should map rule severities to job failure behavior. Errors should fail PR merges by default."
+  - "Use environment variables in CI to set thresholds (BUNDLE_MAX_KB, NEW_DEP_THRESHOLD_KB, LHCI_PERF_THRESHOLD)."
+  - "Where 'check.type' is 'script', the CI runner should run the command and consider non-zero exit codes as failures."
+  - "For 'eslint' checks, prefer running with --max-warnings=0 to ensure warnings are surfaced as failures when desired."
+  - "Adjust scopes to match your monorepo layout (the 'scope' field is advisory—CI path filters should also be used)."
