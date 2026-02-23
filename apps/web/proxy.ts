@@ -182,18 +182,11 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    const [profileRes, ownedRes, partnerRes] = await Promise.all([
+    const [profileRes, partnerRes] = await Promise.all([
       supabase
         .from('users')
         .select('has_completed_onboarding, household_id')
         .eq('id', user.id)
-        .maybeSingle(),
-      supabase
-        .from('households')
-        .select('id')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
         .maybeSingle(),
       supabase
         .from('households')
@@ -208,13 +201,15 @@ export async function proxy(request: NextRequest) {
       has_completed_onboarding: boolean;
       household_id: string | null;
     } | null;
-    const hasHousehold = !!(
-      profile?.household_id ??
-      (ownedRes.data as { id?: string } | null)?.id ??
-      (partnerRes.data as { id?: string } | null)?.id
-    );
-
-    if (profile?.has_completed_onboarding || hasHousehold) {
+    // Only redirect away from onboarding when the owner has fully completed it, or when the user
+    // is a partner (partners do not go through the owner onboarding flow).
+    // Do NOT redirect when the user merely owns a household with has_completed_onboarding=false —
+    // that case arises when onboarding was partially interrupted (e.g. household row created but the
+    // final user-update failed). Redirecting away from /onboarding in that state causes an infinite
+    // redirect loop: proxy sends them to /dashboard/money/blueprint, which sends them back to
+    // /onboarding because has_completed_onboarding is still false.
+    const isPartnerOfHousehold = !!(partnerRes.data as { id?: string } | null)?.id;
+    if (profile?.has_completed_onboarding || isPartnerOfHousehold) {
       return NextResponse.redirect(new URL('/dashboard/money/blueprint', request.url));
     }
   }
