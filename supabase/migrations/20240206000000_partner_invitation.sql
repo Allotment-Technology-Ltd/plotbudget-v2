@@ -8,7 +8,8 @@ ALTER TABLE public.households
   ADD COLUMN IF NOT EXISTS partner_invite_status TEXT DEFAULT 'none',
   ADD COLUMN IF NOT EXISTS partner_invite_sent_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS partner_last_login_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS partner_accepted_at TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS partner_accepted_at TIMESTAMPTZ
+;
 
 -- Constraint for invite status
 DO $$
@@ -20,12 +21,14 @@ BEGIN
       ADD CONSTRAINT partner_invite_status_check
       CHECK (partner_invite_status IN ('none', 'pending', 'accepted'));
   END IF;
-END $$;
+END $$
+;
 
 -- Index for magic link lookups
 CREATE INDEX IF NOT EXISTS idx_households_partner_token
   ON public.households(partner_auth_token)
-  WHERE partner_auth_token IS NOT NULL;
+  WHERE partner_auth_token IS NOT NULL
+;
 
 -- RLS: Partner access is handled at app level via middleware (partner has no auth.uid()).
 -- Existing owner-only policies remain unchanged.

@@ -15,7 +15,7 @@ function getAuthLoadingMessage(pathname: string): string {
 /**
  * Auth loading UI: message reflects the auth page being loaded; uses pulsing indicator.
  */
-export function AuthLoadingClient() {
+export function AuthLoadingClient(): React.JSX.Element {
   const pathname = usePathname();
   const message = getAuthLoadingMessage(pathname);
 
