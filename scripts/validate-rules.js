@@ -13,38 +13,42 @@ try {
   console.error('💥 failed to load rules.yaml:', e.message);
   process.exit(1);
 }
-if (!Array.isArray(data)) {
-  console.error('💥 rules.yaml root should be a YAML sequence (array)');
+if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  console.error('💥 rules.yaml root should be a YAML mapping (object)');
+  process.exit(1);
+}
+if (!data.rules || !Array.isArray(data.rules)) {
+  console.error('💥 rules.yaml is missing a "rules" array');
   process.exit(1);
 }
 const names = new Set();
-for (let i = 0; i < data.length; i++) {
-  const entry = data[i];
+for (let i = 0; i < data.rules.length; i++) {
+  const entry = data.rules[i];
   if (!entry || typeof entry !== 'object') {
-    console.error(`💥 entry at index ${i} is not an object`);
+    console.error(`💥 rules[${i}] is not an object`);
     process.exit(1);
   }
-  const { name, context, description, content } = entry;
-  if (typeof name !== 'string' || name.trim() === '') {
-    console.error(`💥 entry at index ${i} is missing a name`);
+  const { id, description, severity, scope } = entry;
+  if (typeof id !== 'string' || id.trim() === '') {
+    console.error(`💥 rules[${i}] is missing an id`);
     process.exit(1);
   }
-  if (names.has(name)) {
-    console.error(`💥 duplicate rule name: ${name}`);
+  if (names.has(id)) {
+    console.error(`💥 duplicate rule id: ${id}`);
     process.exit(1);
   }
-  names.add(name);
-  if (typeof context !== 'string' || context.trim() === '') {
-    console.error(`💥 entry '${name}' is missing a context`);
-    process.exit(1);
-  }
+  names.add(id);
   if (typeof description !== 'string' || description.trim() === '') {
-    console.error(`💥 entry '${name}' is missing a description`);
+    console.error(`💥 rule '${id}' is missing a description`);
     process.exit(1);
   }
-  if (typeof content !== 'string' || content.trim() === '') {
-    console.error(`💥 entry '${name}' is missing content`);
+  if (typeof severity !== 'string' || !['error', 'warning'].includes(severity)) {
+    console.error(`💥 rule '${id}' severity must be 'error' or 'warning'`);
+    process.exit(1);
+  }
+  if (typeof scope !== 'string' || scope.trim() === '') {
+    console.error(`💥 rule '${id}' is missing a scope`);
     process.exit(1);
   }
 }
-console.log('✅ rules.yaml validated (' + data.length + ' entries)');
+console.log('✅ rules.yaml validated (' + data.rules.length + ' rules)');
