@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AuthMinimalHeader } from '@/components/auth/auth-brand-header';
@@ -61,11 +61,16 @@ function useOrderedLoginMethods(
   appleLoginEnabled: boolean,
   magicLinkEnabled: boolean
 ) {
-  const [lastUsed, setLastUsed] = useState<LastLoginMethod | null>(null);
-
-  useEffect(() => {
-    setLastUsed(getLastLoginMethod());
-  }, []);
+  const lastUsed = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === 'undefined') return () => {};
+      const handler = () => onStoreChange();
+      window.addEventListener('storage', handler);
+      return () => window.removeEventListener('storage', handler);
+    },
+    () => getLastLoginMethod(),
+    () => null
+  );
 
   const orderedMethods = useMemo(() => {
     const enabled = new Set<LastLoginMethod>();

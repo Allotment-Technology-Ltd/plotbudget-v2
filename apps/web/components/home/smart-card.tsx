@@ -14,8 +14,8 @@ interface SmartCardProps {
 }
 
 export function SmartCard({ title, description, moduleId, href }: SmartCardProps) {
-  const module = getModule(moduleId);
-  const borderColor = module.colorLight;
+  const moduleInfo = getModule(moduleId);
+  const borderColor = moduleInfo.colorLight;
 
   return (
     <Link

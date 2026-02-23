@@ -15,7 +15,7 @@ export default async function NotificationsPage() {
   const supabase = await getCachedSupabase();
   const isPartner = !owned && !!partnerOf;
   const partnerHouseholdId = partnerOf?.id ?? null;
-  let householdId: string | null =
+  const householdId: string | null =
     profile?.household_id ?? (isPartner && partnerHouseholdId ? partnerHouseholdId : null);
 
   if (!householdId) redirect('/onboarding');

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil } from 'lucide-react';
@@ -61,7 +61,7 @@ export function EditBudgetItemDialog({ item, tripId }: EditBudgetItemDialogProps
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      category: item.category as any,
+      category: item.category as FormData['category'],
       name: item.name,
       planned_amount: item.planned_amount?.toString() ?? '',
       actual_amount: item.actual_amount?.toString() ?? '',
@@ -71,13 +71,15 @@ export function EditBudgetItemDialog({ item, tripId }: EditBudgetItemDialogProps
   useEffect(() => {
     if (open) {
       form.reset({
-        category: item.category as any,
+        category: item.category as FormData['category'],
         name: item.name,
         planned_amount: item.planned_amount?.toString() ?? '',
         actual_amount: item.actual_amount?.toString() ?? '',
       });
     }
   }, [open, item, form]);
+
+  const categoryValue = useWatch({ control: form.control, name: 'category' });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -127,8 +129,8 @@ export function EditBudgetItemDialog({ item, tripId }: EditBudgetItemDialogProps
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Select
-              value={form.watch('category')}
-              onValueChange={(value) => form.setValue('category', value as any)}
+              value={categoryValue}
+              onValueChange={(value) => form.setValue('category', value as FormData['category'])}
             >
               <SelectTrigger id="category" className="h-9 w-full">
                 <SelectValue />

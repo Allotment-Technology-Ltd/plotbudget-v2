@@ -82,7 +82,7 @@ export function NewTripWizard() {
       const trip = (await res.json()) as Trip;
       setCreatedTripId(trip.id);
       setStep('celebration');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create trip. Please try again.');
     } finally {
       setSubmitting(false);
@@ -101,7 +101,7 @@ export function NewTripWizard() {
       <div className="max-w-2xl mx-auto py-12 text-center space-y-6" data-testid="trip-wizard-greeting">
         <div className="space-y-3">
           <h1 className="font-heading text-3xl uppercase tracking-widest text-foreground">
-            Let's plan your trip
+            Let&apos;s plan your trip
           </h1>
           <p className="text-lg text-muted-foreground">
             This takes about 5 minutes. You can stop and come back anytime.
@@ -110,7 +110,7 @@ export function NewTripWizard() {
 
         <div className="rounded-lg border border-border bg-card p-8 space-y-4 text-left">
           <h2 className="font-heading text-sm uppercase tracking-wider text-foreground">
-            What we'll do
+            What we&apos;ll do
           </h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
@@ -376,7 +376,7 @@ export function NewTripWizard() {
 
         <div className="rounded-lg border border-border bg-card p-8 space-y-4 text-left">
           <h2 className="font-heading text-sm uppercase tracking-wider text-foreground">
-            What's next
+            What&apos;s next
           </h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">

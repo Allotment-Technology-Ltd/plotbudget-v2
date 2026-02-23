@@ -91,7 +91,7 @@ export async function POST(
   const amount = item.planned_amount || item.actual_amount || 0;
   const trip = item.trips;
 
-  const seedRow: InsertTables<'seeds'> = {
+  const seedRow: InsertTables<'seeds'> & { trip_budget_item_id?: string } = {
     household_id: householdId,
     paycycle_id: cycle.id,
     name: `${trip.name} - ${item.name}`,
@@ -101,9 +101,8 @@ export async function POST(
     payment_source: 'me',
     due_date: item.due_date,
     is_recurring: false,
-  } as any; // trip_budget_item_id added via migration, not yet in generated types
+  };
 
-  // @ts-expect-error - trip_budget_item_id exists in DB via migration
   seedRow.trip_budget_item_id = itemId;
 
   const { error: insertError } = await supabase.from('seeds').insert(seedRow as never);

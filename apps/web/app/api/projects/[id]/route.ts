@@ -44,6 +44,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const input: UpdateProjectInput = parsed.data;
   const { id: _id, ...rest } = input;
+  void _id;
   const updates = rest as Record<string, unknown>;
   const { data: updated, error } = await supabase
     .from('projects')

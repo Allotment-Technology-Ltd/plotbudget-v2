@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import {
   getCalmPreferences,
   setCalmReduceMotion as persistReduceMotion,
@@ -18,11 +18,7 @@ const CalmContext = createContext<CalmContextValue | null>(null);
 const DEFAULTS: CalmPreferences = { reduceMotion: false, celebrations: true };
 
 export function CalmProvider({ children }: { children: React.ReactNode }) {
-  const [prefs, setPrefs] = useState<CalmPreferences>(DEFAULTS);
-
-  useEffect(() => {
-    setPrefs(getCalmPreferences());
-  }, []);
+  const [prefs, setPrefs] = useState<CalmPreferences>(() => getCalmPreferences());
 
   const setReduceMotion = useCallback((value: boolean) => {
     persistReduceMotion(value);
@@ -40,7 +36,7 @@ export function CalmProvider({ children }: { children: React.ReactNode }) {
       setReduceMotion,
       setCelebrations,
     }),
-    [prefs.reduceMotion, prefs.celebrations, setReduceMotion, setCelebrations]
+    [prefs, setReduceMotion, setCelebrations]
   );
 
   return <CalmContext.Provider value={value}>{children}</CalmContext.Provider>;
@@ -50,8 +46,7 @@ export function useCalm(): CalmContextValue {
   const ctx = useContext(CalmContext);
   if (!ctx) {
     return {
-      reduceMotion: false,
-      celebrations: true,
+      ...DEFAULTS,
       setReduceMotion: () => {},
       setCelebrations: () => {},
     };

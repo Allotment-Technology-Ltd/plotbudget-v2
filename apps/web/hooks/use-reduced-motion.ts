@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useCalm } from '@/components/providers/calm-provider';
 
 /**
@@ -9,15 +9,17 @@ import { useCalm } from '@/components/providers/calm-provider';
  */
 export function useReducedMotion(): boolean {
   const calm = useCalm();
-  const [systemPrefersReduced, setSystemPrefersReduced] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setSystemPrefersReduced(mq.matches);
-    const handler = () => setSystemPrefersReduced(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+  const systemPrefersReduced = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === 'undefined') return () => {};
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const handler = () => onStoreChange();
+      mq.addEventListener('change', handler);
+      return () => mq.removeEventListener('change', handler);
+    },
+    () => (typeof window === 'undefined' ? false : window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    () => false
+  );
 
   return systemPrefersReduced || calm.reduceMotion;
 }

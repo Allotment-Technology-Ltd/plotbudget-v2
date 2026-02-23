@@ -10,7 +10,8 @@ export interface GetTheAppTabProps {
   isPartner?: boolean;
 }
 
-export function GetTheAppTab(_props: GetTheAppTabProps) {
+export function GetTheAppTab(props: GetTheAppTabProps) {
+  void props;
   return (
     <div className="space-y-6">
       <section>

@@ -11,13 +11,13 @@ const cards = [
 ];
 
 export default function MealsPage() {
-  const module = getModule('meals');
-  const moduleColor = module.colorLight;
+  const moduleInfo = getModule('meals');
+  const moduleColor = moduleInfo.colorLight;
 
   return (
     <div className="content-wrapper section-padding" data-testid="meals-hub">
       <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground mb-2">
-        {module.name}
+        {moduleInfo.name}
       </h1>
       <p className="text-muted-foreground mb-8">
         Recipes, meal planning and shopping list in one place.

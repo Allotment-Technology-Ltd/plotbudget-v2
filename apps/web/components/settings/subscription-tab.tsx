@@ -67,7 +67,7 @@ function PortalLink({
 }) {
   const [error, setError] = useState<string | null>(null);
 
-  const handleClick = (_e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = () => {
     // Clear any previous error
     setError(null);
     

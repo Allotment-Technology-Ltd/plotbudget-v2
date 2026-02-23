@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -71,6 +71,8 @@ export function AddBudgetDialog({ trip }: AddBudgetDialogProps) {
     },
   });
 
+  const categoryValue = useWatch({ control: form.control, name: 'category' });
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const res = await fetch(`/api/trips/${trip.id}/budget`, {
@@ -120,15 +122,15 @@ export function AddBudgetDialog({ trip }: AddBudgetDialogProps) {
         <DialogHeader>
           <DialogTitle>Add budget item</DialogTitle>
           <DialogDescription>
-            Add a new item to your trip budget. Tip: When adding itinerary entries with costs, check "Also add to budget" to automatically create linked budget items.
+            Add a new item to your trip budget. Tip: When adding itinerary entries with costs, check &quot;Also add to budget&quot; to automatically create linked budget items.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Select
-              value={form.watch('category')}
-              onValueChange={(value) => form.setValue('category', value as any)}
+              value={categoryValue}
+              onValueChange={(value) => form.setValue('category', value as FormData['category'])}
             >
               <SelectTrigger id="category" className="h-9 w-full">
                 <SelectValue />

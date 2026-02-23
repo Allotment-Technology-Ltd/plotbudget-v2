@@ -219,7 +219,7 @@ export function getPaymentDatesInRange(
   if (frequencyRule === 'every_4_weeks' && anchorDate) {
     const anchor = new Date(anchorDate);
     anchor.setHours(0, 0, 0, 0);
-    let pay = new Date(anchor);
+    const pay = new Date(anchor);
     while (pay <= end) {
       if (pay >= start) {
         const str = pay.toISOString().split('T')[0];

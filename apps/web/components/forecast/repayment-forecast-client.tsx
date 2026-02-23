@@ -155,7 +155,7 @@ export function RepaymentForecastClient({
     if (linkedSeed && Number(linkedSeed.amount) > 0) {
       queueMicrotask(() => setAmountStr(String(linkedSeed.amount)));
     }
-  }, [linkedSeed?.id, linkedSeed?.amount]);
+  }, [linkedSeed]);
   const [includeInterest, setIncludeInterest] = useState(hasInterest);
   const [isLocking, setIsLocking] = useState(false);
 

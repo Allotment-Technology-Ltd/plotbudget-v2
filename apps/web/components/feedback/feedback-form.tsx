@@ -94,8 +94,8 @@ export function FeedbackForm() {
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {submittedType === 'bug'
-                  ? "We've received your bug report and will get back to you."
-                  : "We've received your message and really appreciate you taking the time."}
+                  ? "We&apos;ve received your bug report and will get back to you."
+                  : "We&apos;ve received your message and really appreciate you taking the time."}
               </p>
             </div>
           </div>
@@ -105,7 +105,7 @@ export function FeedbackForm() {
                 When to expect a reply
               </p>
               <p className="text-muted-foreground">
-                We aim to reply within <strong>1–3 working days</strong>. We're a small team and we're working as hard as we can to resolve issues as quickly as possible while holding down day jobs elsewhere. We really appreciate your patience.
+                We aim to reply within <strong>1–3 working days</strong>. We&apos;re a small team and we&apos;re working as hard as we can to resolve issues as quickly as possible while holding down day jobs elsewhere. We really appreciate your patience.
               </p>
             </div>
           )}
@@ -222,7 +222,7 @@ export function FeedbackForm() {
               <SelectContent>
                 <SelectItem value="general">General</SelectItem>
                 <SelectItem value="idea">Idea / suggestion</SelectItem>
-                <SelectItem value="something_wrong">Something's wrong</SelectItem>
+                <SelectItem value="something_wrong">Something&apos;s wrong</SelectItem>
                 <SelectItem value="praise">Praise</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>

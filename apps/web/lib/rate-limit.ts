@@ -41,6 +41,7 @@ export async function checkRateLimit(
   identifier: string,
   _key: RateLimitKey
 ): Promise<{ allowed: boolean }> {
+  void _key;
   const limiter = await getLimiter();
   if (!limiter) return { allowed: true };
   const { success } = await limiter.limit(identifier);

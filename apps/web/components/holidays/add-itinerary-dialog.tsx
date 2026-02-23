@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -76,8 +76,9 @@ export function AddItineraryDialog({ trip }: AddItineraryDialogProps) {
     },
   });
 
-  const costValue = form.watch('cost');
+  const costValue = useWatch({ control: form.control, name: 'cost' });
   const hasCost = costValue && parseFloat(costValue) > 0;
+  const entryTypeValue = useWatch({ control: form.control, name: 'entry_type' });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -163,8 +164,8 @@ export function AddItineraryDialog({ trip }: AddItineraryDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="entry_type">Type *</Label>
             <Select
-              value={form.watch('entry_type')}
-              onValueChange={(value) => form.setValue('entry_type', value as any)}
+              value={entryTypeValue}
+              onValueChange={(value) => form.setValue('entry_type', value as FormData['entry_type'])}
             >
               <SelectTrigger id="entry_type" className="h-9 w-full">
                 <SelectValue />

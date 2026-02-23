@@ -23,6 +23,7 @@ export async function PATCH(
 
   const input: UpdatePackingItemInput = parsed.data;
   const { id: _id, ...updates } = input;
+  void _id;
 
   try {
     const { data: updated, error } = await supabase

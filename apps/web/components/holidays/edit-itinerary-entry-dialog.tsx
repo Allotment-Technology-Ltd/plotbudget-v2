@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil } from 'lucide-react';
@@ -64,7 +64,7 @@ export function EditItineraryEntryDialog({ entry, tripId }: EditItineraryEntryDi
     defaultValues: {
       date: entry.date,
       title: entry.title,
-      entry_type: entry.entry_type as any,
+      entry_type: entry.entry_type as FormData['entry_type'],
       start_time: entry.start_time ?? '',
       end_time: entry.end_time ?? '',
       description: entry.description ?? '',
@@ -77,7 +77,7 @@ export function EditItineraryEntryDialog({ entry, tripId }: EditItineraryEntryDi
       form.reset({
         date: entry.date,
         title: entry.title,
-        entry_type: entry.entry_type as any,
+        entry_type: entry.entry_type as FormData['entry_type'],
         start_time: entry.start_time ?? '',
         end_time: entry.end_time ?? '',
         description: entry.description ?? '',
@@ -85,6 +85,8 @@ export function EditItineraryEntryDialog({ entry, tripId }: EditItineraryEntryDi
       });
     }
   }, [open, entry, form]);
+
+  const entryTypeValue = useWatch({ control: form.control, name: 'entry_type' });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -163,8 +165,8 @@ export function EditItineraryEntryDialog({ entry, tripId }: EditItineraryEntryDi
           <div className="space-y-2">
             <Label htmlFor="entry_type">Type *</Label>
             <Select
-              value={form.watch('entry_type')}
-              onValueChange={(value) => form.setValue('entry_type', value as any)}
+              value={entryTypeValue}
+              onValueChange={(value) => form.setValue('entry_type', value as FormData['entry_type'])}
             >
               <SelectTrigger id="entry_type" className="h-9 w-full">
                 <SelectValue />

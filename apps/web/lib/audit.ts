@@ -1,7 +1,10 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Json } from '@repo/supabase';
+import type { Database, Json } from '@repo/supabase';
+
+type AuditEventInsert = Database['public']['Tables']['audit_events']['Insert'];
 
 export type AuditEventType =
   | 'login'
@@ -27,8 +30,8 @@ export async function logAuditEvent(params: {
   userAgent?: string | null;
 }): Promise<void> {
   try {
-    const admin = createAdminClient();
-    const row = {
+    const admin = createAdminClient() as SupabaseClient<Database, 'public'>;
+    const row: AuditEventInsert = {
       user_id: params.userId,
       event_type: params.eventType,
       resource: params.resource ?? null,
@@ -36,7 +39,8 @@ export async function logAuditEvent(params: {
       ip_address: params.ipAddress ?? null,
       user_agent: params.userAgent ?? null,
     };
-    await (admin as any).from('audit_events').insert(row);
+    // @ts-expect-error Supabase type inference misfires for this table; row is an AuditEventInsert.
+    await admin.from('audit_events').insert(row);
   } catch (err) {
     console.error('Audit log write failed:', err);
     // Do not throw; audit failure must not break the main flow

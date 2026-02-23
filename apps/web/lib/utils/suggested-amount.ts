@@ -16,6 +16,7 @@ export function countPayCyclesUntil(
   payCycleType: PayCycleType,
   _payDay?: number
 ): number {
+  void _payDay;
   const start = new Date(startDateStr);
   const target = new Date(targetDateStr);
   start.setHours(0, 0, 0, 0);

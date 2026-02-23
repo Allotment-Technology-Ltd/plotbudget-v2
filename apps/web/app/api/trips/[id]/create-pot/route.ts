@@ -48,8 +48,8 @@ export async function POST(
   type TripResult = { id: string; name: string; currency: string };
   const tripData = trip as TripResult;
   // Check if using existing pot
-  const existingPotId =
-    typeof (body as any).existing_pot_id === 'string' ? (body as any).existing_pot_id : null;
+  const bodyRecord = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+  const existingPotId = typeof bodyRecord.existing_pot_id === 'string' ? bodyRecord.existing_pot_id : null;
 
   if (existingPotId) {
     // Verify pot exists and belongs to household
@@ -89,18 +89,18 @@ export async function POST(
   const { target_amount, target_date, current_amount = 0 } = parsed.data;
 
   // Create a new pot
-  const potRow: InsertTables<'pots'> = {
+  const potRow: InsertTables<'pots'> & { currency?: string } = {
     household_id: householdId,
     name: `${tripData.name} Fund`,
     current_amount,
     target_amount,
     target_date: target_date || null,
     status: 'active',
-  } as any; // currency may not be in generated types yet
+  };
 
   // If currency exists in DB, add it
   if (tripData.currency) {
-    (potRow as any).currency = tripData.currency;
+    potRow.currency = tripData.currency;
   }
 
   const { data: newPot, error: createError } = await supabase

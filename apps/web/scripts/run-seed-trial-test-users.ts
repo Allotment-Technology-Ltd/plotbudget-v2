@@ -39,6 +39,6 @@ try {
     env: envWithPsql,
   });
   console.log('\nDone.');
-} catch (err) {
+} catch {
   process.exit(1);
 }

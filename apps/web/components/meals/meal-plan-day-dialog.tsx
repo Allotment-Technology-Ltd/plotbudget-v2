@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -94,7 +94,7 @@ export function MealPlanDayDialog({
   const [leftoversFromId, setLeftoversFromId] = useState<string>('');
   const [addToCalendar, setAddToCalendar] = useState(true);
   const [addToTasks, setAddToTasks] = useState(true);
-  const [dayMealEventId, setDayMealEventId] = useState<string | null>(null);
+  const dayMealEventIdRef = useRef<string | null>(null);
   const createEntry = useCreateMealPlanEntry();
   const deleteEntry = useDeleteMealPlanEntry();
   const createTask = useCreateTask();
@@ -104,13 +104,12 @@ export function MealPlanDayDialog({
   const dayEventsRange = { start: `${date}T00:00:00.000Z`, end: `${date}T23:59:59.999Z` };
   const { data: dayEvents = [] } = useEvents(dayEventsRange);
   const existingMealEvent = dayEvents.find((ev) => (ev as { source_module?: string | null }).source_module === 'meals');
-  const mealEventIdToUpdate = dayMealEventId ?? existingMealEvent?.id ?? null;
 
   useEffect(() => {
-    if (!open) setDayMealEventId(null);
+    if (!open) dayMealEventIdRef.current = null;
   }, [open]);
   useEffect(() => {
-    setDayMealEventId(null);
+    dayMealEventIdRef.current = null;
   }, [date]);
   const selectedRecipe = recipes.find((r) => r.id === selectedRecipeId);
   const pantryMatch = usePantryMatch(
@@ -130,6 +129,7 @@ export function MealPlanDayDialog({
   const syncDayToCalendar = (allEntriesForDay: MealPlanEntryWithRecipe[]) => {
     const title = buildDayEventTitle(allEntriesForDay);
     if (!title || title === MEALS_MODULE_NAME) return;
+    const mealEventIdToUpdate = dayMealEventIdRef.current ?? existingMealEvent?.id ?? null;
     if (mealEventIdToUpdate) {
       updateEvent.mutate({ id: mealEventIdToUpdate, title });
     } else {
@@ -141,7 +141,7 @@ export function MealPlanDayDialog({
           source_module: 'meals',
           source_entity_id: allEntriesForDay[0]?.id ?? undefined,
         },
-        { onSuccess: (ev) => setDayMealEventId(ev.id) }
+        { onSuccess: (ev) => { dayMealEventIdRef.current = ev.id; } }
       );
     }
   };

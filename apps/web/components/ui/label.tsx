@@ -1,10 +1,11 @@
 'use client';
 
+/* eslint-disable react/prop-types */
+
 import * as React from 'react';
 import { cn } from '@repo/ui';
 
-export interface LabelProps
-  extends React.LabelHTMLAttributes<HTMLLabelElement> {}
+export type LabelProps = React.LabelHTMLAttributes<HTMLLabelElement>;
 
 const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ({ className, ...props }, ref) => (

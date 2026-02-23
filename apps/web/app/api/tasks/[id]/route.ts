@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const input: UpdateTaskInput = parsed.data;
   const { id: _id, ...rest } = input;
+  void _id;
   const updates: Record<string, unknown> = { ...rest };
   if (updates.status === 'done') updates.completed_at = new Date().toISOString();
   if (updates.status && updates.status !== 'done') updates.completed_at = null;

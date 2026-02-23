@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -66,6 +66,8 @@ export function AddPackingDialog({ trip }: AddPackingDialogProps) {
     },
   });
 
+  const categoryValue = useWatch({ control: form.control, name: 'category' });
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const res = await fetch(`/api/trips/${trip.id}/packing`, {
@@ -118,8 +120,8 @@ export function AddPackingDialog({ trip }: AddPackingDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Select
-              value={form.watch('category')}
-              onValueChange={(value) => form.setValue('category', value as any)}
+              value={categoryValue}
+              onValueChange={(value) => form.setValue('category', value as FormData['category'])}
             >
               <SelectTrigger id="category" className="h-9 w-full">
                 <SelectValue />
