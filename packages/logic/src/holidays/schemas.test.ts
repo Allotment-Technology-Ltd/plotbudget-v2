@@ -96,7 +96,7 @@ describe('createTripSchema', () => {
   });
 
   it('accepts all valid status values', () => {
-    const statuses = ['draft', 'planning', 'booked', 'in_progress', 'completed', 'cancelled'];
+    const statuses = ['planning', 'booked', 'in_progress', 'completed', 'cancelled'];
     for (const status of statuses) {
       const result = createTripSchema.safeParse({
         name: 'Test',

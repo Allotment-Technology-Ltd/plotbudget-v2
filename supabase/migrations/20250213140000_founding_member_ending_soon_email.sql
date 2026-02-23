@@ -3,5 +3,4 @@
 
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS founding_member_ending_soon_email_sent BOOLEAN DEFAULT FALSE;
-
 COMMENT ON COLUMN public.users.founding_member_ending_soon_email_sent IS 'Whether Founding Member ending-soon (1 month before) email was sent';

@@ -26,6 +26,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "prepare": "husky",
     "code-review": "node scripts/code-review.mjs",
+    "check:migrations": "node scripts/check-migrations-sync.js",
     "create-polar-products": "pnpm --filter @repo/web run create-polar-products",
     "check-updates": "bash scripts/check-updates.sh",
     "test:phase0": "pnpm --filter @repo/logic run test:phase0"

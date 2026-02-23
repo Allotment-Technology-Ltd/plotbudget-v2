@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getHouseholdIdForUser } from '@/lib/household-for-user';
-import { createTripBudgetItemSchema, type CreateTripBudgetItemInput } from '@repo/logic';
+import { createTripBudgetItemSchema, type CreateTripBudgetItemInput, getBudgetTemplate } from '@repo/logic';
 import type { InsertTables } from '@repo/supabase';
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -42,6 +42,35 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .eq('household_id', householdId)
     .single();
   if (!trip) return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+
+  // Check for budget template seeding: POST /api/trips/[id]/budget?template=beach
+  const { searchParams } = new URL(request.url);
+  const templateId = searchParams.get('template');
+  if (templateId) {
+    const template = getBudgetTemplate(templateId);
+    if (!template) return NextResponse.json({ error: `Unknown budget template: ${templateId}` }, { status: 400 });
+
+    const tripRow = trip as { currency: string };
+    const rows: InsertTables<'trip_budget_items'>[] = template.items.map((item) => ({
+      trip_id: tripId,
+      household_id: householdId,
+      category: item.category,
+      name: item.name,
+      planned_amount: item.planned_amount,
+      actual_amount: null,
+      currency: tripRow.currency ?? 'GBP',
+      booking_ref: null,
+      itinerary_entry_id: null,
+    }));
+
+    try {
+      const { data: created, error } = await supabase.from('trip_budget_items').insert(rows as never).select();
+      if (error) return NextResponse.json({ error: 'Failed to seed budget template' }, { status: 500 });
+      return NextResponse.json(created as object[], { status: 201 });
+    } catch {
+      return NextResponse.json({ error: 'Failed to seed budget template' }, { status: 500 });
+    }
+  }
 
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }

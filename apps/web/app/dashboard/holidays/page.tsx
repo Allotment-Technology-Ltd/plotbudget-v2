@@ -11,7 +11,6 @@ export const metadata = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
   planning: 'Planning',
   booked: 'Booked',
   in_progress: 'In progress',

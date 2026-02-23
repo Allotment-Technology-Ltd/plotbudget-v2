@@ -14,11 +14,8 @@ CREATE TABLE IF NOT EXISTS public.roadmap_features (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_roadmap_features_status_order ON public.roadmap_features(status, display_order);
-
 COMMENT ON TABLE public.roadmap_features IS 'Roadmap modules; public read. Used for voting and marketing roadmap page.';
-
 -- updated_at trigger
 CREATE OR REPLACE FUNCTION public.touch_roadmap_features_updated_at()
 RETURNS TRIGGER AS $$
@@ -31,13 +28,10 @@ DROP TRIGGER IF EXISTS update_roadmap_features_updated_at ON public.roadmap_feat
 CREATE TRIGGER update_roadmap_features_updated_at
   BEFORE UPDATE ON public.roadmap_features
   FOR EACH ROW EXECUTE FUNCTION public.touch_roadmap_features_updated_at();
-
 ALTER TABLE public.roadmap_features ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY roadmap_features_select_all ON public.roadmap_features
   FOR SELECT TO anon, authenticated
   USING (true);
-
 -- Votes: one per household per feature
 CREATE TABLE IF NOT EXISTS public.roadmap_votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,19 +41,14 @@ CREATE TABLE IF NOT EXISTS public.roadmap_votes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (feature_id, household_id)
 );
-
 CREATE INDEX IF NOT EXISTS idx_roadmap_votes_feature ON public.roadmap_votes(feature_id);
 CREATE INDEX IF NOT EXISTS idx_roadmap_votes_household ON public.roadmap_votes(household_id);
-
 COMMENT ON TABLE public.roadmap_votes IS 'One vote per household per feature; used for roadmap prioritisation.';
-
 ALTER TABLE public.roadmap_votes ENABLE ROW LEVEL SECURITY;
-
 -- Anyone can read votes (for public counts)
 CREATE POLICY roadmap_votes_select_all ON public.roadmap_votes
   FOR SELECT TO anon, authenticated
   USING (true);
-
 -- Authenticated users can insert only for their own household
 CREATE POLICY roadmap_votes_insert_own_household ON public.roadmap_votes
   FOR INSERT TO authenticated
@@ -68,14 +57,12 @@ CREATE POLICY roadmap_votes_insert_own_household ON public.roadmap_votes
     AND (SELECT household_id FROM public.users WHERE id = auth.uid()) IS NOT NULL
     AND user_id = auth.uid()
   );
-
 -- Users can delete only votes for their household
 CREATE POLICY roadmap_votes_delete_own_household ON public.roadmap_votes
   FOR DELETE TO authenticated
   USING (
     household_id = (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 -- Seed 9 modules
 INSERT INTO public.roadmap_features (
   title, description, module_key, icon_name, status, display_order, key_features, estimated_timeline

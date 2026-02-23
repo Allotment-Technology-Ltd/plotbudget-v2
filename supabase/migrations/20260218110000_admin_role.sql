@@ -4,5 +4,4 @@
 
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
-
 COMMENT ON COLUMN public.users.is_admin IS 'When true, user can access /admin (maintenance, email testing). Assign via Dashboard or backend only.';

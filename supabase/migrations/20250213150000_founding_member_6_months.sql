@@ -22,9 +22,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 COMMENT ON FUNCTION public.set_founding_member_if_first_50 IS 'Sets founding_member_until = NOW() + 6 months for first 50 signups.';
-
 -- Adjust existing users: founding_member_until = created_at + 6 months where it is in the future.
 UPDATE public.users
 SET founding_member_until = created_at + INTERVAL '6 months'

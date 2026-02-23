@@ -19,33 +19,25 @@ CREATE TABLE IF NOT EXISTS public.projects (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS projects_household_id_status_idx ON public.projects(household_id, status);
-
 COMMENT ON TABLE public.projects IS 'Household projects (e.g. renovations); can link to pots/repayments.';
-
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY projects_select_household ON public.projects
   FOR SELECT USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY projects_insert_household ON public.projects
   FOR INSERT WITH CHECK (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY projects_update_household ON public.projects
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY projects_delete_household ON public.projects
   FOR DELETE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE OR REPLACE FUNCTION public.touch_projects_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -53,12 +45,10 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS projects_set_updated_at ON public.projects;
 CREATE TRIGGER projects_set_updated_at
 BEFORE UPDATE ON public.projects
 FOR EACH ROW EXECUTE FUNCTION public.touch_projects_updated_at();
-
 -- Project phases: ordered phases within a project
 CREATE TABLE IF NOT EXISTS public.project_phases (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -72,33 +62,25 @@ CREATE TABLE IF NOT EXISTS public.project_phases (
   end_date DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS project_phases_project_id_sort_order_idx ON public.project_phases(project_id, sort_order);
-
 COMMENT ON TABLE public.project_phases IS 'Phases within a project; tasks can be assigned to a phase.';
-
 ALTER TABLE public.project_phases ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY project_phases_select_household ON public.project_phases
   FOR SELECT USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY project_phases_insert_household ON public.project_phases
   FOR INSERT WITH CHECK (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY project_phases_update_household ON public.project_phases
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY project_phases_delete_household ON public.project_phases
   FOR DELETE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 -- Routines: recurring chore templates that can auto-generate tasks
 CREATE TABLE IF NOT EXISTS public.routines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -115,33 +97,25 @@ CREATE TABLE IF NOT EXISTS public.routines (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS routines_household_id_is_active_idx ON public.routines(household_id, is_active);
-
 COMMENT ON TABLE public.routines IS 'Recurring chore templates; generate tasks on schedule.';
-
 ALTER TABLE public.routines ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY routines_select_household ON public.routines
   FOR SELECT USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY routines_insert_household ON public.routines
   FOR INSERT WITH CHECK (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY routines_update_household ON public.routines
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY routines_delete_household ON public.routines
   FOR DELETE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE OR REPLACE FUNCTION public.touch_routines_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -149,12 +123,10 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS routines_set_updated_at ON public.routines;
 CREATE TRIGGER routines_set_updated_at
 BEFORE UPDATE ON public.routines
 FOR EACH ROW EXECUTE FUNCTION public.touch_routines_updated_at();
-
 -- Tasks: individual work items; can belong to routines or project phases
 CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -177,37 +149,29 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS tasks_household_id_status_idx ON public.tasks(household_id, status);
 CREATE INDEX IF NOT EXISTS tasks_household_id_due_date_idx ON public.tasks(household_id, due_date);
 CREATE INDEX IF NOT EXISTS tasks_project_id_idx ON public.tasks(project_id);
 CREATE INDEX IF NOT EXISTS tasks_routine_id_idx ON public.tasks(routine_id);
 CREATE INDEX IF NOT EXISTS tasks_phase_id_idx ON public.tasks(phase_id);
-
 COMMENT ON TABLE public.tasks IS 'Tasks, chores, and project work items; can link to routines and project phases.';
-
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY tasks_select_household ON public.tasks
   FOR SELECT USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY tasks_insert_household ON public.tasks
   FOR INSERT WITH CHECK (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY tasks_update_household ON public.tasks
   FOR UPDATE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE POLICY tasks_delete_household ON public.tasks
   FOR DELETE USING (
     household_id IN (SELECT household_id FROM public.users WHERE id = auth.uid())
   );
-
 CREATE OR REPLACE FUNCTION public.touch_tasks_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -215,7 +179,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS tasks_set_updated_at ON public.tasks;
 CREATE TRIGGER tasks_set_updated_at
 BEFORE UPDATE ON public.tasks

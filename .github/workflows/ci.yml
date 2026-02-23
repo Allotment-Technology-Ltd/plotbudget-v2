@@ -25,6 +25,22 @@ permissions:
   pull-requests: write
 
 jobs:
+  migrations-sync:
+    name: migrations-sync
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Check migrations are in sync with dev
+        env:
+          SUPABASE_DEV_DB_URL: ${{ secrets.SUPABASE_DEV_DB_URL }}
+        run: node scripts/check-migrations-sync.js
   # Security: dependency vulns (fail on high/critical) + code/secret audit (fail on dangerous patterns only).
   # Only run on same-repo PRs so fork PRs never receive secrets (pull_request_target mitigation).
   security:
