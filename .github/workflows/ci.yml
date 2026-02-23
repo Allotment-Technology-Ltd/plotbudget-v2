@@ -28,7 +28,9 @@ jobs:
   migrations-sync:
     name: migrations-sync
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
+    # Temporarily disabled — SUPABASE_DEV_DB_URL secret needs URL-encoded password before re-enabling.
+    # To re-enable: remove the `if: false` line below.
+    if: false
     steps:
       - uses: actions/checkout@v6
         with:
