@@ -1115,6 +1115,35 @@ export type Database = {
           created_at?: string;
         };
       };
+      shopping_lists: {
+        Row: {
+          id: string;
+          household_id: string;
+          title: string;
+          status: string;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          title?: string;
+          status?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          title?: string;
+          status?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       grocery_items: {
         Row: {
           id: string;
@@ -1125,6 +1154,9 @@ export type Database = {
           quantity_unit: string | null;
           source_recipe_id: string | null;
           source_meal_plan_entry_id: string | null;
+          shopping_list_id: string | null;
+          actual_price: number | null;
+          is_staple: boolean;
           is_checked: boolean;
           sort_order: number;
           created_at: string;
@@ -1139,6 +1171,9 @@ export type Database = {
           quantity_unit?: string | null;
           source_recipe_id?: string | null;
           source_meal_plan_entry_id?: string | null;
+          shopping_list_id?: string | null;
+          actual_price?: number | null;
+          is_staple?: boolean;
           is_checked?: boolean;
           sort_order?: number;
           created_at?: string;
@@ -1153,6 +1188,9 @@ export type Database = {
           quantity_unit?: string | null;
           source_recipe_id?: string | null;
           source_meal_plan_entry_id?: string | null;
+          shopping_list_id?: string | null;
+          actual_price?: number | null;
+          is_staple?: boolean;
           is_checked?: boolean;
           sort_order?: number;
           created_at?: string;
@@ -1423,6 +1461,7 @@ export type Routine = Tables<'routines'>;
 export type Event = Tables<'events'>;
 export type Recipe = Tables<'recipes'>;
 export type MealPlanEntry = Tables<'meal_plan_entries'>;
+export type ShoppingList = Tables<'shopping_lists'>;
 export type GroceryItem = Tables<'grocery_items'>;
 export type PantryItem = Tables<'pantry_items'>;
 export type Trip = Tables<'trips'>;

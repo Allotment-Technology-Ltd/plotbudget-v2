@@ -3,8 +3,17 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/ui', '@repo/logic', '@repo/supabase'],
-  // Avoid sharp install on Vercel (build was hanging at sharp install step).
-  images: { unoptimized: true },
+  // Image optimisation is required for Lighthouse performance targets (score ≥ 90).
+  // Next.js uses its built-in squoosh-based optimizer when sharp is not installed,
+  // which is fine for Vercel deployments and avoids the sharp hang that was seen
+  // on older Node versions. unoptimized MUST be false (see rules.yaml: no-next-unoptimized).
+  //
+  // remotePatterns: recipe images are scraped from arbitrary external domains so we
+  // allow any HTTPS host. All other image domains (Supabase storage etc.) are also covered.
+  images: {
+    unoptimized: false,
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+  },
   // So preview (and client code) use current deployment URL; Production should set NEXT_PUBLIC_APP_URL in Vercel.
   // NEXT_PUBLIC_VERCEL_ENV lets isPreProdContext() detect preview (admin flag overrides, env-based flags).
   env: {

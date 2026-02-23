@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRecipes, useCreateRecipe, useImportRecipeFromUrl, type ImportRecipeFromUrlResponse } from '@/hooks/use-meals';
@@ -162,12 +163,15 @@ export function RecipesPageClient() {
                   >
                     {imageUrl && (
                       <div className="aspect-[16/10] w-full bg-muted/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={imageUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
+                        <div className="relative h-full w-full">
+                          <Image
+                            src={imageUrl}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, 300px"
+                          />
+                        </div>
                       </div>
                     )}
                     <div className="p-4">

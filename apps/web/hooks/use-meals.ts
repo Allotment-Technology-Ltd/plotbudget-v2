@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Recipe, MealPlanEntry, GroceryItem, PantryItem } from '@repo/supabase';
+import type { Recipe, MealPlanEntry, GroceryItem, PantryItem, ShoppingList } from '@repo/supabase';
 import type {
   CreateRecipeInput,
   UpdateRecipeInput,
@@ -9,6 +9,8 @@ import type {
   UpdateMealPlanEntryInput,
   CreateGroceryItemInput,
   UpdateGroceryItemInput,
+  CreateShoppingListInput,
+  UpdateShoppingListInput,
   CreatePantryItemInput,
   UpdatePantryItemInput,
 } from '@repo/logic';
@@ -147,12 +149,74 @@ export function useMealPlanEntry(id: string | null) {
   });
 }
 
-export function useGroceryList(checked?: boolean) {
+export function useShoppingLists(status?: 'active' | 'done') {
   return useQuery({
-    queryKey: ['grocery', checked],
+    queryKey: ['shopping-lists', status ?? 'all'],
     queryFn: async () => {
-      const params = checked !== undefined ? `?checked=${checked}` : '';
-      const res = await fetch(`/api/grocery${params}`);
+      const params = status ? `?status=${status}` : '';
+      const res = await fetch(`/api/shopping-lists${params}`);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<ShoppingList[]>;
+    },
+  });
+}
+
+export function useCreateShoppingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateShoppingListInput) => {
+      const res = await fetch('/api/shopping-lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<ShoppingList>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['shopping-lists'] }),
+  });
+}
+
+export function useUpdateShoppingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateShoppingListInput) => {
+      const res = await fetch(`/api/shopping-lists/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<ShoppingList>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['shopping-lists'] }),
+  });
+}
+
+export function useDeleteShoppingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/shopping-lists/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['shopping-lists'] });
+      qc.invalidateQueries({ queryKey: ['grocery'] });
+    },
+  });
+}
+
+export function useGroceryList(options?: { checked?: boolean; shoppingListId?: string; isStaple?: boolean }) {
+  const { checked, shoppingListId, isStaple } = options ?? {};
+  return useQuery({
+    queryKey: ['grocery', checked, shoppingListId ?? null, isStaple ?? null],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (checked !== undefined) params.set('checked', String(checked));
+      if (shoppingListId) params.set('shopping_list_id', shoppingListId);
+      if (isStaple !== undefined) params.set('is_staple', String(isStaple));
+      const res = await fetch(`/api/grocery${params.toString() ? `?${params.toString()}` : ''}`);
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<GroceryItem[]>;
     },
