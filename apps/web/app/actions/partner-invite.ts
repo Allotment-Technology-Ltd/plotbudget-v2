@@ -27,7 +27,7 @@ export async function invitePartner(partnerEmail: string) {
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
   const household = data as HouseholdRow | null;
   if (householdError || !household) throw new Error('Household not found');
@@ -78,7 +78,7 @@ export async function createPartnerInviteLink(): Promise<{ url: string }> {
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
   const household = data as HouseholdRow | null;
   if (householdError || !household) throw new Error('Household not found');
@@ -128,7 +128,7 @@ export async function sendPartnerInviteToEmail(partnerEmail: string) {
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
   const household = data as HouseholdRow | null;
   if (!household) throw new Error('Household not found');
@@ -180,7 +180,7 @@ export async function resendPartnerInvite() {
     .from('households')
     .select('*')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
   const household = data as HouseholdRow | null;
   if (!household?.partner_email) throw new Error('No partner invited');
@@ -419,15 +419,21 @@ export async function removePartnerAndDeleteAccount(): Promise<void> {
 
   const { data: household } = await supabase
     .from('households')
-    .select('partner_user_id')
+    .select('partner_user_id, partner_invite_status')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
-  const partnerUserId = (household as { partner_user_id: string | null } | null)?.partner_user_id;
-  if (!partnerUserId) throw new Error('No partner to remove');
+  const partnerUserId = (household as { partner_user_id: string | null; partner_invite_status: string } | null)?.partner_user_id;
+  const inviteStatus = (household as { partner_user_id: string | null; partner_invite_status: string } | null)?.partner_invite_status;
+
+  // Nothing to do if there's no partner and invite is already cleared
+  if (!partnerUserId && (!inviteStatus || inviteStatus === 'none')) {
+    throw new Error('No partner to remove');
+  }
 
   const admin = createAdminClient();
 
+  // Clean up household partner fields regardless of whether the auth account still exists
   const { error: updateError } = await admin
     .from('households')
     .update({
@@ -439,7 +445,7 @@ export async function removePartnerAndDeleteAccount(): Promise<void> {
       partner_accepted_at: null,
       partner_last_login_at: null,
     } as never)
-    .eq('partner_user_id', partnerUserId);
+    .eq('owner_id', user.id);
 
   if (updateError) throw new Error('Failed to remove partner');
 
@@ -447,20 +453,22 @@ export async function removePartnerAndDeleteAccount(): Promise<void> {
     userId: user.id,
     eventType: 'partner_removed',
     resource: 'household',
-    resourceDetail: { removedUserId: partnerUserId },
+    resourceDetail: { removedUserId: partnerUserId ?? 'unknown' },
   });
 
-  const { error: userDeleteError } = await admin
-    .from('users')
-    .delete()
-    .eq('id', partnerUserId);
+  if (partnerUserId) {
+    const { error: userDeleteError } = await admin
+      .from('users')
+      .delete()
+      .eq('id', partnerUserId);
 
-  if (userDeleteError) throw new Error('Failed to delete partner profile');
+    if (userDeleteError) throw new Error('Failed to delete partner profile');
 
-  try {
-    await admin.auth.admin.deleteUser(partnerUserId);
-  } catch (err) {
-    console.error('Failed to delete partner auth user:', err);
+    try {
+      await admin.auth.admin.deleteUser(partnerUserId);
+    } catch (err) {
+      console.error('Failed to delete partner auth user:', err);
+    }
   }
 
   revalidatePath('/dashboard/settings');
@@ -481,7 +489,7 @@ export async function getPartnerInviteLink(): Promise<{ url: string | null }> {
     .from('households')
     .select('partner_auth_token, partner_invite_status')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();
 
   const household = data as { partner_auth_token: string | null; partner_invite_status: string } | null;
   if (
