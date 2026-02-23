@@ -118,11 +118,11 @@ export default async function TripDetailPage({
   const nextEntry = itinerary.find((entry) => new Date(entry.date) >= today);
 
   return (
-    <div className="content-wrapper section-padding" data-testid="trip-detail-page">
+    <div className="content-wrapper py-8" data-testid="trip-detail-page">
       {/* Back link */}
       <Link
         href="/dashboard/holidays"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 min-h-[2.75rem]"
         data-testid="back-to-holidays"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -135,17 +135,17 @@ export default async function TripDetailPage({
         style={{ borderLeftWidth: 4, borderLeftColor: MODULE_COLOR }}
       >
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground mb-1">
               {trip.name}
             </h1>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
               <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" aria-hidden />
+                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
                 {trip.destination}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" aria-hidden />
+                <Calendar className="h-4 w-4 shrink-0" aria-hidden />
                 {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
               </span>
               <span
@@ -159,7 +159,7 @@ export default async function TripDetailPage({
               <p className="mt-3 text-sm text-muted-foreground">{trip.notes}</p>
             )}
           </div>
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <DeleteTripButton trip={trip} />
           </div>
         </div>
@@ -167,24 +167,27 @@ export default async function TripDetailPage({
 
       {/* Tabbed Navigation */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full justify-start mb-6">
-          <TabsTrigger value="overview">
-            <LayoutDashboard className="h-4 w-4 mr-2" aria-hidden />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="itinerary">
-            <List className="h-4 w-4 mr-2" aria-hidden />
-            Itinerary
-          </TabsTrigger>
-          <TabsTrigger value="budget">
-            <Banknote className="h-4 w-4 mr-2" aria-hidden />
-            Budget
-          </TabsTrigger>
-          <TabsTrigger value="packing">
-            <Package className="h-4 w-4 mr-2" aria-hidden />
-            Packing
-          </TabsTrigger>
-        </TabsList>
+        {/* -mx-4 sm:mx-0 makes the tab strip bleed to screen edges on mobile so there is no clipping */}
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
+          <TabsList className="w-full">
+            <TabsTrigger value="overview">
+              <LayoutDashboard className="h-4 w-4 mr-1.5 shrink-0 hidden sm:inline-block" aria-hidden />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="itinerary">
+              <List className="h-4 w-4 mr-1.5 shrink-0 hidden sm:inline-block" aria-hidden />
+              Itinerary
+            </TabsTrigger>
+            <TabsTrigger value="budget">
+              <Banknote className="h-4 w-4 mr-1.5 shrink-0 hidden sm:inline-block" aria-hidden />
+              Budget
+            </TabsTrigger>
+            <TabsTrigger value="packing">
+              <Package className="h-4 w-4 mr-1.5 shrink-0 hidden sm:inline-block" aria-hidden />
+              Packing
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview">
@@ -287,12 +290,12 @@ export default async function TripDetailPage({
         {/* Itinerary Tab */}
         <TabsContent value="itinerary">
           <section aria-labelledby="itinerary-heading">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <h2
                 id="itinerary-heading"
                 className="font-heading text-lg uppercase tracking-wider text-foreground flex items-center gap-2"
               >
-                <List className="h-5 w-5" style={{ color: MODULE_COLOR }} aria-hidden />
+                <List className="h-5 w-5 shrink-0" style={{ color: MODULE_COLOR }} aria-hidden />
                 Itinerary
               </h2>
               <div className="flex items-center gap-2">
@@ -301,7 +304,9 @@ export default async function TripDetailPage({
               </div>
             </div>
             {itinerary.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No itinerary entries yet — add your first entry or choose from a template.</p>
+              <p className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+                No itinerary entries yet — add your first entry or choose from a template.
+              </p>
             ) : (
               <ol className="space-y-3">
                 {itinerary.map((entry) => (
@@ -347,12 +352,12 @@ export default async function TripDetailPage({
         {/* Budget Tab */}
         <TabsContent value="budget">
           <section aria-labelledby="budget-heading">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <h2
                 id="budget-heading"
                 className="font-heading text-lg uppercase tracking-wider text-foreground flex items-center gap-2"
               >
-                <Banknote className="h-5 w-5" style={{ color: MODULE_COLOR }} aria-hidden />
+                <Banknote className="h-5 w-5 shrink-0" style={{ color: MODULE_COLOR }} aria-hidden />
                 Budget
               </h2>
               <div className="flex items-center gap-2">
@@ -361,7 +366,9 @@ export default async function TripDetailPage({
               </div>
             </div>
             {budgetItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No budget items yet — add your first item or choose from a template.</p>
+              <p className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+                No budget items yet — add your first item or choose from a template.
+              </p>
             ) : (
               <>
                 {/* Budget items list */}
@@ -452,12 +459,12 @@ export default async function TripDetailPage({
         {/* Packing Tab */}
         <TabsContent value="packing">
           <section aria-labelledby="packing-heading">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <h2
                 id="packing-heading"
                 className="font-heading text-lg uppercase tracking-wider text-foreground flex items-center gap-2"
               >
-                <Package className="h-5 w-5" style={{ color: MODULE_COLOR }} aria-hidden />
+                <Package className="h-5 w-5 shrink-0" style={{ color: MODULE_COLOR }} aria-hidden />
                 Packing list
                 {packingItems.length > 0 && (
                   <span className="text-sm font-normal text-muted-foreground ml-1">
@@ -471,7 +478,9 @@ export default async function TripDetailPage({
               </div>
             </div>
             {packingItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No packing items yet — add your first item or choose from a template.</p>
+              <p className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+                No packing items yet — add your first item or choose from a template.
+              </p>
             ) : (
               <ul className="space-y-2" data-testid="packing-list">
                 {packingItems.map((item) => (

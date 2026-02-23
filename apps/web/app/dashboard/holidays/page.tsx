@@ -44,7 +44,7 @@ export default async function HolidaysPage() {
   const moduleColor = moduleInfo.colorLight;
 
   return (
-    <div className="content-wrapper section-padding" data-testid="holidays-hub">
+    <div className="content-wrapper py-8" data-testid="holidays-hub">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl uppercase tracking-widest text-foreground mb-1">

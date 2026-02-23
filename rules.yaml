@@ -1,166 +1,80 @@
-# Performance & correctness gating rules for apps/web
-# Purpose: a single source of truth for CI checks that prevent performance regressions
-# Scope: These rules apply to apps/web only. CI should run checks when PRs touch apps/web/**
-#
-# NOTE: This file is NOT a replacement for .clinerules or .cursorrules.
-#       .clinerules        → AI assistant behaviour rules for Roo Code / Cline
-#       .cursorrules       → AI assistant behaviour rules for Cursor IDE (legacy format)
-#       .cursor/rules/*.mdc → AI assistant behaviour rules for Cursor IDE (modern format)
-#       rules.yaml         → CI performance and correctness gating checks (this file)
-#
-# Implementation notes:
-# - "check.command" values are executable shell commands run in CI. Map them to your runner environment.
-# - Use environment variables for thresholds to make tuning easy:
-#     BUNDLE_MAX_KB (default 300)
-#     NEW_DEP_THRESHOLD_KB (default 250)
-#     LHCI_PERF_THRESHOLD (default 90)
-# - Scripts referenced below are expected at repo root under /scripts (e.g. scripts/check-next-image-optimizer.js)
-#
-# Severity: "error" = block merge; "warning" = surface in CI/pr comments but may not block (adjust in your CI).
-#
-# If you add/rename scripts, update the check.command values accordingly.
+- name: next-image-optimization
+  context: "apps/web/**/*.{js,jsx,ts,tsx} — whenever rendering images"
+  description: "Enforce Next.js image optimization; disallow raw <img> elements and unoptimized flag."
+  content: |
+    Always use `<Image>` from `next/image` instead of raw `<img>` elements in apps/web.
+    Never set `images.unoptimized: true` in next.config.js.
+    For LCP/hero images, add `priority` prop and explicit `width`/`height` or a sized container to prevent CLS.
+    When `<img>` is genuinely needed (e.g. user-generated content with dynamic src), add an ESLint disable comment with a brief justification.
+    CI runs `scripts/find-plain-img.js` and will fail if unapproved `<img>` tags are found.
 
-thresholds:
-  bundle_max_kb: 300            # total client-side JS budget (uncompressed); CI will fail if exceeded
-  new_dep_threshold_kb: 250     # warn/error when a new dependency's gzipped size > threshold
-  lhci_perf_threshold: 90       # Lighthouse performance score threshold
-  lhci_regression_threshold: 5  # allowed regression vs baseline before failing
+- name: server-first-architecture
+  context: "apps/web/**/*.{ts,tsx} — all new components and pages"
+  description: "Default to React Server Components; only use 'use client' when interactivity requires it."
+  content: |
+    Default to React Server Components (RSC). Only add `'use client'` when the component uses browser APIs, hooks, or event handlers.
+    Never import `server-only` modules (DB clients, secrets) into Client Components.
+    Keep `'use client'` boundaries as small as possible — put interactive slices in small leaf components rather than entire pages.
+    Never place blocking auth/profile fetches (createServerSupabaseClient, supabase.auth.getUser) in global public marketing layouts; these must be in dashboard/authenticated route layouts only.
 
-rules:
-  - id: no-next-unoptimized
-    description: "Ensure Next image optimization is enabled for apps/web (images.unoptimized MUST NOT be true)."
-    severity: error
-    scope: "apps/web/**"
-    check:
-      type: script
-      command: "node scripts/check-next-image-optimizer.js --path apps/web/next.config.js"
-    fail_if: "script exits non-zero or prints 'UNOPTIMIZED=true'"
-    fix: "Remove or set images.unoptimized=false in apps/web/next.config.js and configure images.domains or remotePatterns for your image hosts."
+- name: typescript-strict
+  context: "apps/web/**/*.{ts,tsx}, packages/**/*.{ts,tsx} — all TypeScript files"
+  description: "Enforce strict TypeScript: no any, no ts-ignore, Zod validation for all external input."
+  content: |
+    Never use `any` type. Use `unknown` and narrow, or define proper types.
+    Never use `// @ts-ignore` or `// @ts-expect-error` without an explanatory comment and a linked issue.
+    Validate all user input, API payloads, and webhook bodies with Zod on the server before use.
+    Never use `dangerouslySetInnerHTML`.
+    Zero-trust: treat all client input as untrusted; validate and sanitize server-side.
 
-  - id: lint-next-no-img
-    description: "Disallow raw <img> elements in apps/web; require next/image or approved wrapper."
-    severity: error
-    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
-    check:
-      type: eslint
-      command: "npm --workspace=apps/web run lint -- --max-warnings=0"
-      eslint_rule: "next/no-img-element"
-    fail_if: "eslint reports any next/no-img-element violation or any other lint errors"
-    fix: "Replace <img> with <Image> from 'next/image' or use the approved <AppImage> wrapper with explicit size or aspect container."
+- name: bundle-size-discipline
+  context: "apps/web/package.json — when adding new dependencies"
+  description: "Keep the client-side JS bundle under 300 KB; avoid heavyweight dependencies."
+  content: |
+    Before adding a new npm dependency to apps/web, estimate its gzipped size (https://bundlephobia.com).
+    Prefer lighter alternatives; import only the submodules you need.
+    If a dependency adds > 250 KB gzipped, document the justification in the PR.
+    Use dynamic `import()` for large optional features (dialogs, chart libraries, rich editors).
+    Pin or use conservative semver ranges for production dependencies in apps/web/package.json.
 
-  - id: enforce-image-attrs
-    description: "Require LCP/hero images to use next/image with explicit sizing or use width/height on <img> to avoid CLS."
-    severity: error
-    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
-    check:
-      type: eslint-or-script
-      command: "node scripts/enforce-image-attrs.js --path apps/web --fail"
-    fail_if: "script or ESLint custom rule reports violations"
-    fix: "Use next/image with sizes/priority for hero images or add explicit width/height/aspect containers to prevent layout shift."
+- name: analytics-deferred
+  context: "apps/web/**/*.{ts,tsx} — analytics and third-party script initialisation"
+  description: "Analytics and diagnostics must be initialised after first paint or behind consent; never in top-level layouts for public pages."
+  content: |
+    PostHog, Vercel Speed Insights, and other analytics must be initialised inside a `useEffect` or deferred via dynamic import with `ssr: false`.
+    Never call `posthog.init()` or `injectSpeedInsights()` synchronously in server layouts or top-level client entrypoints for public/marketing pages.
+    Always respect user consent before sending analytics events.
 
-  - id: find-plain-img
-    description: "Detect any remaining plain <img> tags in apps/web and fail until they are converted, unless an approved exception is documented."
-    severity: error
-    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
-    check:
-      type: script
-      command: "node scripts/find-plain-img.js --path apps/web"
-    fail_if: "script finds any <img> occurrences outside approved directories/components"
-    fix: "Convert to next/image or document an exception (rare)."
+- name: accessibility-wcag-aaa
+  context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
+  description: "Achieve WCAG 2.2 AAA: 44px touch targets, sufficient colour contrast, keyboard navigation, ARIA labels."
+  content: |
+    All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-11 min-w-11` (Tailwind h-11 = 2.75rem = 44px at 16px base) on interactive elements.
+    Colour contrast must meet WCAG AAA ratios (7:1 for normal text, 4.5:1 for large text).
+    All interactive elements must be keyboard-accessible with visible focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`).
+    Use semantic HTML elements (`<nav>`, `<main>`, `<section>`, `<button>`, etc.) rather than `<div>` with click handlers.
+    Provide `aria-label` on icon-only buttons; use `aria-current="page"` on active navigation links.
+    Respect `prefers-reduced-motion` for all animations and transitions.
 
-  - id: no-blocking-server-fetch-in-public-layouts
-    description: "Prevent server-side auth/profile fetches in global public marketing/layouts inside apps/web that block TTFB for public pages."
-    severity: error
-    scope: "apps/web/app/(marketing)/**, apps/web/app/(public)/**"
-    check:
-      type: grep
-      command: "git --no-pager grep -n --line-number -E \"createServerSupabaseClient\\(|supabase\\.auth\\.getUser\\(|createServerClient\\(|serverSideAuthenticate\\(\" -- apps/web/app || true"
-    fail_if: "matches reported"
-    fix: "Move profile/auth fetching into a client component (e.g. HeaderClient) that hydrates after initial HTML or guard fetch logic to only run on dashboard/authenticated routes."
+- name: calm-design
+  context: "apps/web/**/*.{ts,tsx} — all product UI"
+  description: "Apply PLOT Calm Design: design for completion not engagement; no dark patterns."
+  content: |
+    Design for task completion and intention, not engagement maximisation.
+    Every screen must have a clear primary action and a clear exit/done state.
+    Use progressive disclosure: simple defaults with complexity accessible on request.
+    No infinite scroll, streaks, countdown timers, or false urgency.
+    Notification copy must be specific and actionable.
+    Destructive actions require explicit confirmation dialogs.
+    Empty states guide orientation without pressure: "Nothing here yet — X appears after Y."
+    Ceremonies follow greeting → work → celebration arc; never collapse to a bare form.
 
-  - id: avoid-excessive-use-client
-    description: "Warn when files include 'use client' but contain no client-only APIs (unnecessary hydration)."
-    severity: warning
-    scope: "apps/web/**/*.{ts,tsx,js,jsx}"
-    check:
-      type: script
-      command: "node scripts/find-unused-use-client.js --path apps/web"
-    fail_if: "script returns candidate files"
-    fix: "Remove 'use client' and convert to server component, or move interactive parts into small client components."
-
-  - id: analytics-deferred
-    description: "Analytics & diagnostics (PostHog, Vercel Speed Insights, other heavy scripts) must be initialized after first paint or behind consent on public pages."
-    severity: error
-    scope: "apps/web/**/*.{js,jsx,ts,tsx}"
-    check:
-      type: grep
-      command: "git --no-pager grep -n --line-number -E \"injectSpeedInsights|inject\\(|posthog\\.(init|capture|flush)|@vercel/speed-insights\" -- apps/web || true"
-    fail_if: "initialization found in top-level client entrypoints or server layouts for public pages"
-    fix: "Move analytics initialization into a client component that runs inside useEffect after consent/after first paint or replace with non-blocking deferred loader."
-
-  - id: bundle-size-budget
-    description: "Enforce a client-side bundle size budget for apps/web builds."
-    severity: error
-    scope: "apps/web/**"
-    check:
-      type: bundle-analyzer
-      command: "ANALYZE=true npm --workspace=apps/web run build:analyze && node scripts/parse-webpack-stats.js --report apps/web/.next/analyze/client.html --max-kb ${BUNDLE_MAX_KB:-300}"
-    fail_if: "parse-webpack-stats.js exits non-zero (bundle size > BUNDLE_MAX_KB)"
-    fix: "Run bundle analyzer, identify top modules, then code-split/dynamic-import or replace heavy libraries. Consider lazy-loading icon sets / large UI chunks."
-
-  - id: disallow-large-deps
-    description: "Warn or block commits that add large dependencies to apps/web package.json (prevent adding heavyweight libs without review)."
-    severity: warning
-    scope: "apps/web/package.json"
-    check:
-      type: script
-      command: "node scripts/check-new-deps.js --package apps/web/package.json --threshold ${NEW_DEP_THRESHOLD_KB:-250}"
-    fail_if: "new dependency gzipped size > NEW_DEP_THRESHOLD_KB"
-    fix: "Choose lighter alternatives, import only submodules, or lazy-load the dependency."
-
-  - id: dependency-version-lock
-    description: "Require explicit version ranges for deps in apps/web package.json to avoid accidental upgrades that increase size."
-    severity: warning
-    scope: "apps/web/package.json"
-    check:
-      type: script
-      command: "node scripts/check-dep-versions.js --path apps/web/package.json"
-    fail_if: "wildcard or caret ranges flagged (policy-specific)"
-    fix: "Pin or set conservative semver ranges for production dependencies."
-
-  - id: ci-lighthouse-guard
-    description: "Run Lighthouse CI on preview deploys and fail PRs that drop performance below threshold or regress significantly vs baseline."
-    severity: error
-    scope: "PRs touching apps/web/** with preview deployments"
-    check:
-      type: lhci
-      command: "npx @lhci/cli@0.9.x autorun --config=./lhci-apps-web.config.js --collect.numberOfRuns=3 --upload.target=temporary-public-storage"
-    fail_if: "Lighthouse performance < ${LHCI_PERF_THRESHOLD:-90} OR regression > ${LHCI_REGRESSION_THRESHOLD:-5}"
-    fix: "Address LCP/LCP images, JS payload, and TTFB causes. If preview deploy not available in the environment, document how to enable and allow the job to be optional."
-
-  - id: ci-flaky-exceptions
-    description: "Allow documented exceptions for checks (owner-approved) but require explicit PR label and linked issue for long-term exceptions."
-    severity: warning
-    scope: "repo"
-    check:
-      type: metadata
-      command: "node scripts/validate-exceptions.js --pr $PR_NUMBER"
-    fail_if: "exception labels found without linked issue or owner approval"
-    fix: "Add linked issue describing the exception, mitigation plan, and timeframe; update exception metadata."
-
-  - id: ci-health
-    description: "Ensure required helper scripts and CI config exist before gating (fail early with actionable message)."
-    severity: error
-    scope: "repo-root"
-    check:
-      type: files-exist
-      command: "node scripts/validate-ci-prereqs.js --expect scripts/check-next-image-optimizer.js,scripts/find-plain-img.js,scripts/parse-webpack-stats.js,.github/workflows/perf-guard.yml"
-    fail_if: "missing required script or workflow files"
-    fix: "Add the referenced scripts/workflows to the repo root or update rules.yaml to reflect new locations."
-
-notes:
-  - "CI should map rule severities to job failure behavior. Errors should fail PR merges by default."
-  - "Use environment variables in CI to set thresholds (BUNDLE_MAX_KB, NEW_DEP_THRESHOLD_KB, LHCI_PERF_THRESHOLD)."
-  - "Where 'check.type' is 'script', the CI runner should run the command and consider non-zero exit codes as failures."
-  - "For 'eslint' checks, prefer running with --max-warnings=0 to ensure warnings are surfaced as failures when desired."
-  - "Adjust scopes to match your monorepo layout (the 'scope' field is advisory—CI path filters should also be used)."
+- name: mobile-responsive-layout
+  context: "apps/web/**/*.{ts,tsx} — all dashboard and module pages"
+  description: "All layouts must be fully usable on screens ≥ 375 px wide; no content clipping or overflow."
+  content: |
+    Test all new UI at 375 px viewport width (iPhone SE baseline).
+    Scrollable tab lists must use `flex` (not `inline-flex`) as the container so `overflow-x-auto` creates a proper scroll region.
+    Header rows that contain a heading + multiple action buttons must use `flex flex-wrap gap-3` so they reflow rather than clip on narrow screens.
+    Bottom navigation docks with > 4 modules must not show all items on mobile; surface a "More" affordance to avoid cramping.
+    Use `sm:` breakpoint prefix consistently to opt into wider layouts at 640 px and above.

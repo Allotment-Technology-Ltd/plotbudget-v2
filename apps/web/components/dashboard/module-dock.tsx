@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ClipboardList, Calendar as CalendarIcon, CheckSquare, GripVertical, PoundSterling, UtensilsCrossed, Plane } from 'lucide-react';
+import { Home, ClipboardList, Calendar as CalendarIcon, CheckSquare, GripVertical, PoundSterling, UtensilsCrossed, Plane, MoreHorizontal, X } from 'lucide-react';
 import { getModule } from '@repo/logic';
 import { cn } from '@repo/ui';
 import type { ModuleFlags } from '@/lib/module-flags';
@@ -104,6 +104,32 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
     ...(moduleFlags.holidays ? [{ href: '/dashboard/holidays', label: getModule('holidays').name, shortLabel: 'Holidays', icon: Plane }] : []),
     ...(moduleFlags.home ? [{ href: '/dashboard/home', label: getModule('home').name, shortLabel: 'Feed', icon: ClipboardList }] : []),
   ].filter(Boolean) as { href: string; label: string; icon: React.ElementType; shortLabel?: string }[];
+
+  /** Maximum number of items to show in the mobile tab bar before overflowing to "More". */
+  const MOBILE_MAX_VISIBLE = 4;
+
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  /**
+   * On mobile, compute which items appear in the fixed bar.
+   * When there are more than MOBILE_MAX_VISIBLE items (e.g. 5+), the active
+   * item is always kept visible; remaining slots are filled from the front.
+   */
+  const { mobileVisible, mobileOverflow } = useMemo(() => {
+    if (hasHover || items.length <= MOBILE_MAX_VISIBLE) {
+      return { mobileVisible: items, mobileOverflow: [] };
+    }
+    const activeIdx = items.findIndex((item) => isCurrent(pathname, item.href));
+    const visibleIndices = new Set<number>();
+    // Fill from the front up to MOBILE_MAX_VISIBLE, but always include the active item.
+    for (let i = 0; i < items.length && visibleIndices.size < MOBILE_MAX_VISIBLE; i++) {
+      if (i !== activeIdx) visibleIndices.add(i);
+    }
+    if (activeIdx >= 0) visibleIndices.add(activeIdx);
+    const visible = items.filter((_, i) => visibleIndices.has(i));
+    const overflow = items.filter((_, i) => !visibleIndices.has(i));
+    return { mobileVisible: visible, mobileOverflow: overflow };
+  }, [hasHover, items, pathname]);
 
   const handleDragStart = useCallback(
     (e: React.PointerEvent) => {
@@ -209,75 +235,157 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
       ? scales
       : items.map(() => 1);
 
+  /** Items actually rendered in the bar — full list on desktop, capped set on mobile. */
+  const visibleItems = hasHover ? items : mobileVisible;
+
   return (
-    <nav
-      className={cn(
-        'fixed z-40 flex justify-center px-3 pt-4',
-        !hasHover && 'bottom-0 left-0 right-0 pb-[env(safe-area-inset-bottom,0)]',
-        hasHover && !position && 'left-1/2 -translate-x-1/2 bottom-6 md:pb-4',
-        hasHover && 'w-max'
-      )}
-      style={
-        hasHover && position
-          ? { left: position.left, bottom: position.bottom }
-          : undefined
-      }
-      aria-label="Switch module"
-    >
-      <div
-        ref={dockRef}
-        onPointerMove={magnifyEnabled ? handlePointerMove : undefined}
-        onPointerLeave={magnifyEnabled ? handlePointerLeave : undefined}
+    <>
+      <nav
         className={cn(
-          'flex items-center justify-center gap-1 rounded-2xl border border-border bg-card/95 px-2 py-2 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/90',
-          'md:gap-2 md:rounded-3xl md:px-4 md:py-2.5'
+          'fixed z-40 flex justify-center px-3 pt-4',
+          !hasHover && 'bottom-0 left-0 right-0 pb-[env(safe-area-inset-bottom,0)]',
+          hasHover && !position && 'left-1/2 -translate-x-1/2 bottom-6 md:pb-4',
+          hasHover && 'w-max'
         )}
+        style={
+          hasHover && position
+            ? { left: position.left, bottom: position.bottom }
+            : undefined
+        }
+        aria-label="Switch module"
       >
-        {hasHover && (
-          <div
-            ref={dragHandleRef}
-            role="button"
-            tabIndex={0}
-            aria-label="Drag to reposition dock"
-            onPointerDown={handleDragStart}
-            className="cursor-grab active:cursor-grabbing touch-none rounded-lg p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <GripVertical className="h-5 w-5" aria-hidden />
-          </div>
-        )}
-        {items.map(({ href, label, shortLabel, icon: Icon }, i) => {
-          const current = isCurrent(pathname, href);
-          const scale = scaleArray[i] ?? 1;
-          return (
-            <Link
-              key={href}
-              ref={(el) => {
-                itemRefs.current[i] = el;
-              }}
-              href={href}
-              className={cn(
-                'flex flex-col items-center justify-center rounded-xl p-2.5 transition-transform duration-150 ease-out min-w-[2.75rem] md:min-w-[3rem]',
-                'touch-manipulation',
-                current
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-              )}
-              style={
-                magnifyEnabled && scale !== 1
-                  ? { transform: `scale(${scale})`, transformOrigin: 'center bottom' }
-                  : undefined
-              }
-              aria-current={current ? 'page' : undefined}
-              title={label}
+        <div
+          ref={dockRef}
+          onPointerMove={magnifyEnabled ? handlePointerMove : undefined}
+          onPointerLeave={magnifyEnabled ? handlePointerLeave : undefined}
+          className={cn(
+            'flex items-center justify-center gap-1 rounded-2xl border border-border bg-card/95 px-2 py-2 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/90',
+            'md:gap-2 md:rounded-3xl md:px-4 md:py-2.5'
+          )}
+        >
+          {hasHover && (
+            <div
+              ref={dragHandleRef}
+              role="button"
+              tabIndex={0}
+              aria-label="Drag to reposition dock"
+              onPointerDown={handleDragStart}
+              className="cursor-grab active:cursor-grabbing touch-none rounded-lg p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Icon className="h-6 w-6 md:h-7 md:w-7 shrink-0" aria-hidden />
-              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wider md:text-xs">
-                {shortLabel ?? label}
+              <GripVertical className="h-5 w-5" aria-hidden />
+            </div>
+          )}
+          {visibleItems.map(({ href, label, shortLabel, icon: Icon }, i) => {
+            const current = isCurrent(pathname, href);
+            // Magnification only applies on desktop (hasHover); on mobile scale is always 1.
+            const scale = scaleArray[i] ?? 1;
+            return (
+              <Link
+                key={href}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+                href={href}
+                className={cn(
+                  'flex flex-col items-center justify-center rounded-xl p-2.5 transition-transform duration-150 ease-out min-w-[2.75rem] md:min-w-[3rem]',
+                  'touch-manipulation',
+                  current
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                )}
+                style={
+                  magnifyEnabled && scale !== 1
+                    ? { transform: `scale(${scale})`, transformOrigin: 'center bottom' }
+                    : undefined
+                }
+                aria-current={current ? 'page' : undefined}
+                title={label}
+              >
+                <Icon className="h-6 w-6 md:h-7 md:w-7 shrink-0" aria-hidden />
+                <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wider md:text-xs">
+                  {shortLabel ?? label}
+                </span>
+              </Link>
+            );
+          })}
+          {/* "More" button — only on mobile when there are overflow items */}
+          {!hasHover && mobileOverflow.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              aria-label="More modules"
+              className={cn(
+                'flex flex-col items-center justify-center rounded-xl p-2.5 min-w-[2.75rem]',
+                'touch-manipulation text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              <MoreHorizontal className="h-6 w-6 shrink-0" aria-hidden />
+              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wider">More</span>
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Bottom-sheet overlay for overflow modules on mobile */}
+      {!hasHover && moreOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col justify-end"
+          role="dialog"
+          aria-modal="true"
+          aria-label="All modules"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMoreOpen(false)}
+            aria-hidden
+          />
+          {/* Sheet */}
+          <div className="relative rounded-t-2xl border-t border-border bg-card pb-[env(safe-area-inset-bottom,0)] shadow-xl">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+              <span className="font-heading text-sm uppercase tracking-wider text-foreground">
+                All modules
               </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+              <button
+                type="button"
+                onClick={() => setMoreOpen(false)}
+                aria-label="Close"
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <nav aria-label="All modules" className="grid grid-cols-4 gap-1 p-3">
+              {items.map(({ href, label, shortLabel, icon: Icon }) => {
+                const current = isCurrent(pathname, href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMoreOpen(false)}
+                    className={cn(
+                      'flex flex-col items-center justify-center rounded-xl p-3 min-h-[4.5rem] transition-colors',
+                      'touch-manipulation',
+                      current
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    )}
+                    aria-current={current ? 'page' : undefined}
+                  >
+                    <Icon className="h-6 w-6 shrink-0" aria-hidden />
+                    <span className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-center leading-tight">
+                      {shortLabel ?? label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
