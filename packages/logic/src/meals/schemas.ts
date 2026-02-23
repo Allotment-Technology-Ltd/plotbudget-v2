@@ -94,6 +94,9 @@ export const createGroceryItemSchema = z.object({
   quantity_text: z.string().max(100).optional().nullable(),
   quantity_value: z.number().optional().nullable(),
   quantity_unit: z.string().max(50).optional().nullable(),
+  shopping_list_id: z.string().uuid().optional().nullable(),
+  actual_price: z.number().min(0).max(99999.99).optional().nullable(),
+  is_staple: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
 
@@ -105,11 +108,28 @@ export const updateGroceryItemSchema = z.object({
   quantity_text: z.string().max(100).optional().nullable(),
   quantity_value: z.number().optional().nullable(),
   quantity_unit: z.string().max(50).optional().nullable(),
+  shopping_list_id: z.string().uuid().optional().nullable(),
+  actual_price: z.number().min(0).max(99999.99).optional().nullable(),
+  is_staple: z.boolean().optional(),
   is_checked: z.boolean().optional(),
   sort_order: z.number().int().optional(),
 });
 
 export type UpdateGroceryItemInput = z.infer<typeof updateGroceryItemSchema>;
+
+export const createShoppingListSchema = z.object({
+  title: z.string().min(1).max(200).default('Shopping list'),
+});
+
+export type CreateShoppingListInput = z.infer<typeof createShoppingListSchema>;
+
+export const updateShoppingListSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1).max(200).optional(),
+  status: z.enum(['active', 'done']).optional(),
+});
+
+export type UpdateShoppingListInput = z.infer<typeof updateShoppingListSchema>;
 
 const pantryLocationSchema = z.string().min(1).max(100).trim();
 
