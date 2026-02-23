@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.9.0...v1.9.1) (2026-02-23)
+
+
+### Reverts
+
+* Revert "Fix stale partner invite state after external auth account deletion" (#118) ([a59e1cb](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/commit/a59e1cbf6d30da6bde69464806dc6ba00c97f667)), closes [#118](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/issues/118) [#119](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/issues/119)
+
 # [1.9.0](https://github.com/Allotment-Technology-Ltd/plotbudget-v2/compare/v1.8.1...v1.9.0) (2026-02-22)
 
 
