@@ -148,7 +148,7 @@ export default async function SettingsPage({
       .from('users')
       .select('display_name')
       .eq('id', household.owner_id)
-      .single();
+      .maybeSingle();
     ownerDisplayName = (ownerRow as { display_name: string | null } | null)?.display_name ?? null;
   }
   const ownerLabel = formatDisplayNameForLabel(ownerDisplayName, 'Account owner');
