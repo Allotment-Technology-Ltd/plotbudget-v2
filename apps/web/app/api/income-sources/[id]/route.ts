@@ -12,6 +12,21 @@ const FREQUENCY_RULES: FrequencyRule[] = ['specific_date', 'last_working_day', '
 const PAYMENT_SOURCES: PaymentSource[] = ['me', 'partner', 'joint'];
 
 /**
+ * POST /api/income-sources/[id]
+ * Handles POST as an alias for PATCH on this resource. When the middleware redirects
+ * a server-action POST from /onboarding to another route, the browser re-issues the
+ * request as POST, losing the Next-Action header. That request can land here with
+ * update-style payloads. Delegating to PATCH ensures clients get a valid 200 response
+ * rather than a 405, and the update is applied correctly.
+ */
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  return PATCH(request, context);
+}
+
+/**
  * PATCH /api/income-sources/[id]
  * Update an income source. Used by native app (Bearer token).
  */
