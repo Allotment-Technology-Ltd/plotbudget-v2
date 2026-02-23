@@ -172,8 +172,16 @@ export async function proxy(request: NextRequest) {
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
-  }
-  if (request.nextUrl.pathname.includes('/onboarding') && user) {
+
+    // Never redirect a Next.js server-action POST — the action must execute on the page it
+    // was called from. The onboarding form creates the household client-side before calling
+    // the server action, so hasHousehold becomes true in the DB between those two steps.
+    // Without this guard the middleware would issue a 307 redirect instead of letting the
+    // action run, causing "an unexpected response from the server" on the client.
+    if (request.headers.get('next-action')) {
+      return response;
+    }
+
     const [profileRes, partnerRes] = await Promise.all([
       supabase
         .from('users')
