@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// simple validator for rules.yaml
+// Validator for rules.yaml — CI performance & correctness gating rules for apps/web
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
@@ -13,38 +13,49 @@ try {
   console.error('💥 failed to load rules.yaml:', e.message);
   process.exit(1);
 }
-if (!Array.isArray(data)) {
-  console.error('💥 rules.yaml root should be a YAML sequence (array)');
+
+if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  console.error('💥 rules.yaml root should be a YAML mapping (object) with thresholds, rules, and notes keys');
   process.exit(1);
 }
-const names = new Set();
-for (let i = 0; i < data.length; i++) {
-  const entry = data[i];
-  if (!entry || typeof entry !== 'object') {
-    console.error(`💥 entry at index ${i} is not an object`);
+
+// Validate thresholds
+if (!data.thresholds || typeof data.thresholds !== 'object') {
+  console.error('💥 rules.yaml is missing a "thresholds" object');
+  process.exit(1);
+}
+
+// Validate rules array
+if (!Array.isArray(data.rules) || data.rules.length === 0) {
+  console.error('💥 rules.yaml "rules" must be a non-empty array');
+  process.exit(1);
+}
+
+const ids = new Set();
+for (let i = 0; i < data.rules.length; i++) {
+  const rule = data.rules[i];
+  if (!rule || typeof rule !== 'object') {
+    console.error(`💥 rules[${i}] is not an object`);
     process.exit(1);
   }
-  const { name, context, description, content } = entry;
-  if (typeof name !== 'string' || name.trim() === '') {
-    console.error(`💥 entry at index ${i} is missing a name`);
+  const { id, description, severity } = rule;
+  if (typeof id !== 'string' || id.trim() === '') {
+    console.error(`💥 rules[${i}] is missing an id`);
     process.exit(1);
   }
-  if (names.has(name)) {
-    console.error(`💥 duplicate rule name: ${name}`);
+  if (ids.has(id)) {
+    console.error(`💥 duplicate rule id: ${id}`);
     process.exit(1);
   }
-  names.add(name);
-  if (typeof context !== 'string' || context.trim() === '') {
-    console.error(`💥 entry '${name}' is missing a context`);
-    process.exit(1);
-  }
+  ids.add(id);
   if (typeof description !== 'string' || description.trim() === '') {
-    console.error(`💥 entry '${name}' is missing a description`);
+    console.error(`💥 rule '${id}' is missing a description`);
     process.exit(1);
   }
-  if (typeof content !== 'string' || content.trim() === '') {
-    console.error(`💥 entry '${name}' is missing content`);
+  if (severity !== 'error' && severity !== 'warning') {
+    console.error(`💥 rule '${id}' has invalid severity '${severity}' (must be 'error' or 'warning')`);
     process.exit(1);
   }
 }
-console.log('✅ rules.yaml validated (' + data.length + ' entries)');
+
+console.log(`✅ rules.yaml validated (${data.rules.length} rules, ${Object.keys(data.thresholds).length} thresholds)`);
