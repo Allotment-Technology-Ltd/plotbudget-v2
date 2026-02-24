@@ -47,7 +47,7 @@ export default async function DashboardLayout({
       const supabase = await getCachedSupabase();
       const { count } = await supabase
         .from('notifications')
-        .select('id', { count: 'estimated', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('household_id', householdId)
         .eq('user_id', user.id)
         .eq('is_read', false);
