@@ -15,7 +15,7 @@
     "react-native": "0.81.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "~19.1.0",
     "eslint": "^10.0.2",
