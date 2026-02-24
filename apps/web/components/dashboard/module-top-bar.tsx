@@ -225,7 +225,7 @@ export function ModuleTopBar({ moduleFlags, userMenuProps, unreadNotificationCou
         <Link
           href="/dashboard/notifications"
           className="relative rounded p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread notifications` : 'Notifications'}
+          aria-label={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread ${unreadNotificationCount === 1 ? 'notification' : 'notifications'}` : 'Notifications'}
         >
           <Bell className="h-5 w-5" aria-hidden />
           {unreadNotificationCount > 0 && (
