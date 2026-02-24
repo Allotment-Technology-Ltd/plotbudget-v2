@@ -98,8 +98,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react@18.3.1)
       react-markdown:
-        specifier: ^9.0.1
-        version: 9.1.0(@types/react@18.3.27)(react@18.3.1)
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@18.3.27)(react@18.3.1)
       react-router-dom:
         specifier: ^7.13.1
         version: 7.13.1(react-dom@18.3.1)(react@18.3.1)
@@ -166,7 +166,7 @@ importers:
         version: link:../../packages/supabase
       '@supabase/supabase-js':
         specifier: 2.94.1
-        version: 2.97.0
+        version: 2.94.1
       '@tanstack/query-sync-storage-persister':
         specifier: ^5.90.22
         version: 5.90.22
@@ -272,7 +272,7 @@ importers:
         version: 17.3.1
       eas-cli:
         specifier: ^18.0.4
-        version: 18.0.4(@types/node@25.3.0)(typescript@5.9.3)
+        version: 18.0.4(@types/node@20.19.33)(typescript@5.9.3)
       eslint:
         specifier: ^10.0.2
         version: 10.0.2
@@ -359,10 +359,10 @@ importers:
         version: 1.1.0
       '@supabase/ssr':
         specifier: ^0.8.0
-        version: 0.8.0(@supabase/supabase-js@2.97.0)
+        version: 0.8.0(@supabase/supabase-js@2.94.1)
       '@supabase/supabase-js':
         specifier: 2.94.1
-        version: 2.97.0
+        version: 2.94.1
       '@tanstack/react-query':
         specifier: ^5.20.0
         version: 5.90.20(react@18.3.1)
@@ -590,7 +590,7 @@ importers:
         version: link:../typescript-config
       '@supabase/supabase-js':
         specifier: 2.94.1
-        version: 2.97.0
+        version: 2.94.1
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.33
@@ -2849,11 +2849,11 @@ packages:
       xmlbuilder: 15.1.1
     dev: false
 
-  /@expo/plugin-help@5.1.23(@types/node@25.3.0)(typescript@5.9.3):
+  /@expo/plugin-help@5.1.23(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-s0uH6cPplLj73ZVie40EYUhl7X7q9kRR+8IfZWDod3wUtVGOFInxuCPX9Jpv1UwwBgbRu2cLisqr8m45LrFgxw==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/core': 2.16.0(@types/node@25.3.0)(typescript@5.9.3)
+      '@oclif/core': 2.16.0(@types/node@20.19.33)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -2861,11 +2861,11 @@ packages:
       - typescript
     dev: true
 
-  /@expo/plugin-warn-if-update-available@2.5.1(@types/node@25.3.0)(typescript@5.9.3):
+  /@expo/plugin-warn-if-update-available@2.5.1(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-B65QSIZ+TgFHnVXsTw+1Q6djsJByWwnIjYfoG8ZV9wizOC01gbAw1cOZ/YtrJ2BrDnzFQtM8qecjlmZ7C3MPLw==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/core': 2.16.0(@types/node@25.3.0)(typescript@5.9.3)
+      '@oclif/core': 2.16.0(@types/node@20.19.33)(typescript@5.9.3)
       chalk: 4.1.2
       debug: 4.4.3(supports-color@8.1.1)
       ejs: 3.1.10
@@ -3633,7 +3633,7 @@ packages:
       wrap-ansi: 7.0.0
     dev: true
 
-  /@oclif/core@2.16.0(@types/node@25.3.0)(typescript@5.9.3):
+  /@oclif/core@2.16.0(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-dL6atBH0zCZl1A1IXCKJgLPrM/wR7K+Wi401E/IvqsK8m2iCHW+0TEOGrans/cuN3oTW+uxIyJFHJ8Im0k4qBw==}
     engines: {node: '>=14.0.0'}
     dependencies:
@@ -3660,7 +3660,7 @@ packages:
       strip-ansi: 6.0.1
       supports-color: 8.1.1
       supports-hyperlinks: 2.3.0
-      ts-node: 10.9.2(@types/node@25.3.0)(typescript@5.9.3)
+      ts-node: 10.9.2(@types/node@20.19.33)(typescript@5.9.3)
       tslib: 2.6.2
       widest-line: 3.1.0
       wordwrap: 1.0.0
@@ -3676,11 +3676,11 @@ packages:
     resolution: {integrity: sha512-Ups2dShK52xXa8w6iBWLgcjPJWjais6KPJQq3gQ/88AY6BXoTX+MIGFPrWQO1KLMiQfoTpcLnUwloN4brrVUHw==}
     dev: true
 
-  /@oclif/plugin-autocomplete@2.3.10(@types/node@25.3.0)(typescript@5.9.3):
+  /@oclif/plugin-autocomplete@2.3.10(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-Ow1AR8WtjzlyCtiWWPgzMyT8SbcDJFr47009riLioHa+MHX2BCDtVn2DVnN/E6b9JlPV5ptQpjefoRSNWBesmg==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/core': 2.16.0(@types/node@25.3.0)(typescript@5.9.3)
+      '@oclif/core': 2.16.0(@types/node@20.19.33)(typescript@5.9.3)
       chalk: 4.1.2
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -6523,23 +6523,9 @@ packages:
     engines: {node: '>=20.0.0'}
     dependencies:
       tslib: 2.8.1
-    dev: false
-
-  /@supabase/auth-js@2.97.0:
-    resolution: {integrity: sha512-2Og/1lqp+AIavr8qS2X04aSl8RBY06y4LrtIAGxat06XoXYiDxKNQMQzWDAKm1EyZFZVRNH48DO5YvIZ7la5fQ==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      tslib: 2.8.1
 
   /@supabase/functions-js@2.94.1:
     resolution: {integrity: sha512-A7Bx0gnclDNZ4m8+mnO2IEEzMxtUSg7cpPEBF6Ek1LpjIQkC7vvoidiV/RuntnKX43IiVcWV1f2FsAppMagEmQ==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      tslib: 2.8.1
-    dev: false
-
-  /@supabase/functions-js@2.97.0:
-    resolution: {integrity: sha512-fSaA0ZeBUS9hMgpGZt5shIZvfs3Mvx2ZdajQT4kv/whubqDBAp3GU5W8iIXy21MRvKmO2NpAj8/Q6y+ZkZyF/w==}
     engines: {node: '>=20.0.0'}
     dependencies:
       tslib: 2.8.1
@@ -6549,29 +6535,9 @@ packages:
     engines: {node: '>=20.0.0'}
     dependencies:
       tslib: 2.8.1
-    dev: false
-
-  /@supabase/postgrest-js@2.97.0:
-    resolution: {integrity: sha512-g4Ps0eaxZZurvfv/KGoo2XPZNpyNtjth9aW8eho9LZWM0bUuBtxPZw3ZQ6ERSpEGogshR+XNgwlSPIwcuHCNww==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      tslib: 2.8.1
 
   /@supabase/realtime-js@2.94.1:
     resolution: {integrity: sha512-Wq8olpCAGmN4y2DH2kUdlcakdzNHRCde72BFS8zK5ub46bBeSUoE9DqrfeNFWKaF2gCE/cmK8aTUTorZD9jdtQ==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      '@types/phoenix': 1.6.7
-      '@types/ws': 8.18.1
-      tslib: 2.8.1
-      ws: 8.19.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
-  /@supabase/realtime-js@2.97.0:
-    resolution: {integrity: sha512-37Jw0NLaFP0CZd7qCan97D1zWutPrTSpgWxAw6Yok59JZoxp4IIKMrPeftJ3LZHmf+ILQOPy3i0pRDHM9FY36Q==}
     engines: {node: '>=20.0.0'}
     dependencies:
       '@types/phoenix': 1.6.7
@@ -6591,25 +6557,8 @@ packages:
       cookie: 1.1.1
     dev: false
 
-  /@supabase/ssr@0.8.0(@supabase/supabase-js@2.97.0):
-    resolution: {integrity: sha512-/PKk8kNFSs8QvvJ2vOww1mF5/c5W8y42duYtXvkOSe+yZKRgTTZywYG2l41pjhNomqESZCpZtXuWmYjFRMV+dw==}
-    peerDependencies:
-      '@supabase/supabase-js': 2.94.1
-    dependencies:
-      '@supabase/supabase-js': 2.97.0
-      cookie: 1.1.1
-    dev: false
-
   /@supabase/storage-js@2.94.1:
     resolution: {integrity: sha512-/Mi18LGyrugPwtfqETfAqEGcBQotY/7IMsTGYgEFdqr8cQq280BVQWjN2wI9KibWtshPp0Ryvil5Uzd5YfM7kA==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      iceberg-js: 0.8.1
-      tslib: 2.8.1
-    dev: false
-
-  /@supabase/storage-js@2.97.0:
-    resolution: {integrity: sha512-9f6NniSBfuMxOWKwEFb+RjJzkfMdJUwv9oHuFJKfe/5VJR8cd90qw68m6Hn0ImGtwG37TUO+QHtoOechxRJ1Yg==}
     engines: {node: '>=20.0.0'}
     dependencies:
       iceberg-js: 0.8.1
@@ -6624,20 +6573,6 @@ packages:
       '@supabase/postgrest-js': 2.94.1
       '@supabase/realtime-js': 2.94.1
       '@supabase/storage-js': 2.94.1
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
-  /@supabase/supabase-js@2.97.0:
-    resolution: {integrity: sha512-kTD91rZNO4LvRUHv4x3/4hNmsEd2ofkYhuba2VMUPRVef1RCmnHtm7rIws38Fg0yQnOSZOplQzafn0GSiy6GVg==}
-    engines: {node: '>=20.0.0'}
-    dependencies:
-      '@supabase/auth-js': 2.97.0
-      '@supabase/functions-js': 2.97.0
-      '@supabase/postgrest-js': 2.97.0
-      '@supabase/realtime-js': 2.97.0
-      '@supabase/storage-js': 2.97.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -9163,7 +9098,7 @@ packages:
       readable-stream: 2.3.8
     dev: true
 
-  /eas-cli@18.0.4(@types/node@25.3.0)(typescript@5.9.3):
+  /eas-cli@18.0.4(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-qcc71HD+dXYGNV7SQLVWGzTH2059Y5/GN4Z7X3WR42F3Uxi6wdFEPISzPXtIfm4Y71WZ181X5XnEUfvxLaKYBQ==}
     engines: {node: '>=20.0.0'}
     hasBin: true
@@ -9182,8 +9117,8 @@ packages:
       '@expo/package-manager': 1.9.10
       '@expo/pkcs12': 0.1.3
       '@expo/plist': 0.2.0
-      '@expo/plugin-help': 5.1.23(@types/node@25.3.0)(typescript@5.9.3)
-      '@expo/plugin-warn-if-update-available': 2.5.1(@types/node@25.3.0)(typescript@5.9.3)
+      '@expo/plugin-help': 5.1.23(@types/node@20.19.33)(typescript@5.9.3)
+      '@expo/plugin-warn-if-update-available': 2.5.1(@types/node@20.19.33)(typescript@5.9.3)
       '@expo/prebuild-config': 8.0.17
       '@expo/results': 1.0.0
       '@expo/rudder-sdk-node': 1.1.1
@@ -9191,7 +9126,7 @@ packages:
       '@expo/steps': 18.0.2
       '@expo/timeago.js': 1.0.0
       '@oclif/core': 1.26.2
-      '@oclif/plugin-autocomplete': 2.3.10(@types/node@25.3.0)(typescript@5.9.3)
+      '@oclif/plugin-autocomplete': 2.3.10(@types/node@20.19.33)(typescript@5.9.3)
       '@segment/ajv-human-errors': 2.15.0(ajv@8.18.0)
       '@urql/core': 4.0.11(graphql@16.8.1)
       '@urql/exchange-retry': 1.2.0(graphql@16.8.1)
@@ -12442,6 +12377,25 @@ packages:
       - supports-color
     dev: false
 
+  /mdast-util-from-markdown@2.0.3:
+    resolution: {integrity: sha512-W4mAWTvSlKvf8L6J+VN9yLSqQ9AOAAvHuoDAmPkz4dHf553m5gVj2ejadHJhoJmcmxEnOv6Pa8XJhpxE93kb8Q==}
+    dependencies:
+      '@types/mdast': 4.0.4
+      '@types/unist': 3.0.3
+      decode-named-character-reference: 1.3.0
+      devlop: 1.1.0
+      mdast-util-to-string: 4.0.0
+      micromark: 4.0.2
+      micromark-util-decode-numeric-character-reference: 2.0.2
+      micromark-util-decode-string: 2.0.1
+      micromark-util-normalize-identifier: 2.0.1
+      micromark-util-symbol: 2.0.1
+      micromark-util-types: 2.0.2
+      unist-util-stringify-position: 4.0.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /mdast-util-gfm-autolink-literal@2.0.1:
     resolution: {integrity: sha512-5HVP2MKaP6L+G6YaxPNjuL0BPrq9orG3TsrZ9YXbA3vDw/ACI4MEsnoDpn6ZNm7GnZgtAcONJyPhOP8tNJQavQ==}
     dependencies:
@@ -12457,7 +12411,7 @@ packages:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
       micromark-util-normalize-identifier: 2.0.1
     transitivePeerDependencies:
@@ -12468,7 +12422,7 @@ packages:
     resolution: {integrity: sha512-mKKb915TF+OC5ptj5bJ7WFRPdYtuHv0yTRxK2tJvi+BDqbkiG7h7u/9SI89nRAYcmap2xHQL9D+QG/6wSrTtXg==}
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -12480,7 +12434,7 @@ packages:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       markdown-table: 3.0.4
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -12491,7 +12445,7 @@ packages:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -12518,7 +12472,7 @@ packages:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -12533,7 +12487,7 @@ packages:
       '@types/unist': 3.0.3
       ccount: 2.0.1
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
       parse-entities: 4.0.2
       stringify-entities: 4.0.4
@@ -12550,7 +12504,7 @@ packages:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -14677,8 +14631,8 @@ packages:
   /react-is@19.2.4:
     resolution: {integrity: sha512-W+EWGn2v0ApPKgKKCy/7s7WHXkboGcsrXE+2joLyVxkbyVQfO3MUEaUQDHoSmb8TFFrSKYa9mw64WZHNHSDzYA==}
 
-  /react-markdown@9.1.0(@types/react@18.3.27)(react@18.3.1):
-    resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
+  /react-markdown@10.1.0(@types/react@18.3.27)(react@18.3.1):
+    resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
       '@types/react': '>=18'
       react: '>=18'
@@ -15311,7 +15265,7 @@ packages:
     resolution: {integrity: sha512-FCxlKLNGknS5ba/1lmpYijMUzX2esxW5xQqjWxw2eHFfS2MSdaHVINFmhjo+qN1WhZhNimq0dZATN9pH0IDrpA==}
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.0.2
+      mdast-util-from-markdown: 2.0.3
       micromark-util-types: 2.0.2
       unified: 11.0.5
     transitivePeerDependencies:
@@ -16696,7 +16650,7 @@ packages:
   /ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
-  /ts-node@10.9.2(@types/node@25.3.0)(typescript@5.9.3):
+  /ts-node@10.9.2(@types/node@20.19.33)(typescript@5.9.3):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
@@ -16715,7 +16669,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 25.3.0
+      '@types/node': 20.19.33
       acorn: 8.16.0
       acorn-walk: 8.3.5
       arg: 4.1.3
