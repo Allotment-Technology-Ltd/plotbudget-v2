@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { getCachedDashboardAuth, getPaydayCompleteRequired } from '@/lib/auth/server-auth-cache';
+import { getCachedDashboardAuth, getCachedSupabase, getPaydayCompleteRequired } from '@/lib/auth/server-auth-cache';
 import { isTrialTestingDashboardAllowed } from '@/lib/feature-flags';
 import { getServerModuleFlags } from '@/lib/posthog-server-flags';
 import { redirect } from 'next/navigation';
@@ -39,6 +39,24 @@ export default async function DashboardLayout({
     isAdmin: isAdmin ?? false,
   });
 
+  // Fetch unread notification count for the nav badge. Fail silently — a missing badge
+  // is better than a broken layout. Only fetch when there is a household to scope the query.
+  let unreadNotificationCount = 0;
+  if (householdId) {
+    try {
+      const supabase = await getCachedSupabase();
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('household_id', householdId)
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      unreadNotificationCount = count ?? 0;
+    } catch {
+      // non-fatal — badge simply won't show
+    }
+  }
+
   const userMenuProps = {
     user: {
       id: user.id,
@@ -54,7 +72,7 @@ export default async function DashboardLayout({
   return (
     <>
       <PaydayCompleteRedirect shouldRedirectToPaydayComplete={shouldRedirectToPaydayComplete} />
-      <DashboardLayoutClient moduleFlags={moduleFlags} userMenuProps={userMenuProps}>
+      <DashboardLayoutClient moduleFlags={moduleFlags} userMenuProps={userMenuProps} unreadNotificationCount={unreadNotificationCount}>
         {children}
       </DashboardLayoutClient>
     </>

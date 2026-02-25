@@ -103,6 +103,7 @@ async function RoadmapPageInner() {
         </div>
       </section>
 
+      {/* Cards and "How we decide" — auth state resolved client-side after hydration */}
       <RoadmapFeatureListClient byStatus={byStatus} />
     </>
   );

@@ -120,15 +120,25 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
       return { mobileVisible: items, mobileOverflow: [] };
     }
     const activeIdx = items.findIndex((item) => isCurrent(pathname, item.href));
-    const visibleIndices = new Set<number>();
-    // Fill from the front up to MOBILE_MAX_VISIBLE, but always include the active item.
-    for (let i = 0; i < items.length && visibleIndices.size < MOBILE_MAX_VISIBLE; i++) {
-      if (i !== activeIdx) visibleIndices.add(i);
-    }
-    if (activeIdx >= 0) visibleIndices.add(activeIdx);
-    const visible = items.filter((_, i) => visibleIndices.has(i));
-    const overflow = items.filter((_, i) => !visibleIndices.has(i));
-    return { mobileVisible: visible, mobileOverflow: overflow };
+    // Build the visible set: Home (index 0) first, then active item, then fill in order.
+    // Using an insertion-ordered array + Set to deduplicate while preserving priority.
+    const prioritised: number[] = [];
+    const seen = new Set<number>();
+    const enqueue = (i: number) => {
+      if (i >= 0 && i < items.length && !seen.has(i)) {
+        seen.add(i);
+        prioritised.push(i);
+      }
+    };
+    enqueue(0);          // Home is always first priority
+    enqueue(activeIdx);  // Active item is always kept visible
+    for (let i = 1; i < items.length; i++) enqueue(i); // fill rest in order
+    // Take only MOBILE_MAX_VISIBLE and re-sort to original index order
+    const visibleSet = new Set(prioritised.slice(0, MOBILE_MAX_VISIBLE));
+    return {
+      mobileVisible: items.filter((_, i) => visibleSet.has(i)),
+      mobileOverflow: items.filter((_, i) => !visibleSet.has(i)),
+    };
   }, [hasHover, items, pathname]);
 
   const handleDragStart = useCallback(
@@ -185,6 +195,16 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
       window.removeEventListener('pointermove', onPointerMove, true);
     };
   }, [hasHover, handleDragEnd, handleDragMove]);
+
+  // Close the "More" sheet on Escape key
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMoreOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [moreOpen]);
 
   const updateScales = useCallback(
     (clientX: number | null) => {
@@ -337,15 +357,19 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
           aria-modal="true"
           aria-label="All modules"
         >
-          {/* Backdrop */}
+          {/* Backdrop — fade in */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 animate-in fade-in duration-200"
             onClick={() => setMoreOpen(false)}
             aria-hidden
           />
-          {/* Sheet */}
-          <div className="relative rounded-t-2xl border-t border-border bg-card pb-[env(safe-area-inset-bottom,0)] shadow-xl">
-            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+          {/* Sheet — slide up from bottom */}
+          <div className="relative rounded-t-2xl border-t border-border bg-card pb-[env(safe-area-inset-bottom,0)] shadow-xl animate-in slide-in-from-bottom duration-250 ease-out">
+            {/* Drag handle affordance */}
+            <div className="flex justify-center pt-3 pb-1" aria-hidden>
+              <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+            </div>
+            <div className="flex items-center justify-between px-4 pt-1 pb-3">
               <span className="font-heading text-sm uppercase tracking-wider text-foreground">
                 All modules
               </span>
@@ -358,8 +382,9 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
-            <nav aria-label="All modules" className="grid grid-cols-4 gap-1 p-3">
-              {items.map(({ href, label, shortLabel, icon: Icon }) => {
+            {/* List layout — full-width rows, scannable like Linear/Notion */}
+            <nav aria-label="All modules" className="flex flex-col px-2 pb-3">
+              {items.map(({ href, label, icon: Icon }) => {
                 const current = isCurrent(pathname, href);
                 return (
                   <Link
@@ -367,18 +392,18 @@ export function ModuleDock({ moduleFlags }: ModuleDockProps) {
                     href={href}
                     onClick={() => setMoreOpen(false)}
                     className={cn(
-                      'flex flex-col items-center justify-center rounded-xl p-3 min-h-[4.5rem] transition-colors',
-                      'touch-manipulation',
+                      'flex items-center gap-3 rounded-xl px-4 min-h-[3.25rem] transition-colors touch-manipulation',
                       current
                         ? 'bg-primary/15 text-primary'
                         : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                     )}
                     aria-current={current ? 'page' : undefined}
                   >
-                    <Icon className="h-6 w-6 shrink-0" aria-hidden />
-                    <span className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-center leading-tight">
-                      {shortLabel ?? label}
-                    </span>
+                    <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                    <span className="flex-1 text-sm font-medium">{label}</span>
+                    {current && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />
+                    )}
                   </Link>
                 );
               })}

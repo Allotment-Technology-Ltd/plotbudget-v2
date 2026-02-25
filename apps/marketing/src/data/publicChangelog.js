@@ -7,10 +7,12 @@
  * Each entry: { version, released_at: 'YYYY-MM-DD', content: 'Markdown string' }
  */
 export const publicChangelogEntries = [
-  // Example (remove or replace when you add real entries):
-  // {
-  //   version: '1.5.0',
-  //   released_at: '2026-02-18',
-  //   content: `### What's new\n\n- Payoff chart month/year labels and dashboard improvements.\n- Action persistence and small fixes.`,
-  // },
+  {
+    version: '1.10.0',
+    released_at: '2026-02-25',
+    content: `### What's new
+
+- **Notifications:** The bell icon now shows a badge with your unread count across every page of the app — so you always know at a glance when something needs your attention.
+- **Mobile navigation:** The bottom nav bar now consistently shows the four most-used modules. Tap "More" to see the rest in a clean, easy-to-read list — no more cramped icons.`,
+  },
 ];

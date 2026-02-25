@@ -18,6 +18,7 @@ type DashboardLayoutClientProps = {
   children: React.ReactNode;
   moduleFlags: ModuleFlags;
   userMenuProps: SidebarUserMenuProps;
+  unreadNotificationCount?: number;
 };
 
 /**
@@ -28,6 +29,7 @@ export function DashboardLayoutClient({
   children,
   moduleFlags,
   userMenuProps,
+  unreadNotificationCount = 0,
 }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const isLauncher = pathname === '/dashboard';
@@ -65,9 +67,17 @@ export function DashboardLayoutClient({
               <Link
                 href="/dashboard/notifications"
                 className="relative rounded p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Notifications"
+                aria-label={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread ${unreadNotificationCount === 1 ? 'notification' : 'notifications'}` : 'Notifications'}
               >
                 <Bell className="h-5 w-5" aria-hidden />
+                {unreadNotificationCount > 0 && (
+                  <span
+                    className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground"
+                    aria-hidden
+                  >
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
               </Link>
               <UserMenu
                 user={userMenuProps.user}
@@ -83,7 +93,7 @@ export function DashboardLayoutClient({
         </div>
       ) : (
         <div className="flex min-h-screen flex-col bg-background">
-          <ModuleTopBar moduleFlags={moduleFlags} userMenuProps={userMenuProps} />
+          <ModuleTopBar moduleFlags={moduleFlags} userMenuProps={userMenuProps} unreadNotificationCount={unreadNotificationCount} />
           <div className="flex-1">
             <DashboardContentTransition>{children}</DashboardContentTransition>
           </div>
