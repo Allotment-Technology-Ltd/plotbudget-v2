@@ -51,3 +51,46 @@ export async function updateHouseholdPercentages(
     return { error: e instanceof Error ? e.message : 'Failed to update percentages' };
   }
 }
+
+/**
+ * Returns founding_member_until for the current user's household, or null if not a founding member.
+ * Safe to call from client components via server action — auth is enforced server-side.
+ */
+export async function getMyFoundingMemberStatus(): Promise<{ foundingMemberUntil: string | null }> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { foundingMemberUntil: null };
+
+    const { data: ownedData } = await supabase
+      .from('households')
+      .select('id')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const { data: partnerOfData } = await supabase
+      .from('households')
+      .select('id')
+      .eq('partner_user_id', user.id)
+      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const householdId =
+      (ownedData as { id: string } | null)?.id ??
+      (partnerOfData as { id: string } | null)?.id ??
+      null;
+    if (!householdId) return { foundingMemberUntil: null };
+
+    const { data: householdStatus } = await supabase
+      .from('households')
+      .select('founding_member_until')
+      .eq('id', householdId)
+      .maybeSingle();
+    const until = (householdStatus as Record<string, unknown> | null)?.founding_member_until as string | null ?? null;
+    return { foundingMemberUntil: until };
+  } catch {
+    return { foundingMemberUntil: null };
+  }
+}

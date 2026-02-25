@@ -29,7 +29,7 @@ export default tseslint.config(
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: { __dirname: "readonly", module: "readonly", require: "readonly" },
     },
-    settings: { react: { version: "detect" } },
+    settings: { react: { version: "19" } },
     rules: {
       ...react.configs.recommended.rules,
       "react-hooks/rules-of-hooks": "error",

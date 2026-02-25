@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { UserMenu } from '@/components/navigation/user-menu';
+import { createClient } from '@/lib/supabase/client';
 
 const DashboardNavClient = dynamic(
   () => Promise.resolve(DashboardNav),
@@ -14,14 +16,41 @@ const UserMenuClient = dynamic(
   { ssr: false }
 );
 
-export type PricingHeaderNavClientProps = {
-  userMenuProps: {
-    user: { id: string; email: string; display_name: string | null; avatar_url: string | null };
-    isPartner: boolean;
-  } | null;
-};
+type UserMenuData = {
+  user: { id: string; email: string; display_name: string | null; avatar_url: string | null };
+  isPartner: boolean;
+} | null;
 
-export function PricingHeaderNavClient({ userMenuProps }: PricingHeaderNavClientProps) {
+export function PricingHeaderNavClient() {
+  const [userMenuProps, setUserMenuProps] = useState<UserMenuData | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        setUserMenuProps(null);
+        return;
+      }
+      supabase
+        .from('users')
+        .select('display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          setUserMenuProps({
+            user: {
+              id: user.id,
+              email: user.email ?? '',
+              display_name: (profile as { display_name: string | null } | null)?.display_name ?? null,
+              avatar_url: (profile as { avatar_url: string | null } | null)?.avatar_url ?? null,
+            },
+            isPartner: false,
+          });
+        });
+    });
+  }, []);
+
+  // Show login/signup during initial render and when unauthenticated
   if (!userMenuProps) {
     return (
       <>
@@ -40,6 +69,7 @@ export function PricingHeaderNavClient({ userMenuProps }: PricingHeaderNavClient
       </>
     );
   }
+
   return (
     <>
       <DashboardNavClient />
