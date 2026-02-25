@@ -1,80 +1,101 @@
-- name: next-image-optimization
-  context: "apps/web/**/*.{js,jsx,ts,tsx} — whenever rendering images"
-  description: "Enforce Next.js image optimization; disallow raw <img> elements and unoptimized flag."
-  content: |
-    Always use `<Image>` from `next/image` instead of raw `<img>` elements in apps/web.
-    Never set `images.unoptimized: true` in next.config.js.
-    For LCP/hero images, add `priority` prop and explicit `width`/`height` or a sized container to prevent CLS.
-    When `<img>` is genuinely needed (e.g. user-generated content with dynamic src), add an ESLint disable comment with a brief justification.
-    CI runs `scripts/find-plain-img.js` and will fail if unapproved `<img>` tags are found.
+thresholds:
+  bundle_max_kb: 300
+  new_dep_warn_kb: 250
+  lighthouse_perf_min: 90
+  touch_target_min_px: 44
 
-- name: server-first-architecture
-  context: "apps/web/**/*.{ts,tsx} — all new components and pages"
-  description: "Default to React Server Components; only use 'use client' when interactivity requires it."
-  content: |
-    Default to React Server Components (RSC). Only add `'use client'` when the component uses browser APIs, hooks, or event handlers.
-    Never import `server-only` modules (DB clients, secrets) into Client Components.
-    Keep `'use client'` boundaries as small as possible — put interactive slices in small leaf components rather than entire pages.
-    Never place blocking auth/profile fetches (createServerSupabaseClient, supabase.auth.getUser) in global public marketing layouts; these must be in dashboard/authenticated route layouts only.
+rules:
+  - id: next-image-optimization
+    severity: error
+    context: "apps/web/**/*.{js,jsx,ts,tsx} — whenever rendering images"
+    description: "Enforce Next.js image optimization; disallow raw <img> elements and unoptimized flag."
+    content: |
+      Always use `<Image>` from `next/image` instead of raw `<img>` elements in apps/web.
+      Never set `images.unoptimized: true` in next.config.js.
+      For LCP/hero images, add `priority` prop and explicit `width`/`height` or a sized container to prevent CLS.
+      When `<img>` is genuinely needed (e.g. user-generated content with dynamic src), add an ESLint disable comment with a brief justification.
+      CI runs `scripts/find-plain-img.js` and will fail if unapproved `<img>` tags are found.
 
-- name: typescript-strict
-  context: "apps/web/**/*.{ts,tsx}, packages/**/*.{ts,tsx} — all TypeScript files"
-  description: "Enforce strict TypeScript: no any, no ts-ignore, Zod validation for all external input."
-  content: |
-    Never use `any` type. Use `unknown` and narrow, or define proper types.
-    Never use `// @ts-ignore` or `// @ts-expect-error` without an explanatory comment and a linked issue.
-    Validate all user input, API payloads, and webhook bodies with Zod on the server before use.
-    Never use `dangerouslySetInnerHTML`.
-    Zero-trust: treat all client input as untrusted; validate and sanitize server-side.
+  - id: server-first-architecture
+    severity: error
+    context: "apps/web/**/*.{ts,tsx} — all new components and pages"
+    description: "Default to React Server Components; only use 'use client' when interactivity requires it."
+    content: |
+      Default to React Server Components (RSC). Only add `'use client'` when the component uses browser APIs, hooks, or event handlers.
+      Never import `server-only` modules (DB clients, secrets) into Client Components.
+      Keep `'use client'` boundaries as small as possible — put interactive slices in small leaf components rather than entire pages.
+      Never place blocking auth/profile fetches (createServerSupabaseClient, supabase.auth.getUser) in global public marketing layouts; these must be in dashboard/authenticated route layouts only.
 
-- name: bundle-size-discipline
-  context: "apps/web/package.json — when adding new dependencies"
-  description: "Keep the client-side JS bundle under 300 KB; avoid heavyweight dependencies."
-  content: |
-    Before adding a new npm dependency to apps/web, estimate its gzipped size (https://bundlephobia.com).
-    Prefer lighter alternatives; import only the submodules you need.
-    If a dependency adds > 250 KB gzipped, document the justification in the PR.
-    Use dynamic `import()` for large optional features (dialogs, chart libraries, rich editors).
-    Pin or use conservative semver ranges for production dependencies in apps/web/package.json.
+  - id: typescript-strict
+    severity: error
+    context: "apps/web/**/*.{ts,tsx}, packages/**/*.{ts,tsx} — all TypeScript files"
+    description: "Enforce strict TypeScript: no any, no ts-ignore, Zod validation for all external input."
+    content: |
+      Never use `any` type. Use `unknown` and narrow, or define proper types.
+      Never use `// @ts-ignore` or `// @ts-expect-error` without an explanatory comment and a linked issue.
+      Validate all user input, API payloads, and webhook bodies with Zod on the server before use.
+      Never use `dangerouslySetInnerHTML`.
+      Zero-trust: treat all client input as untrusted; validate and sanitize server-side.
 
-- name: analytics-deferred
-  context: "apps/web/**/*.{ts,tsx} — analytics and third-party script initialisation"
-  description: "Analytics and diagnostics must be initialised after first paint or behind consent; never in top-level layouts for public pages."
-  content: |
-    PostHog, Vercel Speed Insights, and other analytics must be initialised inside a `useEffect` or deferred via dynamic import with `ssr: false`.
-    Never call `posthog.init()` or `injectSpeedInsights()` synchronously in server layouts or top-level client entrypoints for public/marketing pages.
-    Always respect user consent before sending analytics events.
+  - id: bundle-size-discipline
+    severity: warning
+    context: "apps/web/package.json — when adding new dependencies"
+    description: "Keep the client-side JS bundle under 300 KB; avoid heavyweight dependencies."
+    content: |
+      Before adding a new npm dependency to apps/web, estimate its gzipped size (https://bundlephobia.com).
+      Prefer lighter alternatives; import only the submodules you need.
+      If a dependency adds > 250 KB gzipped, document the justification in the PR.
+      Use dynamic `import()` for large optional features (dialogs, chart libraries, rich editors).
+      Pin or use conservative semver ranges for production dependencies in apps/web/package.json.
 
-- name: accessibility-wcag-aaa
-  context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
-  description: "Achieve WCAG 2.2 AAA: 44px touch targets, sufficient colour contrast, keyboard navigation, ARIA labels."
-  content: |
-    All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-11 min-w-11` (Tailwind h-11 = 2.75rem = 44px at 16px base) on interactive elements.
-    Colour contrast must meet WCAG AAA ratios (7:1 for normal text, 4.5:1 for large text).
-    All interactive elements must be keyboard-accessible with visible focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`).
-    Use semantic HTML elements (`<nav>`, `<main>`, `<section>`, `<button>`, etc.) rather than `<div>` with click handlers.
-    Provide `aria-label` on icon-only buttons; use `aria-current="page"` on active navigation links.
-    Respect `prefers-reduced-motion` for all animations and transitions.
+  - id: analytics-deferred
+    severity: error
+    context: "apps/web/**/*.{ts,tsx} — analytics and third-party script initialisation"
+    description: "Analytics and diagnostics must be initialised after first paint or behind consent; never in top-level layouts for public pages."
+    content: |
+      PostHog, Vercel Speed Insights, and other analytics must be initialised inside a `useEffect` or deferred via dynamic import with `ssr: false`.
+      Never call `posthog.init()` or `injectSpeedInsights()` synchronously in server layouts or top-level client entrypoints for public/marketing pages.
+      Always respect user consent before sending analytics events.
 
-- name: calm-design
-  context: "apps/web/**/*.{ts,tsx} — all product UI"
-  description: "Apply PLOT Calm Design: design for completion not engagement; no dark patterns."
-  content: |
-    Design for task completion and intention, not engagement maximisation.
-    Every screen must have a clear primary action and a clear exit/done state.
-    Use progressive disclosure: simple defaults with complexity accessible on request.
-    No infinite scroll, streaks, countdown timers, or false urgency.
-    Notification copy must be specific and actionable.
-    Destructive actions require explicit confirmation dialogs.
-    Empty states guide orientation without pressure: "Nothing here yet — X appears after Y."
-    Ceremonies follow greeting → work → celebration arc; never collapse to a bare form.
+  - id: accessibility-wcag-aaa
+    severity: error
+    context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
+    description: "Achieve WCAG 2.2 AAA: 44px touch targets, sufficient colour contrast, keyboard navigation, ARIA labels."
+    content: |
+      All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-11 min-w-11` (Tailwind h-11 = 2.75rem = 44px at 16px base) on interactive elements.
+      Colour contrast must meet WCAG AAA ratios (7:1 for normal text, 4.5:1 for large text).
+      All interactive elements must be keyboard-accessible with visible focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`).
+      Use semantic HTML elements (`<nav>`, `<main>`, `<section>`, `<button>`, etc.) rather than `<div>` with click handlers.
+      Provide `aria-label` on icon-only buttons; use `aria-current="page"` on active navigation links.
+      Respect `prefers-reduced-motion` for all animations and transitions.
 
-- name: mobile-responsive-layout
-  context: "apps/web/**/*.{ts,tsx} — all dashboard and module pages"
-  description: "All layouts must be fully usable on screens ≥ 375 px wide; no content clipping or overflow."
-  content: |
-    Test all new UI at 375 px viewport width (iPhone SE baseline).
-    Scrollable tab lists must use `flex` (not `inline-flex`) as the container so `overflow-x-auto` creates a proper scroll region.
-    Header rows that contain a heading + multiple action buttons must use `flex flex-wrap gap-3` so they reflow rather than clip on narrow screens.
-    Bottom navigation docks with > 4 modules must not show all items on mobile; surface a "More" affordance to avoid cramping.
-    Use `sm:` breakpoint prefix consistently to opt into wider layouts at 640 px and above.
+  - id: calm-design
+    severity: warning
+    context: "apps/web/**/*.{ts,tsx} — all product UI"
+    description: "Apply PLOT Calm Design: design for completion not engagement; no dark patterns."
+    content: |
+      Design for task completion and intention, not engagement maximisation.
+      Every screen must have a clear primary action and a clear exit/done state.
+      Use progressive disclosure: simple defaults with complexity accessible on request.
+      No infinite scroll, streaks, countdown timers, or false urgency.
+      Notification copy must be specific and actionable.
+      Destructive actions require explicit confirmation dialogs.
+      Empty states guide orientation without pressure: "Nothing here yet — X appears after Y."
+      Ceremonies follow greeting → work → celebration arc; never collapse to a bare form.
+
+  - id: mobile-responsive-layout
+    severity: error
+    context: "apps/web/**/*.{ts,tsx} — all dashboard and module pages"
+    description: "All layouts must be fully usable on screens ≥ 375 px wide; no content clipping or overflow."
+    content: |
+      Test all new UI at 375 px viewport width (iPhone SE baseline).
+      Scrollable tab lists must use `flex` (not `inline-flex`) as the container so `overflow-x-auto` creates a proper scroll region.
+      Header rows that contain a heading + multiple action buttons must use `flex flex-wrap gap-3` so they reflow rather than clip on narrow screens.
+      Bottom navigation docks with > 4 modules must not show all items on mobile; surface a "More" affordance to avoid cramping.
+      Use `sm:` breakpoint prefix consistently to opt into wider layouts at 640 px and above.
+
+notes:
+  - "Error-severity rules block PR merges. Warning-severity rules surface in CI output but do not block."
+  - "Bundle threshold (bundle_max_kb) applies to client-side JS only; server bundles are not gated."
+  - "Lighthouse threshold (lighthouse_perf_min) is checked on preview deployments via LHCI."
+  - "Touch target threshold (touch_target_min_px) aligns with WCAG 2.2 SC 2.5.5 AAA."

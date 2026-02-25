@@ -15,3 +15,4 @@ export const publicChangelogEntries = [
 - **Notifications:** The bell icon now shows a badge with your unread count across every page of the app — so you always know at a glance when something needs your attention.
 - **Mobile navigation:** The bottom nav bar now consistently shows the four most-used modules. Tap "More" to see the rest in a clean, easy-to-read list — no more cramped icons.`,
   },
+];
