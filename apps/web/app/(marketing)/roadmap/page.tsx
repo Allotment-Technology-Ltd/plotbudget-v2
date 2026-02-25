@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getRoadmapFeaturesWithVotes } from '@/lib/actions/roadmap-actions';
-import { RoadmapCardsSection } from './_components/roadmap-cards-section';
+import { RoadmapFeatureListClient } from './_components/roadmap-feature-list-client';
 import RoadmapLoading from './loading';
 
 export const metadata: Metadata = {
@@ -104,7 +104,7 @@ async function RoadmapPageInner() {
       </section>
 
       {/* Cards and "How we decide" — auth state resolved client-side after hydration */}
-      <RoadmapCardsSection byStatus={byStatus} />
+      <RoadmapFeatureListClient byStatus={byStatus} />
     </>
   );
 }

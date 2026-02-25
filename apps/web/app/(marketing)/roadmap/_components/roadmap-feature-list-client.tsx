@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import type { RoadmapFeatureWithVotes } from '@/lib/actions/roadmap-actions';
+import { getMyRoadmapVoteEligibility } from '@/lib/actions/roadmap-actions';
 import { RoadmapModuleCard } from './roadmap-module-card';
+import type { RoadmapFeatureWithVotes } from '@/lib/actions/roadmap-actions';
 
 const SECTION_LABELS: Record<string, { title: string; subtitle: string }> = {
   now: { title: 'Now', subtitle: 'Currently shipping' },
@@ -13,60 +13,28 @@ const SECTION_LABELS: Record<string, { title: string; subtitle: string }> = {
   shipped: { title: 'Shipped', subtitle: 'Already live' },
 };
 
-interface RoadmapCardsSectionProps {
-  byStatus: {
-    now: RoadmapFeatureWithVotes[];
-    next: RoadmapFeatureWithVotes[];
-    later: RoadmapFeatureWithVotes[];
-    shipped: RoadmapFeatureWithVotes[];
-  };
-}
+type ByStatus = {
+  now: RoadmapFeatureWithVotes[];
+  next: RoadmapFeatureWithVotes[];
+  later: RoadmapFeatureWithVotes[];
+  shipped: RoadmapFeatureWithVotes[];
+};
 
-/**
- * Client component: renders roadmap cards + "How we decide" section.
- * Auth state (isAuthenticated, canVote) is resolved client-side after hydration so the
- * initial HTML can be rendered without any blocking server-side auth fetch in the
- * public marketing layout. Cards default to unauthenticated state (vote → redirects to
- * login) until the browser Supabase client confirms the session.
- */
-export function RoadmapCardsSection({ byStatus }: RoadmapCardsSectionProps) {
+export function RoadmapFeatureListClient({ byStatus }: { byStatus: ByStatus }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [canVote, setCanVote] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      setIsAuthenticated(true);
-
-      const { data: profile } = await supabase
-        .from('users')
-        .select('household_id')
-        .eq('id', user.id)
-        .maybeSingle();
-      const householdId =
-        (profile as { household_id: string | null } | null)?.household_id ?? null;
-      if (!householdId) return;
-
-      const { data: household } = await supabase
-        .from('households')
-        .select('founding_member_until')
-        .eq('id', householdId)
-        .maybeSingle();
-      const until =
-        (household as { founding_member_until: string | null } | null)?.founding_member_until ??
-        null;
-      setCanVote(!!until && new Date(until) > new Date());
+    getMyRoadmapVoteEligibility().then(({ isAuthenticated: auth, canVote: vote }) => {
+      setIsAuthenticated(auth);
+      setCanVote(vote);
     });
   }, []);
 
   return (
     <>
       {/* Timeline sections */}
-      <section
-        className="content-wrapper section-padding border-t border-border"
-        aria-label="Roadmap timeline"
-      >
+      <section className="content-wrapper section-padding border-t border-border" aria-label="Roadmap timeline">
         <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
           {(['now', 'next', 'later', 'shipped'] as const).map((status) => {
             const list = byStatus[status];
