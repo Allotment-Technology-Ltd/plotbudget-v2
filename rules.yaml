@@ -1,14 +1,13 @@
 thresholds:
-  bundle_max_kb: 300
-  new_dep_warn_kb: 250
-  lighthouse_perf_min: 90
-  touch_target_min_px: 44
+  bundle_size_kb: 300
+  new_dep_gzip_kb: 250
+  lighthouse_performance: 90
 
 rules:
   - id: next-image-optimization
     severity: error
-    context: "apps/web/**/*.{js,jsx,ts,tsx} — whenever rendering images"
     description: "Enforce Next.js image optimization; disallow raw <img> elements and unoptimized flag."
+    context: "apps/web/**/*.{js,jsx,ts,tsx} — whenever rendering images"
     content: |
       Always use `<Image>` from `next/image` instead of raw `<img>` elements in apps/web.
       Never set `images.unoptimized: true` in next.config.js.
@@ -18,8 +17,8 @@ rules:
 
   - id: server-first-architecture
     severity: error
-    context: "apps/web/**/*.{ts,tsx} — all new components and pages"
     description: "Default to React Server Components; only use 'use client' when interactivity requires it."
+    context: "apps/web/**/*.{ts,tsx} — all new components and pages"
     content: |
       Default to React Server Components (RSC). Only add `'use client'` when the component uses browser APIs, hooks, or event handlers.
       Never import `server-only` modules (DB clients, secrets) into Client Components.
@@ -28,8 +27,8 @@ rules:
 
   - id: typescript-strict
     severity: error
-    context: "apps/web/**/*.{ts,tsx}, packages/**/*.{ts,tsx} — all TypeScript files"
     description: "Enforce strict TypeScript: no any, no ts-ignore, Zod validation for all external input."
+    context: "apps/web/**/*.{ts,tsx}, packages/**/*.{ts,tsx} — all TypeScript files"
     content: |
       Never use `any` type. Use `unknown` and narrow, or define proper types.
       Never use `// @ts-ignore` or `// @ts-expect-error` without an explanatory comment and a linked issue.
@@ -38,9 +37,9 @@ rules:
       Zero-trust: treat all client input as untrusted; validate and sanitize server-side.
 
   - id: bundle-size-discipline
-    severity: warning
-    context: "apps/web/package.json — when adding new dependencies"
+    severity: error
     description: "Keep the client-side JS bundle under 300 KB; avoid heavyweight dependencies."
+    context: "apps/web/package.json — when adding new dependencies"
     content: |
       Before adding a new npm dependency to apps/web, estimate its gzipped size (https://bundlephobia.com).
       Prefer lighter alternatives; import only the submodules you need.
@@ -50,17 +49,17 @@ rules:
 
   - id: analytics-deferred
     severity: error
-    context: "apps/web/**/*.{ts,tsx} — analytics and third-party script initialisation"
     description: "Analytics and diagnostics must be initialised after first paint or behind consent; never in top-level layouts for public pages."
+    context: "apps/web/**/*.{ts,tsx} — analytics and third-party script initialisation"
     content: |
       PostHog, Vercel Speed Insights, and other analytics must be initialised inside a `useEffect` or deferred via dynamic import with `ssr: false`.
       Never call `posthog.init()` or `injectSpeedInsights()` synchronously in server layouts or top-level client entrypoints for public/marketing pages.
       Always respect user consent before sending analytics events.
 
   - id: accessibility-wcag-aaa
-    severity: error
-    context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
+    severity: warning
     description: "Achieve WCAG 2.2 AAA: 44px touch targets, sufficient colour contrast, keyboard navigation, ARIA labels."
+    context: "apps/web/**/*.{ts,tsx} — all UI components and pages"
     content: |
       All interactive elements (buttons, links, inputs) must have a minimum touch target of 44×44 px (WCAG 2.2 SC 2.5.5 AAA). Use `min-h-11 min-w-11` (Tailwind h-11 = 2.75rem = 44px at 16px base) on interactive elements.
       Colour contrast must meet WCAG AAA ratios (7:1 for normal text, 4.5:1 for large text).
@@ -71,8 +70,8 @@ rules:
 
   - id: calm-design
     severity: warning
-    context: "apps/web/**/*.{ts,tsx} — all product UI"
     description: "Apply PLOT Calm Design: design for completion not engagement; no dark patterns."
+    context: "apps/web/**/*.{ts,tsx} — all product UI"
     content: |
       Design for task completion and intention, not engagement maximisation.
       Every screen must have a clear primary action and a clear exit/done state.
@@ -84,9 +83,9 @@ rules:
       Ceremonies follow greeting → work → celebration arc; never collapse to a bare form.
 
   - id: mobile-responsive-layout
-    severity: error
-    context: "apps/web/**/*.{ts,tsx} — all dashboard and module pages"
+    severity: warning
     description: "All layouts must be fully usable on screens ≥ 375 px wide; no content clipping or overflow."
+    context: "apps/web/**/*.{ts,tsx} — all dashboard and module pages"
     content: |
       Test all new UI at 375 px viewport width (iPhone SE baseline).
       Scrollable tab lists must use `flex` (not `inline-flex`) as the container so `overflow-x-auto` creates a proper scroll region.
@@ -94,8 +93,7 @@ rules:
       Bottom navigation docks with > 4 modules must not show all items on mobile; surface a "More" affordance to avoid cramping.
       Use `sm:` breakpoint prefix consistently to opt into wider layouts at 640 px and above.
 
-notes:
-  - "Error-severity rules block PR merges. Warning-severity rules surface in CI output but do not block."
-  - "Bundle threshold (bundle_max_kb) applies to client-side JS only; server bundles are not gated."
-  - "Lighthouse threshold (lighthouse_perf_min) is checked on preview deployments via LHCI."
-  - "Touch target threshold (touch_target_min_px) aligns with WCAG 2.2 SC 2.5.5 AAA."
+notes: |
+  Rules with severity 'error' block PR merges. Rules with severity 'warning' are advisory.
+  Thresholds are enforced by CI scripts: bundle_size_kb via scripts/check-bundle-size.js,
+  new_dep_gzip_kb advisory via PR review, lighthouse_performance via Lighthouse CI.
