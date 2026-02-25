@@ -1,8 +1,5 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { PricingMatrix } from '@/components/pricing/pricing-matrix';
-import { PWYLPricingMatrix } from '@/components/pricing/pricing-matrix-pwyl';
 import {
   getPaymentUiVisibleFromServerFlags,
   getFullPremiumVisibleFromServerFlags,
@@ -10,6 +7,8 @@ import {
   getFixedPricingEnabledFromEnv,
 } from '@/lib/feature-flags';
 import { getServerFeatureFlags } from '@/lib/posthog-server-flags';
+import { FoundingMemberBannerClient } from './founding-member-banner-client';
+import { PricingContentClient } from './pricing-content-client';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -17,52 +16,16 @@ export const metadata: Metadata = {
 };
 
 export default async function PricingPage() {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const flags = await getServerFeatureFlags(user?.id ?? null);
+  const flags = await getServerFeatureFlags(null);
   const paymentUiVisible = getPaymentUiVisibleFromServerFlags(flags);
   if (!paymentUiVisible) {
-    redirect(user ? '/dashboard' : '/login');
+    redirect('/login');
   }
 
   const fullPremiumVisible = getFullPremiumVisibleFromServerFlags(flags);
   const pwylEnabled = getPWYLPricingEnabledFromEnv();
   const fixedEnabled = getFixedPricingEnabledFromEnv();
   const showPWYL = !fullPremiumVisible || pwylEnabled || (!pwylEnabled && !fixedEnabled);
-
-  let foundingMemberUntil: string | null = null;
-  if (user) {
-    const { data: ownedData } = await supabase
-      .from('households')
-      .select('id')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const { data: partnerOfData } = await supabase
-      .from('households')
-      .select('id')
-      .eq('partner_user_id', user.id)
-      .order('partner_accepted_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const householdId = (ownedData as { id: string } | null)?.id ?? (partnerOfData as { id: string } | null)?.id ?? null;
-    if (householdId) {
-      try {
-        const { data: householdStatus } = await supabase
-          .from('households')
-          .select('founding_member_until')
-          .eq('id', householdId)
-          .maybeSingle();
-        if (householdStatus) {
-          foundingMemberUntil = (householdStatus as Record<string, unknown>).founding_member_until as string | null;
-        }
-      } catch {
-        // column may not exist in test DB
-      }
-    }
-  }
 
   return (
     <div className="content-wrapper section-padding">
@@ -75,40 +38,9 @@ export default async function PricingPage() {
         </p>
       </div>
 
-      {user && foundingMemberUntil && (() => {
-        const end = new Date(foundingMemberUntil);
-        if (end > new Date()) {
-          const oneMonthFromNow = new Date();
-          oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
-          if (end > oneMonthFromNow) {
-            const founderDate = end.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            });
-            return (
-              <div className="mb-12 rounded-lg border border-primary/30 bg-primary/5 px-6 py-4 text-center">
-                <p className="font-heading text-sm uppercase tracking-wider text-primary mb-2">
-                  Founding Member
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  You have 12 months of Premium access free until {founderDate}. Thanks for being here from the start — your support for PLOT means everything.
-                </p>
-              </div>
-            );
-          }
-        }
-        return null;
-      })()}
+      <FoundingMemberBannerClient />
 
-      {showPWYL ? (
-        <PWYLPricingMatrix isLoggedIn={!!user} />
-      ) : (
-        <PricingMatrix
-          pricingEnabled={fullPremiumVisible}
-          isLoggedIn={!!user}
-        />
-      )}
+      <PricingContentClient showPWYL={showPWYL} fullPremiumVisible={fullPremiumVisible} />
     </div>
   );
 }
