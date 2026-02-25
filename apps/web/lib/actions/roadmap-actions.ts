@@ -203,3 +203,34 @@ export async function toggleRoadmapVote(featureId: string): Promise<{
     return { error: e instanceof Error ? e.message : 'Failed to update vote' };
   }
 }
+
+/**
+ * Returns the current user's roadmap vote eligibility (isAuthenticated + canVote).
+ * Safe to call from client components via server action — auth is enforced server-side.
+ */
+export async function getMyRoadmapVoteEligibility(): Promise<{ isAuthenticated: boolean; canVote: boolean }> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { isAuthenticated: false, canVote: false };
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('household_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const householdId = (profile as { household_id: string | null } | null)?.household_id ?? null;
+    if (!householdId) return { isAuthenticated: true, canVote: false };
+
+    const { data: household } = await supabase
+      .from('households')
+      .select('founding_member_until')
+      .eq('id', householdId)
+      .maybeSingle();
+    const until = (household as { founding_member_until: string | null } | null)?.founding_member_until ?? null;
+    return { isAuthenticated: true, canVote: !!until && new Date(until) > new Date() };
+  } catch {
+    return { isAuthenticated: false, canVote: false };
+  }
+}
+
