@@ -233,3 +233,4 @@ export async function getMyRoadmapVoteEligibility(): Promise<{ isAuthenticated: 
     return { isAuthenticated: false, canVote: false };
   }
 }
+

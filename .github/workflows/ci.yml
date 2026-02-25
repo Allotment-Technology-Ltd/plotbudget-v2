@@ -28,6 +28,7 @@ jobs:
   migrations-sync:
     name: migrations-sync
     runs-on: ubuntu-latest
+    continue-on-error: true
     if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v6

@@ -153,7 +153,13 @@ export async function clearPaydayCompleteStateForHousehold(
 export async function ensureActiveCycleEndDateInFuture(
   householdId: string
 ): Promise<void> {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  // Require end_date to be at least 4 days away so the blueprint page does not
+  // show the ritual greeting (which triggers when end_date <= now + 3 days),
+  // causing tests that wait for add-seed-button/blueprint-empty-state to fail.
+  const minDate = new Date(now);
+  minDate.setDate(minDate.getDate() + 4);
+  const minDateStr = minDate.toISOString().slice(0, 10);
   const { data: cycle } = await supabase
     .from('paycycles')
     .select('id, end_date')
@@ -163,15 +169,14 @@ export async function ensureActiveCycleEndDateInFuture(
 
   if (!cycle) return;
   const row = cycle as { id: string; end_date: string };
-  if (row.end_date >= today) return;
+  if (row.end_date >= minDateStr) return;
 
-  const now = new Date();
   const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const endOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
   const endOfThisMonthStr = endOfThisMonth.toISOString().slice(0, 10);
   const endOfNextMonthStr = endOfNextMonth.toISOString().slice(0, 10);
   const newEndDate =
-    endOfThisMonthStr >= today ? endOfThisMonthStr : endOfNextMonthStr;
+    endOfThisMonthStr >= minDateStr ? endOfThisMonthStr : endOfNextMonthStr;
 
   const { error } = await supabase
     .from('paycycles')

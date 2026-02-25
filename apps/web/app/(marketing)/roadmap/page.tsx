@@ -98,7 +98,7 @@ async function RoadmapPageInner() {
           </ul>
           <p className="text-foreground mt-4 font-medium">
             That&apos;s what makes a household system different from a collection of separate
-            apps—single-purpose tools can&apos;t do this.
+            apps&mdash;single-purpose tools can&apos;t do this.
           </p>
         </div>
       </section>
